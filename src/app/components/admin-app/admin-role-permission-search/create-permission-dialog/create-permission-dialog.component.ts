@@ -10,7 +10,7 @@ DM20-0181
 
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Component, Inject } from '@angular/core';
-import { Permission } from '../../../../generated/s3.player.api';
+import { Permission } from '../../../../generated/player-api';
 
 @Component({
   selector: 'create-permission-dialog',

@@ -43,14 +43,14 @@ export class ViewsService {
   public getViewList(userGuid: string): void {
     this.http
       .get<Array<ViewData>>(
-        `${this.settings.settings.ApiUrl}/users/${userGuid}/views`
+        `${this.settings.settings.ApiUrl}/api/users/${userGuid}/views`
       )
       .subscribe((views) => {
         const viewArray = new Array<ViewData>();
         views.forEach((view) => {
           this.http
             .get<Array<TeamData>>(
-              `${this.settings.settings.ApiUrl}/users/${userGuid}/views/${view.id}/teams`
+              `${this.settings.settings.ApiUrl}/api/users/${userGuid}/views/${view.id}/teams`
             )
             .pipe(map((teams) => teams.filter((t) => t.isMember)))
             .subscribe((teams) => {
@@ -80,7 +80,7 @@ export class ViewsService {
   public setPrimaryTeamId(userGuid: string, teamGuid: string): Observable<any> {
     return this.http
       .post<any>(
-        `${this.settings.settings.ApiUrl}/users/${userGuid}/teams/${teamGuid}/primary`,
+        `${this.settings.settings.ApiUrl}/api/users/${userGuid}/teams/${teamGuid}/primary`,
         null,
         httpOptions
       )
@@ -97,7 +97,7 @@ export class ViewsService {
    */
   public getViewById(viewGuid: string): Observable<ViewData> {
     return this.http
-      .get<ViewData>(`${this.settings.settings.ApiUrl}/views/${viewGuid}`)
+      .get<ViewData>(`${this.settings.settings.ApiUrl}/api/views/${viewGuid}`)
       .pipe(
         catchError((err) => {
           return observableThrowError(err || 'Server error');

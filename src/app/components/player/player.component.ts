@@ -27,9 +27,9 @@ import {
   tap,
   withLatestFrom,
 } from 'rxjs/operators';
-import { View } from '../../generated/s3.player.api';
-import { TeamService } from '../../generated/s3.player.api/api/team.service';
-import { ViewService } from '../../generated/s3.player.api/api/view.service';
+import { View } from '../../generated/player-api';
+import { TeamService } from '../../generated/player-api/api/team.service';
+import { ViewService } from '../../generated/player-api/api/view.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { ViewsService } from '../../services/views/views.service';
 import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';

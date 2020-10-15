@@ -9,11 +9,11 @@ DM20-0181
 */
 
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { ApplicationTemplate } from '../../../generated/s3.player.api';
+import { ApplicationTemplate } from '../../../generated/player-api';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ApplicationService } from '../../../generated/s3.player.api/api/application.service';
+import { ApplicationService } from '../../../generated/player-api/api/application.service';
 
 export interface Action {
   Value: string;

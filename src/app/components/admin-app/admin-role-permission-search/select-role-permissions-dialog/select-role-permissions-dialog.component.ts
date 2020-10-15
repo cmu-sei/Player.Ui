@@ -13,7 +13,7 @@ import { Component, Inject, OnInit, AfterContentInit } from '@angular/core';
 import {
   PermissionService,
   RoleService,
-} from '../../../../generated/s3.player.api';
+} from '../../../../generated/player-api';
 
 @Component({
   selector: 'select-role-permissions-dialog',

@@ -15,8 +15,8 @@ import {
   Permission,
   PermissionService,
   PermissionForm,
-} from '../../../generated/s3.player.api';
-import { Role, RoleService, RoleForm } from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
+import { Role, RoleService, RoleForm } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { FormControl } from '@angular/forms';
 

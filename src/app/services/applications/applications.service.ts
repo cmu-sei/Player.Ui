@@ -28,7 +28,7 @@ export class ApplicationsService {
   ): Observable<Array<ApplicationData>> {
     return this.http
       .get<Array<ApplicationData>>(
-        `${this.settings.settings.ApiUrl}/teams/${teamId}/application-instances`
+        `${this.settings.settings.ApiUrl}/api/teams/${teamId}/application-instances`
       )
       .pipe(
         catchError((err) => {

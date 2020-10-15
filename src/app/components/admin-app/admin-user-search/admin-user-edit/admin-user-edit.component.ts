@@ -22,7 +22,7 @@ import {
   RoleService,
   Permission,
   PermissionService,
-} from '../../../../generated/s3.player.api';
+} from '../../../../generated/player-api';
 import { ErrorStateMatcher } from '@angular/material/core';
 import {
   FormControl,
