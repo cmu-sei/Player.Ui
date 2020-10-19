@@ -22,7 +22,7 @@ import { ComnAuthQuery, ComnAuthService, Theme } from '@crucible/common';
 import { User } from 'oidc-client';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-import { Application } from '../../../generated/s3.player.api';
+import { Application } from '../../../generated/player-api';
 import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';

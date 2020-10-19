@@ -17,7 +17,7 @@ import {
   ApplicationInstanceForm,
   View,
   ApplicationTemplate,
-} from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 
 export enum ObjectType {

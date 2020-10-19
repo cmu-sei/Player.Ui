@@ -88,8 +88,8 @@ import { AddRemoveUsersDialogComponent } from './components/shared/add-remove-us
 import { ConfirmDialogComponent } from './components/shared/confirm-dialog/confirm-dialog.component';
 import { SystemMessageComponent } from './components/shared/system-message/system-message.component';
 import { TopbarComponent } from './components/shared/top-bar/topbar.component';
-import { BASE_PATH } from './generated/s3.player.api';
-import { ApiModule as SwaggerCodegenApiModule } from './generated/s3.player.api/api.module';
+import { BASE_PATH } from './generated/player-api';
+import { ApiModule as SwaggerCodegenApiModule } from './generated/player-api/api.module';
 import { ApplicationsService } from './services/applications/applications.service';
 import { DialogService } from './services/dialog/dialog.service';
 import { ErrorService } from './services/error/error.service';

@@ -26,13 +26,13 @@ import {
   TeamService,
   TeamMembershipService,
   TeamMembership,
-} from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
 import {
   Role,
   RoleService,
   TeamMembershipForm,
   Permission,
-} from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
 import { forkJoin, Observable } from 'rxjs';
 
 /** User node with related user and application information */
@@ -68,9 +68,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
   public roles: Array<Role>;
 
-  @ViewChild('usersInput') usersInput: ElementRef<
-    HTMLInputElement
-  >;
+  @ViewChild('usersInput') usersInput: ElementRef<HTMLInputElement>;
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 

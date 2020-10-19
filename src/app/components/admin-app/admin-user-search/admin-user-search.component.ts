@@ -18,7 +18,7 @@ import {
   UserService,
   RoleService,
   Role,
-} from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
 
 export interface Action {
   Value: string;

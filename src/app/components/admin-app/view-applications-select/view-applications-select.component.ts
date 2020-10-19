@@ -14,7 +14,7 @@ import {
   ApplicationTemplate,
   ApplicationService,
   Application,
-} from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import {
   FormControl,

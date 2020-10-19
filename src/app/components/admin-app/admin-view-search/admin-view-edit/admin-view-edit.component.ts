@@ -30,14 +30,14 @@ import {
   TeamService,
   ViewService,
   UserService,
-} from '../../../../generated/s3.player.api';
+} from '../../../../generated/player-api';
 import {
   TeamForm,
   ApplicationTemplate,
   ApplicationService,
   Application,
-} from '../../../../generated/s3.player.api';
-import { User } from '../../../../generated/s3.player.api';
+} from '../../../../generated/player-api';
+import { User } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';

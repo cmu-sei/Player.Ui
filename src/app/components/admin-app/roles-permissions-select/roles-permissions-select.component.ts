@@ -24,7 +24,7 @@ import {
   RoleService,
   Permission,
   PermissionService,
-} from '../../../generated/s3.player.api';
+} from '../../../generated/player-api';
 
 export enum ObjectType {
   Unknown,

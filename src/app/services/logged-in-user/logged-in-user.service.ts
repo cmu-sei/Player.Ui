@@ -17,7 +17,7 @@ import {
   RoleService,
   User as PlayerUser,
   UserService,
-} from '../../generated/s3.player.api';
+} from '../../generated/player-api';
 // Used to display Super User text
 export const SUPER_USER = 'Super User';
 

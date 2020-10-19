@@ -33,7 +33,7 @@ export class TeamsService {
   ): Observable<Array<TeamData>> {
     return this.http
       .get<Array<TeamData>>(
-        `${this.settings.settings.ApiUrl}/users/${userGuid}/views/${viewGuid}/teams`
+        `${this.settings.settings.ApiUrl}/api/users/${userGuid}/views/${viewGuid}/teams`
       )
       .pipe(
         map((teams) => {
