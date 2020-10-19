@@ -11,7 +11,7 @@
     "silent_redirect_uri": "http://localhost:4301/auth-callback-silent"
   },
   "NotificationsSettings": {
-    "url": "http://localhost:4300/notifications",
+    "url": "http://localhost:4300/hubs",
     "number_to_display": 4
   },
   "AppTitle": "Player",
