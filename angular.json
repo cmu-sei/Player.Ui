@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "s3.web": {
+    "player.ui": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -54,19 +54,19 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "s3.web:build",
+            "browserTarget": "player.ui:build",
             "port": 4301
           },
           "configurations": {
             "production": {
-              "browserTarget": "s3.web:build:production"
+              "browserTarget": "player.ui:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "s3.web:build"
+            "browserTarget": "player.ui:build"
           }
         },
         "test": {
@@ -93,7 +93,7 @@
         }
       }
     },
-    "s3.web-e2e": {
+    "player.ui-e2e": {
       "root": "",
       "sourceRoot": "",
       "projectType": "application",
@@ -102,7 +102,7 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "s3.web:serve"
+            "devServerTarget": "player.ui:serve"
           }
         },
         "lint": {
@@ -115,7 +115,7 @@
       }
     }
   },
-  "defaultProject": "s3.web",
+  "defaultProject": "player.ui",
   "schematics": {
     "@schematics/angular:component": {
       "prefix": "app",
