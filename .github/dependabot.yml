@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      time: "14:28"
+      time: "06:00"
       timezone: "America/New_York"
     assignees:
       - "sei-aschlackman"
