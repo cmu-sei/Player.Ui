@@ -1,4 +1,4 @@
-# Scenario Player - Web
+# Player UI
 Scenario Player web is the front-end to for the VM player implementing NPM and 
 Angular 
 version 4.0
