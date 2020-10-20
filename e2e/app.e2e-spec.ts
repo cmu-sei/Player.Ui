@@ -10,7 +10,7 @@ DM20-0181
 
 import { AppPage } from './app.po';
 
-describe('s3.web App', () => {
+describe('player.ui App', () => {
   let page: AppPage;
 
   beforeEach(() => {
@@ -22,4 +22,3 @@ describe('s3.web App', () => {
     expect(page.getParagraphText()).toEqual('Welcome to app!');
   });
 });
-

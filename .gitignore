@@ -299,20 +299,7 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
-# Andrew's settings service for dev environment
 */assets/config/settings.env.json
 
 /dist
-/s3.web.sln
-
-# Andrew's settings service for dev environment
-*/assets/config/settings.env.json
-
-# Chad's Swagger-Codegen files that should be ignored
-
-*/src/app/swagger-codegen/s3.player.api/git_push.sh
-*/src/app/swagger-codegen/s3.player.api/README.md
-*/src/app/swagger-codegen/s3.player.api/.gitignore
-*/src/app/swagger-codegen/s3.player.api/.swagger-codegen-ignore
 /docker
-
