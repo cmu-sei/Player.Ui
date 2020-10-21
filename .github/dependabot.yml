@@ -7,6 +7,4 @@ updates:
       time: "06:00"
       timezone: "America/New_York"
     assignees:
-      - "sei-aschlackman"
-      - "sei-noconnor"
-      - "sei-chershberger"
+      - "cmu-sei/crucible-reviewers"
