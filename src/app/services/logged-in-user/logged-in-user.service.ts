@@ -9,7 +9,7 @@ DM20-0181
 */
 
 import { Injectable, OnDestroy } from '@angular/core';
-import { ComnAuthQuery } from '@crucible/common';
+import { ComnAuthQuery } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';

@@ -11,7 +11,7 @@ DM20-0181
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ComnAuthGuardService } from '@crucible/common';
+import { ComnAuthGuardService } from '@cmusei/crucible-common';
 import { AdminAppComponent } from './components/admin-app/admin-app.component';
 import { HomeAppComponent } from './components/home-app/home-app.component';
 import { PlayerComponent } from './components/player/player.component';

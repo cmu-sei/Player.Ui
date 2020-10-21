@@ -12,7 +12,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { SafeUrl, DomSanitizer } from '@angular/platform-browser';
 import { combineLatest, Observable, Subject } from 'rxjs';
-import { ComnAuthQuery, Theme } from '@crucible/common';
+import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
 import { map, shareReplay, tap } from 'rxjs/operators';
 
 @Component({

@@ -17,7 +17,7 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
-import { ComnAuthQuery, ComnAuthService, Theme } from '@crucible/common';
+import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client';
 import { Observable, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
