@@ -60,7 +60,7 @@
     "rxjs-compat": "^6.5.5",
     "rxjs-tslint": "^0.1.8",
     "tether": "^1.4.7",
-    "tslib": "^1.10.0",
+    "tslib": "^1.14.1",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {
