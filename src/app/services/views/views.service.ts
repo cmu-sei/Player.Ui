@@ -10,7 +10,7 @@ DM20-0181
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ComnSettingsService } from '@crucible/common';
+import { ComnSettingsService } from '@cmusei/crucible-common';
 import {
   BehaviorSubject,
   Observable,

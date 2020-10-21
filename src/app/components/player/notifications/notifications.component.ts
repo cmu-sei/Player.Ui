@@ -9,7 +9,7 @@ DM20-0181
 */
 
 import { Component, Input, OnInit } from '@angular/core';
-import { ComnSettingsService } from '@crucible/common';
+import { ComnSettingsService } from '@cmusei/crucible-common';
 import { PushNotificationsService } from 'ng-push-ivy';
 import { NotificationData } from '../../../models/notification-data';
 import { DialogService } from '../../../services/dialog/dialog.service';

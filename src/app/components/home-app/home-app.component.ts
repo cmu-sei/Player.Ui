@@ -9,7 +9,7 @@ DM20-0181
 */
 
 import { Component, OnInit } from '@angular/core';
-import { ComnSettingsService } from '@crucible/common';
+import { ComnSettingsService } from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 
 @Component({

@@ -18,7 +18,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ComnAuthQuery, ComnAuthService, Theme } from '@crucible/common';
+import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User } from 'oidc-client';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
