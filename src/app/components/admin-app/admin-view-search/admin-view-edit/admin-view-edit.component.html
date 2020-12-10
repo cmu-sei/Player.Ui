@@ -263,9 +263,20 @@ DM20-0181
           <button type="button" mat-stroked-button (click)="fileInput.click()">Choose File</button>
           <input hidden multiple (change)="selectFile($event.target.files)" #fileInput type="file">
           <mat-list>
-            <mat-list-item *ngFor="let fp of filesToUpload">{{fp.name}}</mat-list-item>
+            <mat-list-item *ngFor="let playerFile of files">
+              <button *ngIf="filesUploaded"
+                mat-icon-button
+                ngxClipboard
+                [cbContent]="playerFile.path"
+                title="Copy:  {{ playerFile.path }}"
+              >
+               <mat-icon style="transform: scale(0.85);"svgIcon="ic_clipboard_copy"></mat-icon>
+              </button>
+              {{playerFile.file.name}}
+            </mat-list-item>
           </mat-list>
         </div>
+
         <div class="block">
           <mat-form-field>
             <mat-label>Select Teams</mat-label>
@@ -274,9 +285,11 @@ DM20-0181
             </mat-select>
           </mat-form-field>
         </div>
+
         <div class="block">
-          <button type="button" mat-stroked-button (click)="uploadFile()">Submit</button>
+          <button type="button" mat-stroked-button (click)="uploadFile()">Generate URL(s)</button>
         </div>
+        
       </mat-step>
     </mat-vertical-stepper>
   </mat-dialog-content>

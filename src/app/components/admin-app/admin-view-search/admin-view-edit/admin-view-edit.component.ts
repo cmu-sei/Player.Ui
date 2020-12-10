@@ -93,7 +93,8 @@ export class AdminViewEditComponent implements OnInit {
     viewId: '',
   };
 
-  public filesToUpload: File[];
+  public files: PlayerFile[];
+  public filesUploaded: boolean;
   public teamsForFile: string[];
 
   constructor(
@@ -113,7 +114,9 @@ export class AdminViewEditComponent implements OnInit {
     this.isLoadingTeams = false;
     this.view = undefined;
     this.teams = new Array<TeamUserApp>();
+    this.files = new Array<PlayerFile>();
     this.teamsForFile = new Array<string>();
+    this.filesUploaded = false;
   }
 
   /**
@@ -367,24 +370,33 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
-   * Selects the file(s) to be uploaded
+   * Selects the file(s) to be uploaded. Called when file selection is changed
    */
   selectFile(files: FileList) {
-    this.filesToUpload = Array.from(files);
+    this.filesUploaded = false;
+
+    const filesToUpload = Array.from(files);
+    for (let fp of filesToUpload) {
+      this.files.push(new PlayerFile(fp));
+    }
   }
 
   /**
    * Uploads a file to the specified team in this view
-   * Probably makes more sense to bind this to the done button, but keeping for testing purposes for now
    */
   uploadFile() {
     console.log("Teams: ");
     console.log(this.teamsForFile);
-    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.filesToUpload).subscribe({
-      next(x) { console.log("Got a next value: " + x); },
-      error(err) { console.log("Got an error: " + err); },
-      complete() { console.log("Complete"); }
-    })
+    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.files.map((f) => f.file)).subscribe(
+      data => {
+        data.forEach((elem, i) => {
+          this.files[i].path = elem.path;
+        });
+        this.filesUploaded = true;
+      },
+      err => { console.log("Got an error: " + err); },
+      () => { console.log('Complete'); }
+    )
   }
 
 } // End Class
@@ -397,5 +409,14 @@ export class UserErrorStateMatcher implements ErrorStateMatcher {
   ): boolean {
     const isSubmitted = form && form.submitted;
     return !!(control && control.invalid && (control.dirty || isSubmitted));
+  }
+}
+
+class PlayerFile {
+  file: File;
+  path: string;
+
+  constructor(file: File) {
+    this.file = file;
   }
 }
