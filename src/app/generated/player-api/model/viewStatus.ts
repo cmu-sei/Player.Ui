@@ -11,13 +11,10 @@
  */
 
 
-export interface ViewMembership { 
-    id?: string;
-    userId?: string;
-    userName?: string | null;
-    viewId?: string;
-    viewName?: string | null;
-    primaryTeamId?: string;
-    primaryTeamName?: string | null;
-}
+export type ViewStatus = 'Active' | 'Inactive';
+
+export const ViewStatus = {
+    Active: 'Active' as ViewStatus,
+    Inactive: 'Inactive' as ViewStatus
+};
 

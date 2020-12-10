@@ -11,13 +11,12 @@
  */
 
 
-export interface ViewMembership { 
-    id?: string;
-    userId?: string;
-    userName?: string | null;
-    viewId?: string;
-    viewName?: string | null;
-    primaryTeamId?: string;
-    primaryTeamName?: string | null;
-}
+export type NotificationPriority = 'Normal' | 'Elevated' | 'High' | 'System';
+
+export const NotificationPriority = {
+    Normal: 'Normal' as NotificationPriority,
+    Elevated: 'Elevated' as NotificationPriority,
+    High: 'High' as NotificationPriority,
+    System: 'System' as NotificationPriority
+};
 

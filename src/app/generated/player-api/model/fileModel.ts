@@ -11,13 +11,11 @@
  */
 
 
-export interface ViewMembership { 
+export interface FileModel { 
     id?: string;
-    userId?: string;
-    userName?: string | null;
+    name?: string | null;
     viewId?: string;
-    viewName?: string | null;
-    primaryTeamId?: string;
-    primaryTeamName?: string | null;
+    teamIds?: Array<string> | null;
+    path?: string | null;
 }
 

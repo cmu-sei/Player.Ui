@@ -26,6 +26,7 @@ import {
 } from '@angular/forms';
 import {
   View,
+  ViewStatus,
   Team,
   TeamService,
   ViewService,
@@ -76,7 +77,7 @@ export class AdminViewEditComponent implements OnInit {
   public descriptionFormControl = new FormControl('', [Validators.required]);
 
   public matcher = new UserErrorStateMatcher();
-  public viewStates = Object.values(View.StatusEnum);
+  public viewStates = Object.values(ViewStatus);
   public isLinear = false;
 
   public view: View;

@@ -11,7 +11,7 @@ DM20-0181
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { View, ViewService } from '../../../generated/player-api';
+import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
@@ -90,18 +90,18 @@ export class AdminViewSearchComponent implements OnInit {
         this.viewService.getView(viewGuid).subscribe((view) => {
           let msg = '';
           let title = '';
-          let activation = View.StatusEnum.Inactive;
+          let activation = ViewStatus.Inactive;
           if (
             view.status === undefined ||
-            view.status === View.StatusEnum.Inactive
+            view.status === ViewStatus.Inactive
           ) {
             msg = 'Do you wish to Activate view ' + view.name + '?';
             title = 'Activate View?';
-            activation = View.StatusEnum.Active;
+            activation = ViewStatus.Active;
           } else {
             msg = 'Do you wish to deactivate view ' + view.name + '?';
             title = 'Deactivate View?';
-            activation = View.StatusEnum.Inactive;
+            activation = ViewStatus.Inactive;
           }
           this.dialogService.confirm(title, msg).subscribe((result) => {
             if (result['confirm']) {
@@ -131,7 +131,7 @@ export class AdminViewSearchComponent implements OnInit {
     const view = <View>{
       name: 'New View',
       description: 'Add description',
-      status: View.StatusEnum.Active,
+      status: ViewStatus.Active,
     };
     this.viewService.createView(view).subscribe((ex) => {
       this.refreshViews();
