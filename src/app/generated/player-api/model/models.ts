@@ -1,3 +1,4 @@
+export * from './apiError';
 export * from './application';
 export * from './applicationInstance';
 export * from './applicationInstanceForm';

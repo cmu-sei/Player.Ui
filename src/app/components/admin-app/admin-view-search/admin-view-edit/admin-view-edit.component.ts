@@ -93,9 +93,8 @@ export class AdminViewEditComponent implements OnInit {
     viewId: '',
   };
 
-  // Will need to change these for multiple files, just testing for now
   public filesToUpload: File[];
-  public teamForFile: string;
+  public teamsForFile: string[];
 
   constructor(
     public viewService: ViewService,
@@ -114,6 +113,7 @@ export class AdminViewEditComponent implements OnInit {
     this.isLoadingTeams = false;
     this.view = undefined;
     this.teams = new Array<TeamUserApp>();
+    this.teamsForFile = new Array<string>();
   }
 
   /**
@@ -378,7 +378,9 @@ export class AdminViewEditComponent implements OnInit {
    * Probably makes more sense to bind this to the done button, but keeping for testing purposes for now
    */
   uploadFile() {
-    this.fileService.uploadMultipleFiles(this.view.id, [this.teamForFile], this.filesToUpload).subscribe({
+    console.log("Teams: ");
+    console.log(this.teamsForFile);
+    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.filesToUpload).subscribe({
       next(x) { console.log("Got a next value: " + x); },
       error(err) { console.log("Got an error: " + err); },
       complete() { console.log("Complete"); }
