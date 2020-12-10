@@ -1,4 +1,3 @@
-export * from './apiError';
 export * from './application';
 export * from './applicationInstance';
 export * from './applicationInstanceForm';
@@ -7,7 +6,6 @@ export * from './applicationTemplateForm';
 export * from './fileModel';
 export * from './inlineObject';
 export * from './inlineObject1';
-export * from './inlineObject2';
 export * from './notification';
 export * from './notificationPriority';
 export * from './notificationType';

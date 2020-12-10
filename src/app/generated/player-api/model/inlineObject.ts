@@ -14,6 +14,6 @@
 export interface InlineObject { 
     viewId?: string;
     teamIds?: Array<string> | null;
-    ToUpload?: Blob | null;
+    ToUpload?: Array<Blob> | null;
 }
 

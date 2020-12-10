@@ -459,94 +459,7 @@ export class FileService {
     }
 
     /**
-     * Upload a file
-     * @param viewId 
-     * @param teamIds 
-     * @param toUpload 
-     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
-     * @param reportProgress flag to report request and response progress.
-     */
-    public uploadFile(viewId?: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<any>;
-    public uploadFile(viewId?: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<any>>;
-    public uploadFile(viewId?: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<any>>;
-    public uploadFile(viewId?: string, teamIds?: Array<string>, toUpload?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
-
-        let headers = this.defaultHeaders;
-
-        // authentication (oauth2) required
-        if (this.configuration.accessToken) {
-            const accessToken = typeof this.configuration.accessToken === 'function'
-                ? this.configuration.accessToken()
-                : this.configuration.accessToken;
-            headers = headers.set('Authorization', 'Bearer ' + accessToken);
-        }
-
-        let httpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
-        if (httpHeaderAcceptSelected === undefined) {
-            // to determine the Accept header
-            const httpHeaderAccepts: string[] = [
-                'application/json'
-            ];
-            httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
-        }
-        if (httpHeaderAcceptSelected !== undefined) {
-            headers = headers.set('Accept', httpHeaderAcceptSelected);
-        }
-
-        // to determine the Content-Type header
-        const consumes: string[] = [
-            'multipart/form-data'
-        ];
-
-        const canConsumeForm = this.canConsumeForm(consumes);
-
-        let formParams: { append(param: string, value: any): any; };
-        let useForm = false;
-        let convertFormParamsToString = false;
-        // use FormData to transmit files using content-type "multipart/form-data"
-        // see https://stackoverflow.com/questions/4007969/application-x-www-form-urlencoded-or-multipart-form-data
-        useForm = canConsumeForm;
-        if (useForm) {
-            formParams = new FormData();
-        } else {
-            formParams = new HttpParams({encoder: this.encoder});
-        }
-
-        if (viewId !== undefined) {
-            formParams = formParams.append('viewId', <any>viewId) as any || formParams;
-        }
-        if (teamIds) {
-            if (useForm) {
-                teamIds.forEach((element) => {
-                    formParams = formParams.append('teamIds', <any>element) as any || formParams;
-            })
-            } else {
-                formParams = formParams.append('teamIds', teamIds.join(COLLECTION_FORMATS['csv'])) as any || formParams;
-            }
-        }
-        if (toUpload !== undefined) {
-            formParams = formParams.append('ToUpload', <any>toUpload) as any || formParams;
-        }
-
-        let responseType: 'text' | 'json' = 'json';
-        if(httpHeaderAcceptSelected && httpHeaderAcceptSelected.startsWith('text')) {
-            responseType = 'text';
-        }
-
-        return this.httpClient.post<any>(`${this.configuration.basePath}/api/files`,
-            convertFormParamsToString ? formParams.toString() : formParams,
-            {
-                responseType: <any>responseType,
-                withCredentials: this.configuration.withCredentials,
-                headers: headers,
-                observe: observe,
-                reportProgress: reportProgress
-            }
-        );
-    }
-
-    /**
-     * Upload multiple files
+     * Upload file(s)
      * @param viewId 
      * @param teamIds 
      * @param toUpload 
@@ -626,7 +539,7 @@ export class FileService {
             responseType = 'text';
         }
 
-        return this.httpClient.post<any>(`${this.configuration.basePath}/api/files/multiple`,
+        return this.httpClient.post<any>(`${this.configuration.basePath}/api/files`,
             convertFormParamsToString ? formParams.toString() : formParams,
             {
                 responseType: <any>responseType,
