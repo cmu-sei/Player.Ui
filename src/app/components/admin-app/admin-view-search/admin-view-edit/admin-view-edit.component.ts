@@ -31,6 +31,7 @@ import {
   TeamService,
   ViewService,
   UserService,
+  FileService,
 } from '../../../../generated/player-api';
 import {
   TeamForm,
@@ -92,11 +93,16 @@ export class AdminViewEditComponent implements OnInit {
     viewId: '',
   };
 
+  // Will need to change these for multiple files, just testing for now
+  public filesToUpload: File[];
+  public teamForFile: string;
+
   constructor(
     public viewService: ViewService,
     public teamService: TeamService,
     public dialogService: DialogService,
     public userService: UserService,
+    public fileService: FileService,
     public applicationService: ApplicationService,
     public zone: NgZone
   ) {}
@@ -359,6 +365,26 @@ export class AdminViewEditComponent implements OnInit {
           });
       });
   }
+
+  /**
+   * Selects the file(s) to be uploaded
+   */
+  selectFile(files: FileList) {
+    this.filesToUpload = Array.from(files);
+  }
+
+  /**
+   * Uploads a file to the specified team in this view
+   * Probably makes more sense to bind this to the done button, but keeping for testing purposes for now
+   */
+  uploadFile() {
+    this.fileService.uploadMultipleFiles(this.view.id, [this.teamForFile], this.filesToUpload).subscribe({
+      next(x) { console.log("Got a next value: " + x); },
+      error(err) { console.log("Got an error: " + err); },
+      complete() { console.log("Complete"); }
+    })
+  }
+
 } // End Class
 
 /** Error when invalid control is dirty, touched, or submitted. */

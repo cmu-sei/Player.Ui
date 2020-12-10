@@ -256,6 +256,12 @@ DM20-0181
           </mat-expansion-panel>
         </mat-accordion>
       </mat-step>
+
+      <mat-step label="Files">
+        <input type="file" multiple (change)="selectFile($event.target.files)">
+        <input type="text" [(ngModel)]="teamForFile">
+        <button (click)="uploadFile()">Submit</button>
+      </mat-step>
     </mat-vertical-stepper>
   </mat-dialog-content>
 
