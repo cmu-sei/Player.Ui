@@ -14,6 +14,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { ComnAuthGuardService } from '@cmusei/crucible-common';
 import { AdminAppComponent } from './components/admin-app/admin-app.component';
 import { HomeAppComponent } from './components/home-app/home-app.component';
+import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { PlayerComponent } from './components/player/player.component';
 
 export const ROUTES: Routes = [
@@ -42,6 +43,12 @@ export const ROUTES: Routes = [
     component: AdminAppComponent,
     canActivate: [ComnAuthGuardService],
   },
+  // Placeholder while developing file browsing component
+  {
+    path: 'view/:id/files',
+    component: FileBrowseComponent,
+    canActivate: [ComnAuthGuardService],
+  }
 ];
 
 @NgModule({

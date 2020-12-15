@@ -264,9 +264,9 @@ export class FileService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getTeamFiles(teamId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<FileModel>;
-    public getTeamFiles(teamId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<FileModel>>;
-    public getTeamFiles(teamId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<FileModel>>;
+    public getTeamFiles(teamId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<FileModel>>;
+    public getTeamFiles(teamId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<FileModel>>>;
+    public getTeamFiles(teamId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<FileModel>>>;
     public getTeamFiles(teamId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
         if (teamId === null || teamId === undefined) {
             throw new Error('Required parameter teamId was null or undefined when calling getTeamFiles.');
@@ -302,7 +302,7 @@ export class FileService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<FileModel>(`${this.configuration.basePath}/api/teams/${encodeURIComponent(String(teamId))}/files`,
+        return this.httpClient.get<Array<FileModel>>(`${this.configuration.basePath}/api/teams/${encodeURIComponent(String(teamId))}/files`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -319,9 +319,9 @@ export class FileService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getViewFiles(viewId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<FileModel>;
-    public getViewFiles(viewId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<FileModel>>;
-    public getViewFiles(viewId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<FileModel>>;
+    public getViewFiles(viewId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<FileModel>>;
+    public getViewFiles(viewId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<FileModel>>>;
+    public getViewFiles(viewId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<FileModel>>>;
     public getViewFiles(viewId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
         if (viewId === null || viewId === undefined) {
             throw new Error('Required parameter viewId was null or undefined when calling getViewFiles.');
@@ -357,7 +357,7 @@ export class FileService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<FileModel>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(viewId))}/files`,
+        return this.httpClient.get<Array<FileModel>>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(viewId))}/files`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -460,6 +460,7 @@ export class FileService {
 
     /**
      * Upload file(s)
+     * File objects will be returned in the same order as their respective files within the form.
      * @param viewId 
      * @param teamIds 
      * @param toUpload 

@@ -99,6 +99,7 @@ import { NotificationService } from './services/notification/notification.servic
 import { SystemMessageService } from './services/system-message/system-message.service';
 import { TeamsService } from './services/teams/teams.service';
 import { ViewsService } from './services/views/views.service';
+import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 
 declare var require: any;
 const settings: ComnSettingsConfig = {
@@ -143,6 +144,7 @@ const settings: ComnSettingsConfig = {
     MatTreeModule,
     MatBadgeModule,
   ],
+  declarations: [],
 })
 export class AngularMaterialModule {}
 
@@ -173,6 +175,7 @@ export class AngularMaterialModule {}
     ViewApplicationsSelectComponent,
     AdminTemplateDetailsComponent,
     TopbarComponent,
+    FileBrowseComponent,
   ],
   imports: [
     BrowserModule,
