@@ -399,6 +399,14 @@ export class AdminViewEditComponent implements OnInit {
     )
   }
 
+  /**
+   * Removes a file from the list of file staged for upload
+   */
+  removeFile(file: PlayerFile) {
+    console.log(file);
+    this.files = this.files.filter(f => f.path != file.path);
+  }
+
 } // End Class
 
 /** Error when invalid control is dirty, touched, or submitted. */

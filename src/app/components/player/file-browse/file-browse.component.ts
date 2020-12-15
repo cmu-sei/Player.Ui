@@ -23,6 +23,7 @@ import { FileModel } from '../../../generated/player-api/model/fileModel';
 export class FileBrowseComponent implements OnInit {
 
   public files: FileModel[];
+
   constructor(
     private fileService: FileService,
     private route: ActivatedRoute,
@@ -43,10 +44,4 @@ export class FileBrowseComponent implements OnInit {
       );
     });
   }
-
-  getURL(path: string) {
-    console.log('In getURL')
-    return this.sanitizer.bypassSecurityTrustResourceUrl(path);
-  }
-
 }

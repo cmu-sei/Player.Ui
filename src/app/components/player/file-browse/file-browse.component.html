@@ -8,15 +8,19 @@ DM20-0181 -->
 <header>
   <h1>Files</h1>
 </header>
+<!-- TODO figure out why expansion panels overlap each other-->
 <mat-list>
   <mat-list-item *ngFor="let file of files">
-    <mat-expansion-panel>
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          {{file.name}}
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <iframe src="https://filebin.net/15teod66b4ggq7ra/fileupload_notes.txt?t=2dyxt40u"></iframe>
-    </mat-expansion-panel>
+    <mat-accordian multi>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{file.name}}
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <!-- Note that this won't work with file:/// -->
+        <iframe src="https://example.com"></iframe>
+      </mat-expansion-panel>
+    </mat-accordian>
   </mat-list-item>
 </mat-list>
