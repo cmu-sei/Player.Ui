@@ -14,7 +14,14 @@ DM20-0181 -->
 </div>
 
 <mat-list>
-  <mat-list-item *ngFor="let file of filtered()" (click)="downloadFile(file.id, file.name)">
-    {{file.name}}
+  <mat-list-item *ngFor="let file of filtered()">
+    <div>
+      {{file.name}}
+    </div>
+    <div>
+      <button mat-raised-button (click)="downloadFile(file.id, file.name)">
+        Download
+      </button>
+    </div>
   </mat-list-item>
 </mat-list>
