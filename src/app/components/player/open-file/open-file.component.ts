@@ -41,7 +41,7 @@ export class OpenFileComponent implements OnInit {
         err => { window.alert('Error downloading file'); },
         () => { console.log('Got a next value'); }
       )
-    })
+    });
   }
 
 }

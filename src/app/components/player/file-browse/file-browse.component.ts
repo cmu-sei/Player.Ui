@@ -44,4 +44,18 @@ export class FileBrowseComponent implements OnInit {
       );
     });
   }
+
+  downloadFile(id: string, name: string) {
+    this.fileService.download(id).subscribe(
+      data => {
+        const url = window.URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = name;
+        link.click();
+      },
+      err => { window.alert('Error downloading file'); },
+      () => { console.log('Got a next value'); }
+    );
+  }
 }
