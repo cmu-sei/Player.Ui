@@ -10,9 +10,8 @@ DM20-0181
 
 
 import { Component, OnInit } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
-import { FileService } from '../../../generated/player-api';
+import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
 
 @Component({
@@ -22,12 +21,14 @@ import { FileModel } from '../../../generated/player-api/model/fileModel';
 })
 export class FileBrowseComponent implements OnInit {
 
-  public files: FileModel[];
+  public files = new Array<FileModel>();
+  public teams = new Set<Team>();
+  public currentTeam = '';
 
   constructor(
     private fileService: FileService,
-    private route: ActivatedRoute,
-    private sanitizer: DomSanitizer  
+    private teamService: TeamService,
+    private route: ActivatedRoute, 
   ) { }
 
   ngOnInit(): void {
@@ -38,10 +39,20 @@ export class FileBrowseComponent implements OnInit {
     this.route.params.subscribe(params => {
       const viewId = params['id'];
       this.fileService.getViewFiles(viewId).subscribe(
-        data => { this.files = data; console.log(this.files); },
+        data => { 
+          this.files = data;
+          console.log(this.files);
+        },
         err => { console.log('Error fetching files ' + err); },
-        () => { console.log('Done fetching files'); }
       );
+      this.teamService.getMyViewTeams(viewId).subscribe(
+        data => {
+          for (let team of data) {
+            this.teams.add(team);
+          }
+        },
+        err => { console.log('Error fetching teams ' + err); }
+      )
     });
   }
 
@@ -57,5 +68,19 @@ export class FileBrowseComponent implements OnInit {
       err => { window.alert('Error downloading file'); },
       () => { console.log('Got a next value'); }
     );
+  }
+
+  filtered() {
+    let ret = new Array<FileModel>();
+    for (let file of this.files) {
+      if (file.teamIds.includes(this.currentTeam)) {
+        ret.push(file);
+      }
+    }
+    return ret;
+  }
+
+  selectTeam(team: string) {
+    this.currentTeam = team;
   }
 }

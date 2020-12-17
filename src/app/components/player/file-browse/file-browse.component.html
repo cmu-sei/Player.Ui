@@ -8,8 +8,13 @@ DM20-0181 -->
 <header>
   <h1>Files</h1>
 </header>
+
+<div>
+  <button mat-raised-button *ngFor="let team of teams" (click)="selectTeam(team.id)">{{team.name}}</button>
+</div>
+
 <mat-list>
-  <mat-list-item *ngFor="let file of files" (click)="downloadFile(file.id, file.name)">
+  <mat-list-item *ngFor="let file of filtered()" (click)="downloadFile(file.id, file.name)">
     {{file.name}}
   </mat-list-item>
 </mat-list>
