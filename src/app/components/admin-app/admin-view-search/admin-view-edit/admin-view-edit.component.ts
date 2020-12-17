@@ -32,6 +32,7 @@ import {
   ViewService,
   UserService,
   FileService,
+  FileModel,
 } from '../../../../generated/player-api';
 import {
   TeamForm,
@@ -389,8 +390,9 @@ export class AdminViewEditComponent implements OnInit {
     console.log(this.teamsForFile);
     this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.files.map((f) => f.file)).subscribe(
       data => {
-        data.forEach((elem, i) => {
+        data.forEach((elem: FileModel, i: number) => {
           this.files[i].path = elem.path;
+          this.files[i].id = elem.id;
         });
         this.filesUploaded = true;
       },
@@ -405,6 +407,13 @@ export class AdminViewEditComponent implements OnInit {
   removeFile(file: PlayerFile) {
     console.log(file);
     this.files = this.files.filter(f => f.path != file.path);
+  }
+
+  /**
+   * Returns a link to the download endpoint for a particular file
+   */
+  getDownloadLink(id: string) {
+    return `${this.fileService.configuration.basePath}/files/download/${id}`;
   }
 
 } // End Class
@@ -423,6 +432,7 @@ export class UserErrorStateMatcher implements ErrorStateMatcher {
 class PlayerFile {
   file: File;
   path: string;
+  id: string;
 
   constructor(file: File) {
     this.file = file;

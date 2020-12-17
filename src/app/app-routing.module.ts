@@ -15,6 +15,7 @@ import { ComnAuthGuardService } from '@cmusei/crucible-common';
 import { AdminAppComponent } from './components/admin-app/admin-app.component';
 import { HomeAppComponent } from './components/home-app/home-app.component';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
+import { OpenFileComponent } from './components/player/open-file/open-file.component';
 import { PlayerComponent } from './components/player/player.component';
 
 export const ROUTES: Routes = [
@@ -48,7 +49,12 @@ export const ROUTES: Routes = [
     path: 'view/:id/files',
     component: FileBrowseComponent,
     canActivate: [ComnAuthGuardService],
-  }
+  },
+  {
+    path: 'view/:id/file',
+    component: OpenFileComponent,
+    canActivate: [ComnAuthGuardService],
+  },
 ];
 
 @NgModule({
