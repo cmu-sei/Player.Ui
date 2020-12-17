@@ -35,7 +35,7 @@ export class OpenFileComponent implements OnInit {
           const url = window.URL.createObjectURL(data);
           const link = document.createElement('a');
           link.href = url;
-          link.download = 'foo.txt';
+          link.download = fileName;
           link.click();
         },
         err => { window.alert('Error downloading file'); },

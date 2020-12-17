@@ -267,8 +267,8 @@ DM20-0181
               <button *ngIf="filesUploaded"
                 mat-icon-button
                 ngxClipboard
-                [cbContent]="getDownloadLink(playerFile.id)"
-                title="Copy:  {{ getDownloadLink(playerFile.id) }}"
+                [cbContent]="playerFile.link"
+                title="Copy:  {{ playerFile.link }}"
               >
                <mat-icon style="transform: scale(0.85);"svgIcon="ic_clipboard_copy"></mat-icon>
               </button>

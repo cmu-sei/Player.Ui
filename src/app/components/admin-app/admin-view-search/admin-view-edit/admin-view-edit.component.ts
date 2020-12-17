@@ -393,6 +393,7 @@ export class AdminViewEditComponent implements OnInit {
         data.forEach((elem: FileModel, i: number) => {
           this.files[i].path = elem.path;
           this.files[i].id = elem.id;
+          this.files[i].link = this.getDownloadLink(this.files[i].id, this.files[i].file.name);
         });
         this.filesUploaded = true;
       },
@@ -412,8 +413,9 @@ export class AdminViewEditComponent implements OnInit {
   /**
    * Returns a link to the download endpoint for a particular file
    */
-  getDownloadLink(id: string) {
-    return `${this.fileService.configuration.basePath}/files/download/${id}`;
+  getDownloadLink(id: string, name: string) {
+    console.log(`id = ${id} name = ${name}`);
+    return `${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`;
   }
 
 } // End Class
@@ -433,6 +435,7 @@ class PlayerFile {
   file: File;
   path: string;
   id: string;
+  link: string;
 
   constructor(file: File) {
     this.file = file;
