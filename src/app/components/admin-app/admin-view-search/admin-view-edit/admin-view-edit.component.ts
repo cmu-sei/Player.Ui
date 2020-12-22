@@ -479,8 +479,9 @@ export class AdminViewEditComponent implements OnInit {
    * @param name: The current name of the file 
    */
   editFile(id: string, name: string, teams: string[]) {
-    this.dialogService.editFile(id, this.view.id, name, teams).subscribe(val =>{
-      console.log(val);
+    this.dialogService.editFile(id, this.view.id, name, teams).subscribe(val => {
+      let index = this.viewFiles.findIndex(f => f.id === id);
+      this.viewFiles[index].name = val['name'];
     })
   }
 

@@ -12,6 +12,7 @@
 
 
 export interface InlineObject1 { 
+    Name?: string | null;
     TeamIds?: Array<string> | null;
     ToUpload?: Blob | null;
 }

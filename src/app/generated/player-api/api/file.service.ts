@@ -423,15 +423,16 @@ export class FileService {
      * Update a file
      * Takes a form with fields for team IDs and a new file. File can be assigned to different teams and/or replaced.             The file entry will be changed to point at the newly uploaded file.
      * @param fileId The id of the file
+     * @param name 
      * @param teamIds 
      * @param toUpload 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateFile(fileId: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<FileModel>;
-    public updateFile(fileId: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<FileModel>>;
-    public updateFile(fileId: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<FileModel>>;
-    public updateFile(fileId: string, teamIds?: Array<string>, toUpload?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateFile(fileId: string, name?: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<FileModel>;
+    public updateFile(fileId: string, name?: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<FileModel>>;
+    public updateFile(fileId: string, name?: string, teamIds?: Array<string>, toUpload?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<FileModel>>;
+    public updateFile(fileId: string, name?: string, teamIds?: Array<string>, toUpload?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
         if (fileId === null || fileId === undefined) {
             throw new Error('Required parameter fileId was null or undefined when calling updateFile.');
         }
@@ -479,6 +480,9 @@ export class FileService {
             formParams = new HttpParams({encoder: this.encoder});
         }
 
+        if (name !== undefined) {
+            formParams = formParams.append('Name', <any>name) as any || formParams;
+        }
         if (teamIds) {
             if (useForm) {
                 teamIds.forEach((element) => {

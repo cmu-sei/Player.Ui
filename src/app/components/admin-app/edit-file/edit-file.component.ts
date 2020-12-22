@@ -10,7 +10,8 @@ DM20-0181
 
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { FileService, Team, TeamService } from '../../../generated/player-api';
+import { MatDialogRef } from '@angular/material/dialog';
+import { FileModel, FileService, Team, TeamService } from '../../../generated/player-api';
 
 @Component({
   selector: 'app-edit-file',
@@ -30,7 +31,8 @@ export class EditFileComponent implements OnInit {
   constructor(
     private teamService: TeamService,
     private fileService: FileService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private dialogRef: MatDialogRef<EditFileComponent>,
   ) { }
 
   ngOnInit(): void {
@@ -42,14 +44,29 @@ export class EditFileComponent implements OnInit {
     })
   }
 
+  /**
+   * Get the teams in this view available to the user
+   */
   getTeams() {
     this.teamService.getMyViewTeams(this.viewId).subscribe(data => {
       this.availableTeams = data;
     });
   }
 
+  /**
+   * Submit the form and send the new name back to the parent component
+   */
   submit() {
-    console.log('Form submitted');
+    const name = this.form.get('name').value as string;
+    const teams = this.form.get('teamIDs').value as string[];
+    this.fileService.updateFile(this.fileId, name, teams, null).subscribe(
+      data => { 
+        this.dialogRef.close({
+          name: name
+        });
+      },
+      err => { console.log('Error updating file: ' + err) },
+    );
   }
 
 }
