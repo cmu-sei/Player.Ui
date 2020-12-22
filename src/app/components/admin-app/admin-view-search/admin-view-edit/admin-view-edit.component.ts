@@ -98,6 +98,8 @@ export class AdminViewEditComponent implements OnInit {
   public filesUploaded: boolean;
   public teamsForFile: string[];
 
+  public viewFiles: FileModel[];
+
   constructor(
     public viewService: ViewService,
     public teamService: TeamService,
@@ -333,8 +335,11 @@ export class AdminViewEditComponent implements OnInit {
    * @param event SelectionChange event
    */
   onViewStepChange(event: any) {
-    // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
-    if (event.selectedIndex === 2) {
+    // Index 3 is the files step. Grab the files already in the view.
+    if (event.selectedIndex == 3) {
+      this.getViewFiles();
+    } else if (event.selectedIndex === 2) {
+      // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
       this.currentTeam = undefined;
       this.updateViewTeams();
     } else if (event.selectedIndex === 1) {
@@ -416,6 +421,16 @@ export class AdminViewEditComponent implements OnInit {
   getDownloadLink(id: string, name: string) {
     console.log(`id = ${id} name = ${name}`);
     return `${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`;
+  }
+
+  /**
+   * Get the files in this view that can be accessed by the user
+   */
+  getViewFiles() {
+    this.fileService.getViewFiles(this.view.id).subscribe(
+      data => { this.viewFiles = data; console.log(this.viewFiles); },
+      err => { console.log('Error getting files ' + err); },
+    );
   }
 
 } // End Class

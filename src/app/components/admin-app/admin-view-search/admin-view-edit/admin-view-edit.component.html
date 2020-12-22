@@ -263,6 +263,9 @@ DM20-0181
           <button type="button" mat-stroked-button (click)="fileInput.click()">Choose File</button>
           <input hidden multiple (change)="selectFile($event.target.files)" #fileInput type="file">
           <mat-list>
+            <mat-list-item *ngFor="let viewFile of viewFiles">
+              {{viewFile.name}}
+            </mat-list-item>
             <mat-list-item *ngFor="let playerFile of files">
               <button *ngIf="filesUploaded"
                 mat-icon-button
