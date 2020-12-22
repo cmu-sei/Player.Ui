@@ -271,6 +271,9 @@ DM20-0181
               <button mat-raised-button (click)="deleteFile(viewFile.id)">
                 Delete
               </button>
+              <button mat-raised-button (click)="getDownloadLink(viewFile.id, viewFile.name)">
+                Copy Link
+              </button>
             </mat-list-item>
             <mat-list-item *ngFor="let playerFile of files">
               <button *ngIf="filesUploaded"

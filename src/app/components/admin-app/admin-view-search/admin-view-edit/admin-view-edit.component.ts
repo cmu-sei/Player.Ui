@@ -44,6 +44,7 @@ import { User } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
+import { Clipboard } from '@angular/cdk/clipboard';
 
 /** Team node with related user and application information */
 export class TeamUserApp {
@@ -107,7 +108,8 @@ export class AdminViewEditComponent implements OnInit {
     public userService: UserService,
     public fileService: FileService,
     public applicationService: ApplicationService,
-    public zone: NgZone
+    public zone: NgZone,
+    public clipboard: Clipboard,
   ) {}
 
   /**
@@ -399,7 +401,7 @@ export class AdminViewEditComponent implements OnInit {
         data.forEach((elem: FileModel, i: number) => {
           this.files[i].path = elem.path;
           this.files[i].id = elem.id;
-          this.files[i].link = this.getDownloadLink(this.files[i].id, this.files[i].file.name);
+          // this.files[i].link = this.getDownloadLink(this.files[i].id, this.files[i].file.name);
         });
         this.filesUploaded = true;
       },
@@ -423,7 +425,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   getDownloadLink(id: string, name: string) {
     console.log(`id = ${id} name = ${name}`);
-    return `${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`;
+    this.clipboard.copy(`${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`);
   }
 
   /**
