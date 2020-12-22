@@ -27,6 +27,7 @@ export class EditFileComponent implements OnInit {
   @Input() oldTeams: string[];
 
   availableTeams: Team[];
+  extension: string;
 
   constructor(
     private teamService: TeamService,
@@ -37,6 +38,7 @@ export class EditFileComponent implements OnInit {
 
   ngOnInit(): void {
     this.getTeams();
+    this.extension = '.' + this.oldName.split('.')[1];
 
     this.form = this.formBuilder.group({
       name: [this.oldName],
@@ -57,7 +59,8 @@ export class EditFileComponent implements OnInit {
    * Submit the form and send the new name back to the parent component
    */
   submit() {
-    const name = this.form.get('name').value as string;
+    // Do not allow the file extension to change. Should probably do this in the form somehow (ie immutable .ext in input)
+    const name = this.form.get('name').value as string + this.extension;
     const teams = this.form.get('teamIDs').value as string[];
     this.fileService.updateFile(this.fileId, name, teams, null).subscribe(
       data => { 
