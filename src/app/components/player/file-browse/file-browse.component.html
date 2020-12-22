@@ -19,13 +19,8 @@ DM20-0181 -->
       {{file.name}}
     </div>
     <div>
-      <button mat-raised-button (click)="downloadFile(file.id, file.name)">
-        Download
-      </button>
-    </div>
-    <div>
-      <button mat-raised-button (click)="deleteFile(file.id)">
-        Delete
+      <button mat-icon-button (click)="downloadFile(viewFile.id, viewFile.name)">
+        <mat-icon style="transform: scale(0.85);" svgIcon="ic_get_app"></mat-icon>
       </button>
     </div>
   </mat-list-item>

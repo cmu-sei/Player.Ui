@@ -83,14 +83,4 @@ export class FileBrowseComponent implements OnInit {
   selectTeam(team: string) {
     this.currentTeam = team;
   }
-
-  deleteFile(id: string) {
-    this.fileService.deleteFile(id).subscribe(resp => {
-      if (resp != null) {
-        window.alert('Error deleting file');
-      } else {
-        this.files = this.files.filter(f => f.id != id);
-      }
-    });
-  }
 }
