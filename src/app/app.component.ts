@@ -116,6 +116,18 @@ export class AppComponent implements OnDestroy {
         'assets/svg-icons/ic_crucible_player.svg'
       )
     );
+    this.iconRegistry.addSvgIcon(
+      'ic_delete',
+      this.sanitizer.bypassSecurityTrustResourceUrl(
+        'assets/svg-icons/ic_delete_24px.svg'
+      )
+    );
+    this.iconRegistry.addSvgIcon(
+      'ic_get_app',
+      this.sanitizer.bypassSecurityTrustResourceUrl(
+        'assets/svg-icons/ic_get_app_24px.svg'
+      )
+    );
   }
 
   setTheme(theme: Theme) {

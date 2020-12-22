@@ -95,8 +95,7 @@ export class AdminViewEditComponent implements OnInit {
     viewId: '',
   };
 
-  public files: PlayerFile[];
-  public filesUploaded: boolean;
+  public staged: PlayerFile[];
   public teamsForFile: string[];
 
   public viewFiles: FileModel[];
@@ -119,9 +118,8 @@ export class AdminViewEditComponent implements OnInit {
     this.isLoadingTeams = false;
     this.view = undefined;
     this.teams = new Array<TeamUserApp>();
-    this.files = new Array<PlayerFile>();
+    this.staged = new Array<PlayerFile>();
     this.teamsForFile = new Array<string>();
-    this.filesUploaded = false;
   }
 
   /**
@@ -339,7 +337,7 @@ export class AdminViewEditComponent implements OnInit {
   onViewStepChange(event: any) {
     // Index 3 is the files step. Grab the files already in the view.
     if (event.selectedIndex == 3) {
-      this.files = new Array<PlayerFile>();
+      this.staged = new Array<PlayerFile>();
       this.getViewFiles();
     } else if (event.selectedIndex === 2) {
       // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
@@ -382,11 +380,9 @@ export class AdminViewEditComponent implements OnInit {
    * Selects the file(s) to be uploaded. Called when file selection is changed
    */
   selectFile(files: FileList) {
-    this.filesUploaded = false;
-
     const filesToUpload = Array.from(files);
     for (let fp of filesToUpload) {
-      this.files.push(new PlayerFile(fp));
+      this.staged.push(new PlayerFile(fp));
     }
   }
 
@@ -396,14 +392,13 @@ export class AdminViewEditComponent implements OnInit {
   uploadFile() {
     console.log("Teams: ");
     console.log(this.teamsForFile);
-    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.files.map((f) => f.file)).subscribe(
+    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.staged.map((f) => f.file)).subscribe(
       data => {
         data.forEach((elem: FileModel, i: number) => {
-          this.files[i].path = elem.path;
-          this.files[i].id = elem.id;
-          // this.files[i].link = this.getDownloadLink(this.files[i].id, this.files[i].file.name);
+          this.staged[i].path = elem.path;
+          this.staged[i].id = elem.id;
+          this.staged[i].uploaded = true;
         });
-        this.filesUploaded = true;
       },
       err => { console.log("Got an error: " + err); },
       () => { console.log('Complete'); }
@@ -417,7 +412,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   removeFile(file: PlayerFile) {
     console.log(file);
-    this.files = this.files.filter(f => f.path != file.path);
+    this.staged = this.staged.filter(f => f.path != file.path);
   }
 
   /**
@@ -503,9 +498,10 @@ class PlayerFile {
   file: File;
   path: string;
   id: string;
-  link: string;
+  uploaded: boolean;
 
   constructor(file: File) {
     this.file = file;
+    this.uploaded = false;
   }
 }
