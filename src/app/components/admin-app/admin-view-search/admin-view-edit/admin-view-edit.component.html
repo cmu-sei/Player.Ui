@@ -265,6 +265,12 @@ DM20-0181
           <mat-list>
             <mat-list-item *ngFor="let viewFile of viewFiles">
               {{viewFile.name}}
+              <button mat-raised-button (click)="downloadFile(viewFile.id, viewFile.name)">
+                Download
+              </button>
+              <button mat-raised-button (click)="deleteFile(viewFile.id)">
+                Delete
+              </button>
             </mat-list-item>
             <mat-list-item *ngFor="let playerFile of files">
               <button *ngIf="filesUploaded"

@@ -337,6 +337,7 @@ export class AdminViewEditComponent implements OnInit {
   onViewStepChange(event: any) {
     // Index 3 is the files step. Grab the files already in the view.
     if (event.selectedIndex == 3) {
+      this.files = new Array<PlayerFile>();
       this.getViewFiles();
     } else if (event.selectedIndex === 2) {
       // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
@@ -409,6 +410,8 @@ export class AdminViewEditComponent implements OnInit {
 
   /**
    * Removes a file from the list of file staged for upload
+   * 
+   * @param file: The file to remove from the list
    */
   removeFile(file: PlayerFile) {
     console.log(file);
@@ -431,6 +434,54 @@ export class AdminViewEditComponent implements OnInit {
       data => { this.viewFiles = data; console.log(this.viewFiles); },
       err => { console.log('Error getting files ' + err); },
     );
+  }
+
+  /**
+   * Trigger a download for a file. This will open the file in the broswer if it is an image or pdf
+   * 
+   * @param id: The GUID of the file to download
+   * @param name: The name to use when triggering the download
+   */
+  downloadFile(id: string, name: string) {
+    this.fileService.download(id).subscribe(
+      data => {
+        const url = window.URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        if (!this.isImageOrPdf(name)) {
+          link.download = name;
+        }
+        link.click();
+      },
+      err => { window.alert('Error downloading file'); },
+      () => { console.log('Got a next value'); }
+    );
+  }
+
+  /**
+   * Delete the file with the specified id.
+   * 
+   * @param id: The GUID of the file to delete
+   */
+  deleteFile(id: string) {
+    this.fileService.deleteFile(id).subscribe(resp => {
+      if (resp != null) {
+        window.alert('Error deleting file');
+      } else {
+        this.viewFiles = this.viewFiles.filter(f => f.id != id);
+      }
+    });
+  }
+
+  /**
+   * Returns true if the file is an image or pdf. If we want to support more image type, will have to modify this function
+   * 
+   * @param file: The file to consider 
+   */
+  private isImageOrPdf(file: string): boolean {
+    return file.endsWith('.pdf') || file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png') 
+      || file.endsWith('.bmp') || file.endsWith('.heic') || file.endsWith('.gif');
   }
 
 } // End Class
