@@ -277,6 +277,9 @@ DM20-0181
                 <button mat-icon-button (click)="editFile(viewFile.id, viewFile.name, viewFile.teamIds)">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_edit"></mat-icon>
                 </button>
+                <button mat-icon-button (click)="createApplication(viewFile)">
+                  <mat-icon style="transform: scale(0.85);" svgIcon="ic_add"></mat-icon>
+                </button>
               </div>
             </mat-list-item>
             <mat-list-item *ngFor="let playerFile of staged">

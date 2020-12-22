@@ -134,6 +134,12 @@ export class AppComponent implements OnDestroy {
         'assets/svg-icons/ic_edit_24px.svg'
       )
     );
+    this.iconRegistry.addSvgIcon(
+      'ic_add',
+      this.sanitizer.bypassSecurityTrustResourceUrl(
+        'assets/svg-icons/ic_add_24px.svg'
+      )
+    );
   }
 
   setTheme(theme: Theme) {

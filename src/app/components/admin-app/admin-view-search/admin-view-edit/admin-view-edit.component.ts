@@ -33,6 +33,8 @@ import {
   UserService,
   FileService,
   FileModel,
+  ApplicationInstance,
+  ApplicationInstanceForm,
 } from '../../../../generated/player-api';
 import {
   TeamForm,
@@ -485,6 +487,44 @@ export class AdminViewEditComponent implements OnInit {
         this.viewFiles[index].name = val['name']; 
       }
     })
+  }
+
+  /**
+   * Creates a player application pointing to this file
+   * 
+   * @param file: The file to create an application for
+   */
+  createApplication(file: FileModel) {
+    // TODO: Create an application for this file, assign it to the same teams as the file
+    let payload: Application = {
+      name: file.name,
+      url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
+      embeddable: true,
+      loadInBackground: true,
+      viewId: this.view.id,
+    }
+
+    let resp: Application;
+    this.applicationService.createApplication(this.view.id, payload).subscribe(
+      data => {
+        resp = data;
+        // Add to teams
+        for(const team of file.teamIds) {
+          let appInstanceForm: ApplicationInstanceForm = {
+            teamId: team,
+            applicationId: resp.id,
+          }
+          this.applicationService.createApplicationInstance(team, appInstanceForm).subscribe(
+            data => { console.log(data); },
+            err => { console.log('Error adding app to team' + err); }
+          );
+        }
+      },
+      err => {
+        console.log('Error creating application ' + err);
+      }
+    );
+    
   }
 
   /**
