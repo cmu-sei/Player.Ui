@@ -394,11 +394,10 @@ export class AdminViewEditComponent implements OnInit {
     console.log(this.teamsForFile);
     this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.staged.map((f) => f.file)).subscribe(
       data => {
-        data.forEach((elem: FileModel, i: number) => {
-          this.staged[i].path = elem.path;
-          this.staged[i].id = elem.id;
-          this.staged[i].uploaded = true;
-        });
+        for (const elem of data) {
+          this.viewFiles.push(elem);
+        };
+        this.staged = new Array<PlayerFile>();
       },
       err => { console.log("Got an error: " + err); },
       () => { console.log('Complete'); }
@@ -498,10 +497,8 @@ class PlayerFile {
   file: File;
   path: string;
   id: string;
-  uploaded: boolean;
 
   constructor(file: File) {
     this.file = file;
-    this.uploaded = false;
   }
 }

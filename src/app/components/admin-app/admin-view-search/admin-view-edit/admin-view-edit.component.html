@@ -277,20 +277,9 @@ DM20-0181
                 </button>
               </div>
             </mat-list-item>
-            <mat-list-item *ngFor="let playerFile of files">
+            <mat-list-item *ngFor="let playerFile of staged">
               {{playerFile.file.name}}
-              <div *ngIf="playerFile.uploaded">
-                <button mat-icon-button (click)="downloadFile(viewFile.id, viewFile.name)">
-                  <mat-icon style="transform: scale(0.85);" svgIcon="ic_get_app"></mat-icon>
-                </button>
-                <button mat-icon-button (click)="deleteFile(viewFile.id)">
-                  <mat-icon style="transform: scale(0.85);" svgIcon="ic_delete"></mat-icon>
-                </button>
-                <button mat-icon-button (click)="getDownloadLink(viewFile.id, viewFile.name)">
-                  <mat-icon style="transform: scale(0.85);" svgIcon="ic_clipboard_copy"></mat-icon>
-                </button>
-              </div>
-              <div *ngIf="!playerFile.uploaded">
+              <div>
                 <button mat-icon-button (click)="removeFile(playerFile)">
                   <mat-icon style="transform: scale(0.85);"svgIcon="ic_clear_black_24px"></mat-icon>
                 </button>
@@ -308,7 +297,7 @@ DM20-0181
           </div>
   
           <div>
-            <button type="button" mat-stroked-button (click)="uploadFile()">Upload File(s)</button>
+            <button type="button" mat-stroked-button (click)="uploadFile()">Upload Staged File(s)</button>
           </div>
         </div>
         
