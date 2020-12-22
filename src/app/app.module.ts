@@ -101,6 +101,7 @@ import { TeamsService } from './services/teams/teams.service';
 import { ViewsService } from './services/views/views.service';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { OpenFileComponent } from './components/player/open-file/open-file.component';
+import { EditFileComponent } from './components/admin-app/edit-file/edit-file.component';
 
 declare var require: any;
 const settings: ComnSettingsConfig = {
@@ -178,6 +179,7 @@ export class AngularMaterialModule {}
     TopbarComponent,
     FileBrowseComponent,
     OpenFileComponent,
+    EditFileComponent
   ],
   imports: [
     BrowserModule,

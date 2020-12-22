@@ -274,6 +274,9 @@ DM20-0181
                 <button mat-icon-button (click)="getDownloadLink(viewFile.id, viewFile.name)">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_clipboard_copy"></mat-icon>
                 </button>
+                <button mat-icon-button (click)="editFile(viewFile.id, viewFile.name, viewFile.teamIds)">
+                  <mat-icon style="transform: scale(0.85);" svgIcon="ic_edit"></mat-icon>
+                </button>
               </div>
             </mat-list-item>
             <mat-list-item *ngFor="let playerFile of staged">

@@ -45,6 +45,7 @@ import { DialogService } from '../../../../services/dialog/dialog.service';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { EditFileComponent } from '../../edit-file/edit-file.component';
 
 /** Team node with related user and application information */
 export class TeamUserApp {
@@ -66,6 +67,7 @@ export class AdminViewEditComponent implements OnInit {
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
   @ViewChild(AdminViewEditComponent) child;
   @ViewChild('stepper') stepper: MatStepper;
+  @ViewChild(EditFileComponent) editFileComponent: EditFileComponent;
 
   public viewNameFormControl = new FormControl('', [
     Validators.required,
@@ -468,6 +470,18 @@ export class AdminViewEditComponent implements OnInit {
         this.viewFiles = this.viewFiles.filter(f => f.id != id);
       }
     });
+  }
+
+  /**
+   * Rename or assign this file to different teams.
+   * 
+   * @param id: The GUID of the file
+   * @param name: The current name of the file 
+   */
+  editFile(id: string, name: string, teams: string[]) {
+    this.dialogService.editFile(id, this.view.id, name, teams).subscribe(val =>{
+      console.log(val);
+    })
   }
 
   /**
