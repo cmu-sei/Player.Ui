@@ -62,7 +62,10 @@ export class FileBrowseComponent implements OnInit {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.download = name;
+        link.target = '_blank';
+        if (!this.isImageOrPdf(name)) {
+          link.download = name;
+        }
         link.click();
       },
       err => { window.alert('Error downloading file'); },
@@ -82,5 +85,11 @@ export class FileBrowseComponent implements OnInit {
 
   selectTeam(team: string) {
     this.currentTeam = team;
+  }
+
+  // Returns true if the filename is an image or pdf and false otherwise
+  private isImageOrPdf(file: string): boolean {
+    return file.endsWith('.pdf') || file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png') 
+      || file.endsWith('.bmp') || file.endsWith('.heic') || file.endsWith('.gif');
   }
 }

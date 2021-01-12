@@ -495,7 +495,6 @@ export class AdminViewEditComponent implements OnInit {
    * @param file: The file to create an application for
    */
   createApplication(file: FileModel) {
-    // TODO: Create an application for this file, assign it to the same teams as the file
     let payload: Application = {
       name: file.name,
       url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
