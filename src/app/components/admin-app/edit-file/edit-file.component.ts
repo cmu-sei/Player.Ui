@@ -11,7 +11,7 @@ DM20-0181
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { FileModel, FileService, Team, TeamService } from '../../../generated/player-api';
+import { FileService, Team, TeamService } from '../../../generated/player-api';
 
 @Component({
   selector: 'app-edit-file',
