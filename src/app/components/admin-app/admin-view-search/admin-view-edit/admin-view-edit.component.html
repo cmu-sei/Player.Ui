@@ -265,19 +265,19 @@ DM20-0181
             <mat-list-item *ngFor="let viewFile of viewFiles">
               {{viewFile.name}}
               <div class="btnList">
-                <button mat-icon-button (click)="downloadFile(viewFile.id, viewFile.name)">
+                <button mat-icon-button (click)="downloadFile(viewFile.id, viewFile.name)" title="Download">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_get_app"></mat-icon>
                 </button>
-                <button mat-icon-button (click)="deleteFile(viewFile.id)">
+                <button mat-icon-button (click)="deleteFile(viewFile.id)" title="Delete">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_delete"></mat-icon>
                 </button>
-                <button mat-icon-button (click)="getDownloadLink(viewFile.id, viewFile.name)">
+                <button mat-icon-button (click)="getDownloadLink(viewFile.id, viewFile.name)" title="Copy Link">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_clipboard_copy"></mat-icon>
                 </button>
-                <button mat-icon-button (click)="editFile(viewFile.id, viewFile.name, viewFile.teamIds)">
+                <button mat-icon-button (click)="editFile(viewFile.id, viewFile.name, viewFile.teamIds)" title="Edit">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_edit"></mat-icon>
                 </button>
-                <button mat-icon-button (click)="createApplication(viewFile)">
+                <button mat-icon-button (click)="createApplication(viewFile)" title="Add as Application">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_add"></mat-icon>
                 </button>
               </div>
