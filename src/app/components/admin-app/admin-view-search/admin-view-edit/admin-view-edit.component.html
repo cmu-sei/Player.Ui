@@ -298,6 +298,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   
           <div>
             <button type="button" mat-stroked-button (click)="uploadFile()">Upload Staged File(s)</button>
+            <mat-progress-bar mode="determinate" [value]="uploadProgess" *ngIf="uploading"></mat-progress-bar>
           </div>
         </div>
         

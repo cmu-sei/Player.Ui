@@ -6,7 +6,7 @@
  * Rearrange files and staged files
  * add application button should just assign it to view, users can worry about team assignments: Done
  * prevent duplicating applications - hide if app already exists for file?: Done
- * progress bar/feedback if big file being uploaded?
+ * progress bar/feedback if big file being uploaded?: Done
  * Add confirmation when deleting a file
  * files displaying multiple times bug
  * 
@@ -52,6 +52,8 @@ import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { EditFileComponent } from '../../edit-file/edit-file.component';
+import { report } from 'process';
+import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 /** Team node with related user and application information */
 export class TeamUserApp {
@@ -105,6 +107,8 @@ export class AdminViewEditComponent implements OnInit {
 
   public staged: PlayerFile[];
   public teamsForFile: string[];
+  public uploadProgess: number;
+  public uploading: boolean;
 
   public viewFiles: FileModel[];
 
@@ -399,20 +403,28 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
-   * Uploads a file to the specified team in this view
+   * Uploads file(s) to specified team(s) in this view
    */
   uploadFile() {
-    console.log("Teams: ");
-    console.log(this.teamsForFile);
-    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.staged.map((f) => f.file)).subscribe(
-      data => {
-        for (const elem of data) {
-          this.viewFiles.push(elem);
-        };
-        this.staged = new Array<PlayerFile>();
-      },
-      err => { console.log("Got an error: " + err); },
-      () => { console.log('Complete'); }
+    this.uploadProgess = 0;
+    this.uploading = true;
+    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.staged.map((f) => f.file), 'events', true).subscribe(
+      event => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.uploadProgess = Math.round(100 * event.loaded / event.total);
+          console.log(this.uploadProgess);
+        } else if (event instanceof HttpResponse) {
+          this.uploading = false;
+          if (event.status === 201) {
+            for (const elem of event.body) {
+              this.viewFiles.push(elem);
+            }
+            this.staged = new Array<PlayerFile>();
+          } else {
+            console.log('Error uploading files: ' + event.status);
+          }
+        }
+      }
     )
   }
 
