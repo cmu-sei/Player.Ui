@@ -7,8 +7,8 @@
  * add application button should just assign it to view, users can worry about team assignments: Done
  * prevent duplicating applications - hide if app already exists for file?: Done
  * progress bar/feedback if big file being uploaded?: Done
- * Add confirmation when deleting a file
- * files displaying multiple times bug
+ * Add confirmation when deleting a file: Done
+ * files displaying multiple times bug: Done
  * 
  * VM UI bug with clickpoints being spawned above click
  */
@@ -135,6 +135,7 @@ export class AdminViewEditComponent implements OnInit {
     this.staged = new Array<PlayerFile>();
     this.teamsForFile = new Array<string>();
     this.appNames = new Array<string>();
+    this.viewFiles = new Array<FileModel>();
   }
 
   /**
@@ -417,7 +418,9 @@ export class AdminViewEditComponent implements OnInit {
           this.uploading = false;
           if (event.status === 201) {
             for (const elem of event.body) {
-              this.viewFiles.push(elem);
+              if (!this.viewFiles.some(f => f.name === elem.name)) {
+                this.viewFiles.push(elem);
+              }
             }
             this.staged = new Array<PlayerFile>();
           } else {
@@ -451,7 +454,13 @@ export class AdminViewEditComponent implements OnInit {
    */
   getViewFiles() {
     this.fileService.getViewFiles(this.view.id).subscribe(
-      data => { this.viewFiles = data; console.log(this.viewFiles); },
+      data => {
+        for (const elem of data) {
+          if (!this.viewFiles.some(f => f.name === elem.name)) {
+            this.viewFiles.push(elem);
+          }
+        }
+      },
       err => { console.log('Error getting files ' + err); },
     );
   }
