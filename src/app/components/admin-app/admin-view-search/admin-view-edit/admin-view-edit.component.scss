@@ -56,3 +56,10 @@
 #teamSelect {
   margin-right: 25px;
 }
+
+#viewFiles {
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+  align-items: center;
+}
