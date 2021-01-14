@@ -483,15 +483,24 @@ export class AdminViewEditComponent implements OnInit {
    * Delete the file with the specified id.
    * 
    * @param id: The GUID of the file to delete
+   * @param name: The name of the file
    */
-  deleteFile(id: string) {
-    this.fileService.deleteFile(id).subscribe(resp => {
-      if (resp != null) {
-        window.alert('Error deleting file');
-      } else {
-        this.viewFiles = this.viewFiles.filter(f => f.id != id);
-      }
-    });
+  deleteFile(id: string, name: string) {
+    this.dialogService
+      .confirm(
+        'Delete File?',
+        'Are you sure you want to delete file ' + name
+      ).subscribe(result => {
+        if (result['confirm']) {
+          this.fileService.deleteFile(id).subscribe(resp => {
+            if (resp != null) {
+              window.alert('Error deleting file');
+            } else {
+              this.viewFiles = this.viewFiles.filter(f => f.id != id);
+            }
+          });
+        }
+      });
   }
 
   /**
