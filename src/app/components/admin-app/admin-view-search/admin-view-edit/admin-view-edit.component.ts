@@ -1,6 +1,18 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+/**
+ * TODO
+ * Rearrange files and staged files
+ * add application button should just assign it to view, users can worry about team assignments: Done
+ * prevent duplicating applications - hide if app already exists for file?: Done
+ * progress bar/feedback if big file being uploaded?
+ * Add confirmation when deleting a file
+ * files displaying multiple times bug
+ * 
+ * VM UI bug with clickpoints being spawned above click
+ */
+
 import {
   Component,
   OnInit,
@@ -96,6 +108,8 @@ export class AdminViewEditComponent implements OnInit {
 
   public viewFiles: FileModel[];
 
+  public appNames: string[];
+
   constructor(
     public viewService: ViewService,
     public teamService: TeamService,
@@ -116,6 +130,7 @@ export class AdminViewEditComponent implements OnInit {
     this.teams = new Array<TeamUserApp>();
     this.staged = new Array<PlayerFile>();
     this.teamsForFile = new Array<string>();
+    this.appNames = new Array<string>();
   }
 
   /**
@@ -335,6 +350,7 @@ export class AdminViewEditComponent implements OnInit {
     if (event.selectedIndex == 3) {
       this.staged = new Array<PlayerFile>();
       this.getViewFiles();
+      this.getExistingApps();
     } else if (event.selectedIndex === 2) {
       // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
       this.currentTeam = undefined;
@@ -498,24 +514,29 @@ export class AdminViewEditComponent implements OnInit {
     let resp: Application;
     this.applicationService.createApplication(this.view.id, payload).subscribe(
       data => {
-        resp = data;
-        // Add to teams
-        for(const team of file.teamIds) {
-          let appInstanceForm: ApplicationInstanceForm = {
-            teamId: team,
-            applicationId: resp.id,
-          }
-          this.applicationService.createApplicationInstance(team, appInstanceForm).subscribe(
-            data => { console.log(data); },
-            err => { console.log('Error adding app to team' + err); }
-          );
-        }
+        this.appNames.push(data.name);
       },
       err => {
         console.log('Error creating application ' + err);
       }
     );
     
+  }
+
+  /**
+   * Gets the names of the apps already in this view so we don't duplicate an application
+   */
+  getExistingApps() {
+    this.applicationService.getViewApplications(this.view.id).subscribe(
+      data => {
+        for (let app of data) {
+          this.appNames.push(app.name);
+        }
+      },
+      err => {
+        console.log('Error fetching apps');
+      }
+    )
   }
 
   /**

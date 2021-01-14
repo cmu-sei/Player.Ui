@@ -272,7 +272,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 <button mat-icon-button (click)="editFile(viewFile.id, viewFile.name, viewFile.teamIds)" title="Edit">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_edit"></mat-icon>
                 </button>
-                <button mat-icon-button (click)="createApplication(viewFile)" title="Add as Application">
+                <button *ngIf="!appNames.includes(viewFile.name)" mat-icon-button (click)="createApplication(viewFile)" title="Add as Application">
                   <mat-icon style="transform: scale(0.85);" svgIcon="ic_add"></mat-icon>
                 </button>
               </div>
