@@ -37,7 +37,7 @@ export const ROUTES: Routes = [
     component: AdminAppComponent,
     canActivate: [ComnAuthGuardService],
   },
-  // Placeholder while developing file browsing component
+  // These are needed for embedding a file brower application and for downloading files respectively
   {
     path: 'view/:id/files',
     component: FileBrowseComponent,

@@ -38,7 +38,6 @@ import {
   UserService,
   FileService,
   FileModel,
-  ApplicationInstanceForm,
 } from '../../../../generated/player-api';
 import {
   TeamForm,
@@ -52,7 +51,6 @@ import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { EditFileComponent } from '../../edit-file/edit-file.component';
-import { report } from 'process';
 import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 /** Team node with related user and application information */
@@ -541,7 +539,6 @@ export class AdminViewEditComponent implements OnInit {
       viewId: this.view.id,
     }
 
-    let resp: Application;
     this.applicationService.createApplication(this.view.id, payload).subscribe(
       data => {
         this.appNames.push(data.name);
