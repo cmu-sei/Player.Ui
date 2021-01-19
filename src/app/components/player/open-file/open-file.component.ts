@@ -25,25 +25,21 @@ export class OpenFileComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      console.log('In open file component');
-      const fileId = params['id'];
-      const fileName = params['name'];
-      console.log(`Name = ${fileName} Id = ${fileId}`);
-      this.fileService.download(fileId).subscribe(
-        data => {
-          const url = window.URL.createObjectURL(data);
-          const link = document.createElement('a');
-          link.href = url;
-          if (!this.isImageOrPdf(fileName)) {
-            link.download = fileName;
-          }
-          link.click();
-        },
-        err => { window.alert('Error downloading file'); },
-        () => { console.log('Got a next value'); }
-      )
-    });
+    const fileId = this.route.snapshot.paramMap.get('id');
+    const fileName = this.route.snapshot.paramMap.get('name');
+    this.fileService.download(fileId).subscribe(
+      data => {
+        const url = window.URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        if (!this.isImageOrPdf(fileName)) {
+          link.download = fileName;
+        }
+        link.click();
+      },
+      err => { window.alert('Error downloading file'); },
+      () => { console.log('Got a next value'); }
+    )
   }
 
   private isImageOrPdf(file: string): boolean {

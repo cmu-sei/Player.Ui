@@ -36,24 +36,22 @@ export class FileBrowseComponent implements OnInit {
   }
 
   getFiles(): void {
-    this.route.params.subscribe(params => {
-      const viewId = params['id'];
-      this.fileService.getViewFiles(viewId).subscribe(
-        data => { 
-          this.files = data;
-          console.log(this.files);
-        },
-        err => { console.log('Error fetching files ' + err); },
-      );
-      this.teamService.getMyViewTeams(viewId).subscribe(
-        data => {
-          for (let team of data) {
-            this.teams.add(team);
-          }
-        },
-        err => { console.log('Error fetching teams ' + err); }
-      )
-    });
+    const viewId = this.route.snapshot.paramMap.get('id');
+    this.fileService.getViewFiles(viewId).subscribe(
+      data => { 
+        this.files = data;
+        console.log(this.files);
+      },
+      err => { console.log('Error fetching files ' + err); },
+    );
+    this.teamService.getMyViewTeams(viewId).subscribe(
+      data => {
+        for (let team of data) {
+          this.teams.add(team);
+        }
+      },
+      err => { console.log('Error fetching teams ' + err); }
+    )
   }
 
   downloadFile(id: string, name: string) {
@@ -64,6 +62,7 @@ export class FileBrowseComponent implements OnInit {
         link.href = url;
         link.target = '_blank';
         if (!this.isImageOrPdf(name)) {
+          console.log('Not image or pdf');
           link.download = name;
         }
         link.click();
