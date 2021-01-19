@@ -254,10 +254,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
       <mat-step label="Files" fxLayout="row">
         <div fxLayout="row" fxLayoutGap="350px">
-          <button type="button" mat-stroked-button (click)="fileInput.click()">Choose File</button>
+          <button id="chooseBtn" type="button" mat-stroked-button (click)="fileInput.click()">Choose File</button>
           <div>
             <mat-label>Uploaded Files</mat-label>
-            <mat-list id="viewFiles">
+            <mat-list id="viewFiles" fxLayout="column">
               <mat-list-item *ngFor="let viewFile of viewFiles">
                 {{viewFile.name}}
                 <div>
