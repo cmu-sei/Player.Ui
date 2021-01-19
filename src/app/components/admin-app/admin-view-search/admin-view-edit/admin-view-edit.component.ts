@@ -1,18 +1,6 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-/**
- * TODO
- * Rearrange files and staged files
- * add application button should just assign it to view, users can worry about team assignments: Done
- * prevent duplicating applications - hide if app already exists for file?: Done
- * progress bar/feedback if big file being uploaded?: Done
- * Add confirmation when deleting a file: Done
- * files displaying multiple times bug: Done
- * 
- * VM UI bug with clickpoints being spawned above click
- */
-
 import {
   Component,
   OnInit,
@@ -422,6 +410,7 @@ export class AdminViewEditComponent implements OnInit {
             }
             this.staged = new Array<PlayerFile>();
           } else {
+            this.uploading = false;
             console.log('Error uploading files: ' + event.status);
           }
         }
