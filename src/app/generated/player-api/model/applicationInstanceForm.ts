@@ -16,8 +16,8 @@
 
 export interface ApplicationInstanceForm { 
     id?: string;
-    teamId?: string;
-    applicationId?: string;
+    teamId: string;
+    applicationId: string;
     displayOrder?: number;
 }
 

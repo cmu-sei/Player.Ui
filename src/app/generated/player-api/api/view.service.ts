@@ -20,8 +20,8 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
-import { ApiError } from '../model/models';
 import { Notification } from '../model/models';
+import { ProblemDetails } from '../model/models';
 import { View } from '../model/models';
 import { ViewForm } from '../model/models';
 
@@ -95,14 +95,14 @@ export class ViewService {
      * Sends a new View Notification
      * Creates a new View within an View with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin View within the specified View
      * @param id The id of the View
-     * @param incomingData The data to create the View with
+     * @param notification The data to create the View with
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public broadcastToView(id: string, incomingData?: Notification, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<string>;
-    public broadcastToView(id: string, incomingData?: Notification, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<string>>;
-    public broadcastToView(id: string, incomingData?: Notification, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<string>>;
-    public broadcastToView(id: string, incomingData?: Notification, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public broadcastToView(id: string, notification?: Notification, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<string>;
+    public broadcastToView(id: string, notification?: Notification, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<string>>;
+    public broadcastToView(id: string, notification?: Notification, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<string>>;
+    public broadcastToView(id: string, notification?: Notification, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling broadcastToView.');
         }
@@ -134,7 +134,6 @@ export class ViewService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json-patch+json',
             'application/json',
             'text/json',
             'application/_*+json'
@@ -150,7 +149,7 @@ export class ViewService {
         }
 
         return this.httpClient.post<string>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(id))}/notifications`,
-            incomingData,
+            notification,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -220,14 +219,14 @@ export class ViewService {
     /**
      * Creates a new View
      * Creates a new View with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or an Administrator
-     * @param view The data to create the View with
+     * @param viewForm The data to create the View with
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createView(view?: ViewForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<View>;
-    public createView(view?: ViewForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<View>>;
-    public createView(view?: ViewForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<View>>;
-    public createView(view?: ViewForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public createView(viewForm?: ViewForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<View>;
+    public createView(viewForm?: ViewForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<View>>;
+    public createView(viewForm?: ViewForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<View>>;
+    public createView(viewForm?: ViewForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
 
         let headers = this.defaultHeaders;
 
@@ -256,7 +255,6 @@ export class ViewService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json-patch+json',
             'application/json',
             'text/json',
             'application/_*+json'
@@ -272,7 +270,7 @@ export class ViewService {
         }
 
         return this.httpClient.post<View>(`${this.configuration.basePath}/api/views`,
-            view,
+            viewForm,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -290,10 +288,10 @@ export class ViewService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public deleteView(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: '*/*'}): Observable<any>;
-    public deleteView(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: '*/*'}): Observable<HttpResponse<any>>;
-    public deleteView(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: '*/*'}): Observable<HttpEvent<any>>;
-    public deleteView(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: '*/*'}): Observable<any> {
+    public deleteView(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<any>;
+    public deleteView(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<any>>;
+    public deleteView(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<any>>;
+    public deleteView(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling deleteView.');
         }
@@ -312,7 +310,7 @@ export class ViewService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                '*/*'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -596,7 +594,6 @@ export class ViewService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json-patch+json',
             'application/json',
             'text/json',
             'application/_*+json'

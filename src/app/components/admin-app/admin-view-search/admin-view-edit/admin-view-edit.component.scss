@@ -45,3 +45,26 @@
   margin-left: 10px; 
   font-family: open_sansbold;
 }
+
+.block {
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
+}
+
+#teamSelect {
+  margin-right: 25px;
+}
+
+#viewFiles {
+  display: flex;
+  flex-direction: row;
+  justify-content: right;
+  align-items: center;
+}
+
+#chooseBtn {
+  max-width: 168.05px;
+  max-height: 65px;
+}

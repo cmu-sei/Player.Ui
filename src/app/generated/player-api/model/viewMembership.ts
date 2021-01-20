@@ -17,10 +17,10 @@
 export interface ViewMembership { 
     id?: string;
     userId?: string;
-    userName?: string;
+    userName?: string | null;
     viewId?: string;
-    viewName?: string;
+    viewName?: string | null;
     primaryTeamId?: string;
-    primaryTeamName?: string;
+    primaryTeamName?: string | null;
 }
 

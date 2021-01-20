@@ -17,10 +17,10 @@ import { Permission } from './permission';
 
 export interface User { 
     id?: string;
-    name?: string;
-    roleId?: string;
-    roleName?: string;
-    permissions?: Array<Permission>;
+    name?: string | null;
+    roleId?: string | null;
+    roleName?: string | null;
+    permissions?: Array<Permission> | null;
     isSystemAdmin?: boolean;
 }
 

@@ -15,6 +15,6 @@
 
 
 export interface RoleForm { 
-    name?: string;
+    name?: string | null;
 }
 

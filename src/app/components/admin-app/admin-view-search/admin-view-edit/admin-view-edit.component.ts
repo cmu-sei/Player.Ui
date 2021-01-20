@@ -19,10 +19,13 @@ import {
 } from '@angular/forms';
 import {
   View,
+  ViewStatus,
   Team,
   TeamService,
   ViewService,
   UserService,
+  FileService,
+  FileModel,
 } from '../../../../generated/player-api';
 import {
   TeamForm,
@@ -34,6 +37,9 @@ import { User } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
+import { Clipboard } from '@angular/cdk/clipboard';
+import { EditFileComponent } from '../../edit-file/edit-file.component';
+import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 /** Team node with related user and application information */
 export class TeamUserApp {
@@ -55,6 +61,7 @@ export class AdminViewEditComponent implements OnInit {
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
   @ViewChild(AdminViewEditComponent) child;
   @ViewChild('stepper') stepper: MatStepper;
+  @ViewChild(EditFileComponent) editFileComponent: EditFileComponent;
 
   public viewNameFormControl = new FormControl('', [
     Validators.required,
@@ -69,7 +76,7 @@ export class AdminViewEditComponent implements OnInit {
   public descriptionFormControl = new FormControl('', [Validators.required]);
 
   public matcher = new UserErrorStateMatcher();
-  public viewStates = Object.values(View.StatusEnum);
+  public viewStates = Object.values(ViewStatus);
   public isLinear = false;
 
   public view: View;
@@ -84,13 +91,24 @@ export class AdminViewEditComponent implements OnInit {
     viewId: '',
   };
 
+  public staged: PlayerFile[];
+  public teamsForFile: string[];
+  public uploadProgess: number;
+  public uploading: boolean;
+
+  public viewFiles: FileModel[];
+
+  public appNames: string[];
+
   constructor(
     public viewService: ViewService,
     public teamService: TeamService,
     public dialogService: DialogService,
     public userService: UserService,
+    public fileService: FileService,
     public applicationService: ApplicationService,
-    public zone: NgZone
+    public zone: NgZone,
+    public clipboard: Clipboard,
   ) {}
 
   /**
@@ -100,6 +118,10 @@ export class AdminViewEditComponent implements OnInit {
     this.isLoadingTeams = false;
     this.view = undefined;
     this.teams = new Array<TeamUserApp>();
+    this.staged = new Array<PlayerFile>();
+    this.teamsForFile = new Array<string>();
+    this.appNames = new Array<string>();
+    this.viewFiles = new Array<FileModel>();
   }
 
   /**
@@ -315,8 +337,13 @@ export class AdminViewEditComponent implements OnInit {
    * @param event SelectionChange event
    */
   onViewStepChange(event: any) {
-    // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
-    if (event.selectedIndex === 2) {
+    // Index 3 is the files step. Grab the files already in the view.
+    if (event.selectedIndex == 3) {
+      this.staged = new Array<PlayerFile>();
+      this.getViewFiles();
+      this.getExistingApps();
+    } else if (event.selectedIndex === 2) {
+      // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
       this.currentTeam = undefined;
       this.updateViewTeams();
     } else if (event.selectedIndex === 1) {
@@ -351,6 +378,193 @@ export class AdminViewEditComponent implements OnInit {
           });
       });
   }
+
+  /**
+   * Selects the file(s) to be uploaded. Called when file selection is changed
+   */
+  selectFile(files: FileList) {
+    const filesToUpload = Array.from(files);
+    for (let fp of filesToUpload) {
+      this.staged.push(new PlayerFile(fp));
+    }
+  }
+
+  /**
+   * Uploads file(s) to specified team(s) in this view
+   */
+  uploadFile() {
+    this.uploadProgess = 0;
+    this.uploading = true;
+    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.staged.map((f) => f.file), 'events', true).subscribe(
+      event => {
+        if (event.type === HttpEventType.UploadProgress) {
+          this.uploadProgess = Math.round(100 * event.loaded / event.total);
+          console.log(this.uploadProgess);
+        } else if (event instanceof HttpResponse) {
+          this.uploading = false;
+          if (event.status === 201) {
+            for (const elem of event.body) {
+              if (!this.viewFiles.some(f => f.name === elem.name)) {
+                this.viewFiles.push(elem);
+              }
+            }
+            this.staged = new Array<PlayerFile>();
+          } else {
+            this.uploading = false;
+            console.log('Error uploading files: ' + event.status);
+          }
+        }
+      }
+    )
+  }
+
+  /**
+   * Removes a file from the list of file staged for upload
+   * 
+   * @param file: The file to remove from the list
+   */
+  removeFile(file: PlayerFile) {
+    console.log(file);
+    this.staged = this.staged.filter(f => f.path != file.path);
+  }
+
+  /**
+   * Returns a link to the download endpoint for a particular file
+   */
+  getDownloadLink(id: string, name: string) {
+    console.log(`id = ${id} name = ${name}`);
+    this.clipboard.copy(`${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`);
+  }
+
+  /**
+   * Get the files in this view that can be accessed by the user
+   */
+  getViewFiles() {
+    this.fileService.getViewFiles(this.view.id).subscribe(
+      data => {
+        for (const elem of data) {
+          if (!this.viewFiles.some(f => f.name === elem.name)) {
+            this.viewFiles.push(elem);
+          }
+        }
+      },
+      err => { console.log('Error getting files ' + err); },
+    );
+  }
+
+  /**
+   * Trigger a download for a file. This will open the file in the broswer if it is an image or pdf
+   * 
+   * @param id: The GUID of the file to download
+   * @param name: The name to use when triggering the download
+   */
+  downloadFile(id: string, name: string) {
+    this.fileService.download(id).subscribe(
+      data => {
+        const url = window.URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        if (!this.isImageOrPdf(name)) {
+          link.download = name;
+        }
+        link.click();
+      },
+      err => { window.alert('Error downloading file'); },
+      () => { console.log('Got a next value'); }
+    );
+  }
+
+  /**
+   * Delete the file with the specified id.
+   * 
+   * @param id: The GUID of the file to delete
+   * @param name: The name of the file
+   */
+  deleteFile(id: string, name: string) {
+    this.dialogService
+      .confirm(
+        'Delete File?',
+        'Are you sure you want to delete file ' + name
+      ).subscribe(result => {
+        if (result['confirm']) {
+          this.fileService.deleteFile(id).subscribe(resp => {
+            if (resp != null) {
+              window.alert('Error deleting file');
+            } else {
+              this.viewFiles = this.viewFiles.filter(f => f.id != id);
+            }
+          });
+        }
+      });
+  }
+
+  /**
+   * Rename or assign this file to different teams.
+   * 
+   * @param id: The GUID of the file
+   * @param name: The current name of the file 
+   */
+  editFile(id: string, name: string, teams: string[]) {
+    this.dialogService.editFile(id, this.view.id, name, teams).subscribe(val => {
+      if (val != undefined) {
+        let index = this.viewFiles.findIndex(f => f.id === id);
+        this.viewFiles[index].name = val['name']; 
+      }
+    })
+  }
+
+  /**
+   * Creates a player application pointing to this file
+   * 
+   * @param file: The file to create an application for
+   */
+  createApplication(file: FileModel) {
+    let payload: Application = {
+      name: file.name,
+      url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
+      embeddable: true,
+      loadInBackground: true,
+      viewId: this.view.id,
+    }
+
+    this.applicationService.createApplication(this.view.id, payload).subscribe(
+      data => {
+        this.appNames.push(data.name);
+      },
+      err => {
+        console.log('Error creating application ' + err);
+      }
+    );
+    
+  }
+
+  /**
+   * Gets the names of the apps already in this view so we don't duplicate an application
+   */
+  getExistingApps() {
+    this.applicationService.getViewApplications(this.view.id).subscribe(
+      data => {
+        for (let app of data) {
+          this.appNames.push(app.name);
+        }
+      },
+      err => {
+        console.log('Error fetching apps');
+      }
+    )
+  }
+
+  /**
+   * Returns true if the file is an image or pdf. If we want to support more image type, will have to modify this function
+   * 
+   * @param file: The file to consider 
+   */
+  private isImageOrPdf(file: string): boolean {
+    return file.endsWith('.pdf') || file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png') 
+      || file.endsWith('.bmp') || file.endsWith('.heic') || file.endsWith('.gif');
+  }
+
 } // End Class
 
 /** Error when invalid control is dirty, touched, or submitted. */
@@ -361,5 +575,15 @@ export class UserErrorStateMatcher implements ErrorStateMatcher {
   ): boolean {
     const isSubmitted = form && form.submitted;
     return !!(control && control.invalid && (control.dirty || isSubmitted));
+  }
+}
+
+class PlayerFile {
+  file: File;
+  path: string;
+  id: string;
+
+  constructor(file: File) {
+    this.file = file;
   }
 }

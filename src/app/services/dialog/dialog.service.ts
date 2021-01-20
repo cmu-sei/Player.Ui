@@ -14,6 +14,7 @@ import { Team } from '../../generated/player-api';
 import { CreatePermissionDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
 import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
 import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
+import { EditFileComponent } from '../../components/admin-app/edit-file/edit-file.component';
 
 @Injectable()
 export class DialogService {
@@ -91,6 +92,23 @@ export class DialogService {
     );
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.loadTeam(team);
+    return dialogRef.afterClosed();
+  }
+
+  public editFile(
+    fileId: string,
+    viewId: string,
+    oldName: string,
+    oldTeams: string[]
+  ): Observable<boolean> {
+    let dialogRef: MatDialogRef<EditFileComponent>;
+    dialogRef = this.dialog.open(
+      EditFileComponent,
+    );
+    dialogRef.componentInstance.fileId = fileId;
+    dialogRef.componentInstance.viewId = viewId;
+    dialogRef.componentInstance.oldName = oldName;
+    dialogRef.componentInstance.oldTeams = oldTeams;
     return dialogRef.afterClosed();
   }
 }

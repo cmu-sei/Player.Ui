@@ -21,12 +21,12 @@ export interface ApplicationInstance {
     /**
      * The location of the application. {teamId}, {teamName}, {viewId} and {viewName} will be replaced dynamically if included
      */
-    name?: string;
+    name?: string | null;
     /**
      * The location of the application. {teamId}, {teamName}, {viewId} and {viewName} will be replaced dynamically if included
      */
-    url?: string;
-    icon?: string;
+    url?: string | null;
+    icon?: string | null;
     embeddable?: boolean;
     loadInBackground?: boolean;
     viewId?: string;

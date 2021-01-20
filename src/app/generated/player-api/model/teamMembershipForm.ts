@@ -15,6 +15,6 @@
 
 
 export interface TeamMembershipForm { 
-    roleId?: string;
+    roleId?: string | null;
 }
 

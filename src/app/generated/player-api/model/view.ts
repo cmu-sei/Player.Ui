@@ -12,21 +12,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ViewStatus } from '../model/viewStatus';
 
 
 export interface View { 
     id?: string;
-    name?: string;
-    description?: string;
-    status?: View.StatusEnum;
+    name?: string | null;
+    description?: string | null;
+    status?: ViewStatus;
     canManage?: boolean;
 }
-export namespace View {
-    export type StatusEnum = 'Active' | 'Inactive';
-    export const StatusEnum = {
-        Active: 'Active' as StatusEnum,
-        Inactive: 'Inactive' as StatusEnum
-    };
-}
-
 

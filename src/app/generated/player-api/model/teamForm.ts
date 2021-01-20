@@ -16,7 +16,7 @@
 
 export interface TeamForm { 
     id?: string;
-    name?: string;
-    roleId?: string;
+    name?: string | null;
+    roleId?: string | null;
 }
 

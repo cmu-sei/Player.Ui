@@ -3,6 +3,8 @@
 
 export * from './application.service';
 import { ApplicationService } from './application.service';
+export * from './file.service';
+import { FileService } from './file.service';
 export * from './permission.service';
 import { PermissionService } from './permission.service';
 export * from './role.service';
@@ -17,4 +19,4 @@ export * from './view.service';
 import { ViewService } from './view.service';
 export * from './viewMembership.service';
 import { ViewMembershipService } from './viewMembership.service';
-export const APIS = [ApplicationService, PermissionService, RoleService, TeamService, TeamMembershipService, UserService, ViewService, ViewMembershipService];
+export const APIS = [ApplicationService, FileService, PermissionService, RoleService, TeamService, TeamMembershipService, UserService, ViewService, ViewMembershipService];

@@ -15,9 +15,9 @@
 
 
 export interface ApplicationTemplateForm { 
-    name?: string;
-    url?: string;
-    icon?: string;
+    name?: string | null;
+    url?: string | null;
+    icon?: string | null;
     embeddable?: boolean;
     loadInBackground?: boolean;
 }

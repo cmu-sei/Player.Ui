@@ -16,9 +16,9 @@
 
 export interface Permission { 
     id?: string;
-    key?: string;
-    value?: string;
-    description?: string;
+    key?: string | null;
+    value?: string | null;
+    description?: string | null;
     readOnly?: boolean;
 }
 

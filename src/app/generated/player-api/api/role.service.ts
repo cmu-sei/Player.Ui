@@ -20,7 +20,7 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
-import { ApiError } from '../model/models';
+import { ProblemDetails } from '../model/models';
 import { Role } from '../model/models';
 import { RoleForm } from '../model/models';
 
@@ -93,14 +93,14 @@ export class RoleService {
     /**
      * Creates a new Role
      * Creates a new Role with the attributes specified  &lt;para /&gt;  An Role is a top-level resource that can optionally be the parent of an View specific Application resource, which would inherit it\&#39;s properties  &lt;para /&gt;  Accessible only to a SuperUser
-     * @param form 
+     * @param roleForm 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createRole(form?: RoleForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Role>;
-    public createRole(form?: RoleForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Role>>;
-    public createRole(form?: RoleForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Role>>;
-    public createRole(form?: RoleForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public createRole(roleForm?: RoleForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Role>;
+    public createRole(roleForm?: RoleForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Role>>;
+    public createRole(roleForm?: RoleForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Role>>;
+    public createRole(roleForm?: RoleForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
 
         let headers = this.defaultHeaders;
 
@@ -129,7 +129,6 @@ export class RoleService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json-patch+json',
             'application/json',
             'text/json',
             'application/_*+json'
@@ -144,8 +143,8 @@ export class RoleService {
             responseType = 'text';
         }
 
-        return this.httpClient.post<Role>(`${this.configuration.basePath}/api/Roles`,
-            form,
+        return this.httpClient.post<Role>(`${this.configuration.basePath}/api/roles`,
+            roleForm,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -163,10 +162,10 @@ export class RoleService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public deleteRole(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: '*/*'}): Observable<any>;
-    public deleteRole(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: '*/*'}): Observable<HttpResponse<any>>;
-    public deleteRole(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: '*/*'}): Observable<HttpEvent<any>>;
-    public deleteRole(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: '*/*'}): Observable<any> {
+    public deleteRole(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<any>;
+    public deleteRole(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<any>>;
+    public deleteRole(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<any>>;
+    public deleteRole(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling deleteRole.');
         }
@@ -185,7 +184,7 @@ export class RoleService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                '*/*'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -199,7 +198,7 @@ export class RoleService {
             responseType = 'text';
         }
 
-        return this.httpClient.delete<any>(`${this.configuration.basePath}/api/Roles/${encodeURIComponent(String(id))}`,
+        return this.httpClient.delete<any>(`${this.configuration.basePath}/api/roles/${encodeURIComponent(String(id))}`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -255,7 +254,7 @@ export class RoleService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<Role>(`${this.configuration.basePath}/api/Roles/${encodeURIComponent(String(id))}`,
+        return this.httpClient.get<Role>(`${this.configuration.basePath}/api/roles/${encodeURIComponent(String(id))}`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -311,7 +310,7 @@ export class RoleService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<Role>(`${this.configuration.basePath}/api/Roles/name/${encodeURIComponent(String(name))}`,
+        return this.httpClient.get<Role>(`${this.configuration.basePath}/api/roles/name/${encodeURIComponent(String(name))}`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -363,7 +362,7 @@ export class RoleService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<Array<Role>>(`${this.configuration.basePath}/api/Roles`,
+        return this.httpClient.get<Array<Role>>(`${this.configuration.basePath}/api/roles`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -378,14 +377,14 @@ export class RoleService {
      * Updates a Role
      * Updates a Role with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser
      * @param id 
-     * @param form The updated Role values
+     * @param roleForm The updated Role values
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateRole(id: string, form?: RoleForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Role>;
-    public updateRole(id: string, form?: RoleForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Role>>;
-    public updateRole(id: string, form?: RoleForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Role>>;
-    public updateRole(id: string, form?: RoleForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateRole(id: string, roleForm?: RoleForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Role>;
+    public updateRole(id: string, roleForm?: RoleForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Role>>;
+    public updateRole(id: string, roleForm?: RoleForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Role>>;
+    public updateRole(id: string, roleForm?: RoleForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateRole.');
         }
@@ -417,7 +416,6 @@ export class RoleService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json-patch+json',
             'application/json',
             'text/json',
             'application/_*+json'
@@ -432,8 +430,8 @@ export class RoleService {
             responseType = 'text';
         }
 
-        return this.httpClient.put<Role>(`${this.configuration.basePath}/api/Roles/${encodeURIComponent(String(id))}`,
-            form,
+        return this.httpClient.put<Role>(`${this.configuration.basePath}/api/roles/${encodeURIComponent(String(id))}`,
+            roleForm,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,

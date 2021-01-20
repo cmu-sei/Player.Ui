@@ -12,48 +12,24 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { NotificationPriority } from '../model/notificationPriority';
+import { NotificationType } from '../model/notificationType';
 
 
 export interface Notification { 
     fromId?: string;
-    fromType?: Notification.FromTypeEnum;
+    fromType?: NotificationType;
     toId?: string;
-    toType?: Notification.ToTypeEnum;
-    broadcastTime?: string;
-    toName?: string;
-    fromName?: string;
-    subject?: string;
-    text?: string;
-    link?: string;
-    priority?: Notification.PriorityEnum;
+    toType?: NotificationType;
+    broadcastTime?: Date;
+    toName?: string | null;
+    fromName?: string | null;
+    subject?: string | null;
+    text?: string | null;
+    link?: string | null;
+    priority?: NotificationPriority;
     wasSuccess?: boolean;
     canPost?: boolean;
-    iconUrl?: string;
+    iconUrl?: string | null;
 }
-export namespace Notification {
-    export type FromTypeEnum = 'View' | 'Team' | 'User' | 'Application' | 'Admin';
-    export const FromTypeEnum = {
-        View: 'View' as FromTypeEnum,
-        Team: 'Team' as FromTypeEnum,
-        User: 'User' as FromTypeEnum,
-        Application: 'Application' as FromTypeEnum,
-        Admin: 'Admin' as FromTypeEnum
-    };
-    export type ToTypeEnum = 'View' | 'Team' | 'User' | 'Application' | 'Admin';
-    export const ToTypeEnum = {
-        View: 'View' as ToTypeEnum,
-        Team: 'Team' as ToTypeEnum,
-        User: 'User' as ToTypeEnum,
-        Application: 'Application' as ToTypeEnum,
-        Admin: 'Admin' as ToTypeEnum
-    };
-    export type PriorityEnum = 'Normal' | 'Elevated' | 'High' | 'System';
-    export const PriorityEnum = {
-        Normal: 'Normal' as PriorityEnum,
-        Elevated: 'Elevated' as PriorityEnum,
-        High: 'High' as PriorityEnum,
-        System: 'System' as PriorityEnum
-    };
-}
-
 

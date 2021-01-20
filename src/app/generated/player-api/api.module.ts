@@ -7,6 +7,7 @@ import { HttpClient } from '@angular/common/http';
 
 
 import { ApplicationService } from './api/application.service';
+import { FileService } from './api/file.service';
 import { PermissionService } from './api/permission.service';
 import { RoleService } from './api/role.service';
 import { TeamService } from './api/team.service';

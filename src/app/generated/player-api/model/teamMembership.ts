@@ -17,11 +17,11 @@
 export interface TeamMembership { 
     id?: string;
     userId?: string;
-    userName?: string;
+    userName?: string | null;
     teamId?: string;
-    teamName?: string;
-    roleId?: string;
-    roleName?: string;
+    teamName?: string | null;
+    roleId?: string | null;
+    roleName?: string | null;
     viewId?: string;
     isPrimary?: boolean;
 }

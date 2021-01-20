@@ -20,7 +20,7 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
-import { ApiError } from '../model/models';
+import { ProblemDetails } from '../model/models';
 import { TeamMembership } from '../model/models';
 import { TeamMembershipForm } from '../model/models';
 
@@ -210,14 +210,14 @@ export class TeamMembershipService {
      * Updates a Team Membership
      * Updates a Team Membership with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team within the specified View
      * @param id The id of the Team Membership
-     * @param form The updated Team Membership values
+     * @param teamMembershipForm The updated Team Membership values
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateTeamMembership(id: string, form?: TeamMembershipForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<TeamMembership>;
-    public updateTeamMembership(id: string, form?: TeamMembershipForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<TeamMembership>>;
-    public updateTeamMembership(id: string, form?: TeamMembershipForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<TeamMembership>>;
-    public updateTeamMembership(id: string, form?: TeamMembershipForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateTeamMembership(id: string, teamMembershipForm?: TeamMembershipForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<TeamMembership>;
+    public updateTeamMembership(id: string, teamMembershipForm?: TeamMembershipForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<TeamMembership>>;
+    public updateTeamMembership(id: string, teamMembershipForm?: TeamMembershipForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<TeamMembership>>;
+    public updateTeamMembership(id: string, teamMembershipForm?: TeamMembershipForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateTeamMembership.');
         }
@@ -249,7 +249,6 @@ export class TeamMembershipService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json-patch+json',
             'application/json',
             'text/json',
             'application/_*+json'
@@ -265,7 +264,7 @@ export class TeamMembershipService {
         }
 
         return this.httpClient.put<TeamMembership>(`${this.configuration.basePath}/api/team-memberships/${encodeURIComponent(String(id))}`,
-            form,
+            teamMembershipForm,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,

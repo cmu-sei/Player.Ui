@@ -15,8 +15,8 @@
 
 
 export interface PermissionForm { 
-    key?: string;
-    value?: string;
-    description?: string;
+    key?: string | null;
+    value?: string | null;
+    description?: string | null;
 }
 

@@ -17,11 +17,11 @@ import { Permission } from './permission';
 
 export interface Team { 
     id?: string;
-    name?: string;
+    name?: string | null;
     viewId?: string;
-    roleId?: string;
-    roleName?: string;
-    permissions?: Array<Permission>;
+    roleId?: string | null;
+    roleName?: string | null;
+    permissions?: Array<Permission> | null;
     canManage?: boolean;
     isMember?: boolean;
     isPrimary?: boolean;

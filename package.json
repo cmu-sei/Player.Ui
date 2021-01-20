@@ -15,7 +15,8 @@
     "docker:stack:api": "docker stack deploy -c ./docker/docker-compose.yml -c ./docker/compose/api.yml player_stack",
     "docker:stack:identity": "docker stack deploy -c ./docker/docker-compose.yml -c ./docker/compose/identity.yml identity_stack",
     "docker:destroy": "docker stack rm player_stack identity_stack",
-    "tslint-check": "tslint-config-prettier-check ./tslint.json"
+    "tslint-check": "tslint-config-prettier-check ./tslint.json",
+    "swagger:gen-win": "docker run --rm -v %CD%:/local openapitools/openapi-generator-cli:v4.3.0 generate -i http://host.docker.internal:4300/swagger/v1/swagger.json?format=openapi -g typescript-angular -o /local/src/app/generated/player-api --additional-properties ngVersion=9.1 --additional-properties useRxJS6=true --additional-properties modelPropertyNaming=original --type-mappings=DateTime=Date --skip-validate-spec"
   },
   "scriptComments": {
     "docker:stack": "// Runs the entire player stack",

@@ -20,7 +20,7 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
-import { ApiError } from '../model/models';
+import { ProblemDetails } from '../model/models';
 import { ViewMembership } from '../model/models';
 
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
