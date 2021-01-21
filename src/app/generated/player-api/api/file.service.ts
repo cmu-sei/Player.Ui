@@ -144,7 +144,7 @@ export class FileService {
             responseType = 'text';
         }
 
-        return this.httpClient.delete<any>(`${this.configuration.basePath}/files/${encodeURIComponent(String(fileId))}`,
+        return this.httpClient.delete<any>(`${this.configuration.basePath}/api/files/${encodeURIComponent(String(fileId))}`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -195,7 +195,7 @@ export class FileService {
         }
 
 
-        return this.httpClient.get(`${this.configuration.basePath}/files/download/${encodeURIComponent(String(fileId))}`,
+        return this.httpClient.get(`${this.configuration.basePath}/api/files/download/${encodeURIComponent(String(fileId))}`,
             {
                 responseType: "blob",
                 withCredentials: this.configuration.withCredentials,
@@ -301,7 +301,7 @@ export class FileService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<FileModel>(`${this.configuration.basePath}/files/${encodeURIComponent(String(fileId))}`,
+        return this.httpClient.get<FileModel>(`${this.configuration.basePath}/api/files/${encodeURIComponent(String(fileId))}`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -504,7 +504,7 @@ export class FileService {
             responseType = 'text';
         }
 
-        return this.httpClient.put<FileModel>(`${this.configuration.basePath}/files/${encodeURIComponent(String(fileId))}`,
+        return this.httpClient.put<FileModel>(`${this.configuration.basePath}/api/files/${encodeURIComponent(String(fileId))}`,
             convertFormParamsToString ? formParams.toString() : formParams,
             {
                 responseType: <any>responseType,
