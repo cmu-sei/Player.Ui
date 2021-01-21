@@ -25,7 +25,7 @@ export class OpenFileComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const fileId = this.route.snapshot.queryParamMap.get('id')
+    const fileId = this.route.snapshot.queryParamMap.get('id');
     const fileName = this.route.snapshot.queryParamMap.get('name');
     this.fileService.download(fileId).subscribe(
       data => {
