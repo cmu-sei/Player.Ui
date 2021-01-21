@@ -73,7 +73,13 @@ export class AdminViewSearchComponent implements OnInit {
           this.adminViewEditComponent.resetStepper();
           this.adminViewEditComponent.updateView();
           this.adminViewEditComponent.updateApplicationTemplates();
-          this.adminViewEditComponent.view = view;
+          
+          // Get teams for the view now so user does not have to expand teams section before uploading files
+          this.adminViewEditComponent.view = {
+            id: viewGuid
+          };
+          this.adminViewEditComponent.updateViewTeams();
+          
           this.showEditScreen = true;
         });
         break;
