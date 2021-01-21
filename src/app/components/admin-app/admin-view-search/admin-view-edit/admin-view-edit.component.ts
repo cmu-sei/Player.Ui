@@ -524,7 +524,7 @@ export class AdminViewEditComponent implements OnInit {
       name: file.name,
       url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
       embeddable: true,
-      loadInBackground: true,
+      loadInBackground: false,
       viewId: this.view.id,
     }
 
