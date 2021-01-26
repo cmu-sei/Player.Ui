@@ -64,7 +64,20 @@
   align-items: center;
 }
 
+#viewFiles > mat-list-item {
+  padding-top: 20px;
+}
+
 #chooseBtn {
-  max-width: 168.05px;
-  max-height: 65px;
+  width: 175px;
+  height: 65px;
+}
+
+.file_buttons {
+  white-space: nowrap;
+}
+
+.file_buttons > button {
+  display: inline-block;
+  white-space: normal;
 }

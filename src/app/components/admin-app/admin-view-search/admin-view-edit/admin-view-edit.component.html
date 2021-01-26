@@ -260,7 +260,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <mat-list id="viewFiles" fxLayout="column">
               <mat-list-item *ngFor="let viewFile of viewFiles">
                 {{viewFile.name}}
-                <div>
+                <div class="file_buttons">
                   <button mat-icon-button (click)="downloadFile(viewFile.id, viewFile.name)" title="Download">
                     <mat-icon style="transform: scale(0.85);" svgIcon="ic_get_app"></mat-icon>
                   </button>
