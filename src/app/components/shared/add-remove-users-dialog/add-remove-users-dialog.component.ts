@@ -306,4 +306,34 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       return (a.toLowerCase() < b.toLowerCase() ? -1 : 1) * (isAsc ? 1 : -1);
     }
   }
+
+  /**
+   * Add users in bulk to this team by uploading a csv
+   */
+  uploadUsers(files: FileList): void {
+    const fp = files[0];
+    if (!fp.name.endsWith('.csv')) {
+      window.alert('Please upload a csv file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsText(fp);
+    reader.onload = (ev) => {
+      const text = reader.result as string;
+      const users = text.split('\n');
+      console.log(users);
+
+      for (let user of users) {
+        user = user.replace('\r', '');
+        
+        // If user is empty string, we're at end of file
+        if (user == '') {
+          break;
+        }
+        console.log('Adding user ' + user);
+        this.userService.addUserToTeam(this.team.id, user).subscribe();
+      }
+    }
+  }
 }
