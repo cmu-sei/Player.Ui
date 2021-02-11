@@ -26,7 +26,8 @@ import {
   TeamMembershipForm,
   Permission,
 } from '../../../generated/player-api';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, from, Observable, of } from 'rxjs';
+import { combineLatest, concatMap, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -321,18 +322,31 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     reader.readAsText(fp);
     reader.onload = (ev) => {
       const text = reader.result as string;
-      const users = text.split('\n');
-      console.log(users);
+      let users = text.split('\r\n'); // Will this break if user isn't using windows?
+      users = users.filter(u => u != '');
 
       for (let user of users) {
-        user = user.replace('\r', '');
-        
-        // If user is empty string, we're at end of file
-        if (user == '') {
-          break;
-        }
-        console.log('Adding user ' + user);
-        this.userService.addUserToTeam(this.team.id, user).subscribe();
+        // Add users to team
+        this.userService.addUserToTeam(this.team.id, user).pipe(
+          switchMap(() => {
+            return this.teamMembershipService.getTeamMemberships(this.team.viewId, user)
+          })
+        ).subscribe(memberships => {
+          const relevantMembership = memberships.find(m => m.userId == user);
+          
+          // Get the user we just added and set the new userSource array
+          const lhsUsers = this.userDataSource.data;
+          const addedUser = lhsUsers.find(u => u.id == user);
+          const lhsNew = lhsUsers.filter(usr => usr != addedUser);
+
+          // Add the user we just uploaded to the teamUser data source array
+          let teamUsers = this.teamUserDataSource.data;
+          teamUsers.push(new TeamUser(addedUser.name, addedUser, relevantMembership))
+
+          // Update the arrays with the new data
+          this.userDataSource = new MatTableDataSource(lhsNew); 
+          this.teamUserDataSource = new MatTableDataSource(teamUsers);
+        })
       }
     }
   }
