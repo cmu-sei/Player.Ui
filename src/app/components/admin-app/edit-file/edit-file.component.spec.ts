@@ -8,7 +8,7 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { EditFileComponent } from './edit-file.component';
 
@@ -16,7 +16,7 @@ describe('EditFileComponent', () => {
   let component: EditFileComponent;
   let fixture: ComponentFixture<EditFileComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ EditFileComponent ]
     })
