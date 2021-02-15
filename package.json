@@ -42,7 +42,7 @@
     "@auth0/angular-jwt": "^4.1.2",
     "@datorama/akita": "^4.23.2",
     "@datorama/akita-ng-router-store": "^5.1.4",
-    "@ng-bootstrap/ng-bootstrap": "^6.1.0",
+    "@ng-bootstrap/ng-bootstrap": "^9.0.2",
     "@schematics/angular": "^9.1.7",
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^4.5.3",
