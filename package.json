@@ -54,14 +54,14 @@
     "ng-push-ivy": "^1.0.8",
     "ng-socket-io": "^0.2.4",
     "ngx-clipboard": "^14.0.1",
-    "oidc-client": "^1.11.4",
+    "oidc-client": "^1.11.5",
     "popper.js": "^1.16.1",
     "rxjs": "^6.6.3",
     "rxjs-compat": "^6.6.3",
     "rxjs-tslint": "^0.1.8",
     "tether": "^1.4.7",
     "tslib": "^2.1.0",
-    "zone.js": "~0.11.3"
+    "zone.js": "~0.11.4"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.1102.0",
