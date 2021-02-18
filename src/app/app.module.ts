@@ -187,7 +187,7 @@ export class AngularMaterialModule {}
     FlexLayoutModule,
     SwaggerCodegenApiModule,
     ClipboardModule,
-    environment.production ? [] : AkitaNgDevtools,
+    environment.production ? [] : AkitaNgDevtools.forRoot(),
     AkitaNgRouterStoreModule,
     ComnSettingsModule.forRoot(),
     ComnAuthModule.forRoot(),
