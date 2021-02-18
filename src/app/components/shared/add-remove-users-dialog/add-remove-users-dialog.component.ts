@@ -322,7 +322,8 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     reader.readAsText(fp);
     reader.onload = (ev) => {
       const text = reader.result as string;
-      let users = text.split('\r\n'); // Will this break if user isn't using windows?
+      // Assumes user IDs in file are in a column; should split on commas if in rows
+      let users = text.includes('\r') ? text.split('\r\n') : text.split('\n');
       users = users.filter(u => u != '');
 
       for (let user of users) {
