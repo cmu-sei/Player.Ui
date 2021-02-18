@@ -26,8 +26,8 @@ import {
   TeamMembershipForm,
   Permission,
 } from '../../../generated/player-api';
-import { forkJoin, from, Observable, of } from 'rxjs';
-import { combineLatest, concatMap, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { forkJoin, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -67,7 +67,6 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) data,
     private dialogRef: MatDialogRef<AddRemoveUsersDialogComponent>,
     public userService: UserService,
     public teamService: TeamService,
@@ -221,7 +220,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       this.isBusy = true;
       this.userService
         .addUserToTeam(this.team.id, user.id)
-        .subscribe((result) => {
+        .subscribe(() => {
           const tUsers = this.teamUserDataSource.data.slice(0);
 
           this.teamMembershipService
@@ -264,7 +263,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       this.isBusy = true;
       this.userService
         .removeUserFromTeam(this.team.id, tuser.user.id)
-        .subscribe((result) => {
+        .subscribe(() => {
           const tUsers = this.teamUserDataSource.data.slice(0);
           tUsers.splice(index, 1);
           this.teamUserDataSource = new MatTableDataSource(tUsers);
@@ -295,7 +294,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
     this.teamMembershipService
       .updateTeamMembership(teamUser.teamMembership.id, form)
-      .subscribe((result) => {
+      .subscribe(() => {
         console.log('Update complete');
       });
   }
@@ -320,7 +319,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
     const reader = new FileReader();
     reader.readAsText(fp);
-    reader.onload = (ev) => {
+    reader.onload = () => {
       const text = reader.result as string;
       // Assumes user IDs in file are in a column; should split on commas if in rows
       let users = text.includes('\r') ? text.split('\r\n') : text.split('\n');
