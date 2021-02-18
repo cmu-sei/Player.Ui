@@ -88,13 +88,21 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
   <div style="margin-left: 20px;">
     <div class="team-list-container mat-elevation-z8">
-      <div class="sp-icon">
-        <img
-          height="35"
-          src="../../../assets/img/SP_Icon_Team.png"
-          alt="Users"
-        />
-        Team Users
+      <div id="userImport">
+        <div class="sp-icon">
+          <img
+            height="35"
+            src="../../../assets/img/SP_Icon_Team.png"
+            alt="Users"
+          />
+          Team Users
+        </div>
+        <div>
+          <button mat-stroked-button (click)="fileInput.click()" title="Import users from a CSV containing a single column of user IDs">
+            Import Users
+          </button>
+        </div>
+        <input hidden (change)="uploadUsers($event.target.files)" #fileInput type="file">
       </div>
 
       <mat-card

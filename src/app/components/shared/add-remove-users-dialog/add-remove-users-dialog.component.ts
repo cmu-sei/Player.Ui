@@ -4,11 +4,10 @@
 import {
   Component,
   OnInit,
-  Inject,
   ElementRef,
   ViewChild,
 } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -27,6 +26,7 @@ import {
   Permission,
 } from '../../../generated/player-api';
 import { forkJoin, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -66,7 +66,6 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) data,
     private dialogRef: MatDialogRef<AddRemoveUsersDialogComponent>,
     public userService: UserService,
     public teamService: TeamService,
@@ -220,7 +219,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       this.isBusy = true;
       this.userService
         .addUserToTeam(this.team.id, user.id)
-        .subscribe((result) => {
+        .subscribe(() => {
           const tUsers = this.teamUserDataSource.data.slice(0);
 
           this.teamMembershipService
@@ -263,7 +262,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       this.isBusy = true;
       this.userService
         .removeUserFromTeam(this.team.id, tuser.user.id)
-        .subscribe((result) => {
+        .subscribe(() => {
           const tUsers = this.teamUserDataSource.data.slice(0);
           tUsers.splice(index, 1);
           this.teamUserDataSource = new MatTableDataSource(tUsers);
@@ -294,7 +293,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
     this.teamMembershipService
       .updateTeamMembership(teamUser.teamMembership.id, form)
-      .subscribe((result) => {
+      .subscribe(() => {
         console.log('Update complete');
       });
   }
@@ -304,6 +303,50 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       return 0;
     } else {
       return (a.toLowerCase() < b.toLowerCase() ? -1 : 1) * (isAsc ? 1 : -1);
+    }
+  }
+
+  /**
+   * Add users in bulk to this team by uploading a csv
+   */
+  uploadUsers(files: FileList): void {
+    const fp = files[0];
+    if (!fp.name.endsWith('.csv')) {
+      window.alert('Please upload a csv file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsText(fp);
+    reader.onload = () => {
+      const text = reader.result as string;
+      // Assumes user IDs in file are in a column; should split on commas if in rows
+      let users = text.includes('\r') ? text.split('\r\n') : text.split('\n');
+      users = users.filter(u => u != '');
+
+      for (let user of users) {
+        // Add users to team
+        this.userService.addUserToTeam(this.team.id, user).pipe(
+          switchMap(() => {
+            return this.teamMembershipService.getTeamMemberships(this.team.viewId, user)
+          })
+        ).subscribe(memberships => {
+          const relevantMembership = memberships.find(m => m.userId == user);
+          
+          // Get the user we just added and set the new userSource array
+          const lhsUsers = this.userDataSource.data;
+          const addedUser = lhsUsers.find(u => u.id == user);
+          const lhsNew = lhsUsers.filter(usr => usr != addedUser);
+
+          // Add the user we just uploaded to the teamUser data source array
+          let teamUsers = this.teamUserDataSource.data;
+          teamUsers.push(new TeamUser(addedUser.name, addedUser, relevantMembership))
+
+          // Update the arrays with the new data
+          this.userDataSource = new MatTableDataSource(lhsNew); 
+          this.teamUserDataSource = new MatTableDataSource(teamUsers);
+        })
+      }
     }
   }
 }
