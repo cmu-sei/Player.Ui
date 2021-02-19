@@ -48,7 +48,7 @@
     "@schematics/angular": "^11.2.1",
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^4.6.0",
-    "core-js": "^3.8.3",
+    "core-js": "^3.9.0",
     "font-awesome": "^4.7.0",
     "jquery": "^3.5.1",
     "ng-push-ivy": "^1.0.8",
