@@ -57,7 +57,7 @@
     "ngx-clipboard": "^14.0.1",
     "oidc-client": "^1.11.5",
     "popper.js": "^1.16.1",
-    "rxjs": "^6.6.3",
+    "rxjs": "^6.6.6",
     "rxjs-compat": "^6.6.3",
     "rxjs-tslint": "^0.1.8",
     "tether": "^1.4.7",
