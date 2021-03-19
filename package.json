@@ -46,7 +46,7 @@
     "@datorama/akita": "^6.1.2",
     "@datorama/akita-ng-router-store": "^6.0.0",
     "@ng-bootstrap/ng-bootstrap": "^9.0.2",
-    "@schematics/angular": "^11.2.4",
+    "@schematics/angular": "^11.2.5",
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^4.6.0",
     "core-js": "^3.9.1",
