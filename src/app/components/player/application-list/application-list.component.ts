@@ -15,7 +15,6 @@ import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User } from 'oidc-client';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-import { Application } from '../../../generated/player-api';
 import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
@@ -37,6 +36,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   public titleText: string;
   private unsubscribe$: Subject<null> = new Subject<null>();
   private currentTheme = Theme.LIGHT;
+  private currentApp: ApplicationData;
 
   constructor(
     private applicationsService: ApplicationsService,
@@ -87,7 +87,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
         }),
         tap((apps) => {
           if (apps.length > 0) {
-            this.openInFocusedApp(apps[0]);
+            this.currentApp == undefined ? this.openInFocusedApp(apps[0]) : this.openInFocusedApp(this.currentApp);
           }
         }),
         takeUntil(this.unsubscribe$)
@@ -95,6 +95,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   openInFocusedApp(app: ApplicationData) {
+    this.currentApp = app;
     this.authService.isAuthenticated().then((isAuthenticated) => {
       if (!isAuthenticated) {
         console.log(
