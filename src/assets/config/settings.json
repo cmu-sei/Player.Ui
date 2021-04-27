@@ -18,5 +18,5 @@
   "AppTopBarText": "Player",
   "AppTopBarHexColor": "#5F8DB5",
   "AppTopBarHexTextColor": "#FFFFFF",
-  "UseLocalAuthStorage": true
+  "UseLocalAuthStorage": false
 }
