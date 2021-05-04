@@ -85,6 +85,9 @@ export class AdminAppComponent implements OnInit, OnDestroy {
       case Section.ADMIN_ROLE_PERM:
         this.title = 'Roles / Permissions';
         break;
+      case Section.ADMIN_SUBS:
+        this.title = 'Subscriptions';
+        break;
     }
   }
 

@@ -5,4 +5,5 @@ export enum Section {
   ADMIN_USERS = 'admin-users',
   ADMIN_APP_TEMP = 'admin-app-temp',
   ADMIN_ROLE_PERM = 'admin-role-perm',
+  ADMIN_SUBS = 'admin-subs',
 }

@@ -15,6 +15,7 @@ import { CreatePermissionDialogComponent } from '../../components/admin-app/admi
 import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
 import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
 import { EditFileComponent } from '../../components/admin-app/edit-file/edit-file.component';
+import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 
 @Injectable()
 export class DialogService {
@@ -109,6 +110,13 @@ export class DialogService {
     dialogRef.componentInstance.viewId = viewId;
     dialogRef.componentInstance.oldName = oldName;
     dialogRef.componentInstance.oldTeams = oldTeams;
+    return dialogRef.afterClosed();
+  }
+
+  public editSubscription(subId?: string): Observable<boolean> {
+    let dialogRef: MatDialogRef<EditSubscriptionComponent>;
+    dialogRef = this.dialog.open(EditSubscriptionComponent);
+    dialogRef.componentInstance.currentSubId = subId;
     return dialogRef.afterClosed();
   }
 }

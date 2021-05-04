@@ -94,6 +94,8 @@ import { ViewsService } from './services/views/views.service';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { OpenFileComponent } from './components/player/open-file/open-file.component';
 import { EditFileComponent } from './components/admin-app/edit-file/edit-file.component';
+import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-admin-subscription-search/app-admin-subscription-search.component';
+import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 
 declare var require: any;
 const settings: ComnSettingsConfig = {
@@ -171,7 +173,9 @@ export class AngularMaterialModule {}
     TopbarComponent,
     FileBrowseComponent,
     OpenFileComponent,
-    EditFileComponent
+    EditFileComponent,
+    AppAdminSubscriptionSearchComponent,
+    EditSubscriptionComponent
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,84 @@
+<!--
+Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+-->
+<div class="sub-container mat-elevation-z8">
+	<div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
+		<mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon>
+		<h3 class="header-text">Subscriptions</h3>
+		<div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
+			<mat-icon style="transform: scale(0.85); margin-right: 5px;"></mat-icon>
+			<mat-form-field style="width: 320px;">
+				<input
+					matInput
+					[(ngModel)]="filterStr"
+					(keyup)="applyFilter($event.target.value)"
+					placeholder="Search"
+				>
+			</mat-form-field>
+			<button
+				*ngIf="filterStr != ''"
+				fxLayoutAlign="start center"
+				mat-icon-button
+				(click)="clearFilter()"
+				style="outline: none;"
+				title="Clear Search"
+			>
+				<mat-icon
+					style="transform: scale(0.85);"
+					svgIcon="ic_cancel_circle"
+				></mat-icon>
+			</button>
+			<div class="button-end">
+				<button mat-stroked-button (click)="addNewSubscription()">
+					Add New Subscription
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<mat-table #table [dataSource]="dataSource" matSort>
+		<!-- Name column -->
+		<ng-container matColumnDef="name">
+			<mat-header-cell fxFlex="50" *matHeaderCellDef mat-sort-header>
+				Subscription Name
+			</mat-header-cell>
+			<mat-cell fxFlex="50" *matCellDef="let element">
+				<button
+					mat-icon-button
+					title = "Edit Subscription"
+					(click)="editSubscription(element.id)"
+				>
+					<mat-icon
+						style="transform: scale(0.85);"
+						svgIcon="ic_edit"
+					></mat-icon>
+					{{ element.name }}
+				</button>
+			</mat-cell>
+		</ng-container>
+
+		<!-- Error Column -->
+		<ng-container matColumnDef="lastError">
+			<mat-header-cell fxFlex="50" *matHeaderCellDef>
+				Last Error
+			</mat-header-cell>
+			<mat-cell fxFlex="50" *matCellDef="let element">
+				{{element.lastError}}
+			</mat-cell>
+		</ng-container>
+
+		<!-- EventTypes Column -->
+		<ng-container matColumnDef="eventTypes">
+			<mat-header-cell fxFlex="100" *matHeaderCellDef mat-sort-header>
+				Event Types
+			</mat-header-cell>
+			<mat-cell fxFlex="100" *matCellDef="let element">
+				{{ element.eventTypes }}
+			</mat-cell>
+		</ng-container>
+
+		<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+		<mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+	</mat-table>
+</div>
