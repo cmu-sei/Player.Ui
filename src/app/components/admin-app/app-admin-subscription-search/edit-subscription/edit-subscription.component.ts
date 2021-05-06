@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormControlDirective, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { EventType, WebhookService, WebhookSubscription, WebhookSubscriptionForm } from '../../../../generated/player-api';
+import { EventType, WebhookService, WebhookSubscriptionForm } from '../../../../generated/player-api';
 
 @Component({
   selector: 'app-edit-subscription',
