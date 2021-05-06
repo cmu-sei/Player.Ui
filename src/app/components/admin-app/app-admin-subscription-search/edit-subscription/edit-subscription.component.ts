@@ -6,6 +6,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
+import { take } from 'rxjs/operators';
 import { EventType, WebhookService, WebhookSubscriptionForm } from '../../../../generated/player-api';
 
 @Component({
@@ -47,24 +48,31 @@ export class EditSubscriptionComponent implements OnInit {
       eventTypes: this.form.get('events').value as EventType[]
     };
 
-    this.webhookService.subscribe(webhook).subscribe(
-      data => {
-        this.dialogRef.close(false);
-      },
-      err => {
-        this.dialogRef.close(true);
-      }
-    );
+    // Create a new subscription
+    if (this.currentSubId === undefined) {
+      this.webhookService.subscribe(webhook)
+        .pipe(take(1))
+        .subscribe(
+          data => { this.dialogRef.close(false); },
+          err => { this.dialogRef.close(true); }
+        );
+    } else {
+      // Update an existing subscription
+      this.webhookService.update(this.currentSubId, webhook)
+        .pipe(take(1))
+        .subscribe(
+          data => { this.dialogRef.close(false); },
+          err => { this.dialogRef.close(true); }
+        );
+    }
   }
 
   onDelete() {
-    this.webhookService._delete(this.currentSubId).subscribe(
-      data => {
-        this.dialogRef.close(false);
-      },
-      err => {
-        this.dialogRef.close(true);
-      }
-    );
+    this.webhookService._delete(this.currentSubId)
+      .pipe(take(1))
+      .subscribe(
+        data => { this.dialogRef.close(false); },
+        err => { this.dialogRef.close(true); }
+      )
   }
 }
