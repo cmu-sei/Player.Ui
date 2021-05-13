@@ -7,20 +7,22 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181 -->
 <h2>Edit File</h2>
 <form [formGroup]="form" (ngSubmit)="submit()">
-	<mat-form-field fxLayout="row">
-		<mat-label>Name</mat-label>
-		<input type="string" matInput formControlName="name" value=".png">
-	</mat-form-field>
-	<mat-form-field fxLayout="row">
-		<mat-label>Teams</mat-label>
-		<mat-select multiple matNativeControl formControlName="teamIDs">
-			<mat-option *ngFor="let team of availableTeams" [value]="team.id">{{team.name}}</mat-option>
-		</mat-select>
-	</mat-form-field>
+  <mat-form-field fxLayout="row">
+    <mat-label>Name</mat-label>
+    <input type="string" matInput formControlName="name" value=".png" />
+  </mat-form-field>
+  <mat-form-field fxLayout="row">
+    <mat-label>Teams</mat-label>
+    <mat-select multiple matNativeControl formControlName="teamIDs">
+      <mat-option *ngFor="let team of availableTeams" [value]="team.id">{{
+        team.name
+      }}</mat-option>
+    </mat-select>
+  </mat-form-field>
 
-	<div fxLayout="row" fxLayoutAlign="space-around center">
-		<button mat-flat-button color="primary" class="action-button" type="submit">
-			Submit
-		</button>
-	</div>
+  <div fxLayout="row" fxLayoutAlign="space-around center">
+    <button mat-flat-button color="primary" class="action-button" type="submit">
+      Submit
+    </button>
+  </div>
 </form>

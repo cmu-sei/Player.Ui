@@ -9,11 +9,13 @@ describe('AddRemoveUsersDialogComponent', () => {
   let component: AddRemoveUsersDialogComponent;
   let fixture: ComponentFixture<AddRemoveUsersDialogComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AddRemoveUsersDialogComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [AddRemoveUsersDialogComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AddRemoveUsersDialogComponent);

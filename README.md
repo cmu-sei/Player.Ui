@@ -1,4 +1,4 @@
-# Player.Ui Readme 
+# Player.Ui Readme
 
 Player UI is the front-end to the Player application implementing NPM and Angular version 4.0.
 
@@ -18,7 +18,7 @@ The following table defines Docker environment variables that can be set at depl
 - Recommended to update NPM (`npm update -g npm`)
 - Install latest Angular-CLI
 - Clone the repo: `git clone https://github.com/cmu-sei/Player.Ui.git`
-- Move to player.ui directory,  `cd player.ui`
+- Move to player.ui directory, `cd player.ui`
 - Install the NPM dependencies: `npm install`
 - Run the server: `ng serve`
 
@@ -27,7 +27,7 @@ The following table defines Docker environment variables that can be set at depl
 All configurable values (URLs, etc.) should be made to use the **SettingsService**. The **SettingsService** loads its values from configuration files located in `/assets/config/`. There are two files used for this. They are as follows:
 
 - **settings.json:** This file is committed to source control, and holds default values for all settings. Changes should only be made to this file to add new settings, or change the default value of a setting that will affect everyone who pulls down the project.
-- **settings.env.json:** This file is *not* committed to source control, and will differ for each environment. Settings can be placed into this file and they will override settings found in `settings.json`. Any settings not found in this file will default to the values in `settings.json`.
+- **settings.env.json:** This file is _not_ committed to source control, and will differ for each environment. Settings can be placed into this file and they will override settings found in `settings.json`. Any settings not found in this file will default to the values in `settings.json`.
 
 In a production environment, `settings.env.json` should contain only the settings that need to be changed for that environment; `settings.json` serves as a reference for the default values as well as any unchanged settings. `settings.json` should not be altered in a production environment for any reason.
 

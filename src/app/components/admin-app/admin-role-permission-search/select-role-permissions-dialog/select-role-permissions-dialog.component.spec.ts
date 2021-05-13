@@ -9,11 +9,13 @@ describe('SelectRolePermissionsDialogComponent', () => {
   let component: SelectRolePermissionsDialogComponent;
   let fixture: ComponentFixture<SelectRolePermissionsDialogComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [SelectRolePermissionsDialogComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [SelectRolePermissionsDialogComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SelectRolePermissionsDialogComponent);

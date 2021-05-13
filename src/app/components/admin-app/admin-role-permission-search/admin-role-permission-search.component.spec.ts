@@ -9,11 +9,13 @@ describe('AdminAppRolePermissionSearchComponent', () => {
   let component: AdminRolePermissionSearchComponent;
   let fixture: ComponentFixture<AdminRolePermissionSearchComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AdminRolePermissionSearchComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [AdminRolePermissionSearchComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AdminRolePermissionSearchComponent);

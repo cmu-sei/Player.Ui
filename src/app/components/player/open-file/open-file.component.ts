@@ -15,20 +15,19 @@ import { FileService } from '../../../generated/player-api';
 @Component({
   selector: 'app-open-file',
   templateUrl: './open-file.component.html',
-  styleUrls: ['./open-file.component.scss']
+  styleUrls: ['./open-file.component.scss'],
 })
 export class OpenFileComponent implements OnInit {
-
   constructor(
     private fileService: FileService,
-    private route: ActivatedRoute,
-  ) { }
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     const fileId = this.route.snapshot.queryParamMap.get('id');
     const fileName = this.route.snapshot.queryParamMap.get('name');
     this.fileService.download(fileId).subscribe(
-      data => {
+      (data) => {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
@@ -37,14 +36,24 @@ export class OpenFileComponent implements OnInit {
         }
         link.click();
       },
-      err => { window.alert('Error downloading file'); },
-      () => { console.log('Got a next value'); }
-    )
+      (err) => {
+        window.alert('Error downloading file');
+      },
+      () => {
+        console.log('Got a next value');
+      }
+    );
   }
 
   private isImageOrPdf(file: string): boolean {
-    return file.endsWith('.pdf') || file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png') 
-      || file.endsWith('.bmp') || file.endsWith('.heic') || file.endsWith('.gif');
+    return (
+      file.endsWith('.pdf') ||
+      file.endsWith('.jpeg') ||
+      file.endsWith('.jpg') ||
+      file.endsWith('.png') ||
+      file.endsWith('.bmp') ||
+      file.endsWith('.heic') ||
+      file.endsWith('.gif')
+    );
   }
-
 }

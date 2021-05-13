@@ -16,7 +16,7 @@ import { FileService, Team, TeamService } from '../../../generated/player-api';
 @Component({
   selector: 'app-edit-file',
   templateUrl: './edit-file.component.html',
-  styleUrls: ['./edit-file.component.scss']
+  styleUrls: ['./edit-file.component.scss'],
 })
 export class EditFileComponent implements OnInit {
   form: FormGroup;
@@ -33,8 +33,8 @@ export class EditFileComponent implements OnInit {
     private teamService: TeamService,
     private fileService: FileService,
     private formBuilder: FormBuilder,
-    private dialogRef: MatDialogRef<EditFileComponent>,
-  ) { }
+    private dialogRef: MatDialogRef<EditFileComponent>
+  ) {}
 
   ngOnInit(): void {
     this.getTeams();
@@ -45,14 +45,14 @@ export class EditFileComponent implements OnInit {
     this.form = this.formBuilder.group({
       name: [name],
       teamIDs: [this.oldTeams],
-    })
+    });
   }
 
   /**
    * Get the teams in this view available to the user
    */
   getTeams() {
-    this.teamService.getMyViewTeams(this.viewId).subscribe(data => {
+    this.teamService.getMyViewTeams(this.viewId).subscribe((data) => {
       this.availableTeams = data;
     });
   }
@@ -62,16 +62,17 @@ export class EditFileComponent implements OnInit {
    */
   submit() {
     // Do not allow the file extension to change
-    const name = this.form.get('name').value as string + this.extension;
+    const name = (this.form.get('name').value as string) + this.extension;
     const teams = this.form.get('teamIDs').value as string[];
     this.fileService.updateFile(this.fileId, name, teams, null).subscribe(
-      data => { 
+      (data) => {
         this.dialogRef.close({
-          name: name
+          name: name,
         });
       },
-      err => { console.log('Error updating file: ' + err) },
+      (err) => {
+        console.log('Error updating file: ' + err);
+      }
     );
   }
-
 }

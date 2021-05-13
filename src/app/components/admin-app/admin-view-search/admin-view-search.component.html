@@ -15,17 +15,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   class="view-list-container mat-elevation-z8"
 >
   <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
-    <mat-icon
-      class="player-icon-small"
-      svgIcon="ic_crucible_player"
-    ></mat-icon>
+    <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon>
     <h3 class="header-text">Views</h3>
     <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
       <mat-icon
-        style="transform: scale(0.85); margin-right: 5px;"
+        style="transform: scale(0.85); margin-right: 5px"
         svgIcon="ic_magnify_search"
       ></mat-icon>
-      <mat-form-field style="width: 320px;">
+      <mat-form-field style="width: 320px">
         <input
           matInput
           [(ngModel)]="filterString"
@@ -38,11 +35,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         fxLayoutAlign="start center"
         mat-icon-button
         (click)="clearFilter()"
-        style="outline: none;"
+        style="outline: none"
         title="Clear Search"
       >
         <mat-icon
-          style="transform: scale(0.85);"
+          style="transform: scale(0.85)"
           svgIcon="ic_cancel_circle"
         ></mat-icon>
       </button>
@@ -54,7 +51,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
   <mat-card
     *ngIf="isLoading"
-    style="display: flex; justify-content: center; align-items: center;"
+    style="display: flex; justify-content: center; align-items: center"
   >
     <mat-progress-spinner color="primary" mode="indeterminate">
     </mat-progress-spinner>
@@ -76,12 +73,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           title="Copy:  {{ element.id }}"
         >
           <mat-icon
-            style="transform: scale(0.85);"
+            style="transform: scale(0.85)"
             svgIcon="ic_clipboard_copy"
           ></mat-icon>
         </button>
         <a
-          style="cursor: pointer;"
+          style="cursor: pointer"
           (click)="executeViewAction('edit', element.id)"
           >{{ element.name }}</a
         >
@@ -94,7 +91,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         Description
       </mat-header-cell>
       <mat-cell fxFlex="40" *matCellDef="let element">
-        <div class="description-text" style="margin: 5px;">
+        <div class="description-text" style="margin: 5px">
           {{ element.description }}
         </div>
       </mat-cell>

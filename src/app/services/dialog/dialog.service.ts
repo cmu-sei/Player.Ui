@@ -102,9 +102,7 @@ export class DialogService {
     oldTeams: string[]
   ): Observable<boolean> {
     let dialogRef: MatDialogRef<EditFileComponent>;
-    dialogRef = this.dialog.open(
-      EditFileComponent,
-    );
+    dialogRef = this.dialog.open(EditFileComponent);
     dialogRef.componentInstance.fileId = fileId;
     dialogRef.componentInstance.viewId = viewId;
     dialogRef.componentInstance.oldName = oldName;

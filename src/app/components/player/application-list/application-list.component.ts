@@ -87,7 +87,9 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
         }),
         tap((apps) => {
           if (apps.length > 0) {
-            this.currentApp == undefined ? this.openInFocusedApp(apps[0]) : this.openInFocusedApp(this.currentApp);
+            this.currentApp == undefined
+              ? this.openInFocusedApp(apps[0])
+              : this.openInFocusedApp(this.currentApp);
           }
         }),
         takeUntil(this.unsubscribe$)

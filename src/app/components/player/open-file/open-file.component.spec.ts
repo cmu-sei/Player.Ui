@@ -16,12 +16,13 @@ describe('OpenFileComponent', () => {
   let component: OpenFileComponent;
   let fixture: ComponentFixture<OpenFileComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OpenFileComponent ]
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [OpenFileComponent],
+      }).compileComponents();
     })
-    .compileComponents();
-  }));
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(OpenFileComponent);

@@ -9,11 +9,13 @@ describe('AdminAppTemplateSearchComponent', () => {
   let component: AdminAppTemplateSearchComponent;
   let fixture: ComponentFixture<AdminAppTemplateSearchComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AdminAppTemplateSearchComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [AdminAppTemplateSearchComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AdminAppTemplateSearchComponent);

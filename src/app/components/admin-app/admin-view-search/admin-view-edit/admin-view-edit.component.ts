@@ -108,7 +108,7 @@ export class AdminViewEditComponent implements OnInit {
     public fileService: FileService,
     public applicationService: ApplicationService,
     public zone: NgZone,
-    public clipboard: Clipboard,
+    public clipboard: Clipboard
   ) {}
 
   /**
@@ -395,16 +395,23 @@ export class AdminViewEditComponent implements OnInit {
   uploadFile() {
     this.uploadProgess = 0;
     this.uploading = true;
-    this.fileService.uploadMultipleFiles(this.view.id, this.teamsForFile, this.staged.map((f) => f.file), 'events', true).subscribe(
-      event => {
+    this.fileService
+      .uploadMultipleFiles(
+        this.view.id,
+        this.teamsForFile,
+        this.staged.map((f) => f.file),
+        'events',
+        true
+      )
+      .subscribe((event) => {
         if (event.type === HttpEventType.UploadProgress) {
-          this.uploadProgess = Math.round(100 * event.loaded / event.total);
+          this.uploadProgess = Math.round((100 * event.loaded) / event.total);
           console.log(this.uploadProgess);
         } else if (event instanceof HttpResponse) {
           this.uploading = false;
           if (event.status === 201) {
             for (const elem of event.body) {
-              if (!this.viewFiles.some(f => f.name === elem.name)) {
+              if (!this.viewFiles.some((f) => f.name === elem.name)) {
                 this.viewFiles.push(elem);
               }
             }
@@ -414,18 +421,17 @@ export class AdminViewEditComponent implements OnInit {
             console.log('Error uploading files: ' + event.status);
           }
         }
-      }
-    )
+      });
   }
 
   /**
    * Removes a file from the list of file staged for upload
-   * 
+   *
    * @param file: The file to remove from the list
    */
   removeFile(file: PlayerFile) {
     console.log(file);
-    this.staged = this.staged.filter(f => f.path != file.path);
+    this.staged = this.staged.filter((f) => f.path != file.path);
   }
 
   /**
@@ -433,7 +439,9 @@ export class AdminViewEditComponent implements OnInit {
    */
   getDownloadLink(id: string, name: string) {
     console.log(`id = ${id} name = ${name}`);
-    this.clipboard.copy(`${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`);
+    this.clipboard.copy(
+      `${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`
+    );
   }
 
   /**
@@ -441,26 +449,28 @@ export class AdminViewEditComponent implements OnInit {
    */
   getViewFiles() {
     this.fileService.getViewFiles(this.view.id).subscribe(
-      data => {
+      (data) => {
         for (const elem of data) {
-          if (!this.viewFiles.some(f => f.name === elem.name)) {
+          if (!this.viewFiles.some((f) => f.name === elem.name)) {
             this.viewFiles.push(elem);
           }
         }
       },
-      err => { console.log('Error getting files ' + err); },
+      (err) => {
+        console.log('Error getting files ' + err);
+      }
     );
   }
 
   /**
    * Trigger a download for a file. This will open the file in the broswer if it is an image or pdf
-   * 
+   *
    * @param id: The GUID of the file to download
    * @param name: The name to use when triggering the download
    */
   downloadFile(id: string, name: string) {
     this.fileService.download(id).subscribe(
-      data => {
+      (data) => {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
@@ -470,29 +480,31 @@ export class AdminViewEditComponent implements OnInit {
         }
         link.click();
       },
-      err => { window.alert('Error downloading file'); },
-      () => { console.log('Got a next value'); }
+      (err) => {
+        window.alert('Error downloading file');
+      },
+      () => {
+        console.log('Got a next value');
+      }
     );
   }
 
   /**
    * Delete the file with the specified id.
-   * 
+   *
    * @param id: The GUID of the file to delete
    * @param name: The name of the file
    */
   deleteFile(id: string, name: string) {
     this.dialogService
-      .confirm(
-        'Delete File?',
-        'Are you sure you want to delete file ' + name
-      ).subscribe(result => {
+      .confirm('Delete File?', 'Are you sure you want to delete file ' + name)
+      .subscribe((result) => {
         if (result['confirm']) {
-          this.fileService.deleteFile(id).subscribe(resp => {
+          this.fileService.deleteFile(id).subscribe((resp) => {
             if (resp != null) {
               window.alert('Error deleting file');
             } else {
-              this.viewFiles = this.viewFiles.filter(f => f.id != id);
+              this.viewFiles = this.viewFiles.filter((f) => f.id != id);
             }
           });
         }
@@ -501,22 +513,24 @@ export class AdminViewEditComponent implements OnInit {
 
   /**
    * Rename or assign this file to different teams.
-   * 
+   *
    * @param id: The GUID of the file
-   * @param name: The current name of the file 
+   * @param name: The current name of the file
    */
   editFile(id: string, name: string, teams: string[]) {
-    this.dialogService.editFile(id, this.view.id, name, teams).subscribe(val => {
-      if (val != undefined) {
-        let index = this.viewFiles.findIndex(f => f.id === id);
-        this.viewFiles[index].name = val['name']; 
-      }
-    })
+    this.dialogService
+      .editFile(id, this.view.id, name, teams)
+      .subscribe((val) => {
+        if (val != undefined) {
+          let index = this.viewFiles.findIndex((f) => f.id === id);
+          this.viewFiles[index].name = val['name'];
+        }
+      });
   }
 
   /**
    * Creates a player application pointing to this file
-   * 
+   *
    * @param file: The file to create an application for
    */
   createApplication(file: FileModel) {
@@ -526,17 +540,16 @@ export class AdminViewEditComponent implements OnInit {
       embeddable: true,
       loadInBackground: false,
       viewId: this.view.id,
-    }
+    };
 
     this.applicationService.createApplication(this.view.id, payload).subscribe(
-      data => {
+      (data) => {
         this.appNames.push(data.name);
       },
-      err => {
+      (err) => {
         console.log('Error creating application ' + err);
       }
     );
-    
   }
 
   /**
@@ -544,27 +557,33 @@ export class AdminViewEditComponent implements OnInit {
    */
   getExistingApps() {
     this.applicationService.getViewApplications(this.view.id).subscribe(
-      data => {
+      (data) => {
         for (let app of data) {
           this.appNames.push(app.name);
         }
       },
-      err => {
+      (err) => {
         console.log('Error fetching apps');
       }
-    )
+    );
   }
 
   /**
    * Returns true if the file is an image or pdf. If we want to support more image type, will have to modify this function
-   * 
-   * @param file: The file to consider 
+   *
+   * @param file: The file to consider
    */
   private isImageOrPdf(file: string): boolean {
-    return file.endsWith('.pdf') || file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png') 
-      || file.endsWith('.bmp') || file.endsWith('.heic') || file.endsWith('.gif');
+    return (
+      file.endsWith('.pdf') ||
+      file.endsWith('.jpeg') ||
+      file.endsWith('.jpg') ||
+      file.endsWith('.png') ||
+      file.endsWith('.bmp') ||
+      file.endsWith('.heic') ||
+      file.endsWith('.gif')
+    );
   }
-
 } // End Class
 
 /** Error when invalid control is dirty, touched, or submitted. */

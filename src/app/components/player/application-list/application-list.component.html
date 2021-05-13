@@ -28,11 +28,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       (click)="openInTab(app)"
     />
 
-    <div
-      *ngIf="app.embeddable"
-      class="grow"
-      (click)="openInFocusedApp(app)"
-    >
+    <div *ngIf="app.embeddable" class="grow" (click)="openInFocusedApp(app)">
       {{ app.name }}
     </div>
     <div *ngIf="!app.embeddable" class="grow" (click)="openInTab(app)">
@@ -40,7 +36,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
 
     <div class="righticon">
-      <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none;">
+      <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none">
         <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
       </button>
     </div>
@@ -53,9 +49,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >
         Open Here
       </button>
-      <button mat-menu-item (click)="openInTab(app)">
-        Open in New Tab
-      </button>
+      <button mat-menu-item (click)="openInTab(app)">Open in New Tab</button>
     </mat-menu>
   </mat-list-item>
 </mat-list>

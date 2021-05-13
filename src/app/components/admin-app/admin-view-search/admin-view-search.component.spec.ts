@@ -9,11 +9,13 @@ describe('AdminViewSearchComponent', () => {
   let component: AdminViewSearchComponent;
   let fixture: ComponentFixture<AdminViewSearchComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AdminViewSearchComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [AdminViewSearchComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AdminViewSearchComponent);

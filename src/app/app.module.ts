@@ -171,7 +171,7 @@ export class AngularMaterialModule {}
     TopbarComponent,
     FileBrowseComponent,
     OpenFileComponent,
-    EditFileComponent
+    EditFileComponent,
   ],
   imports: [
     BrowserModule,

@@ -21,10 +21,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
     <span>Users</span>
     <mat-icon
-      style="transform: scale(0.85); margin-right: 5px;"
+      style="transform: scale(0.85); margin-right: 5px"
       svgIcon="ic_magnify_search"
     ></mat-icon>
-    <mat-form-field style="width: 320px;">
+    <mat-form-field style="width: 320px">
       <input
         matInput
         [(ngModel)]="filterString"
@@ -37,11 +37,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       fxLayoutAlign="start center"
       mat-icon-button
       (click)="clearFilter()"
-      style="outline: none;"
+      style="outline: none"
       title="Clear Search"
     >
       <mat-icon
-        style="transform: scale(0.85);"
+        style="transform: scale(0.85)"
         svgIcon="ic_cancel_circle"
       ></mat-icon>
     </button>
@@ -49,7 +49,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
   <mat-card
     *ngIf="isLoading"
-    style="display: flex; justify-content: center; align-items: center;"
+    style="display: flex; justify-content: center; align-items: center"
   >
     <mat-progress-spinner color="primary" mode="indeterminate">
     </mat-progress-spinner>
@@ -69,7 +69,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             title="Copy:  {{ element.id }}"
           >
             <mat-icon
-              style="transform: scale(0.85);"
+              style="transform: scale(0.85)"
               svgIcon="ic_clipboard_copy"
             ></mat-icon>
           </button>
@@ -86,7 +86,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <div fxFlex="100">
             <mat-expansion-panel>
               <mat-expansion-panel-header>
-                <mat-panel-title style="font-size: small;">
+                <mat-panel-title style="font-size: small">
                   <div fxLayout="column">
                     <div [hidden]="!element.roleId">
                       Role: {{ element.roleName }}

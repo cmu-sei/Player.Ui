@@ -23,14 +23,14 @@ export class FocusedAppComponent implements OnDestroy {
     private sanitizer: DomSanitizer,
     private authQuery: ComnAuthQuery
   ) {
-
     this.focusedAppUrl$ = this.focusedAppService.focusedAppUrl.pipe(
-      map((url) =>
-        this.sanitizer.bypassSecurityTrustResourceUrl(url)
-      )
+      map((url) => this.sanitizer.bypassSecurityTrustResourceUrl(url))
     );
 
-    this.focusedAppUrl$ = combineLatest([this.focusedAppService.focusedAppUrl, this.authQuery.userTheme$]).pipe(
+    this.focusedAppUrl$ = combineLatest([
+      this.focusedAppService.focusedAppUrl,
+      this.authQuery.userTheme$,
+    ]).pipe(
       map(([url, theme]) => {
         let themedUrl = url;
         const themeIndex = url.indexOf('?theme=');
@@ -42,12 +42,10 @@ export class FocusedAppComponent implements OnDestroy {
       }),
       shareReplay(1)
     );
-
   }
 
   ngOnDestroy() {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
   }
-
 }

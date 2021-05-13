@@ -10,17 +10,30 @@ DM20-0181 -->
 </header>
 
 <div>
-  <button mat-raised-button *ngFor="let team of teams" (click)="selectTeam(team.id)">{{team.name}}</button>
+  <button
+    mat-raised-button
+    *ngFor="let team of teams"
+    (click)="selectTeam(team.id)"
+  >
+    {{ team.name }}
+  </button>
 </div>
 
 <mat-list>
   <mat-list-item *ngFor="let file of filtered()">
     <div>
-      {{file.name}}
+      {{ file.name }}
     </div>
     <div>
-      <button mat-icon-button (click)="downloadFile(file.id, file.name)" title="Download">
-        <mat-icon style="transform: scale(0.85);" svgIcon="ic_get_app"></mat-icon>
+      <button
+        mat-icon-button
+        (click)="downloadFile(file.id, file.name)"
+        title="Download"
+      >
+        <mat-icon
+          style="transform: scale(0.85)"
+          svgIcon="ic_get_app"
+        ></mat-icon>
       </button>
     </div>
   </mat-list-item>

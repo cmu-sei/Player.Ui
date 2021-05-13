@@ -148,8 +148,8 @@ export class NotificationsComponent implements OnInit {
 
   public showNotificationPage(direction: number) {
     // Determine indexes to show
-    let maxDisplay = this.settingsService.settings.NotificationsSettings
-      .number_to_display;
+    let maxDisplay =
+      this.settingsService.settings.NotificationsSettings.number_to_display;
     if (maxDisplay > this.notificationsHistory.length) {
       maxDisplay = this.notificationsHistory.length;
     }

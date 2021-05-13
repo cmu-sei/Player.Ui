@@ -9,11 +9,13 @@ describe('AdminTemplateDetailsComponent', () => {
   let component: AdminTemplateDetailsComponent;
   let fixture: ComponentFixture<AdminTemplateDetailsComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AdminTemplateDetailsComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [AdminTemplateDetailsComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AdminTemplateDetailsComponent);

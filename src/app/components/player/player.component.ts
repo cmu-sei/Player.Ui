@@ -35,9 +35,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   public loaded = false;
   public data$: Observable<any>;
-  public opened$: Observable<boolean> = this.routerQuery.selectQueryParams(
-    'opened'
-  );
+  public opened$: Observable<boolean> =
+    this.routerQuery.selectQueryParams('opened');
 
   public view: View;
   public opened: boolean;
