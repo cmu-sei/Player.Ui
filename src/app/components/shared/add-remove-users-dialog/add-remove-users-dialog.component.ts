@@ -1,12 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import {
-  Component,
-  OnInit,
-  ElementRef,
-  ViewChild,
-} from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
@@ -217,33 +212,31 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     );
     if (index === -1) {
       this.isBusy = true;
-      this.userService
-        .addUserToTeam(this.team.id, user.id)
-        .subscribe(() => {
-          const tUsers = this.teamUserDataSource.data.slice(0);
+      this.userService.addUserToTeam(this.team.id, user.id).subscribe(() => {
+        const tUsers = this.teamUserDataSource.data.slice(0);
 
-          this.teamMembershipService
-            .getTeamMemberships(this.team.viewId, user.id)
-            .subscribe((tmbs) => {
-              const teamMembership = tmbs.find(
-                (tmb) => tmb.teamId === this.team.id
-              );
-              const tUser = new TeamUser(user.name, user, teamMembership);
-              tUsers.push(tUser);
-              tUsers.sort((a, b) => {
-                return this.compare(a.user.name, b.user.name, true);
-              });
-              this.teamUserDataSource.data = tUsers;
-              const allUsers = this.userDataSource.data.slice(0);
-              const i = allUsers.findIndex((u) => u.id === user.id);
-              allUsers.splice(i, 1);
-              this.userDataSource = new MatTableDataSource(allUsers);
-              this.userDataSource.sort = this.sort;
-              this.userDataSource.paginator = this.paginator;
-              this.applyFilter('');
-              this.isBusy = false;
+        this.teamMembershipService
+          .getTeamMemberships(this.team.viewId, user.id)
+          .subscribe((tmbs) => {
+            const teamMembership = tmbs.find(
+              (tmb) => tmb.teamId === this.team.id
+            );
+            const tUser = new TeamUser(user.name, user, teamMembership);
+            tUsers.push(tUser);
+            tUsers.sort((a, b) => {
+              return this.compare(a.user.name, b.user.name, true);
             });
-        });
+            this.teamUserDataSource.data = tUsers;
+            const allUsers = this.userDataSource.data.slice(0);
+            const i = allUsers.findIndex((u) => u.id === user.id);
+            allUsers.splice(i, 1);
+            this.userDataSource = new MatTableDataSource(allUsers);
+            this.userDataSource.sort = this.sort;
+            this.userDataSource.paginator = this.paginator;
+            this.applyFilter('');
+            this.isBusy = false;
+          });
+      });
     }
   }
 
@@ -322,31 +315,41 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       const text = reader.result as string;
       // Assumes user IDs in file are in a column; should split on commas if in rows
       let users = text.includes('\r') ? text.split('\r\n') : text.split('\n');
-      users = users.filter(u => u != '');
+      users = users.filter((u) => u != '');
 
       for (let user of users) {
         // Add users to team
-        this.userService.addUserToTeam(this.team.id, user).pipe(
-          switchMap(() => {
-            return this.teamMembershipService.getTeamMemberships(this.team.viewId, user)
-          })
-        ).subscribe(memberships => {
-          const relevantMembership = memberships.find(m => m.userId == user);
-          
-          // Get the user we just added and set the new userSource array
-          const lhsUsers = this.userDataSource.data;
-          const addedUser = lhsUsers.find(u => u.id == user);
-          const lhsNew = lhsUsers.filter(usr => usr != addedUser);
+        this.userService
+          .addUserToTeam(this.team.id, user)
+          .pipe(
+            switchMap(() => {
+              return this.teamMembershipService.getTeamMemberships(
+                this.team.viewId,
+                user
+              );
+            })
+          )
+          .subscribe((memberships) => {
+            const relevantMembership = memberships.find(
+              (m) => m.userId == user
+            );
 
-          // Add the user we just uploaded to the teamUser data source array
-          let teamUsers = this.teamUserDataSource.data;
-          teamUsers.push(new TeamUser(addedUser.name, addedUser, relevantMembership))
+            // Get the user we just added and set the new userSource array
+            const lhsUsers = this.userDataSource.data;
+            const addedUser = lhsUsers.find((u) => u.id == user);
+            const lhsNew = lhsUsers.filter((usr) => usr != addedUser);
 
-          // Update the arrays with the new data
-          this.userDataSource = new MatTableDataSource(lhsNew); 
-          this.teamUserDataSource = new MatTableDataSource(teamUsers);
-        })
+            // Add the user we just uploaded to the teamUser data source array
+            let teamUsers = this.teamUserDataSource.data;
+            teamUsers.push(
+              new TeamUser(addedUser.name, addedUser, relevantMembership)
+            );
+
+            // Update the arrays with the new data
+            this.userDataSource = new MatTableDataSource(lhsNew);
+            this.teamUserDataSource = new MatTableDataSource(teamUsers);
+          });
       }
-    }
+    };
   }
 }

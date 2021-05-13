@@ -6,7 +6,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { SystemMessageService } from '../system-message/system-message.service';
 import { ApiError } from '../../generated/player-api/model/apiError';
 
-
 @Injectable({
   providedIn: 'root',
 })

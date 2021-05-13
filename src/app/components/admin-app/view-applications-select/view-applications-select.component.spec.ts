@@ -9,11 +9,13 @@ describe('ApplicationsSelectComponent', () => {
   let component: ViewApplicationsSelectComponent;
   let fixture: ComponentFixture<ViewApplicationsSelectComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ViewApplicationsSelectComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [ViewApplicationsSelectComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ViewApplicationsSelectComponent);

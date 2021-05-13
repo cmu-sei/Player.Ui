@@ -8,7 +8,6 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FileService, Team, TeamService } from '../../../generated/player-api';
@@ -17,10 +16,9 @@ import { FileModel } from '../../../generated/player-api/model/fileModel';
 @Component({
   selector: 'app-file-browse',
   templateUrl: './file-browse.component.html',
-  styleUrls: ['./file-browse.component.scss']
+  styleUrls: ['./file-browse.component.scss'],
 })
 export class FileBrowseComponent implements OnInit {
-
   public files = new Array<FileModel>();
   public teams = new Set<Team>();
   public currentTeam = '';
@@ -28,8 +26,8 @@ export class FileBrowseComponent implements OnInit {
   constructor(
     private fileService: FileService,
     private teamService: TeamService,
-    private route: ActivatedRoute, 
-  ) { }
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.getFiles();
@@ -38,25 +36,29 @@ export class FileBrowseComponent implements OnInit {
   getFiles(): void {
     const viewId = this.route.snapshot.paramMap.get('id');
     this.fileService.getViewFiles(viewId).subscribe(
-      data => { 
+      (data) => {
         this.files = data;
         console.log(this.files);
       },
-      err => { console.log('Error fetching files ' + err); },
+      (err) => {
+        console.log('Error fetching files ' + err);
+      }
     );
     this.teamService.getMyViewTeams(viewId).subscribe(
-      data => {
+      (data) => {
         for (let team of data) {
           this.teams.add(team);
         }
       },
-      err => { console.log('Error fetching teams ' + err); }
-    )
+      (err) => {
+        console.log('Error fetching teams ' + err);
+      }
+    );
   }
 
   downloadFile(id: string, name: string) {
     this.fileService.download(id).subscribe(
-      data => {
+      (data) => {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
@@ -67,8 +69,12 @@ export class FileBrowseComponent implements OnInit {
         }
         link.click();
       },
-      err => { window.alert('Error downloading file'); },
-      () => { console.log('Got a next value'); }
+      (err) => {
+        window.alert('Error downloading file');
+      },
+      () => {
+        console.log('Got a next value');
+      }
     );
   }
 
@@ -88,7 +94,14 @@ export class FileBrowseComponent implements OnInit {
 
   // Returns true if the filename is an image or pdf and false otherwise
   private isImageOrPdf(file: string): boolean {
-    return file.endsWith('.pdf') || file.endsWith('.jpeg') || file.endsWith('.jpg') || file.endsWith('.png') 
-      || file.endsWith('.bmp') || file.endsWith('.heic') || file.endsWith('.gif');
+    return (
+      file.endsWith('.pdf') ||
+      file.endsWith('.jpeg') ||
+      file.endsWith('.jpg') ||
+      file.endsWith('.png') ||
+      file.endsWith('.bmp') ||
+      file.endsWith('.heic') ||
+      file.endsWith('.gif')
+    );
   }
 }

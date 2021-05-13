@@ -9,11 +9,13 @@ describe('SystemMessageComponent', () => {
   let component: SystemMessageComponent;
   let fixture: ComponentFixture<SystemMessageComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [SystemMessageComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [SystemMessageComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SystemMessageComponent);

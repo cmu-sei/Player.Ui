@@ -5,7 +5,11 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, HostBinding, OnDestroy } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer, Title } from '@angular/platform-browser';
-import { ComnAuthQuery, Theme, ComnSettingsService } from '@cmusei/crucible-common';
+import {
+  ComnAuthQuery,
+  Theme,
+  ComnSettingsService,
+} from '@cmusei/crucible-common';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 

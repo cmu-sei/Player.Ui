@@ -30,10 +30,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <span>Roles</span>
         <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
           <mat-icon
-            style="transform: scale(0.85); margin-right: 5px;"
+            style="transform: scale(0.85); margin-right: 5px"
             svgIcon="ic_magnify_search"
           ></mat-icon>
-          <mat-form-field style="width: 320px;">
+          <mat-form-field style="width: 320px">
             <input
               matInput
               [(ngModel)]="filterRoleString"
@@ -46,11 +46,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             fxLayoutAlign="start center"
             mat-icon-button
             (click)="clearRoleFilter()"
-            style="outline: none;"
+            style="outline: none"
             title="Clear Search"
           >
             <mat-icon
-              style="transform: scale(0.85);"
+              style="transform: scale(0.85)"
               svgIcon="ic_cancel_circle"
             ></mat-icon>
           </button>
@@ -78,7 +78,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <ng-container matColumnDef="permissions">
           <mat-header-cell *matHeaderCellDef> Permissions </mat-header-cell>
           <mat-cell *matCellDef="let element">
-            <ul style="list-style: none; padding: 0; margin: 0;">
+            <ul style="list-style: none; padding: 0; margin: 0">
               <li *ngFor="let permission of element.permissions">
                 {{ permission.key }}
               </li>
@@ -92,7 +92,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <button mat-icon-button [matMenuTriggerFor]="menu">
               <mat-icon title="Menu">
                 <img
-                  style="transform: scaleX(-1);"
+                  style="transform: scaleX(-1)"
                   width="32"
                   src="assets/img/SP_Icon_Collapse.png"
                 />
@@ -137,10 +137,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <span>Permissions</span>
         <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
           <mat-icon
-            style="transform: scale(0.85); margin-right: 5px;"
+            style="transform: scale(0.85); margin-right: 5px"
             svgIcon="ic_magnify_search"
           ></mat-icon>
-          <mat-form-field style="width: 320px;">
+          <mat-form-field style="width: 320px">
             <input
               matInput
               [(ngModel)]="filterPermissionString"
@@ -153,11 +153,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             fxLayoutAlign="start center"
             mat-icon-button
             (click)="clearPermissionFilter()"
-            style="outline: none;"
+            style="outline: none"
             title="Clear Search"
           >
             <mat-icon
-              style="transform: scale(0.85);"
+              style="transform: scale(0.85)"
               svgIcon="ic_cancel_circle"
             ></mat-icon>
           </button>
@@ -181,7 +181,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               *ngIf="!permission.readOnly"
               mat-button
               (click)="executePermissionAction('edit', permission)"
-              style="color: blue;"
+              style="color: blue"
             >
               {{ permission.key }}
             </button>
@@ -210,7 +210,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               <button mat-icon-button [matMenuTriggerFor]="menu">
                 <mat-icon title="Menu">
                   <img
-                    style="transform: scaleX(-1);"
+                    style="transform: scaleX(-1)"
                     width="32"
                     src="assets/img/SP_Icon_Collapse.png"
                   />

@@ -21,11 +21,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <div
             id="time"
             title="{{ notification.broadcastTime | date: 'MM/dd/yyyy HH:mm' }}"
-            style="font-size: 100%;"
+            style="font-size: 100%"
           >
-            <b>{{ notification.broadcastTime | date: "HH:mm" }}</b>
+            <b>{{ notification.broadcastTime | date: 'HH:mm' }}</b>
           </div>
-          <div id="from" style="font-size: 100%;">
+          <div id="from" style="font-size: 100%">
             {{ notification.fromName }}
           </div>
           <div id="link">
@@ -54,17 +54,17 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >
           <mat-icon
             svgIcon="ic_expand_more_black_24px"
-            style="transform: rotate(180deg);"
+            style="transform: rotate(180deg)"
           ></mat-icon>
         </button>
         <button
           *ngIf="!showUp"
           mat-icon-button
-          style="opacity: 0.3; filter: alpha(opacity=30);"
+          style="opacity: 0.3; filter: alpha(opacity=30)"
         >
           <mat-icon
             svgIcon="ic_expand_more_black_24px"
-            style="transform: rotate(180deg);"
+            style="transform: rotate(180deg)"
           ></mat-icon>
         </button>
       </div>
@@ -79,7 +79,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <button
           *ngIf="!showDown"
           mat-icon-button
-          style="opacity: 0.3; filter: alpha(opacity=30);"
+          style="opacity: 0.3; filter: alpha(opacity=30)"
         >
           <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>
         </button>
@@ -88,7 +88,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div id="history">
       <mat-list
         *ngIf="notificationsHistory != undefined"
-        style="min-width: 500px; width: 100%;"
+        style="min-width: 500px; width: 100%"
       >
         <mat-list-item
           *ngFor="
@@ -100,7 +100,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               id="time"
               title="{{ notif.broadcastTime | date: 'MM/dd/yyyy HH:mm' }}"
             >
-              <b>{{ notif.broadcastTime | date: "HH:mm" }}</b>
+              <b>{{ notif.broadcastTime | date: 'HH:mm' }}</b>
             </div>
             <div id="from">
               {{ notif.fromName }}

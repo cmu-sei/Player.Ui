@@ -9,11 +9,13 @@ describe('RolesPermissionsSelectComponent', () => {
   let component: RolesPermissionsSelectComponent;
   let fixture: ComponentFixture<RolesPermissionsSelectComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [RolesPermissionsSelectComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [RolesPermissionsSelectComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(RolesPermissionsSelectComponent);

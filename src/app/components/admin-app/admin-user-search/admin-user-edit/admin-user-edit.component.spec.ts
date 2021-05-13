@@ -9,11 +9,13 @@ describe('AdminUserEditComponent', () => {
   let component: AdminUserEditComponent;
   let fixture: ComponentFixture<AdminUserEditComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AdminUserEditComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [AdminUserEditComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AdminUserEditComponent);

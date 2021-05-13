@@ -16,12 +16,13 @@ describe('FileBrowseComponent', () => {
   let component: FileBrowseComponent;
   let fixture: ComponentFixture<FileBrowseComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ FileBrowseComponent ]
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [FileBrowseComponent],
+      }).compileComponents();
     })
-    .compileComponents();
-  }));
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(FileBrowseComponent);

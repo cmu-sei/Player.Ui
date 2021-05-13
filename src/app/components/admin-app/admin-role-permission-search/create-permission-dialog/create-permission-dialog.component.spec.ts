@@ -9,11 +9,13 @@ describe('CreatePermissionDialogComponent', () => {
   let component: CreatePermissionDialogComponent;
   let fixture: ComponentFixture<CreatePermissionDialogComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [CreatePermissionDialogComponent],
-    }).compileComponents();
-  }));
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        declarations: [CreatePermissionDialogComponent],
+      }).compileComponents();
+    })
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(CreatePermissionDialogComponent);
