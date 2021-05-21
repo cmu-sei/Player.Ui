@@ -14,7 +14,7 @@ WORKDIR /ng-app
 
 COPY . .
 
-RUN $(npm bin)/ng build --prod
+RUN $(npm bin)/ng build --configuration production
 
 ### Stage 2: Setup ###
 
