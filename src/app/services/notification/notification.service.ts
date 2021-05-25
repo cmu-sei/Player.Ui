@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
+import * as signalR from '@microsoft/signalr';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { BehaviorSubject } from 'rxjs';
 import { NotificationData } from '../../models/notification-data';
@@ -16,9 +16,9 @@ export class NotificationService {
     new Array<NotificationData>()
   );
   public canSendMessage = new BehaviorSubject<boolean>(false);
-  public viewConnection: HubConnection;
-  public teamConnection: HubConnection;
-  public userConnection: HubConnection;
+  public viewConnection: signalR.HubConnection;
+  public teamConnection: signalR.HubConnection;
+  public userConnection: signalR.HubConnection;
 
   constructor(private settingsSvc: ComnSettingsService) {}
 
@@ -28,20 +28,23 @@ export class NotificationService {
     userGuid: string,
     userToken: string
   ) {
-    this.viewConnection = new HubConnectionBuilder()
+    this.viewConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/view?bearer=${userToken}`
       )
+      .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
       .build();
-    this.teamConnection = new HubConnectionBuilder()
+    this.teamConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/team?bearer=${userToken}`
       )
+      .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
       .build();
-    this.userConnection = new HubConnectionBuilder()
+    this.userConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/user?bearer=${userToken}`
       )
+      .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
       .build();
 
     this.viewConnection.on('Reply', (data: NotificationData) => {
@@ -135,5 +138,30 @@ export class NotificationService {
     }
 
     return data;
+  }
+}
+
+class RetryPolicy {
+  constructor(
+    private maxSeconds: number,
+    private minJitterSeconds: number,
+    private maxJitterSeconds: number
+  ) {}
+
+  nextRetryDelayInMilliseconds(
+    retryContext: signalR.RetryContext
+  ): number | null {
+    let nextRetrySeconds = Math.pow(2, retryContext.previousRetryCount + 1);
+
+    if (nextRetrySeconds > this.maxSeconds) {
+      nextRetrySeconds = this.maxSeconds;
+    }
+
+    nextRetrySeconds +=
+      Math.floor(
+        Math.random() * (this.maxJitterSeconds - this.minJitterSeconds + 1)
+      ) + this.minJitterSeconds; // Add Jitter
+
+    return nextRetrySeconds * 1000;
   }
 }
