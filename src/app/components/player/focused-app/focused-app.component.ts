@@ -4,9 +4,9 @@
 import { Component, OnDestroy } from '@angular/core';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { SafeUrl, DomSanitizer } from '@angular/platform-browser';
-import { combineLatest, Observable, Subject } from 'rxjs';
+import { combineLatest, Observable, Subject, ReplaySubject } from 'rxjs';
 import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
-import { map, shareReplay, tap } from 'rxjs/operators';
+import { map, share, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-focused-app',
@@ -40,7 +40,9 @@ export class FocusedAppComponent implements OnDestroy {
         }
         return this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl);
       }),
-      shareReplay(1)
+      share({
+        connector: () => new ReplaySubject(1),
+      })
     );
   }
 
