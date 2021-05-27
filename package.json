@@ -66,7 +66,7 @@
     "@angular-devkit/build-angular": "^12.0.1",
     "@angular/cli": "^12.0.1",
     "@angular/compiler-cli": "^12.0.1",
-    "@angular/language-service": "^12.0.1",
+    "@angular/language-service": "^12.0.2",
     "@datorama/akita-ngdevtools": "^6.0.0",
     "@openapitools/openapi-generator-cli": "^2.3.3",
     "@types/jasmine": "^3.7.4",
