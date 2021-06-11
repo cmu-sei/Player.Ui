@@ -26,7 +26,7 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-devkit/core": "^12.0.3",
+    "@angular-devkit/core": "^12.0.4",
     "@angular-devkit/schematics": "^12.0.3",
     "@angular/animations": "^12.0.1",
     "@angular/cdk": "^12.0.1",
@@ -46,7 +46,7 @@
     "@datorama/akita-ng-router-store": "^6.0.0",
     "@microsoft/signalr": "^5.0.7",
     "@ng-bootstrap/ng-bootstrap": "^9.1.2",
-    "@schematics/angular": "^12.0.3",
+    "@schematics/angular": "^12.0.4",
     "babel-polyfill": "^6.26.0",
     "core-js": "^3.14.0",
     "font-awesome": "^4.7.0",
@@ -63,7 +63,7 @@
     "zone.js": "^0.11.4"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^12.0.3",
+    "@angular-devkit/build-angular": "^12.0.4",
     "@angular/cli": "^12.0.3",
     "@angular/compiler-cli": "^12.0.1",
     "@angular/language-service": "^12.0.4",
