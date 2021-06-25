@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^12.0.5",
-    "@angular/cli": "^12.0.5",
+    "@angular/cli": "^12.1.0",
     "@angular/compiler-cli": "^12.0.1",
     "@angular/language-service": "^12.0.5",
     "@datorama/akita-ngdevtools": "^6.0.0",
