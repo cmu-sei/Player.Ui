@@ -42,7 +42,7 @@
     "@angular/router": "^12.1.0",
     "@auth0/angular-jwt": "^5.0.2",
     "@cmusei/crucible-common": "0.1.1",
-    "@datorama/akita": "^6.2.0",
+    "@datorama/akita": "^6.2.1",
     "@datorama/akita-ng-router-store": "^6.0.0",
     "@microsoft/signalr": "^5.0.8",
     "@ng-bootstrap/ng-bootstrap": "^10.0.0",
