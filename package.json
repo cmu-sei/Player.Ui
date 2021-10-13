@@ -1,6 +1,6 @@
 {
   "name": "player.ui",
-  "version": "0.0.0",
+  "version": "3.0.4",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
@@ -10,6 +10,7 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "postinstall": "ngcc",
+    "docker:build": "docker build -t cmusei/player-ui:${npm_package_version} .",
     "docker:init": "docker network create identity --driver=overlay",
     "docker:stack": "npm run docker:stack:api && npm run docker:stack:identity",
     "docker:stack:proxy": "docker stack deploy -c ./docker/docker-compose.yml -c ./docker/compose/api.yml -c ./docker/api-proxy.yml player_stack",
