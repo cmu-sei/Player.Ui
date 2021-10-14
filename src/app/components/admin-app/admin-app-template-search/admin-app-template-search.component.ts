@@ -1,11 +1,11 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { ApplicationTemplate } from '../../../generated/player-api';
-import { PageEvent, MatPaginator } from '@angular/material/paginator';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 
 export interface Action {
@@ -82,7 +82,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
       name: 'New Template',
       url: 'http://localhost',
       embeddable: true,
-      icon: '/assets/img/player.png',
+      icon: 'assets/img/player.png',
       loadInBackground: false,
     };
     this.applicationService
