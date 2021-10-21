@@ -47,7 +47,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-list-item class="applist showhand highlight">
         <img
           class="lefticon"
-          src="../../../assets/img/SP_Icon_User.png"
+          src="assets/img/SP_Icon_User.png"
           alt="Users"
           (click)="sectionChangedFn(Section.ADMIN_USERS)"
         />
@@ -69,7 +69,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-list-item class="showhand highlight">
         <img
           class="lefticon"
-          src="../../../assets/img/SP_Icon_Intel.png"
+          src="assets/img/SP_Icon_Intel.png"
           alt="Users"
           (click)="sectionChangedFn(Section.ADMIN_APP_TEMP)"
         />
@@ -91,7 +91,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-list-item class="showhand highlight">
         <img
           class="lefticon"
-          src="../../../assets/img/SP_Icon_Alert.png"
+          src="assets/img/SP_Icon_Alert.png"
           alt="Users"
           (click)="sectionChangedFn(Section.ADMIN_ROLE_PERM)"
         />
@@ -118,8 +118,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       class="crucible-logo"
       [src]="
         (theme$ | async) === 'light-theme'
-          ? '/assets/img/crucible-logo-light.png'
-          : '/assets/img/crucible-logo-dark.png'
+          ? 'assets/img/crucible-logo-light.png'
+          : 'assets/img/crucible-logo-dark.png'
       "
     />
   </mat-sidenav>
