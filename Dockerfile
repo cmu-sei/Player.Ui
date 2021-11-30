@@ -1,4 +1,4 @@
-FROM node as builder
+FROM node:16-alpine as builder
 
 COPY package.json package-lock.json ./
 
@@ -13,8 +13,6 @@ RUN npm ci && mkdir -p /ng-app/dist && cp -R ./node_modules ./ng-app
 WORKDIR /ng-app
 
 COPY . .
-
-ENV NODE_OPTIONS=--openssl-legacy-provider
 
 RUN $(npm bin)/ng build --resources-output-path=assets/fonts --aot --configuration production
 
