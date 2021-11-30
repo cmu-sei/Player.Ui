@@ -62,9 +62,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
 
   // Local Component functions
   openInTab(app: ApplicationData) {
-    const url = app.url.includes('{theme}')
-      ? app.url.replace('{theme}', '?theme=' + this.currentTheme)
-      : app.url;
+    const url = this.insertThemeToUrl(app.url);
     window.open(url, '_blank');
   }
 
@@ -105,12 +103,23 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
         );
         window.location.reload();
       } else {
-        const url = app.url.includes('{theme}')
-          ? app.url.replace('{theme}', '?theme=' + this.currentTheme)
-          : app.url;
+        const url = this.insertThemeToUrl(app.url);
         this.focusedAppService.focusedAppUrl.next(url);
       }
     });
+  }
+
+  insertThemeToUrl(url: string) {
+    if (url.includes('{theme}')) {
+      if (url.includes('?')) {
+        url = url.replace('?{theme}', '?theme=' + this.currentTheme);
+        url = url.replace('&{theme}', '&theme=' + this.currentTheme);
+        url = url.replace('{theme}', '&theme=' + this.currentTheme);
+      } else {
+        url = url.replace('{theme}', '?theme=' + this.currentTheme);
+      }
+    }
+    return url;
   }
 
   ngOnDestroy() {

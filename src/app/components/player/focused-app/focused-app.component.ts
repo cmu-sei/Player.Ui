@@ -33,10 +33,18 @@ export class FocusedAppComponent implements OnDestroy {
     ]).pipe(
       map(([url, theme]) => {
         let themedUrl = url;
-        const themeIndex = url.indexOf('?theme=');
+        let themeText = '?theme=';
+        let themeIndex = url.indexOf(themeText);
+        if (themeIndex < 0) {
+          themeText = '&theme=';
+          themeIndex = url.indexOf(themeText);
+        }
         if (themeIndex >= 0) {
           // Only add the theme query param if it already exists
-          themedUrl = url.substring(0, themeIndex) + '?theme=' + theme;
+          let urlEnding = url.substring(themeIndex + 7);
+          const endingIndex = urlEnding.indexOf('&');
+          urlEnding = endingIndex < 0 ? '' : urlEnding.substring(endingIndex);
+          themedUrl = url.substring(0, themeIndex) + '?theme=' + theme + urlEnding;
         }
         return this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl);
       }),
