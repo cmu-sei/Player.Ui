@@ -14,7 +14,9 @@ WORKDIR /ng-app
 
 COPY . .
 
-RUN $(npm bin)/ng build --resources-output-path=assets/fonts --aot --configuration production 
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+RUN $(npm bin)/ng build --resources-output-path=assets/fonts --aot --configuration production
 
 ### Stage 2: Setup ###
 
