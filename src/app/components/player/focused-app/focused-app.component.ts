@@ -44,7 +44,7 @@ export class FocusedAppComponent implements OnDestroy {
           let urlEnding = url.substring(themeIndex + 7);
           const endingIndex = urlEnding.indexOf('&');
           urlEnding = endingIndex < 0 ? '' : urlEnding.substring(endingIndex);
-          themedUrl = url.substring(0, themeIndex) + '?theme=' + theme + urlEnding;
+          themedUrl = url.substring(0, themeIndex) + themeText + theme + urlEnding;
         }
         return this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl);
       }),
