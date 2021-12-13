@@ -3,9 +3,10 @@
 
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { ComnSettingsService } from '@cmusei/crucible-common';
+import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
 import { BehaviorSubject } from 'rxjs';
 import { NotificationData } from '../../models/notification-data';
+import { ViewPresence } from '../../models/view-presence';
 
 @Injectable()
 export class NotificationService {
@@ -15,12 +16,20 @@ export class NotificationService {
   public notificationHistory = new BehaviorSubject<Array<NotificationData>>(
     new Array<NotificationData>()
   );
+
+  private userPresenceList$ = new BehaviorSubject<ViewPresence[]>([]);
+  private userPresenceList = new Array<ViewPresence>();
+  public userPresence$ = this.userPresenceList$.asObservable();
+
   public canSendMessage = new BehaviorSubject<boolean>(false);
   public viewConnection: signalR.HubConnection;
   public teamConnection: signalR.HubConnection;
   public userConnection: signalR.HubConnection;
 
-  constructor(private settingsSvc: ComnSettingsService) {}
+  constructor(
+    private settingsSvc: ComnSettingsService,
+    private authService: ComnAuthService
+  ) {}
 
   connectToNotificationServer(
     viewGuid: string,
@@ -58,6 +67,10 @@ export class NotificationService {
       this.notificationHistory.next(data);
     });
 
+    this.viewConnection.on('PresenceUpdate', (data) => {
+      console.log(data);
+    });
+
     this.teamConnection.on('Reply', (data: NotificationData) => {
       const validatedData = this.validateNotificationData(data);
       if (validatedData != null) {
@@ -91,6 +104,10 @@ export class NotificationService {
         console.log('Error while establishing View connection');
       });
 
+    this.viewConnection.onreconnected(() => {
+      this.viewConnection.invoke('Join', viewGuid);
+    });
+
     this.teamConnection
       .start()
       .then(() => {
@@ -102,6 +119,10 @@ export class NotificationService {
         console.log('Error while establishing Team connection');
       });
 
+    this.teamConnection.onreconnected(() => {
+      this.teamConnection.invoke('Join', teamGuid);
+    });
+
     this.userConnection
       .start()
       .then(() => {
@@ -112,6 +133,10 @@ export class NotificationService {
       .catch(() => {
         console.log('Error while establishing User connection');
       });
+
+    this.userConnection.onreconnected(() => {
+      this.userConnection.invoke('Join', userGuid);
+    });
   }
 
   sendNotification(guid: string, msg: string) {
@@ -138,6 +163,50 @@ export class NotificationService {
     }
 
     return data;
+  }
+
+  joinPresence(viewId: string) {
+    if (this.viewConnection == null) {
+      this.viewConnection = new signalR.HubConnectionBuilder()
+        .withUrl(
+          `${
+            this.settingsSvc.settings.NotificationsSettings.url
+          }/view?bearer=${this.authService.getAuthorizationToken()}`
+        )
+        .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
+        .build();
+    }
+
+    this.viewConnection
+      .start()
+      .then(() => {
+        this.viewConnection.invoke('JoinPresence', viewId).then((x) => {
+          this.userPresenceList = x;
+          this.userPresenceList$.next(this.userPresenceList);
+        });
+      })
+      .catch(() => {
+        console.log('Error while establishing Presence connection');
+      });
+
+    this.viewConnection.onreconnected(() => {
+      this.viewConnection.invoke('JoinPresence', viewId);
+    });
+
+    this.viewConnection.on('PresenceUpdate', (data: ViewPresence) => {
+      const presence = this.userPresenceList.find((x) => x.id == data.id);
+
+      if (presence != null && presence.online != data.online) {
+        presence.online = data.online;
+        this.userPresenceList$.next(this.userPresenceList);
+      }
+    });
+  }
+
+  leavePresence(viewId: string) {
+    if (this.viewConnection != null) {
+      this.viewConnection.invoke('LeavePresence', viewId).then();
+    }
   }
 }
 

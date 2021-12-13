@@ -94,6 +94,11 @@ import { ViewsService } from './services/views/views.service';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { OpenFileComponent } from './components/player/open-file/open-file.component';
 import { EditFileComponent } from './components/admin-app/edit-file/edit-file.component';
+import { UserPresencePageComponent } from './components/player/user-presence-page/user-presence-page.component';
+import { UserPresenceComponent } from './components/player/user-presence-page/user-presence/user-presence.component';
+import { TeamUserPresenceComponent } from './components/player/user-presence-page/team-user-presence/team-user-presence.component';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 
 declare var require: any;
 const settings: ComnSettingsConfig = {
@@ -137,8 +142,8 @@ const settings: ComnSettingsConfig = {
     MatBottomSheetModule,
     MatTreeModule,
     MatBadgeModule,
+    ScrollingModule,
   ],
-  declarations: [],
 })
 export class AngularMaterialModule {}
 
@@ -172,6 +177,9 @@ export class AngularMaterialModule {}
     FileBrowseComponent,
     OpenFileComponent,
     EditFileComponent,
+    UserPresencePageComponent,
+    UserPresenceComponent,
+    TeamUserPresenceComponent,
   ],
   imports: [
     BrowserModule,
@@ -191,6 +199,7 @@ export class AngularMaterialModule {}
     AkitaNgRouterStoreModule,
     ComnSettingsModule.forRoot(),
     ComnAuthModule.forRoot(),
+    TableVirtualScrollModule,
   ],
   providers: [
     AppService,

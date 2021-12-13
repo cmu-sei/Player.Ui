@@ -1,0 +1,43 @@
+<!--
+ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+-->
+
+<mat-expansion-panel>
+    <mat-expansion-panel-header fxLayout="row">
+      <mat-panel-title fxFlex="50">
+        {{ team.name }}
+      </mat-panel-title>
+      <mat-panel-description>
+        Count: {{ userDatasource.filteredData.length }}
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+  
+    <cdk-virtual-scroll-viewport
+      tvsItemSize="itemSize"
+      headerHeight="headerSize"
+      [ngStyle]="{ height: tableHeight }"
+    >
+      <mat-table [dataSource]="userDatasource" class="mat-elevation-z8">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            {{ element.userName }}
+          </mat-cell>
+        </ng-container>
+  
+        <!-- Online Column -->
+        <ng-container matColumnDef="online">
+          <mat-header-cell *matHeaderCellDef>Online</mat-header-cell>
+          <mat-cell *matCellDef="let element">
+              {{ element.online }}
+          </mat-cell>
+        </ng-container>
+  
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+      </mat-table>
+    </cdk-virtual-scroll-viewport>
+  </mat-expansion-panel>
+  

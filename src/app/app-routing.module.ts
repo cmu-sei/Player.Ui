@@ -10,6 +10,7 @@ import { HomeAppComponent } from './components/home-app/home-app.component';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { OpenFileComponent } from './components/player/open-file/open-file.component';
 import { PlayerComponent } from './components/player/player.component';
+import { UserPresencePageComponent } from './components/player/user-presence-page/user-presence-page.component';
 
 export const ROUTES: Routes = [
   {
@@ -48,6 +49,11 @@ export const ROUTES: Routes = [
     component: OpenFileComponent,
     canActivate: [ComnAuthGuardService],
   },
+  {
+    path: 'view/:id/presence',
+    component: UserPresencePageComponent,
+    canActivate: [ComnAuthGuardService],
+  }
 ];
 
 @NgModule({
