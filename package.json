@@ -45,7 +45,7 @@
     "@cmusei/crucible-common": "0.1.1",
     "@datorama/akita": "^6.2.1",
     "@datorama/akita-ng-router-store": "^6.0.2",
-    "@microsoft/signalr": "^5.0.8",
+    "@microsoft/signalr": "^6.0.0",
     "@ng-bootstrap/ng-bootstrap": "^10.0.0",
     "@schematics/angular": "^12.2.10",
     "babel-polyfill": "^6.26.0",
