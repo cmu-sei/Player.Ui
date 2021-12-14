@@ -4,48 +4,47 @@
 -->
 
 <div>
-    <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="0.5em">
-      <mat-icon svgIcon="ic_magnify_search"></mat-icon>
-      <mat-form-field fxFlex="20">
-        <input
-          matInput
-          [(ngModel)]="searchTerm"
-          (keyup)="applyFilter($event.target.value)"
-          placeholder="Search"
-        />
-        <button
-          matSuffix
-          *ngIf="searchTerm != ''"
-          mat-icon-button
-          (click)="clearFilter()"
-          matTooltip="Clear Search"
-        >
-          <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
-        </button>
-      </mat-form-field>
-      <button mat-raised-button color="primary" (click)="accordion.openAll()">
-        Expand All
-      </button>
-      <button mat-raised-button color="primary" (click)="accordion.closeAll()">
-        Collapse All
-      </button>
-      <mat-checkbox
-        class="search-checkbox text"
-        color="primary"
-        (change)="setHideInactive($event.checked)"
-        >Hide Inactive</mat-checkbox
+  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="0.5em">
+    <mat-icon svgIcon="ic_magnify_search"></mat-icon>
+    <mat-form-field fxFlex="20">
+      <input
+        matInput
+        [(ngModel)]="searchTerm"
+        (keyup)="applyFilter($event.target.value)"
+        placeholder="Search"
+      />
+      <button
+        matSuffix
+        *ngIf="searchTerm != ''"
+        mat-icon-button
+        (click)="clearFilter()"
+        matTooltip="Clear Search"
       >
-    </div>
-  
-    <mat-accordion multi>
-      <div *ngFor="let team of _teams | async; trackBy: trackByTeamId">
-        <app-team-user-presence
-          [team]="team"
-          [users]="getPresenceByTeamId(team.id) | async"
-          [searchTerm]="searchTerm$ | async"
-          [hideInactive]="hideInactive"
-        ></app-team-user-presence>
-      </div>
-    </mat-accordion>
+        <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
+      </button>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="accordion.openAll()">
+      Expand All
+    </button>
+    <button mat-raised-button color="primary" (click)="accordion.closeAll()">
+      Collapse All
+    </button>
+    <mat-checkbox
+      class="search-checkbox text"
+      color="primary"
+      (change)="setHideInactive($event.checked)"
+      >Hide Offline</mat-checkbox
+    >
   </div>
-  
+
+  <mat-accordion multi>
+    <div *ngFor="let team of _teams | async; trackBy: trackByTeamId">
+      <app-team-user-presence
+        [team]="team"
+        [users]="getPresenceByTeamId(team.id) | async"
+        [searchTerm]="searchTerm$ | async"
+        [hideInactive]="hideInactive"
+      ></app-team-user-presence>
+    </div>
+  </mat-accordion>
+</div>
