@@ -29,7 +29,9 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this._teams = this.teamService.getMyViewTeams(this.viewId);
+    this._teams = this.teamService
+      .getMyViewTeams(this.viewId)
+      .pipe(map((x) => x.sort(firstBy('name'))));
     this.notificationService.joinPresence(this.viewId);
   }
 
