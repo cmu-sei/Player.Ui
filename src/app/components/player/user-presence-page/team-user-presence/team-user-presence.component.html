@@ -4,40 +4,42 @@
 -->
 
 <mat-expansion-panel>
-    <mat-expansion-panel-header fxLayout="row">
-      <mat-panel-title fxFlex="50">
-        {{ team.name }}
-      </mat-panel-title>
-      <mat-panel-description>
-        Count: {{ userDatasource.filteredData.length }}
-      </mat-panel-description>
-    </mat-expansion-panel-header>
-  
-    <cdk-virtual-scroll-viewport
-      tvsItemSize="itemSize"
-      headerHeight="headerSize"
-      [ngStyle]="{ height: tableHeight }"
-    >
-      <mat-table [dataSource]="userDatasource" class="mat-elevation-z8">
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-          <mat-cell *matCellDef="let element">
-            {{ element.userName }}
-          </mat-cell>
-        </ng-container>
-  
-        <!-- Online Column -->
-        <ng-container matColumnDef="online">
-          <mat-header-cell *matHeaderCellDef>Online</mat-header-cell>
-          <mat-cell *matCellDef="let element">
-              {{ element.online }}
-          </mat-cell>
-        </ng-container>
-  
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-      </mat-table>
-    </cdk-virtual-scroll-viewport>
-  </mat-expansion-panel>
-  
+  <mat-expansion-panel-header fxLayout="row">
+    <mat-panel-title fxFlex="50">
+      {{ team.name }}
+    </mat-panel-title>
+    <mat-panel-description>
+      Count: {{ userDatasource.filteredData.length }}
+    </mat-panel-description>
+  </mat-expansion-panel-header>
+
+  <cdk-virtual-scroll-viewport
+    tvsItemSize="itemSize"
+    headerHeight="headerSize"
+    [ngStyle]="{ height: tableHeight }"
+  >
+    <mat-table [dataSource]="userDatasource" class="mat-elevation-z8">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          {{ element.userName }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- Online Column -->
+      <ng-container matColumnDef="online">
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <div class="online" *ngIf="element.online; else offline">Online</div>
+          <ng-template #offline>
+            <div class="offline">Offline</div>
+          </ng-template>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </cdk-virtual-scroll-viewport>
+</mat-expansion-panel>
