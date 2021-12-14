@@ -12,6 +12,7 @@ import {
 import { catchError, map } from 'rxjs/operators';
 import { TeamData } from '../../models/team-data';
 import { ViewData } from '../../models/view-data';
+import { ViewStatus } from '../../generated/player-api';
 
 const httpOptions = {
   headers: new HttpHeaders({
@@ -48,7 +49,7 @@ export class ViewsService {
             .pipe(map((teams) => teams.filter((t) => t.isMember)))
             .subscribe((teams) => {
               teams.forEach((team) => {
-                if (team.isPrimary) {
+                if (team.isPrimary && view.status === ViewStatus.Active) {
                   const ex = <ViewData>{
                     id: view.id,
                     name: view.name,
