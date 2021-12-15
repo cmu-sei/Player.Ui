@@ -135,7 +135,7 @@ export class NotificationService {
       });
 
     this.userConnection.onreconnected(() => {
-      this.userConnection.invoke('Join', userGuid);
+      this.userConnection.invoke('Join', viewGuid, userGuid);
     });
   }
 
