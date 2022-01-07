@@ -39,6 +39,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.routerQuery.selectQueryParams('opened');
 
   public view: View;
+  public viewId: string;
   public opened: boolean;
   public topbarColor = '#5F8DB5';
   public topbarTextColor = '#ffffff';
@@ -71,6 +72,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
     // Set the topbar color from config file.
     this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
+    this.viewId = this.routerQuery.getParams('id');
   }
 
   checkParam(params: string[]): Observable<boolean> {

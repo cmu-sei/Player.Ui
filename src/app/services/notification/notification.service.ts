@@ -175,23 +175,28 @@ export class NotificationService {
         )
         .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
         .build();
-    }
 
-    this.viewConnection
-      .start()
-      .then(() => {
-        this.viewConnection.invoke('JoinPresence', viewId).then((x) => {
-          this.userPresenceList = x;
-          this.userPresenceList$.next(this.userPresenceList);
+      this.viewConnection
+        .start()
+        .then(() => {
+          this.invokeJoinPresence(viewId);
+        })
+        .catch((x) => {
+          console.log(x);
+          console.log('Error while establishing Presence connection');
         });
-      })
-      .catch(() => {
-        console.log('Error while establishing Presence connection');
-      });
 
-    this.viewConnection.onreconnected(() => {
-      this.viewConnection.invoke('JoinPresence', viewId);
-    });
+      this.viewConnection.onreconnected(() => {
+        this.viewConnection.invoke('JoinPresence', viewId);
+      });
+    } else {
+      this.invokeJoinPresence(viewId);
+
+      this.viewConnection.onreconnected(() => {
+        this.viewConnection.invoke('JoinView', viewId);
+        this.viewConnection.invoke('JoinPresence', viewId);
+      });
+    }
 
     this.viewConnection.on('PresenceUpdate', (data: ViewPresence) => {
       const presence = this.userPresenceList.find((x) => x.id == data.id);
@@ -207,6 +212,13 @@ export class NotificationService {
     if (this.viewConnection != null) {
       this.viewConnection.invoke('LeavePresence', viewId).then();
     }
+  }
+
+  private invokeJoinPresence(viewId: string) {
+    this.viewConnection.invoke('JoinPresence', viewId).then((x) => {
+      this.userPresenceList = x;
+      this.userPresenceList$.next(this.userPresenceList);
+    });
   }
 }
 
