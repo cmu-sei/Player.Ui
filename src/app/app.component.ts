@@ -41,6 +41,8 @@ export class AppComponent implements OnDestroy {
   }
 
   registerIcons() {
+    this.iconRegistry.setDefaultFontSetClass('mdi');
+
     this.iconRegistry.addSvgIcon(
       'ic_apps_white_24px',
       this.sanitizer.bypassSecurityTrustResourceUrl(

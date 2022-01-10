@@ -47,6 +47,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </mat-menu>
       </div>
     </ng-container>
+    <button
+      *ngIf="teams"
+      mat-icon-button
+      aria-label="Users"
+      matTooltip="Users"
+      (click)="openUserPresence()"
+    >
+      <mat-icon
+        class="mdi-24px"
+        fontIcon="mdi-account-multiple-outline"
+      ></mat-icon>
+    </button>
     <span class="spacer"></span>
     <div
       fxFlex
@@ -101,3 +113,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
   </mat-toolbar-row>
 </mat-toolbar>
+
+<ng-template #userPresenceDialog>
+  <app-user-presence [viewId]="viewId"></app-user-presence>
+</ng-template>

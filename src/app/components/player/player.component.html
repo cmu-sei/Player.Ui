@@ -51,6 +51,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           topbarView="player-home"
           [teams]="data.teams"
           [team]="data.team"
+          [viewId]="viewId"
           (setTeam)="setPrimaryTeam($event)"
           (sidenavToggle)="sidenavToggleFn($event)"
           (editView)="editViewFn($event)"
