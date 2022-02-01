@@ -1,9 +1,9 @@
 /*
-Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
+ Copyright 2022 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatAccordion } from '@angular/material/expansion';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
@@ -19,6 +19,7 @@ import { firstBy } from 'thenby';
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
   @Input() viewId: string;
+  @Output() closeMe = new EventEmitter<any>();
 
   public _teams: Observable<Array<Team>>;
   public hideInactive = false;
