@@ -113,6 +113,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           </button>
         </div>
       </mat-list-item>
+
+      <mat-list-item class="showhand highlight">
+        <img
+          class="lefticon"
+          src="../../../assets/img/subscription.png"
+          alt="Subscriptions"
+          (click)="sectionChangedFn(Section.ADMIN_SUBS)"
+        />
+
+        <div
+          class="grow center-self"
+          (click)="sectionChangedFn(Section.ADMIN_SUBS)"
+        >
+          Subscriptions
+        </div>
+
+        <div>
+          <button
+            mat-icon-button
+            style="outline: none;"
+            (click)="sectionChangedFn(Section.ADMIN_SUBS)"
+          >
+            <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
+          </button>
+        </div>
+      </mat-list-item>
     </mat-list>
     <img
       class="crucible-logo"
@@ -155,6 +181,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         fxFlex
         fxLayoutAlign="center"
       ></app-admin-role-permission-search>
+
+      <app-admin-subscription-search
+        *ngSwitchCase="Section.ADMIN_SUBS"
+        fxFlex
+        fxLayoutAlign = "center"
+      ></app-admin-subscription-search>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

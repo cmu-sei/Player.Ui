@@ -1,5 +1,7 @@
-// Copyright 2021 Carnegie Mellon University. All Rights Reserved.
-// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+/*
+Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
+ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+*/
 
 import { NgModule, ModuleWithProviders, SkipSelf, Optional } from '@angular/core';
 import { Configuration } from './configuration';
@@ -8,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { ApplicationService } from './api/application.service';
 import { FileService } from './api/file.service';
+import { HealthService } from './api/health.service';
 import { PermissionService } from './api/permission.service';
 import { RoleService } from './api/role.service';
 import { TeamService } from './api/team.service';
@@ -15,6 +18,7 @@ import { TeamMembershipService } from './api/teamMembership.service';
 import { UserService } from './api/user.service';
 import { ViewService } from './api/view.service';
 import { ViewMembershipService } from './api/viewMembership.service';
+import { WebhookService } from './api/webhook.service';
 
 @NgModule({
   imports:      [],

@@ -10,11 +10,12 @@ import {
 import { Injectable } from '@angular/core';
 import { ConfirmDialogComponent } from '../../components/shared/confirm-dialog/confirm-dialog.component';
 import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
-import { Team } from '../../generated/player-api';
+import { Team, WebhookSubscription } from '../../generated/player-api';
 import { CreatePermissionDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
 import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
 import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
 import { EditFileComponent } from '../../components/admin-app/edit-file/edit-file.component';
+import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 
 @Injectable()
 export class DialogService {
@@ -107,6 +108,15 @@ export class DialogService {
     dialogRef.componentInstance.viewId = viewId;
     dialogRef.componentInstance.oldName = oldName;
     dialogRef.componentInstance.oldTeams = oldTeams;
+    return dialogRef.afterClosed();
+  }
+
+  public editSubscription(
+    subscription?: WebhookSubscription
+  ): Observable<boolean> {
+    let dialogRef: MatDialogRef<EditSubscriptionComponent>;
+    dialogRef = this.dialog.open(EditSubscriptionComponent);
+    dialogRef.componentInstance.currentSub = subscription;
     return dialogRef.afterClosed();
   }
 }
