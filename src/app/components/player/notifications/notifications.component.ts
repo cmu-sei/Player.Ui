@@ -2,11 +2,13 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, Input, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { PushNotificationsService } from 'ng-push-ivy';
-import { NotificationData } from '../../../models/notification-data';
+import { NotificationDataStatus } from '../../../models/notification-data';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { NotificationService } from '../../../services/notification/notification.service';
+import { ViewService } from '../../../generated/player-api/api/view.service';
 
 @Component({
   selector: 'app-notifications',
@@ -19,69 +21,64 @@ export class NotificationsComponent implements OnInit {
   @Input() userGuid: string;
   @Input() userToken: string;
   @Input() userName: string;
+  @Input() topbarColor: string;
 
-  public notification: NotificationData;
+  public notification: NotificationDataStatus;
   public messageToSend: string;
   public userData: any;
   public showSystemNotifications: boolean;
-  public showSendMessage: boolean;
+  public hasViewAdmin: boolean;
   public sendMessagePlaceholder: string;
-  public notificationsList: Array<NotificationData>;
-  public notificationsHistory: Array<NotificationData>;
-  public startIndex: number;
-  public endIndex: number;
-  public showUp: boolean;
-  public showDown: boolean;
+  public notificationsList: Array<NotificationDataStatus>;
+  public notificationsHistory: Array<NotificationDataStatus>;
+  public newNotificationCount = 0;
+  public useBadge = false;
+  public useBlink = false;
+  public useBeep = false;
 
   public constructor(
     private notificationService: NotificationService,
     private pushNotificationService: PushNotificationsService,
     private settingsService: ComnSettingsService,
-    private dialogService: DialogService
-  ) {}
+    private dialogService: DialogService,
+    private viewService: ViewService,
+    private titleService: Title
+  ) {
+    this.useBadge = this.settingsService.settings.NotificationsSettings.useBadge;
+    this.useBlink = this.settingsService.settings.NotificationsSettings.useBlink;
+    this.useBeep = this.settingsService.settings.NotificationsSettings.useBeep;
+  }
 
   ngOnInit() {
-    this.showSystemNotifications = true;
+    this.showSystemNotifications = false;
     this.notification = undefined;
     this.messageToSend = '';
-    this.showUp = false;
-    this.showDown = false;
-    this.startIndex = 0;
-    this.endIndex = 0;
-    this.notificationsHistory = new Array<NotificationData>();
-    this.showSendMessage = false;
+    this.notificationsHistory = new Array<NotificationDataStatus>();
+    this.hasViewAdmin = false;
     this.sendMessagePlaceholder = 'Send system wide notification';
 
     this.notificationService.canSendMessage.subscribe((data) => {
-      this.showSendMessage = data;
+      this.hasViewAdmin = data;
     });
 
     this.notificationService.notificationHistory.subscribe((data) => {
       if (data != undefined && data.length > 0) {
         this.notificationsHistory = this.notificationsHistory.concat(
-          <Array<NotificationData>>data
+          <Array<NotificationDataStatus>>data
         );
         this.notificationsHistory = this.notificationsHistory.sort(
-          (a: NotificationData, b: NotificationData) => {
-            if (a.broadcastTime < b.broadcastTime) {
-              return -1;
-            } else if (a.broadcastTime > b.broadcastTime) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }
+          (a: NotificationDataStatus, b: NotificationDataStatus) => a.broadcastTime < b.broadcastTime ? 1 : -1
         );
-        this.showNotificationPage(0);
       }
     });
 
     this.notificationService.viewNotification.subscribe((msg) => {
       // Check to see if a valid notification came across.
       if (msg.broadcastTime != undefined) {
-        this.notification = msg;
-        this.notificationsHistory.push(this.notification);
-        this.showNotificationPage(0);
+        this.notification = msg as NotificationDataStatus;
+        this.notificationsHistory.unshift(this.notification);
+        this.setNewNotificationCount(this.newNotificationCount + 1);
+        this.playBeep();
 
         if (this.pushNotificationService.permission == 'granted') {
           this.pushNotificationService
@@ -116,6 +113,7 @@ export class NotificationsComponent implements OnInit {
       this.userGuid,
       this.userToken
     );
+
   }
 
   public openLink(link: string) {
@@ -146,39 +144,73 @@ export class NotificationsComponent implements OnInit {
     }
   }
 
-  public showNotificationPage(direction: number) {
-    // Determine indexes to show
-    let maxDisplay =
-      this.settingsService.settings.NotificationsSettings.number_to_display;
-    if (maxDisplay > this.notificationsHistory.length) {
-      maxDisplay = this.notificationsHistory.length;
+  notificationPanelToggle(state: string) {
+    this.showSystemNotifications = state === 'open';
+    if (state === 'close') {
+      this.notificationsHistory.forEach(n => {
+        n.wasSeen = true;
+      });
+      this.setNewNotificationCount(0);
     }
+  }
 
-    if (direction == 0) {
-      this.startIndex = this.notificationsHistory.length - maxDisplay;
-      this.endIndex = this.notificationsHistory.length;
-    } else if (direction == 1) {
-      this.startIndex -= maxDisplay;
-      this.endIndex -= maxDisplay;
-      while (this.startIndex < 0) {
-        this.startIndex++;
-        if (this.endIndex < this.notificationsHistory.length) {
-          this.endIndex++;
-        }
-      }
-    } else if (direction == -1) {
-      this.startIndex += maxDisplay;
-      this.endIndex += maxDisplay;
-      while (this.endIndex > this.notificationsHistory.length) {
-        this.endIndex--;
-        if (this.startIndex > 0) {
-          this.startIndex--;
-        }
-      }
+  notificationDisplayClass() {
+    if (this.useBlink && !this.showSystemNotifications && this.newNotificationCount > 0) {
+      return 'blink'
     }
+    return '';
+  }
 
-    this.showUp = this.startIndex > 0;
-    this.showDown = this.endIndex < this.notificationsHistory.length;
+  playBeep() {
+    if (this.useBeep) {
+      var audio = new Audio('assets/sounds/beep.mp3');
+      audio.play();
+    }
+  }
+
+  deleteNotification(notification: NotificationDataStatus): void {
+    this.dialogService
+      .confirm(
+        'Delete Notification',
+        'This will delete this notification for EVERYONE in this view.  Are you sure that you want to delete notification:  ' + notification.text + '?'
+      )
+      .subscribe((result) => {
+        if (result['confirm']) {
+          this.viewService.deleteNotification(this.viewGuid, notification.key).subscribe((deleted) => {
+            const index = this.notificationsHistory.findIndex(n => n.key === notification.key);
+            if (index > -1) {
+              this.notificationsHistory.splice(index, 1);
+            }
+            this.setNewNotificationCount(0);
+          });
+        }
+      });
+  }
+
+  deleteViewNotifications(): void {
+    this.dialogService
+      .confirm(
+        'DELETE ALL NOTIFICATIONS!',
+        'This will delete all notifications for everyone in this view!  Are you sure that you want to delete ALL NOTIFICATIONS?'
+      )
+      .subscribe((result) => {
+        if (result['confirm']) {
+          this.viewService.deleteViewNotifications(this.viewGuid).subscribe((deleted) => {
+            this.notificationsHistory.length = 0;
+          });
+        }
+      });
+  }
+
+  setNewNotificationCount(count: number) {
+    this.newNotificationCount = count;
+    if (count < 1) {
+      this.titleService.setTitle(this.settingsService.settings.AppTitle);
+    } else if (count === 1) {
+      this.titleService.setTitle(this.settingsService.settings.AppTitle + ' (1 Alert)');
+    } else {
+      this.titleService.setTitle(this.settingsService.settings.AppTitle + ' (' + count.toString() + ' Alerts)');
+    }
   }
 
   public onSubmit() {

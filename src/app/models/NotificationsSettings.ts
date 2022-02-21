@@ -3,5 +3,7 @@
 
 export interface NotificationsSettings {
   url: string;
-  number_to_display: number;
+  useBadge: boolean;
+  useBlink: boolean;
+  useBeep: boolean;
 }
