@@ -107,6 +107,17 @@ export class NotificationsComponent implements OnInit {
       }
     });
 
+    this.notificationService.deleteNotification.subscribe((key: string) => {
+      if (key === 'all') {
+        this.notificationsHistory.length = 0;
+      } else {
+        const index = this.notificationsHistory.findIndex(n => n.key === +key);
+        if (index > -1) {
+          this.notificationsHistory.splice(index, 1);
+        }
+      }
+    });
+
     this.notificationService.connectToNotificationServer(
       this.viewGuid,
       this.teamGuid,
