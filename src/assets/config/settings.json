@@ -12,7 +12,9 @@
   },
   "NotificationsSettings": {
     "url": "http://localhost:4300/hubs",
-    "number_to_display": 4
+    "useBadge": false,
+    "useBlink": false,
+    "useBeep": false
   },
   "AppTitle": "Player",
   "AppTopBarText": "Player",

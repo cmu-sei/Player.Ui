@@ -13,6 +13,7 @@ export class NotificationService {
   public viewNotification = new BehaviorSubject<NotificationData>(
     <NotificationData>{}
   );
+  public deleteNotification = new BehaviorSubject<string>('');
   public notificationHistory = new BehaviorSubject<Array<NotificationData>>(
     new Array<NotificationData>()
   );
@@ -65,6 +66,10 @@ export class NotificationService {
 
     this.viewConnection.on('History', (data: [NotificationData]) => {
       this.notificationHistory.next(data);
+    });
+
+    this.viewConnection.on('Delete', (data: string) => {
+      this.deleteNotification.next(data);
     });
 
     this.viewConnection.on('PresenceUpdate', (data) => {

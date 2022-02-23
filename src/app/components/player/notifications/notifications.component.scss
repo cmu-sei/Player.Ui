@@ -7,6 +7,24 @@
   width: 100%;
 }
 
+.notification-badge {
+  margin-left: 20px;
+  margin-top: 9px;
+}
+
+.notification-panel-title {
+  margin-left: 10px;
+  margin-right: 30px;
+}
+
+.blink {
+  animation: blinking 3s infinite;
+}
+
+@keyframes blinking {
+  0% { background-color: orangered; }
+}
+
 .notificationslist-input {
   width: 100%;
 }
@@ -20,11 +38,24 @@
 .send-message {
   display: flex;
   flex-direction: column;
-  margin-left: 80px;
+  margin-left: 30px;
+  margin-right: 50px;
 }
 
 .input-message {
   width: 100%;
+}
+
+.mat-list {
+  margin-left: 30px;
+  margin-right: 30px;
+  border: 1px solid;
+  overflow: auto;
+  max-height: 250px;
+}
+
+.mat-list-item {
+  height: 30px !important; /* default is 72px */
 }
 
 #wrapper {
@@ -37,7 +68,7 @@
 }
 #time {
   width: 40px;
-  font-size: 80%;
+  font-size: 70%;
   padding: 0;
   margin: 0;
   text-align: left;
@@ -45,6 +76,7 @@
 #from {
   width: 100px;
   text-align: center;
+  font-size: 70%;
 }
 #link {
   text-align: center;
@@ -53,25 +85,16 @@
 }
 #message {
   text-align: left;
-  margin-left: 125px;
   font-size: 70%;
   min-width: 300px;
   padding: 0.5em;
-}
-
-#historywrapper {
-  display: table;
-  table-layout: relative;
-  width: 100%;
-  height: 100%;
-}
-#historywrapper > div {
-  display: table-cell;
 }
 #navigation {
   width: 5px;
   padding: 0;
 }
 #history {
+  width: 100%;
+  max-height: 200px;
   text-align: left;
 }

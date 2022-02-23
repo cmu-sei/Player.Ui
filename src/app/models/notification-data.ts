@@ -2,6 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 export interface NotificationData {
+  key: number,
   fromId: string;
   fromName: string;
   fromType: string;
@@ -16,4 +17,8 @@ export interface NotificationData {
   priority: string;
   wasSuccess: boolean;
   canPost: boolean;
+}
+
+export interface NotificationDataStatus extends NotificationData {
+  wasSeen: boolean;
 }
