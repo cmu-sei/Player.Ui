@@ -1,10 +1,16 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { SafeUrl, DomSanitizer } from '@angular/platform-browser';
-import { combineLatest, Observable, Subject, ReplaySubject } from 'rxjs';
+import {
+  combineLatest,
+  Observable,
+  Subject,
+  ReplaySubject,
+  BehaviorSubject,
+} from 'rxjs';
 import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
 import { map, share, shareReplay, tap } from 'rxjs/operators';
 
@@ -12,20 +18,25 @@ import { map, share, shareReplay, tap } from 'rxjs/operators';
   selector: 'app-focused-app',
   templateUrl: './focused-app.component.html',
   styleUrls: ['./focused-app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FocusedAppComponent implements OnDestroy {
   public focusedAppUrl$: Observable<SafeUrl>;
   public theme$: Observable<Theme>;
   private unsubscribe$ = new Subject<null>();
+  public iFrames = [new Object()];
+
+  private showIframeSubject = new BehaviorSubject(true);
+  public showIframe$ = this.showIframeSubject.asObservable();
 
   constructor(
     private focusedAppService: FocusedAppService,
     private sanitizer: DomSanitizer,
     private authQuery: ComnAuthQuery
   ) {
-    this.focusedAppUrl$ = this.focusedAppService.focusedAppUrl.pipe(
-      map((url) => this.sanitizer.bypassSecurityTrustResourceUrl(url))
-    );
+    // this.focusedAppUrl$ = this.focusedAppService.focusedAppUrl.pipe(
+    //   map((url) => this.sanitizer.bypassSecurityTrustResourceUrl(url))
+    // );
 
     this.focusedAppUrl$ = combineLatest([
       this.focusedAppService.focusedAppUrl,
@@ -44,15 +55,24 @@ export class FocusedAppComponent implements OnDestroy {
           let urlEnding = url.substring(themeIndex + 7);
           const endingIndex = urlEnding.indexOf('&');
           urlEnding = endingIndex < 0 ? '' : urlEnding.substring(endingIndex);
-          themedUrl = url.substring(0, themeIndex) + themeText + theme + urlEnding;
+          themedUrl =
+            url.substring(0, themeIndex) + themeText + theme + urlEnding;
         }
         return this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl);
+      }),
+      tap(() => {
+        this.showIframeSubject.next(false);
+        window.setTimeout(() => this.showIframeSubject.next(true), 1000);
       }),
       shareReplay(1)
       // share({
       //   connector: () => new ReplaySubject(1),
       // })
     );
+  }
+
+  public trackByObject(index: number, item: Object) {
+    return item;
   }
 
   ngOnDestroy() {
