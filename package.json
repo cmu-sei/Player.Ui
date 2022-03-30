@@ -74,7 +74,7 @@
     "@angular/language-service": "^12.2.10",
     "@datorama/akita-ngdevtools": "^6.0.1",
     "@openapitools/openapi-generator-cli": "1.0.18-4.3.1",
-    "@types/jasmine": "^3.9.1",
+    "@types/jasmine": "^4.0.1",
     "@types/jasminewd2": "^2.0.10",
     "@types/node": "^16.4.12",
     "codelyzer": "^6.0.2",
