@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { PushNotificationsService } from 'ng-push-ivy';
@@ -9,13 +9,15 @@ import { NotificationDataStatus } from '../../../models/notification-data';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { NotificationService } from '../../../services/notification/notification.service';
 import { ViewService } from '../../../generated/player-api/api/view.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent implements OnInit, OnDestroy {
   @Input() viewGuid: string;
   @Input() teamGuid: string;
   @Input() userGuid: string;
@@ -35,6 +37,7 @@ export class NotificationsComponent implements OnInit {
   public useBadge = false;
   public useBlink = false;
   public useBeep = false;
+  private unsubscribe$: Subject<null> = new Subject<null>();
 
   public constructor(
     private notificationService: NotificationService,
@@ -57,11 +60,11 @@ export class NotificationsComponent implements OnInit {
     this.hasViewAdmin = false;
     this.sendMessagePlaceholder = 'Send system wide notification';
 
-    this.notificationService.canSendMessage.subscribe((data) => {
+    this.notificationService.canSendMessage.pipe(takeUntil(this.unsubscribe$)).subscribe((data) => {
       this.hasViewAdmin = data;
     });
 
-    this.notificationService.notificationHistory.subscribe((data) => {
+    this.notificationService.notificationHistory.pipe(takeUntil(this.unsubscribe$)).subscribe((data) => {
       if (data != undefined && data.length > 0) {
         this.notificationsHistory = this.notificationsHistory.concat(
           <Array<NotificationDataStatus>>data
@@ -72,7 +75,7 @@ export class NotificationsComponent implements OnInit {
       }
     });
 
-    this.notificationService.viewNotification.subscribe((msg) => {
+    this.notificationService.viewNotification.pipe(takeUntil(this.unsubscribe$)).subscribe((msg) => {
       // Check to see if a valid notification came across.
       if (msg.broadcastTime != undefined) {
         this.notification = msg as NotificationDataStatus;
@@ -86,7 +89,7 @@ export class NotificationsComponent implements OnInit {
               icon: this.notification.iconUrl,
               body: this.notification.text,
             })
-            .subscribe(
+            .pipe(takeUntil(this.unsubscribe$)).subscribe(
               (res) => {
                 if (
                   this.notification.link != null &&
@@ -107,7 +110,7 @@ export class NotificationsComponent implements OnInit {
       }
     });
 
-    this.notificationService.deleteNotification.subscribe((key: string) => {
+    this.notificationService.deleteNotification.pipe(takeUntil(this.unsubscribe$)).subscribe((key: string) => {
       if (key === 'all') {
         this.notificationsHistory.length = 0;
       } else {
@@ -228,4 +231,10 @@ export class NotificationsComponent implements OnInit {
     const message = this.userData;
     message.message = this.sendMessage;
   }
+
+  ngOnDestroy() {
+    this.unsubscribe$.next(null);
+    this.unsubscribe$.complete();
+  }
+
 }

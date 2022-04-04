@@ -1,19 +1,21 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ViewData } from '../../../models/view-data';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { ViewsService } from '../../../services/views/views.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-view-list',
   templateUrl: './view-list.component.html',
   styleUrls: ['./view-list.component.scss'],
 })
-export class ViewListComponent implements OnInit {
+export class ViewListComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   public viewDataSource: MatTableDataSource<ViewData>;
@@ -21,6 +23,7 @@ export class ViewListComponent implements OnInit {
 
   public filterString: string;
   public isLoading: Boolean;
+  private unsubscribe$: Subject<null> = new Subject<null>();
 
   constructor(
     private viewsService: ViewsService,
@@ -42,13 +45,13 @@ export class ViewListComponent implements OnInit {
 
     // Subscribe to the service
     this.isLoading = true;
-    this.viewsService.viewList.subscribe((views) => {
+    this.viewsService.viewList.pipe(takeUntil(this.unsubscribe$)).subscribe((views) => {
       this.viewDataSource.data = views;
       this.isLoading = false;
     });
 
     // Tell the service to update once a user is officially logged in
-    this.loggedInUserService.loggedInUser$.subscribe((loggedInUser) => {
+    this.loggedInUserService.loggedInUser$.pipe(takeUntil(this.unsubscribe$)).subscribe((loggedInUser) => {
       if (loggedInUser == null) {
         return;
       }
@@ -73,4 +76,10 @@ export class ViewListComponent implements OnInit {
   clearFilter() {
     this.applyFilter('');
   }
+
+  ngOnDestroy() {
+    this.unsubscribe$.next(null);
+    this.unsubscribe$.complete();
+  }
+
 }
