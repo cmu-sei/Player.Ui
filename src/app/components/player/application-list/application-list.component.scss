@@ -1,6 +1,10 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+.scrollable-div {
+  height: calc(100vh - 107px);
+  overflow-y: auto;
+}
 /* mat-list-item must be overridden here due to a heigh sizing bug */
 .appitems-container .mat-list-item {
   height: auto;

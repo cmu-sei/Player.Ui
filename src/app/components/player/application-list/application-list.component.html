@@ -2,54 +2,57 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<mat-list class="appitems-container">
-  <mat-list-item
-    *ngFor="let app of applications$ | async"
-    class="showhand highlight"
-  >
-    <iframe
-      *ngIf="app.loadInBackground"
-      class="hidden-app-iframe"
-      [src]="app.safeUrl"
-    ></iframe>
 
-    <img
-      *ngIf="app.embeddable"
-      class="lefticon"
-      src="{{ app.icon }}"
-      alt="{{ app.name }}"
-      (click)="openInFocusedApp(app)"
-    />
-    <img
-      *ngIf="!app.embeddable"
-      class="lefticon"
-      src="{{ app.icon }}"
-      alt="{{ app.name }}"
-      (click)="openInTab(app)"
-    />
+<div class="scrollable-div">
+  <mat-list class="appitems-container">
+    <mat-list-item
+      *ngFor="let app of applications$ | async"
+      class="showhand highlight"
+    >
+      <iframe
+        *ngIf="app.loadInBackground"
+        class="hidden-app-iframe"
+        [src]="app.safeUrl"
+      ></iframe>
 
-    <div *ngIf="app.embeddable" class="grow" (click)="openInFocusedApp(app)">
-      {{ app.name }}
-    </div>
-    <div *ngIf="!app.embeddable" class="grow" (click)="openInTab(app)">
-      {{ app.name }}
-    </div>
-
-    <div class="righticon">
-      <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none">
-        <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-      </button>
-    </div>
-
-    <mat-menu #menu="matMenu">
-      <button
-        mat-menu-item
+      <img
         *ngIf="app.embeddable"
+        class="lefticon"
+        src="{{ app.icon }}"
+        alt="{{ app.name }}"
         (click)="openInFocusedApp(app)"
-      >
-        Open Here
-      </button>
-      <button mat-menu-item (click)="openInTab(app)">Open in New Tab</button>
-    </mat-menu>
-  </mat-list-item>
-</mat-list>
+      />
+      <img
+        *ngIf="!app.embeddable"
+        class="lefticon"
+        src="{{ app.icon }}"
+        alt="{{ app.name }}"
+        (click)="openInTab(app)"
+      />
+
+      <div *ngIf="app.embeddable" class="grow" (click)="openInFocusedApp(app)">
+        {{ app.name }}
+      </div>
+      <div *ngIf="!app.embeddable" class="grow" (click)="openInTab(app)">
+        {{ app.name }}
+      </div>
+
+      <div class="righticon">
+        <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none">
+          <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
+        </button>
+      </div>
+
+      <mat-menu #menu="matMenu">
+        <button
+          mat-menu-item
+          *ngIf="app.embeddable"
+          (click)="openInFocusedApp(app)"
+        >
+          Open Here
+        </button>
+        <button mat-menu-item (click)="openInTab(app)">Open in New Tab</button>
+      </mat-menu>
+    </mat-list-item>
+  </mat-list>
+</div>
