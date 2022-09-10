@@ -83,7 +83,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           </button>
           <button 
           title="Open in Browser Tab"
-          *ngIf="currentUser.profile.isSystemAdmin !== null &&
+          *ngIf="team && currentUser.profile.isSystemAdmin !== null &&
             currentUser.profile.isSystemAdmin"
           (click)="editFnNewTab($event)"
           class="small-button"
