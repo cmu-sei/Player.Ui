@@ -37,7 +37,11 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  MatTooltipDefaultOptions,
+  MatTooltipModule,
+  MAT_TOOLTIP_DEFAULT_OPTIONS,
+} from '@angular/material/tooltip';
 import { MatTreeModule } from '@angular/material/tree';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -147,6 +151,13 @@ const settings: ComnSettingsConfig = {
 })
 export class AngularMaterialModule {}
 
+/** Custom options to configure the tooltip's default show/hide delays. */
+export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
+  showDelay: 1000,
+  hideDelay: 0,
+  touchendHideDelay: 1000,
+};
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -220,6 +231,7 @@ export class AngularMaterialModule {}
       provide: ErrorHandler,
       useClass: ErrorService,
     },
+    { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
   ],
   bootstrap: [AppComponent],
   entryComponents: [

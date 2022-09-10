@@ -9,12 +9,16 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  TemplateRef,
+  ViewChild,
 } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client';
 import { Observable, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
+import { UserPresenceComponent } from '../../player/user-presence-page/user-presence/user-presence.component';
 import { TopbarView } from './topbar.models';
 @Component({
   selector: 'app-topbar',
@@ -30,6 +34,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   @Input() topbarColor?;
   @Input() topbarTextColor?;
   @Input() topbarView?: TopbarView;
+  @Input() viewId: string;
   @Output() sidenavToggle?: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() setTeam?: EventEmitter<string> = new EventEmitter<string>();
   @Output() editView?: EventEmitter<any> = new EventEmitter<any>();
@@ -37,10 +42,15 @@ export class TopbarComponent implements OnInit, OnDestroy {
   theme$: Observable<Theme>;
   unsubscribe$: Subject<null> = new Subject<null>();
   TopbarView = TopbarView;
+
+  @ViewChild('userPresenceDialog')
+  userPresenceDialog: TemplateRef<UserPresenceComponent>;
+
   constructor(
     private authService: ComnAuthService,
     private loggedInUserService: LoggedInUserService,
-    private authQuery: ComnAuthQuery
+    private authQuery: ComnAuthQuery,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -79,6 +89,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  openUserPresence(): void {
+    this.dialog.open(this.userPresenceDialog, {
+      height: '75%',
+      width: '75%',
+    });
   }
 
   ngOnDestroy(): void {
