@@ -1,5 +1,5 @@
 <!--
-Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 <mat-toolbar
@@ -59,13 +59,27 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false">
-        <button
-          *ngIf="team && team.canManage"
-          (click)="editFn($event)"
+        <div fxLayout="row" fxLayoutAlign="start center">
+          <button
+            *ngIf="team && team.canManage"
+            (click)="editFn($event)"
+            [ngClass]="(currentUser.profile.isSystemAdmin !== null &&
+              currentUser.profile.isSystemAdmin) ? big-button : ''"
+            mat-menu-item
+          >
+            Edit View
+          </button>
+          <button 
+          title="Open in Browser Tab"
+          *ngIf="currentUser.profile.isSystemAdmin !== null &&
+            currentUser.profile.isSystemAdmin"
+          (click)="editFnNewTab($event)"
+          class="small-button"
           mat-menu-item
-        >
-          Edit View
-        </button>
+          >
+          <mat-icon svgIcon="ic_open_tab"></mat-icon>
+          </button>
+        </div>
         <button
           *ngIf="
             currentUser.profile.isSystemAdmin !== null &&

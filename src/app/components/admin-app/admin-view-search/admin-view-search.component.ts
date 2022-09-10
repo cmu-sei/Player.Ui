@@ -4,6 +4,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { ActivatedRoute } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
@@ -38,7 +39,8 @@ export class AdminViewSearchComponent implements OnInit {
   constructor(
     private viewService: ViewService,
     public loggedInUserService: LoggedInUserService,
-    public dialogService: DialogService
+    public dialogService: DialogService,
+    public route: ActivatedRoute
   ) {}
 
   /**
@@ -58,6 +60,12 @@ export class AdminViewSearchComponent implements OnInit {
     this.loggedInUserService.loggedInUser$.subscribe((user) => {
       this.refreshViews();
     });
+
+    // Check to see if a view was specified in the URL
+    const viewId = this.route.snapshot.queryParamMap.get('view');
+    if (viewId) {
+      this.executeViewAction('edit', viewId);
+    }
   }
 
   /**
