@@ -16,6 +16,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         color="primary"
         mat-icon-button
         matTooltip="Close Sidebar"
+        aria-label="Close Sidebar"
       >
         <mat-icon svgIcon="ic_chevron_left_white_24px"></mat-icon>
       </button>
@@ -26,6 +27,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         color="primary"
         mat-icon-button
         matTooltip="Open Sidebar"
+        aria-label="Open Sidebar"
       >
         <mat-icon svgIcon="ic_chevron_right_white_24px"></mat-icon>
       </button>
@@ -35,7 +37,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <div class="team-text">Team:</div>
       <span class="team-text">{{ team.name }}</span>
       <div *ngIf="teams.length > 1" fxLayout="row" fxLayoutAlign="start center">
-        <button mat-button [matMenuTriggerFor]="teamMenu" style="outline: none">
+        <button mat-button [matMenuTriggerFor]="teamMenu" style="outline: none" aria-label="Select a Team">
           <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
         </button>
         <mat-menu #teamMenu="matMenu" [overlapTrigger]="false">
