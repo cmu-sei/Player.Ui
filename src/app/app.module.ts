@@ -103,6 +103,8 @@ import { UserPresenceComponent } from './components/player/user-presence-page/us
 import { TeamUserPresenceComponent } from './components/player/user-presence-page/team-user-presence/team-user-presence.component';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TableVirtualScrollModule } from 'ng-table-virtual-scroll';
+import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-admin-subscription-search/app-admin-subscription-search.component';
+import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 
 declare var require: any;
 const settings: ComnSettingsConfig = {
@@ -191,6 +193,8 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     UserPresencePageComponent,
     UserPresenceComponent,
     TeamUserPresenceComponent,
+    AppAdminSubscriptionSearchComponent,
+    EditSubscriptionComponent,
   ],
   imports: [
     BrowserModule,

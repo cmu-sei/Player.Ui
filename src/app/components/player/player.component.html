@@ -14,7 +14,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >
         <mat-list class="appitems-container">
           <mat-list-item>
-            <a class="nolink" href="/">
+            <a class="nolink" [routerLink]="['/']">
               <div fxLayout="row" fxLayoutAlign="start center">
                 <mat-icon
                   class="player-icon"
@@ -66,6 +66,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [userGuid]="data.user.profile.id"
           [userToken]="data.user.access_token"
           [userName]="data.user.profile.name"
+          [topbarColor]="topbarColor"
           class="notification-height"
         >
         </app-notifications>

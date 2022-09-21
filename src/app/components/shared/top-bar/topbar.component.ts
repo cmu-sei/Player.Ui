@@ -98,6 +98,10 @@ export class TopbarComponent implements OnInit, OnDestroy {
     });
   }
 
+  closeUserPresence() {
+    this.dialog.closeAll();
+  }
+
   ngOnDestroy(): void {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();

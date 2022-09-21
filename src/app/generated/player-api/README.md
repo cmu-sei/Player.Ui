@@ -1,8 +1,3 @@
-<!--
- Copyright 2021 Carnegie Mellon University. All Rights Reserved.
- Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
--->
-
 ## @
 
 ### Building
@@ -92,6 +87,31 @@ export function apiConfigFactory (): Configuration => {
     imports: [ ApiModule.forRoot(apiConfigFactory) ],
     declarations: [ AppComponent ],
     providers: [],
+    bootstrap: [ AppComponent ]
+})
+export class AppModule {}
+```
+
+```
+// configuring providers with an authentication service that manages your access tokens
+import { ApiModule, Configuration } from '';
+
+@NgModule({
+    imports: [ ApiModule ],
+    declarations: [ AppComponent ],
+    providers: [
+      {
+        provide: Configuration,
+        useFactory: (authService: AuthService) => new Configuration(
+          {
+            basePath: environment.apiUrl,
+            accessToken: authService.getAccessToken.bind(authService)
+          }
+        ),
+        deps: [AuthService],
+        multi: false
+      }
+    ],
     bootstrap: [ AppComponent ]
 })
 export class AppModule {}
