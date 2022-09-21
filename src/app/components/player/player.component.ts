@@ -1,4 +1,4 @@
-// Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 // TODO: Set sidnav status in query string.
@@ -164,17 +164,28 @@ export class PlayerComponent implements OnInit, OnDestroy {
    * Called to open the edit view dialog window
    */
   editViewFn(event) {
-    const dialogRef = this.dialog.open(AdminViewEditComponent);
-    this.data$.subscribe((data) => {
-      dialogRef.componentInstance.resetStepper();
-      dialogRef.componentInstance.updateApplicationTemplates();
-      dialogRef.componentInstance.updateView();
-      dialogRef.componentInstance.view = data.view;
-    });
+    if (event.isNewBrowserTab === true) {
+      const url = this.router.serializeUrl(
+        this.router.createUrlTree(
+          ['/admin'],
+          { queryParams: { section: 'admin-views', view: this.routerQuery.getParams('id') }}
+          )
+        );
+      console.log('url', url);
+      window.open(url, '_blank');
+    } else {
+      const dialogRef = this.dialog.open(AdminViewEditComponent);
+      this.data$.subscribe((data) => {
+        dialogRef.componentInstance.resetStepper();
+        dialogRef.componentInstance.updateApplicationTemplates();
+        dialogRef.componentInstance.updateView();
+        dialogRef.componentInstance.view = data.view;
+      });
 
-    dialogRef.componentInstance.editComplete.subscribe(() => {
-      dialogRef.close();
-    });
+      dialogRef.componentInstance.editComplete.subscribe(() => {
+        dialogRef.close();
+      });
+    }
   }
 
   sidenavToggleFn() {

@@ -1,4 +1,4 @@
-// Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { OverlayContainer } from '@angular/cdk/overlay';
@@ -137,6 +137,12 @@ export class AppComponent implements OnDestroy {
       'ic_add',
       this.sanitizer.bypassSecurityTrustResourceUrl(
         'assets/svg-icons/ic_add_24px.svg'
+      )
+    );
+    this.iconRegistry.addSvgIcon(
+      'ic_open_tab',
+      this.sanitizer.bypassSecurityTrustResourceUrl(
+        'assets/svg-icons/ic_open_tab.svg'
       )
     );
   }
