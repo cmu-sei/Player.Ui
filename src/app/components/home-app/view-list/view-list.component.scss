@@ -8,11 +8,11 @@
   max-height: 800px;
   min-width: 300px;
   margin-top: 40px;
-  width: 50%;
+  width: 80%;
 }
 
 .views-title {
-  font-size: large;
+  font-size: x-large;
 }
 
 .no-results {
@@ -35,15 +35,11 @@
 }
 
 .description-text {
-  margin-left: 10px;
-  margin-right: 10px;
   font-size: medium;
   text-align: left;
 }
 
 .team-text {
-  margin-left: 10px;
-  margin-right: 10px;
   font-size: medium;
   text-align: center;
 }
@@ -69,4 +65,21 @@
 .player-icon {
   transform: scale(2);
   width: 60px;
+}
+
+.mat-column-name {
+  flex: 0 0 18%;
+  padding: 1%;
+}
+.mat-column-teamName {
+  flex: 0 0 20%;
+}
+.mat-column-description {
+  flex: 0 0 58%;
+  padding: 1%;
+}
+
+.searchBox {
+  margin-right: 10px ;
+  margin-left: auto !important;
 }

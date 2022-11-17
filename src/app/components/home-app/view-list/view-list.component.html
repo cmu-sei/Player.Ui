@@ -14,7 +14,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
     </div>
     <span class="views-title text">My Views</span>
-    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
+    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5" class="searchBox">
       <mat-icon
         class="text"
         style="transform: scale(0.85); margin-right: 5px"
@@ -58,7 +58,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
-        View Name
+        Name
       </mat-header-cell>
       <mat-cell *matCellDef="let element">
         <div class="link-text">
