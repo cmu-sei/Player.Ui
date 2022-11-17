@@ -11,6 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <span class="margin-auto">
       <button
         *ngIf="sidenav && sidenav?.opened"
+        aria-label="close sidebar"
         (click)="sidenavToggleFn()"
         color="primary"
         mat-icon-button
@@ -20,6 +21,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <button
         *ngIf="sidenav && !sidenav?.opened"
+        aria-label="open sidebar"
         (click)="sidenavToggleFn()"
         color="primary"
         mat-icon-button
@@ -81,7 +83,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           >
             Edit View
           </button>
-          <button 
+          <button
           title="Open in Browser Tab"
           *ngIf="team && currentUser.profile.isSystemAdmin !== null &&
             currentUser.profile.isSystemAdmin"
@@ -112,6 +114,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           mat-menu-item
         >
           Administration
+        </button>
+        <button
+          *ngIf="topbarView === 'player-player'"
+          [routerLink]="['/']"
+          mat-menu-item
+        >
+          Exit View
         </button>
         <button mat-menu-item (click)="logout()">Logout</button>
         <mat-slide-toggle

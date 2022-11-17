@@ -41,7 +41,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public view: View;
   public viewId: string;
   public opened: boolean;
-  public topbarColor = '#5F8DB5';
+  public topbarColor = '#4c7aa2';
   public topbarTextColor = '#ffffff';
   queryParams: any = {};
   unsubscribe$: Subject<null> = new Subject<null>();

@@ -8,7 +8,19 @@
   max-height: 800px;
   min-width: 300px;
   margin-top: 40px;
-  width: 800px;
+  width: 50%;
+}
+
+.views-title {
+  font-size: large;
+}
+
+.no-results {
+  font-size: x-large;
+}
+
+.mat-header-cell {
+  font-size: medium;
 }
 
 .mat-table {
@@ -25,7 +37,7 @@
 .description-text {
   margin-left: 10px;
   margin-right: 10px;
-  font-size: x-small;
+  font-size: medium;
   text-align: left;
 }
 
@@ -51,6 +63,7 @@
 
 .link-text {
   text-align: left;
+  font-size: medium;
 }
 
 .player-icon {

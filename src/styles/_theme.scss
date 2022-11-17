@@ -189,6 +189,16 @@ $custom-typography: mat.define-typography-config(
       color: map-get($foreground, disabled);
     }
   }
+
+  .mat-header-cell,
+  .mat-form-field,
+  .mat-form-field-label,
+  .mat-sort-header-content,
+  .mat-paginator-page-size-label,
+  .mat-paginator-range-label {
+    color: map-get($foreground, 'text') !important;
+  }
+
 }
 
 $primary: mat.define-palette($mat-cmu-tartan);
