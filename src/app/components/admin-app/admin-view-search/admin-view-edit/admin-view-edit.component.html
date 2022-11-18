@@ -10,6 +10,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="title">
     <div fxFlex="10" fxLayoutAlign="start center">
       <button
+      *ngIf="
+        !viewNameFormControl.hasError('minlength') &&
+        !viewNameFormControl.hasError('required') &&
+        !descriptionFormControl.hasError('required')
+      "
+
         title="Return to View Search"
         mat-icon-button
         (click)="returnToViewSearch()"
@@ -35,13 +41,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <div fxLayout="row" class="add-margin">
           <div fxFlex fxFlexOffset="20">
             <mat-form-field class="full-width">
+            <mat-label>Name (required)</mat-label>
               <input
                 type="text"
                 matInput
                 [formControl]="viewNameFormControl"
-                placeholder="Name (required)"
                 (change)="saveView()"
-                value="{{ view.name }}"
+                [(ngModel)]="view.name"
                 [errorStateMatcher]="matcher"
               />
               <mat-error
@@ -62,12 +68,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <div fxLayout="row" class="add-margin">
           <div fxFlex fxFlexOffset="20">
             <mat-form-field class="full-width">
+              <mat-label>Description (required)</mat-label>
               <textarea
                 matInput
-                placeholder="View Description (required)"
                 [formControl]="descriptionFormControl"
                 (change)="saveView()"
-                value="{{ view.description }}"
+                [(ngModel)]="view.description"
                 [errorStateMatcher]="matcher"
               ></textarea>
               <mat-error *ngIf="descriptionFormControl.hasError('required')">
@@ -379,7 +385,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
   <div fxLayout="row" class="bottom-button">
     <div fxFlex fxLayoutAlign="center center">
-      <button mat-stroked-button (click)="returnToViewSearch()">Done</button>
+      <button
+        *ngIf="
+          !viewNameFormControl.hasError('minlength') &&
+          !viewNameFormControl.hasError('required') &&
+          !descriptionFormControl.hasError('required')
+        "
+        mat-stroked-button (click)="returnToViewSearch()">Done</button>
     </div>
   </div>
 </div>

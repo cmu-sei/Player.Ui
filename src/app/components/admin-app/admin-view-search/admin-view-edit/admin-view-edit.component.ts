@@ -248,8 +248,7 @@ export class AdminViewEditComponent implements OnInit {
       !this.viewNameFormControl.hasError('minlength') &&
       !this.viewNameFormControl.hasError('required')
     ) {
-      if (this.view.name !== this.viewNameFormControl.value) {
-        this.view.name = this.viewNameFormControl.value;
+      if (this.view.name.length > 4) {
         this.viewService
           .updateView(this.view.id, this.view)
           .subscribe((updatedView) => {
@@ -259,14 +258,11 @@ export class AdminViewEditComponent implements OnInit {
     }
 
     if (!this.descriptionFormControl.hasError('required')) {
-      if (this.view.description !== this.descriptionFormControl.value) {
-        this.view.description = this.descriptionFormControl.value;
-        this.viewService
-          .updateView(this.view.id, this.view)
-          .subscribe((updatedView) => {
-            this.view = updatedView;
-          });
-      }
+      this.viewService
+        .updateView(this.view.id, this.view)
+        .subscribe((updatedView) => {
+          this.view = updatedView;
+        });
     }
   }
 
