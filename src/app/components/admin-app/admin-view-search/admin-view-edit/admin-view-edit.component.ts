@@ -99,6 +99,7 @@ export class AdminViewEditComponent implements OnInit {
   public viewFiles: FileModel[];
 
   public appNames: string[];
+  public hasErrors: boolean;
 
   constructor(
     public viewService: ViewService,
@@ -122,6 +123,7 @@ export class AdminViewEditComponent implements OnInit {
     this.teamsForFile = new Array<string>();
     this.appNames = new Array<string>();
     this.viewFiles = new Array<FileModel>();
+    this.hasErrors = false;
   }
 
   /**
@@ -244,6 +246,13 @@ export class AdminViewEditComponent implements OnInit {
    * Saves the current view
    */
   saveView(): void {
+
+    if (this.viewNameFormControl.hasError || this.descriptionFormControl.hasError) {
+      this.hasErrors = true;
+    } else {
+      this.hasErrors = false;
+    }
+
     if (
       !this.viewNameFormControl.hasError('minlength') &&
       !this.viewNameFormControl.hasError('required')

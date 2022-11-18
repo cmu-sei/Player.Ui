@@ -10,12 +10,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="title">
     <div fxFlex="10" fxLayoutAlign="start center">
       <button
-      *ngIf="
-        !viewNameFormControl.hasError('minlength') &&
-        !viewNameFormControl.hasError('required') &&
-        !descriptionFormControl.hasError('required')
-      "
-
+      *ngIf="!hasErrors"
         title="Return to View Search"
         mat-icon-button
         (click)="returnToViewSearch()"
@@ -386,11 +381,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="bottom-button">
     <div fxFlex fxLayoutAlign="center center">
       <button
-        *ngIf="
-          !viewNameFormControl.hasError('minlength') &&
-          !viewNameFormControl.hasError('required') &&
-          !descriptionFormControl.hasError('required')
-        "
+        *ngIf="!hasErrors"
         mat-stroked-button (click)="returnToViewSearch()">Done</button>
     </div>
   </div>
