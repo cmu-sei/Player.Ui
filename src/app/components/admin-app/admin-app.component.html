@@ -36,8 +36,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
         <div class="righticon">
           <button
-            class="right-icon"
+            title="views"
             mat-icon-button
+            class="right-icon"
             (click)="sectionChangedFn(Section.ADMIN_VIEWS)"
           >
             <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
@@ -58,6 +59,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
         <div class="righticon">
           <button
+            title="users"
             mat-icon-button
             style="outline: none"
             (click)="sectionChangedFn(Section.ADMIN_USERS)"
@@ -80,6 +82,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
         <div>
           <button
+            title="application templates"
             mat-icon-button
             style="outline: none"
             (click)="sectionChangedFn(Section.ADMIN_APP_TEMP)"
@@ -105,6 +108,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
         <div>
           <button
+            title="roles and permissions"
             mat-icon-button
             style="outline: none"
             (click)="sectionChangedFn(Section.ADMIN_ROLE_PERM)"
@@ -131,6 +135,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
         <div>
           <button
+            title="subscriptions"
             mat-icon-button
             style="outline: none;"
             (click)="sectionChangedFn(Section.ADMIN_SUBS)"
