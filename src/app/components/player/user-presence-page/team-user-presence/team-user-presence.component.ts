@@ -1,5 +1,5 @@
 /*
-Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
+Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
@@ -37,7 +37,7 @@ export class TeamUserPresenceComponent implements OnInit {
   public userDatasource = new TableVirtualScrollDataSource<ViewPresence>(
     new Array<ViewPresence>()
   );
-  public displayedColumns: string[] = ['name', 'online'];
+  public displayedColumns: string[] = ['user-name', 'online'];
   public itemSize = 48;
   public headerSize = 56;
   public maxSize = this.itemSize * 7;

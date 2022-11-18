@@ -1,20 +1,30 @@
 /*
-Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
+Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
+//@import '../../../../../styles/_theme.scss';
+
 mat-header-cell {
-  font-size: 15px;
+  font-size: large;
 }
 
 mat-panel-title {
-  font-size: 16px;
+  font-size: large;
+}
+
+mat-panel-description {
+  font-size: large;
+}
+
+mat-cell {
+  font-size: large;
 }
 
 .online {
-  color: green;
+  font-size: large;
 }
 
 .offline {
-  color: red;
+  font-size: large;
 }
