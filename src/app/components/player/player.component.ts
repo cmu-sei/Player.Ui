@@ -180,6 +180,10 @@ export class PlayerComponent implements OnInit, OnDestroy {
         dialogRef.componentInstance.updateApplicationTemplates();
         dialogRef.componentInstance.updateView();
         dialogRef.componentInstance.view = data.view;
+        if (data.view) {
+          dialogRef.componentInstance.setView(data.view);
+        }
+
       });
 
       dialogRef.componentInstance.editComplete.subscribe(() => {
