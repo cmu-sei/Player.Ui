@@ -76,7 +76,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   checkParam(params: string[]): Observable<boolean> {
-    return this.routerQuery.selectQueryParams([...params]).pipe(
+    return this.routerQuery.selectQueryParams([...params]).pipe(takeUntil(this.unsubscribe$),
       switchMap((p) => {
         return p.every((x) => x != null) ? of(true) : of(false);
       })
@@ -92,8 +92,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
       switchMap((state) =>
         combineLatest([
           this.loggedInUserService.loggedInUser$,
-          this.viewService.getView(state.params['id']),
-          this.teamService.getMyViewTeams(state.params['id']),
+          state.params['id'] ? this.viewService.getView(state.params['id']) : new Observable<View>(),
+          state.params['id'] ? this.teamService.getMyViewTeams(state.params['id']) : new Observable<any>(),
         ]).pipe(
           // this pipe allows us to return all previous observable values.
           map(([user, view, teams]) => ({
@@ -175,17 +175,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
       window.open(url, '_blank');
     } else {
       const dialogRef = this.dialog.open(AdminViewEditComponent);
-      this.data$.subscribe((data) => {
-        dialogRef.componentInstance.resetStepper();
-        dialogRef.componentInstance.updateApplicationTemplates();
-        dialogRef.componentInstance.updateView();
-        dialogRef.componentInstance.view = data.view;
-        if (data.view) {
-          dialogRef.componentInstance.setView(data.view);
-        }
-
-      });
-
+        this.data$.subscribe((data) => {
+          dialogRef.componentInstance.resetStepper();
+          dialogRef.componentInstance.updateApplicationTemplates();
+          dialogRef.componentInstance.updateView();
+          if (data.view) {
+            dialogRef.componentInstance.setView(data.view);
+          }
+        });
       dialogRef.componentInstance.editComplete.subscribe(() => {
         dialogRef.close();
       });

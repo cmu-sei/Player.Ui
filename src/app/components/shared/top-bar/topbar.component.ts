@@ -71,6 +71,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     const theme = event.checked ? Theme.DARK : Theme.LIGHT;
     this.authService.setUserTheme(theme);
   }
+
   editFn(event) {
     this.editView.emit(event);
   }
