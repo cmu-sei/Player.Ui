@@ -99,7 +99,6 @@ export class AdminViewEditComponent implements OnInit {
   public viewFiles: FileModel[];
 
   public appNames: string[];
-  public hasErrors: boolean;
 
   constructor(
     public viewService: ViewService,
@@ -123,7 +122,6 @@ export class AdminViewEditComponent implements OnInit {
     this.teamsForFile = new Array<string>();
     this.appNames = new Array<string>();
     this.viewFiles = new Array<FileModel>();
-    this.hasErrors = false;
   }
 
   /**
@@ -166,6 +164,21 @@ export class AdminViewEditComponent implements OnInit {
           });
         });
       });
+    }
+  }
+
+  /**
+   * Sets the contents of the current view
+   */
+   setView(view: View): void {
+    if (view) {
+      this.view = view;
+      this.viewNameFormControl.setValue(view.name);
+      this.descriptionFormControl.setValue(view.description);
+    } else {
+      this.view = {};
+      this.viewNameFormControl.setValue('');
+      this.descriptionFormControl.setValue('');
     }
   }
 
@@ -247,17 +260,12 @@ export class AdminViewEditComponent implements OnInit {
    */
   saveView(): void {
 
-    if (this.viewNameFormControl.hasError || this.descriptionFormControl.hasError) {
-      this.hasErrors = true;
-    } else {
-      this.hasErrors = false;
-    }
-
     if (
       !this.viewNameFormControl.hasError('minlength') &&
       !this.viewNameFormControl.hasError('required')
     ) {
-      if (this.view.name.length > 4) {
+      if (this.view.name !== this.viewNameFormControl.value) {
+        this.view.name = this.viewNameFormControl.value;
         this.viewService
           .updateView(this.view.id, this.view)
           .subscribe((updatedView) => {
@@ -267,6 +275,14 @@ export class AdminViewEditComponent implements OnInit {
     }
 
     if (!this.descriptionFormControl.hasError('required')) {
+      if (this.view.description !== this.descriptionFormControl.value) {
+        this.view.description = this.descriptionFormControl.value;
+        this.viewService
+          .updateView(this.view.id, this.view)
+          .subscribe((updatedView) => {
+            this.view = updatedView;
+          });
+      }
       this.viewService
         .updateView(this.view.id, this.view)
         .subscribe((updatedView) => {

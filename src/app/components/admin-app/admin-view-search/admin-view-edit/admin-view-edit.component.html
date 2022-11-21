@@ -10,7 +10,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="title">
     <div fxFlex="10" fxLayoutAlign="start center">
       <button
-      *ngIf="!hasErrors"
+        [disabled]="viewNameFormControl.invalid || descriptionFormControl.invalid"
         title="Return to View Search"
         mat-icon-button
         (click)="returnToViewSearch()"
@@ -42,7 +42,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 matInput
                 [formControl]="viewNameFormControl"
                 (change)="saveView()"
-                [(ngModel)]="view.name"
                 [errorStateMatcher]="matcher"
               />
               <mat-error
@@ -68,7 +67,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 matInput
                 [formControl]="descriptionFormControl"
                 (change)="saveView()"
-                [(ngModel)]="view.description"
                 [errorStateMatcher]="matcher"
               ></textarea>
               <mat-error *ngIf="descriptionFormControl.hasError('required')">
@@ -381,7 +379,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="bottom-button">
     <div fxFlex fxLayoutAlign="center center">
       <button
-        *ngIf="!hasErrors"
+        [disabled]="viewNameFormControl.invalid || descriptionFormControl.invalid"
         mat-stroked-button (click)="returnToViewSearch()">Done</button>
     </div>
   </div>
