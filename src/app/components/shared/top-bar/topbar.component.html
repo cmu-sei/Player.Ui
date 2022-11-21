@@ -11,6 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <span class="margin-auto">
       <button
         *ngIf="sidenav && sidenav?.opened"
+        aria-label="close sidebar"
         (click)="sidenavToggleFn()"
         color="primary"
         mat-icon-button
@@ -20,6 +21,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <button
         *ngIf="sidenav && !sidenav?.opened"
+        aria-label="open sidebar"
         (click)="sidenavToggleFn()"
         color="primary"
         mat-icon-button
@@ -31,7 +33,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <span class="view-text">{{ title }}</span>
     <ng-container *ngIf="teams && team && teams.length > 0">
       <div class="team-text">Team:</div>
-      <b class="team-text">{{ team.name }}</b>
+      <span class="team-text">{{ team.name }}</span>
       <div *ngIf="teams.length > 1" fxLayout="row" fxLayoutAlign="start center">
         <button mat-button [matMenuTriggerFor]="teamMenu" style="outline: none">
           <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
@@ -67,7 +69,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       *ngIf="currentUser$ | async as currentUser"
     >
       <button mat-button [matMenuTriggerFor]="menu" style="outline: none">
-        <strong>{{ currentUser.profile.name }}</strong>
+        <span class="username-text">{{ currentUser.profile.name }}</span>
         <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false">
@@ -81,7 +83,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           >
             Edit View
           </button>
-          <button 
+          <button
           title="Open in Browser Tab"
           *ngIf="team && currentUser.profile.isSystemAdmin !== null &&
             currentUser.profile.isSystemAdmin"
@@ -113,15 +115,23 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >
           Administration
         </button>
+        <button
+          *ngIf="topbarView === 'player-player'"
+          [routerLink]="['/']"
+          mat-menu-item
+        >
+          Exit View
+        </button>
         <button mat-menu-item (click)="logout()">Logout</button>
         <mat-slide-toggle
+          aria-labelledby="theme-toggle"
           class="mat-menu-item"
           color="primary"
           [checked]="(theme$ | async) === 'dark-theme' ? true : false"
           (click)="$event.stopPropagation()"
           (change)="themeFn($event)"
         >
-          Dark Theme
+          <mat-label id="theme-toggle">Dark Theme</mat-label>
         </mat-slide-toggle>
       </mat-menu>
     </div>

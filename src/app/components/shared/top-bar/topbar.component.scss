@@ -11,13 +11,16 @@
   min-height: 38px;
 }
 .team-text {
+  font-size: large;
   text-align: right;
   margin-right: 10px;
+  font-weight: bold;
 }
 .view-text {
-  font-size: 110%;
+  font-size: large;
   margin-left: 50px;
   margin-right: 40px;
+  font-weight: bold;
 }
 .big-button {
   width: 75%;
@@ -25,4 +28,8 @@
 .small-button {
   width: 25%;
   padding-right: 40px;
+}
+.username-text {
+  font-size: large;
+  font-weight: bold;
 }

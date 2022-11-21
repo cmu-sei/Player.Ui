@@ -11,6 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     >
       <iframe
         *ngIf="app.loadInBackground"
+        aria-hidden="true"
         class="hidden-app-iframe"
         [src]="app.safeUrl"
       ></iframe>
@@ -38,7 +39,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </div>
 
       <div class="righticon">
-        <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none">
+        <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none" title="{{ app.name }}">
           <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
         </button>
       </div>

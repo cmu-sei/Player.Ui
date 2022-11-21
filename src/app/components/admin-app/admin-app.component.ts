@@ -22,7 +22,7 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
-  public topbarColor = '#5F8DB5';
+  public topbarColor = '#4c7aa2';
   public topbarTextColor = '#FFFFFF';
   public TopbarView = TopbarView;
   public queryParams: any = {

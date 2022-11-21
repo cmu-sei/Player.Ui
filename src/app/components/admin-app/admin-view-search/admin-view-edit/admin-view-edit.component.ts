@@ -74,17 +74,13 @@ export class AdminViewEditComponent implements OnInit {
   ]);
 
   public descriptionFormControl = new FormControl('', [Validators.required]);
-
   public matcher = new UserErrorStateMatcher();
   public viewStates = Object.values(ViewStatus);
   public isLinear = false;
-
   public view: View;
   public teams: Array<TeamUserApp>;
   public currentTeam: TeamUserApp;
-
   public isLoadingTeams: Boolean;
-
   public applicationTemplates: Array<ApplicationTemplate>;
   public BLANK_TEMPLATE = <ApplicationTemplate>{
     name: 'New Application',
@@ -95,9 +91,7 @@ export class AdminViewEditComponent implements OnInit {
   public teamsForFile: string[];
   public uploadProgess: number;
   public uploading: boolean;
-
   public viewFiles: FileModel[];
-
   public appNames: string[];
 
   constructor(
@@ -164,6 +158,21 @@ export class AdminViewEditComponent implements OnInit {
           });
         });
       });
+    }
+  }
+
+  /**
+   * Sets the contents of the current view
+   */
+   setView(view: View): void {
+    if (view) {
+      this.view = view;
+      this.viewNameFormControl.setValue(view.name);
+      this.descriptionFormControl.setValue(view.description);
+    } else {
+      this.view = {};
+      this.viewNameFormControl.setValue('');
+      this.descriptionFormControl.setValue('');
     }
   }
 
@@ -244,6 +253,7 @@ export class AdminViewEditComponent implements OnInit {
    * Saves the current view
    */
   saveView(): void {
+
     if (
       !this.viewNameFormControl.hasError('minlength') &&
       !this.viewNameFormControl.hasError('required')

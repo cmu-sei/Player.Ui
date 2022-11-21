@@ -53,6 +53,7 @@ $cmu-light-theme-background: (
   disabled-button-toggle: map_get(mat.$grey-palette, 200),
   unselected-chip: map_get(mat.$grey-palette, 300),
   disabled-list-option: #f1f1f2,
+  presence-table: map_get(mat.$grey-palette, 300),
 );
 
 // Foreground palette for light themes.
@@ -71,6 +72,8 @@ $cmu-light-theme-foreground: (
   slider-min: rgba(black, 0.87),
   slider-off: rgba(black, 0.26),
   slider-off-active: rgba(black, 0.38),
+  online: #007400,
+  offline: #ca0000,
 );
 
 // Background palette for dark themes.
@@ -91,6 +94,7 @@ $cmu-dark-theme-background: (
   disabled-button-toggle: black,
   unselected-chip: map_get(mat.$grey-palette, 700),
   disabled-list-option: map_get(mat.$grey-palette, 900),
+  presence-table: black,
 );
 
 // Foreground palette for dark themes.
@@ -110,6 +114,8 @@ $cmu-dark-theme-foreground: (
   slider-min: white,
   slider-off: rgba(white, 0.3),
   slider-off-active: rgba(white, 0.3),
+  online: #088808,
+  offline: red,
 );
 
 $custom-colors: (
@@ -189,6 +195,29 @@ $custom-typography: mat.define-typography-config(
       color: map-get($foreground, disabled);
     }
   }
+
+  .mat-column-online,
+  .mat-column-user-name {
+    background: map-get($background, 'presence-table') !important;
+  }
+
+  .online {
+    color: map-get($foreground, 'online');
+  }
+  .offline {
+    color: map-get($foreground, 'offline');
+  }
+
+  .mat-header-cell,
+  .mat-form-field,
+  .mat-form-field-label,
+  .mat-sort-header-content,
+  .mat-paginator-page-size-label,
+  .mat-paginator-range-label,
+  .mat-expansion-panel-header-description {
+    color: map-get($foreground, 'text') !important;
+  }
+
 }
 
 $primary: mat.define-palette($mat-cmu-tartan);

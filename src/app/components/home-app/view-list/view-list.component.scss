@@ -8,7 +8,19 @@
   max-height: 800px;
   min-width: 300px;
   margin-top: 40px;
-  width: 800px;
+  width: 80%;
+}
+
+.views-title {
+  font-size: x-large;
+}
+
+.no-results {
+  font-size: x-large;
+}
+
+.mat-header-cell {
+  font-size: medium;
 }
 
 .mat-table {
@@ -23,16 +35,12 @@
 }
 
 .description-text {
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: x-small;
+  font-size: large;
   text-align: left;
 }
 
 .team-text {
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: medium;
+  font-size: large;
   text-align: center;
 }
 
@@ -51,9 +59,27 @@
 
 .link-text {
   text-align: left;
+  font-size: large;
 }
 
 .player-icon {
   transform: scale(2);
   width: 60px;
+}
+
+.mat-column-name {
+  flex: 0 0 28%;
+  padding: 1%;
+}
+.mat-column-teamName {
+  flex: 0 0 20%;
+}
+.mat-column-description {
+  flex: 0 0 48%;
+  padding: 1%;
+}
+
+.searchBox {
+  margin-right: 10px ;
+  margin-left: auto !important;
 }

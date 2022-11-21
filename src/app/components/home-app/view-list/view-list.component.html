@@ -13,9 +13,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="sp-icon text">
       <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
     </div>
-    <span class="text">View Search</span>
-    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
+    <span class="views-title text">My Views</span>
+    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5" class="searchBox">
       <mat-icon
+        class="text"
         style="transform: scale(0.85); margin-right: 5px"
         svgIcon="ic_magnify_search"
       ></mat-icon>
@@ -57,7 +58,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
-        View Name
+        Name
       </mat-header-cell>
       <mat-cell *matCellDef="let element">
         <div class="link-text">
@@ -89,5 +90,5 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
   </mat-table>
-  <div *ngIf="viewDataSource.filteredData.length === 0">No results found</div>
+  <div class="text no-results" *ngIf="viewDataSource.filteredData.length === 0">No results found</div>
 </div>

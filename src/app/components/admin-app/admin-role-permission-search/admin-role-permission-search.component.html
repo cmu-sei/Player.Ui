@@ -89,12 +89,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
           <mat-cell *matCellDef="let element">
             <button mat-icon-button [matMenuTriggerFor]="menu">
-              <mat-icon title="Menu">
-                <img
-                  style="transform: scaleX(-1)"
-                  width="32"
-                  src="assets/img/SP_Icon_Collapse.png"
-                />
+              <mat-icon title="Menu"
+                class="actions-button"
+                style="transform: scaleX(-1)"
+                svgIcon="ic_expand_more_black_24px">
               </mat-icon>
             </button>
             <mat-menu #menu="matMenu">

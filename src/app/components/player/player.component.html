@@ -35,6 +35,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (toggleSideNavEvent)="sidenavToggleFn()"
         ></app-application-list>
         <img
+          alt="crucible logo"
           class="crucible-logo"
           [src]="
             (theme$ | async) === 'light-theme'
@@ -48,7 +49,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [sidenav]="sidenav"
           [title]="data.view.name"
           [topbarColor]="topbarColor"
-          topbarView="player-home"
+          topbarView="player-player"
           [teams]="data.teams"
           [team]="data.team"
           [viewId]="viewId"

@@ -12,7 +12,7 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 })
 export class HomeAppComponent implements OnInit {
   public title: string;
-  public topbarColor = '#5F8DB5';
+  public topbarColor = '#4c7aa2';
   public topbarTextColor = '#FFFFFF';
   TopbarView = TopbarView;
 
