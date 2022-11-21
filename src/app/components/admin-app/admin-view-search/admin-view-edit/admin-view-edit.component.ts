@@ -277,11 +277,6 @@ export class AdminViewEditComponent implements OnInit {
             this.view = updatedView;
           });
       }
-      this.viewService
-        .updateView(this.view.id, this.view)
-        .subscribe((updatedView) => {
-          this.view = updatedView;
-        });
     }
   }
 
