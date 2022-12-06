@@ -86,7 +86,7 @@ $cmu-dark-theme-background: (
   dialog: map_get(mat.$grey-palette, 900),
   button: map_get($mat-cmu-tartan, default),
   disabled-button: rgba(white, 0.12),
-  expansion-panel-header: map_get(mat.$grey-palette, 900),
+  expansion-panel: map_get(mat.$grey-palette, 900),
   raised-button: map-get(mat.$grey-palette, 900),
   focused-button: $light-focused,
   selected-button: map_get(mat.$grey-palette, 900),
@@ -216,6 +216,10 @@ $custom-typography: mat.define-typography-config(
   .mat-paginator-range-label,
   .mat-expansion-panel-header-description {
     color: map-get($foreground, 'text') !important;
+  }
+  .mat-expansion-panel,
+  .mat-drawer {
+    background-color: map-get($background, 'expansion-panel') !important;
   }
 
 }
