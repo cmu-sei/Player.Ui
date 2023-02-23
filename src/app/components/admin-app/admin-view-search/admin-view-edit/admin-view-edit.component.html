@@ -10,7 +10,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="title">
     <div fxFlex="10" fxLayoutAlign="start center">
       <button
-        [disabled]="viewNameFormControl.invalid || descriptionFormControl.invalid"
+        [disabled]="
+          viewNameFormControl.invalid || descriptionFormControl.invalid
+        "
         title="Return to View Search"
         mat-icon-button
         (click)="returnToViewSearch()"
@@ -36,7 +38,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <div fxLayout="row" class="add-margin">
           <div fxFlex fxFlexOffset="20">
             <mat-form-field class="full-width">
-            <mat-label>Name (required)</mat-label>
+              <mat-label>Name (required)</mat-label>
               <input
                 type="text"
                 matInput
@@ -252,126 +254,163 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-step>
 
       <mat-step label="Files" fxLayout="row">
-        <div fxLayout="row" fxLayoutGap="350px">
-          <button
-            id="chooseBtn"
-            type="button"
-            mat-stroked-button
-            (click)="fileInput.click()"
+        <mat-accordion>
+          <div>
+            <input
+              hidden
+              (change)="selectFile($event.target.files)"
+              #fileInput
+              type="file"
+            />
+            <div>
+              <div
+                fxLayout="row"
+                fxLayoutAlign="end"
+                class="top-button"
+                *ngIf="staged.length === 0"
+              >
+                <button mat-stroked-button (click)="fileInput.click()">
+                  Add New File
+                </button>
+              </div>
+              <div
+                fxLayout="row"
+                fxLayoutAlign="end center" 
+                class="top-button"
+                *ngIf="staged.length !== 0"
+              >
+                <mat-list>
+                  <mat-list-item *ngFor="let playerFile of staged">
+                    {{ playerFile.file.name }}
+                    <div>
+                      <button mat-icon-button (click)="removeFile(playerFile)">
+                        <mat-icon
+                          style="transform: scale(0.85)"
+                          svgIcon="ic_clear_black_24px"
+                        ></mat-icon>
+                      </button>
+                    </div>
+                  </mat-list-item>
+                </mat-list>
+
+                <div fxLayout="row">
+                  <mat-form-field id="teamSelect" style="width: 300px">
+                    <mat-label>Select Teams</mat-label>
+                    <mat-select multiple [(ngModel)]="teamsForFile">
+                      <mat-option
+                        *ngFor="let teamWrapper of teams"
+                        [value]="teamWrapper.team.id"
+                        >{{ teamWrapper.team.name }}</mat-option
+                      >
+                    </mat-select>
+                  </mat-form-field>
+                  <button mat-stroked-button (click)="uploadFile()" style="height: 35px;">
+                    Upload File
+                  </button>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="uploadProgess"
+                    *ngIf="uploading"
+                  ></mat-progress-bar>
+                </div>
+              </div>
+            </div>
+          </div>
+          <mat-expansion-panel
+            *ngFor="let viewFile of viewFiles"
+            [expanded]="
+              currentFile !== undefined && viewFile.id === currentFile.id
+            "
+            (opened)="currentFile = currentFile"
           >
-            Choose File
-          </button>
-          <div>
-            <mat-label>Uploaded Files</mat-label>
-            <mat-list id="viewFiles" fxLayout="column">
-              <mat-list-item *ngFor="let viewFile of viewFiles">
-                {{ viewFile.name }}
-                <div class="file_buttons">
-                  <button
-                    mat-icon-button
-                    (click)="downloadFile(viewFile.id, viewFile.name)"
-                    title="Download"
-                  >
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_get_app"
-                    ></mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    (click)="deleteFile(viewFile.id, viewFile.name)"
-                    title="Delete"
-                  >
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_delete"
-                    ></mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    (click)="getDownloadLink(viewFile.id, viewFile.name)"
-                    title="Copy Link"
-                  >
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_clipboard_copy"
-                    ></mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    (click)="
-                      editFile(viewFile.id, viewFile.name, viewFile.teamIds)
-                    "
-                    title="Edit"
-                  >
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_edit"
-                    ></mat-icon>
-                  </button>
-                  <button
-                    *ngIf="!appNames.includes(viewFile.name)"
-                    mat-icon-button
-                    (click)="createApplication(viewFile)"
-                    title="Add as Application"
-                  >
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_add"
-                    ></mat-icon>
-                  </button>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <div fxLayout="row" fxLayoutAlign="start center">
+                  <img
+                    height="25"
+                    src="assets/img/SP_Icon_Intel.png"
+                    alt="Application Templates"
+                  />{{ viewFile.name }}
                 </div>
-              </mat-list-item>
-            </mat-list>
-          </div>
-        </div>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
 
-        <div>
-          <input
-            hidden
-            multiple
-            (change)="selectFile($event.target.files)"
-            #fileInput
-            type="file"
-          />
-          <div>
-            <mat-label>Staged Files</mat-label>
-            <mat-list>
-              <mat-list-item *ngFor="let playerFile of staged">
-                {{ playerFile.file.name }}
-                <div>
-                  <button mat-icon-button (click)="removeFile(playerFile)">
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_clear_black_24px"
-                    ></mat-icon>
-                  </button>
-                </div>
-              </mat-list-item>
-            </mat-list>
-          </div>
-
-          <div fxLayout="row">
-            <mat-form-field id="teamSelect">
-              <mat-label>Select Teams</mat-label>
-              <mat-select multiple [(ngModel)]="teamsForFile">
-                <mat-option
-                  *ngFor="let teamWrapper of teams"
-                  [value]="teamWrapper.team.id"
-                  >{{ teamWrapper.team.name }}</mat-option
+            <div fxLayout="column">
+              <div fxLayout="row" fxLayoutAlign="space-around center" >
+                <mat-form-field id="teamSelect" style="width: 400px">
+                  <mat-label>Teams with Permission to View</mat-label>
+                  <mat-select multiple [ngModel]="viewFile.teamIds">
+                    <mat-option
+                      *ngFor="let teamWrapper of teams"
+                      [value]="teamWrapper.team.id"
+                      >{{ teamWrapper.team.name }}</mat-option
+                    >
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div fxLayout="row" fxLayoutAlign="space-around center" >
+                <button
+                  mat-stroked-button
+                  (click)="downloadFile(viewFile.id, viewFile.name)"
+                  title="Download"
                 >
-              </mat-select>
-            </mat-form-field>
-            <button type="button" mat-stroked-button (click)="uploadFile()">
-              Upload Staged File(s)
-            </button>
-            <mat-progress-bar
-              mode="determinate"
-              [value]="uploadProgess"
-              *ngIf="uploading"
-            ></mat-progress-bar>
-          </div>
-        </div>
+                  Download
+                  <mat-icon
+                    style="transform: scale(0.85)"
+                    svgIcon="ic_get_app"
+                  ></mat-icon>
+                </button>
+                <button
+                  mat-stroked-button
+                  (click)="deleteFile(viewFile.id, viewFile.name)"
+                  title="Delete"
+                >
+                  Delete
+                  <mat-icon
+                    style="transform: scale(0.85)"
+                    svgIcon="ic_delete"
+                  ></mat-icon>
+                </button>
+                <button
+                  mat-stroked-button
+                  (click)="getDownloadLink(viewFile.id, viewFile.name)"
+                  title="Copy Link"
+                >
+                  Copy Link
+                  <mat-icon
+                    style="transform: scale(0.85)"
+                    svgIcon="ic_clipboard_copy"
+                  ></mat-icon>
+                </button>
+                <button
+                  mat-stroked-button
+                  (click)="
+                    editFile(viewFile.id, viewFile.name, viewFile.teamIds)
+                  "
+                  title="Edit"
+                >
+                  Edit Name
+                  <mat-icon
+                    style="transform: scale(0.85)"
+                    svgIcon="ic_edit"
+                  ></mat-icon>
+                </button>
+                <button
+                  *ngIf="!appNames.includes(viewFile.name)"
+                  mat-stroked-button
+                  (click)="createApplication(viewFile)"
+                  title="Add as Application"
+                >
+                  Add as App
+                  <mat-icon
+                    style="transform: scale(0.85)"
+                    svgIcon="ic_add"
+                  ></mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
       </mat-step>
     </mat-vertical-stepper>
   </mat-dialog-content>
@@ -379,8 +418,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div fxLayout="row" class="bottom-button">
     <div fxFlex fxLayoutAlign="center center">
       <button
-        [disabled]="viewNameFormControl.invalid || descriptionFormControl.invalid"
-        mat-stroked-button (click)="returnToViewSearch()">Done</button>
+        [disabled]="
+          viewNameFormControl.invalid || descriptionFormControl.invalid
+        "
+        mat-stroked-button
+        (click)="returnToViewSearch()"
+      >
+        Done
+      </button>
     </div>
   </div>
 </div>

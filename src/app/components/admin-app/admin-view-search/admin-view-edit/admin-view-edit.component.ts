@@ -92,6 +92,7 @@ export class AdminViewEditComponent implements OnInit {
   public uploadProgess: number;
   public uploading: boolean;
   public viewFiles: FileModel[];
+  public currentFile: FileModel;
   public appNames: string[];
 
   constructor(
@@ -394,6 +395,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   selectFile(files: FileList) {
     const filesToUpload = Array.from(files);
+    this.uploading = false;
     for (let fp of filesToUpload) {
       this.staged.push(new PlayerFile(fp));
     }
@@ -531,8 +533,8 @@ export class AdminViewEditComponent implements OnInit {
     this.dialogService
       .editFile(id, this.view.id, name, teams)
       .subscribe((val) => {
-        if (val != undefined) {
-          let index = this.viewFiles.findIndex((f) => f.id === id);
+        if (val !== undefined) {
+          const index = this.viewFiles.findIndex((f) => f.id === id);
           this.viewFiles[index].name = val['name'];
         }
       });
