@@ -337,9 +337,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
             <div fxLayout="column">
               <div fxLayout="row" fxLayoutAlign="space-around center" >
-                <mat-form-field id="teamSelect" style="width: 400px">
+                <mat-form-field id="teamSelect" style="width: 600px">
                   <mat-label>Teams with Permission to View</mat-label>
-                  <mat-select multiple [ngModel]="viewFile.teamIds">
+                  <mat-select multiple [ngModel]="viewFile.teamIds" (selectionChange)="teamsUpdated($event, viewFile)">
                     <mat-option
                       *ngFor="let teamWrapper of teams"
                       [value]="teamWrapper.team.id"

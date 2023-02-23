@@ -580,6 +580,13 @@ export class AdminViewEditComponent implements OnInit {
     );
   }
 
+
+  teamsUpdated(event: any, file: FileModel) {
+    console.log(event);
+    file.teamIds = event.value;
+    this.fileService.updateFile(file.id, file.name, file.teamIds, null).pipe(take(1)).subscribe();
+  }
+
   /**
    * Returns true if the file is an image or pdf. If we want to support more image type, will have to modify this function
    *
