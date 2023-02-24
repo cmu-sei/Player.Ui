@@ -1,4 +1,4 @@
-// Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+// Copyright 2023 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import {
@@ -349,7 +349,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   onViewStepChange(event: any) {
     // Index 3 is the files step. Grab the files already in the view.
-    if (event.selectedIndex == 3) {
+    if (event.selectedIndex === 3) {
       this.staged = new Array<PlayerFile>();
       this.getViewFiles();
       this.getExistingApps();
@@ -396,7 +396,7 @@ export class AdminViewEditComponent implements OnInit {
   selectFile(files: FileList) {
     const filesToUpload = Array.from(files);
     this.uploading = false;
-    for (let fp of filesToUpload) {
+    for (const fp of filesToUpload) {
       this.staged.push(new PlayerFile(fp));
     }
   }
@@ -443,7 +443,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   removeFile(file: PlayerFile) {
     console.log(file);
-    this.staged = this.staged.filter((f) => f.path != file.path);
+    this.staged = this.staged.filter((f) => f.path !== file.path);
   }
 
   /**
@@ -516,7 +516,7 @@ export class AdminViewEditComponent implements OnInit {
             if (resp != null) {
               window.alert('Error deleting file');
             } else {
-              this.viewFiles = this.viewFiles.filter((f) => f.id != id);
+              this.viewFiles = this.viewFiles.filter((f) => f.id !== id);
             }
           });
         }
@@ -546,17 +546,18 @@ export class AdminViewEditComponent implements OnInit {
    * @param file: The file to create an application for
    */
   createApplication(file: FileModel) {
-    let payload: Application = {
+    const payload: Application = {
       name: file.name,
       url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
       embeddable: true,
       loadInBackground: false,
       viewId: this.view.id,
+      icon: '/assets/img/SP_Icon_Intel.png',
     };
 
     this.applicationService.createApplication(this.view.id, payload).subscribe(
-      (data) => {
-        this.appNames.push(data.name);
+      (application) => {
+        this.appNames.push(application.name);
       },
       (err) => {
         console.log('Error creating application ' + err);
@@ -570,7 +571,7 @@ export class AdminViewEditComponent implements OnInit {
   getExistingApps() {
     this.applicationService.getViewApplications(this.view.id).subscribe(
       (data) => {
-        for (let app of data) {
+        for (const app of data) {
           this.appNames.push(app.name);
         }
       },
@@ -580,7 +581,11 @@ export class AdminViewEditComponent implements OnInit {
     );
   }
 
-
+  /**
+   * Called when the Teams select box for a file is changed.
+   * @param event The event from the select box
+   * @param file The file to update the teams for
+   */
   teamsUpdated(event: any, file: FileModel) {
     console.log(event);
     file.teamIds = event.value;
