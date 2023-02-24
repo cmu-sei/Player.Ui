@@ -10,22 +10,22 @@ DM20-0181
 
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
-import { EditFileComponent } from './edit-file.component';
+import { EditFileDialogComponent } from './edit-file.component';
 
 describe('EditFileComponent', () => {
-  let component: EditFileComponent;
-  let fixture: ComponentFixture<EditFileComponent>;
+  let component: EditFileDialogComponent;
+  let fixture: ComponentFixture<EditFileDialogComponent>;
 
   beforeEach(
     waitForAsync(() => {
       TestBed.configureTestingModule({
-        declarations: [EditFileComponent],
+        declarations: [EditFileDialogComponent],
       }).compileComponents();
     })
   );
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(EditFileComponent);
+    fixture = TestBed.createComponent(EditFileDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

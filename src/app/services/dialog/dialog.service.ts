@@ -14,7 +14,7 @@ import { Team, WebhookSubscription } from '../../generated/player-api';
 import { CreatePermissionDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
 import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
 import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
-import { EditFileComponent } from '../../components/admin-app/edit-file/edit-file.component';
+import { EditFileDialogComponent } from '../../components/shared/edit-file-dialog/edit-file.component';
 import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 
 @Injectable()
@@ -102,8 +102,8 @@ export class DialogService {
     oldName: string,
     oldTeams: string[]
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<EditFileComponent>;
-    dialogRef = this.dialog.open(EditFileComponent);
+    let dialogRef: MatDialogRef<EditFileDialogComponent>;
+    dialogRef = this.dialog.open(EditFileDialogComponent);
     dialogRef.componentInstance.fileId = fileId;
     dialogRef.componentInstance.viewId = viewId;
     dialogRef.componentInstance.oldName = oldName;

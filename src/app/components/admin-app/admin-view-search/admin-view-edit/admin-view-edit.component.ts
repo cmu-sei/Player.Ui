@@ -38,7 +38,7 @@ import { DialogService } from '../../../../services/dialog/dialog.service';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { EditFileComponent } from '../../edit-file/edit-file.component';
+import { EditFileDialogComponent } from '../../../shared/edit-file-dialog/edit-file.component';
 import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 /** Team node with related user and application information */
@@ -61,7 +61,7 @@ export class AdminViewEditComponent implements OnInit {
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
   @ViewChild(AdminViewEditComponent) child;
   @ViewChild('stepper') stepper: MatStepper;
-  @ViewChild(EditFileComponent) editFileComponent: EditFileComponent;
+  @ViewChild(EditFileDialogComponent) editFileComponent: EditFileDialogComponent;
 
   public viewNameFormControl = new FormControl('', [
     Validators.required,
@@ -546,6 +546,16 @@ export class AdminViewEditComponent implements OnInit {
    * @param file: The file to create an application for
    */
   createApplication(file: FileModel) {
+
+    /*this.dialogService
+    .createApplication()
+    .subscribe((val) => {
+      if (val !== undefined) {
+        const index = this.viewFiles.findIndex((f) => f.id === id);
+        this.viewFiles[index].name = val['name'];
+      }
+    });
+*/
     const payload: Application = {
       name: file.name,
       url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,

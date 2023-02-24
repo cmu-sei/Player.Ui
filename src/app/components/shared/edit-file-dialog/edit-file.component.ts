@@ -18,7 +18,7 @@ import { FileService, Team, TeamService } from '../../../generated/player-api';
   templateUrl: './edit-file.component.html',
   styleUrls: ['./edit-file.component.scss'],
 })
-export class EditFileComponent implements OnInit {
+export class EditFileDialogComponent implements OnInit {
   form: FormGroup;
 
   @Input() fileId: string;
@@ -32,7 +32,7 @@ export class EditFileComponent implements OnInit {
     private teamService: TeamService,
     private fileService: FileService,
     private formBuilder: FormBuilder,
-    private dialogRef: MatDialogRef<EditFileComponent>
+    private dialogRef: MatDialogRef<EditFileDialogComponent>
   ) {}
 
   ngOnInit(): void {

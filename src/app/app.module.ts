@@ -97,7 +97,7 @@ import { TeamsService } from './services/teams/teams.service';
 import { ViewsService } from './services/views/views.service';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { OpenFileComponent } from './components/player/open-file/open-file.component';
-import { EditFileComponent } from './components/admin-app/edit-file/edit-file.component';
+import { EditFileDialogComponent } from './components/shared/edit-file-dialog/edit-file.component';
 import { UserPresencePageComponent } from './components/player/user-presence-page/user-presence-page.component';
 import { UserPresenceComponent } from './components/player/user-presence-page/user-presence/user-presence.component';
 import { TeamUserPresenceComponent } from './components/player/user-presence-page/team-user-presence/team-user-presence.component';
@@ -105,6 +105,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-admin-subscription-search/app-admin-subscription-search.component';
 import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
+import { CreateApplicationDialogComponent } from './components/shared/create-application-dialog/create-application-dialog.component';
 
 declare var require: any;
 const settings: ComnSettingsConfig = {
@@ -150,6 +151,9 @@ const settings: ComnSettingsConfig = {
     MatBadgeModule,
     ScrollingModule,
   ],
+  declarations: [
+    CreateApplicationDialogComponent
+  ],
 })
 export class AngularMaterialModule {}
 
@@ -189,7 +193,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     TopbarComponent,
     FileBrowseComponent,
     OpenFileComponent,
-    EditFileComponent,
+    EditFileDialogComponent,
     UserPresencePageComponent,
     UserPresenceComponent,
     TeamUserPresenceComponent,
