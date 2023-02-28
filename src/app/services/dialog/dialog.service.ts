@@ -10,12 +10,14 @@ import {
 import { Injectable } from '@angular/core';
 import { ConfirmDialogComponent } from '../../components/shared/confirm-dialog/confirm-dialog.component';
 import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
-import { Team, WebhookSubscription } from '../../generated/player-api';
+import { FileModel, Team, WebhookSubscription } from '../../generated/player-api';
 import { CreatePermissionDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
 import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
 import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
-import { EditFileDialogComponent } from '../../components/shared/edit-file-dialog/edit-file.component';
+import { EditFileDialogComponent } from '../../components/shared/edit-file-dialog/edit-file-dialog.component';
 import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
+import { CreateApplicationDialogComponent } from '../../components/shared/create-application-dialog/create-application-dialog.component';
+import { TeamUserApp } from '../../components/admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 
 @Injectable()
 export class DialogService {
@@ -117,6 +119,21 @@ export class DialogService {
     let dialogRef: MatDialogRef<EditSubscriptionComponent>;
     dialogRef = this.dialog.open(EditSubscriptionComponent);
     dialogRef.componentInstance.currentSub = subscription;
+    return dialogRef.afterClosed();
+  }
+
+  public createApplication(
+    applicationId: string,
+    file: FileModel,
+    viewName: string,
+    currentTeams: TeamUserApp[]
+  ): Observable<boolean> {
+    let dialogRef: MatDialogRef<CreateApplicationDialogComponent>;
+    dialogRef = this.dialog.open(CreateApplicationDialogComponent);
+    dialogRef.componentInstance.applicationId = applicationId;
+    dialogRef.componentInstance.file = file;
+    dialogRef.componentInstance.viewName = viewName;
+    dialogRef.componentInstance.currentTeams = currentTeams;
     return dialogRef.afterClosed();
   }
 }

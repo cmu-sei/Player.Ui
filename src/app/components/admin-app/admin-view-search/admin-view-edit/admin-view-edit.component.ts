@@ -38,7 +38,7 @@ import { DialogService } from '../../../../services/dialog/dialog.service';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { EditFileDialogComponent } from '../../../shared/edit-file-dialog/edit-file.component';
+import { EditFileDialogComponent } from '../../../shared/edit-file-dialog/edit-file-dialog.component';
 import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 /** Team node with related user and application information */
@@ -123,7 +123,7 @@ export class AdminViewEditComponent implements OnInit {
    * Updates the list of available app templates
    */
   updateApplicationTemplates() {
-    this.applicationService.getApplicationTemplates().subscribe((templates) => {
+    this.applicationService.getApplicationTemplates().pipe(take(1)).subscribe((templates) => {
       this.applicationTemplates = templates;
     });
   }
@@ -136,10 +136,10 @@ export class AdminViewEditComponent implements OnInit {
       // Update the teams arrays
       this.isLoadingTeams = true;
       this.teams = new Array<TeamUserApp>();
-      this.teamService.getViewTeams(this.view.id).subscribe((tms) => {
+      this.teamService.getViewTeams(this.view.id).pipe(take(1)).subscribe((tms) => {
         const userTeams = new Array<TeamUserApp>();
         tms.forEach((tm) => {
-          this.userService.getTeamUsers(tm.id).subscribe((usrs) => {
+          this.userService.getTeamUsers(tm.id).pipe(take(1)).subscribe((usrs) => {
             this.teams.push(new TeamUserApp(tm.name, tm, usrs));
             this.teams.sort((t1, t2) => {
               if (t1.name === null || t2.name === null) {
@@ -224,6 +224,7 @@ export class AdminViewEditComponent implements OnInit {
     console.log(app);
     this.applicationService
       .createApplication(this.view.id, app)
+      .pipe(take(1))
       .subscribe((rslt) => {
         console.log('Application added');
         this.viewApplicationsSelectComponent.updateApplications();
@@ -242,7 +243,7 @@ export class AdminViewEditComponent implements OnInit {
       )
       .subscribe((result) => {
         if (result['confirm']) {
-          this.viewService.deleteView(this.view.id).subscribe((deleted) => {
+          this.viewService.deleteView(this.view.id).pipe(take(1)).subscribe((deleted) => {
             console.log('successfully deleted view');
             this.returnToViewSearch();
           });
@@ -263,6 +264,7 @@ export class AdminViewEditComponent implements OnInit {
         this.view.name = this.viewNameFormControl.value;
         this.viewService
           .updateView(this.view.id, this.view)
+          .pipe(take(1))
           .subscribe((updatedView) => {
             this.view = updatedView;
           });
@@ -274,6 +276,7 @@ export class AdminViewEditComponent implements OnInit {
         this.view.description = this.descriptionFormControl.value;
         this.viewService
           .updateView(this.view.id, this.view)
+          .pipe(take(1))
           .subscribe((updatedView) => {
             this.view = updatedView;
           });
@@ -319,7 +322,7 @@ export class AdminViewEditComponent implements OnInit {
    * @param id team Guid
    */
   saveTeamName(name: string, id: string): void {
-    this.teamService.getTeam(id).subscribe((tm) => {
+    this.teamService.getTeam(id).pipe(take(1)).subscribe((tm) => {
       tm.name = name;
       this.teamService.updateTeam(id, tm).subscribe((updatedTeam) => {
         this.teams.find((t) => t.team.id === id).team = updatedTeam;
@@ -370,6 +373,7 @@ export class AdminViewEditComponent implements OnInit {
   addNewTeam() {
     this.teamService
       .createTeam(this.view.id, <TeamForm>{ name: 'New Team' })
+      .pipe(take(1))
       .subscribe((newTeam) => {
         const team = new TeamUserApp('New Team', newTeam, new Array<User>());
         this.teams.unshift(team);
@@ -415,6 +419,7 @@ export class AdminViewEditComponent implements OnInit {
         'events',
         true
       )
+      .pipe(take(1))
       .subscribe((event) => {
         if (event.type === HttpEventType.UploadProgress) {
           this.uploadProgess = Math.round((100 * event.loaded) / event.total);
@@ -460,7 +465,7 @@ export class AdminViewEditComponent implements OnInit {
    * Get the files in this view that can be accessed by the user
    */
   getViewFiles() {
-    this.fileService.getViewFiles(this.view.id).subscribe(
+    this.fileService.getViewFiles(this.view.id).pipe(take(1)).subscribe(
       (data) => {
         for (const elem of data) {
           if (!this.viewFiles.some((f) => f.name === elem.name)) {
@@ -481,7 +486,7 @@ export class AdminViewEditComponent implements OnInit {
    * @param name: The name to use when triggering the download
    */
   downloadFile(id: string, name: string) {
-    this.fileService.download(id).subscribe(
+    this.fileService.download(id).pipe(take(1)).subscribe(
       (data) => {
         const url = window.URL.createObjectURL(data);
         const link = document.createElement('a');
@@ -541,33 +546,30 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
-   * Creates a player application pointing to this file
-   *
-   * @param file: The file to create an application for
+   * 
+   * @param file Creates a player application pointing to this file
    */
   createApplication(file: FileModel) {
 
-    /*this.dialogService
-    .createApplication()
-    .subscribe((val) => {
-      if (val !== undefined) {
-        const index = this.viewFiles.findIndex((f) => f.id === id);
-        this.viewFiles[index].name = val['name'];
-      }
-    });
-*/
     const payload: Application = {
       name: file.name,
       url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
       embeddable: true,
       loadInBackground: false,
       viewId: this.view.id,
-      icon: '/assets/img/SP_Icon_Intel.png',
+      icon: '/assets/img/SP_Icon_Intel.png', // Default icon rather than no icon
     };
 
-    this.applicationService.createApplication(this.view.id, payload).subscribe(
+    this.applicationService.createApplication(this.view.id, payload).pipe(take(1)).subscribe(
       (application) => {
         this.appNames.push(application.name);
+        this.dialogService
+        .createApplication(application.id, file, this.view.name, this.teams)
+        .subscribe((val) => {
+          if (val !== undefined) {
+            console.log('Create app for teams:  ', val);
+          }
+        });
       },
       (err) => {
         console.log('Error creating application ' + err);
@@ -579,8 +581,9 @@ export class AdminViewEditComponent implements OnInit {
    * Gets the names of the apps already in this view so we don't duplicate an application
    */
   getExistingApps() {
-    this.applicationService.getViewApplications(this.view.id).subscribe(
+    this.applicationService.getViewApplications(this.view.id).pipe(take(1)).subscribe(
       (data) => {
+        this.appNames = new Array<string>();
         for (const app of data) {
           this.appNames.push(app.name);
         }
@@ -596,8 +599,7 @@ export class AdminViewEditComponent implements OnInit {
    * @param event The event from the select box
    * @param file The file to update the teams for
    */
-  teamsUpdated(event: any, file: FileModel) {
-    console.log(event);
+  teamsForFileUpdated(event: any, file: FileModel) {
     file.teamIds = event.value;
     this.fileService.updateFile(file.id, file.name, file.teamIds, null).pipe(take(1)).subscribe();
   }

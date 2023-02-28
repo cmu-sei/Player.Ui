@@ -11,12 +11,12 @@ DM20-0181
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { FileService, Team, TeamService } from '../../../generated/player-api';
+import { FileService } from '../../../generated/player-api';
 
 @Component({
   selector: 'app-edit-file',
-  templateUrl: './edit-file.component.html',
-  styleUrls: ['./edit-file.component.scss'],
+  templateUrl: './edit-file-dialog.component.html',
+  styleUrls: ['./edit-file-dialog.component.scss'],
 })
 export class EditFileDialogComponent implements OnInit {
   form: FormGroup;
@@ -29,7 +29,6 @@ export class EditFileDialogComponent implements OnInit {
   extension: string;
 
   constructor(
-    private teamService: TeamService,
     private fileService: FileService,
     private formBuilder: FormBuilder,
     private dialogRef: MatDialogRef<EditFileDialogComponent>

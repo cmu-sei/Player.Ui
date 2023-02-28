@@ -10,7 +10,7 @@ DM20-0181
 
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
-import { EditFileDialogComponent } from './edit-file.component';
+import { EditFileDialogComponent } from './edit-file-dialog.component';
 
 describe('EditFileComponent', () => {
   let component: EditFileDialogComponent;

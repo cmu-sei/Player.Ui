@@ -97,7 +97,7 @@ import { TeamsService } from './services/teams/teams.service';
 import { ViewsService } from './services/views/views.service';
 import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
 import { OpenFileComponent } from './components/player/open-file/open-file.component';
-import { EditFileDialogComponent } from './components/shared/edit-file-dialog/edit-file.component';
+import { EditFileDialogComponent } from './components/shared/edit-file-dialog/edit-file-dialog.component';
 import { UserPresencePageComponent } from './components/player/user-presence-page/user-presence-page.component';
 import { UserPresenceComponent } from './components/player/user-presence-page/user-presence/user-presence.component';
 import { TeamUserPresenceComponent } from './components/player/user-presence-page/team-user-presence/team-user-presence.component';
@@ -151,9 +151,6 @@ const settings: ComnSettingsConfig = {
     MatBadgeModule,
     ScrollingModule,
   ],
-  declarations: [
-    CreateApplicationDialogComponent
-  ],
 })
 export class AngularMaterialModule {}
 
@@ -199,6 +196,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     TeamUserPresenceComponent,
     AppAdminSubscriptionSearchComponent,
     EditSubscriptionComponent,
+    CreateApplicationDialogComponent,
   ],
   imports: [
     BrowserModule,
