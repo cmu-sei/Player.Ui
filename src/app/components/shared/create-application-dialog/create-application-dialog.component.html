@@ -1,28 +1,31 @@
 <!-- Crucible
-Copyright 2020 Carnegie Mellon University.
+Copyright 2023 Carnegie Mellon University.
 NO WARRANTY. THIS CARNEGIE MELLON UNIVERSITY AND SOFTWARE ENGINEERING INSTITUTE MATERIAL IS FURNISHED ON AN "AS-IS" BASIS. CARNEGIE MELLON UNIVERSITY MAKES NO WARRANTIES OF ANY KIND, EITHER EXPRESSED OR IMPLIED, AS TO ANY MATTER INCLUDING, BUT NOT LIMITED TO, WARRANTY OF FITNESS FOR PURPOSE OR MERCHANTABILITY, EXCLUSIVITY, OR RESULTS OBTAINED FROM USE OF THE MATERIAL. CARNEGIE MELLON UNIVERSITY DOES NOT MAKE ANY WARRANTY OF ANY KIND WITH RESPECT TO FREEDOM FROM PATENT, TRADEMARK, OR COPYRIGHT INFRINGEMENT.
 Released under a MIT (SEI)-style license, please see license.txt or contact permission@sei.cmu.edu for full terms.
 [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution.
 Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
 DM20-0181 -->
-<h2>Edit File</h2>
+<h2>An application named {{file.name}} has been created.</h2>
+<h3>Would you like to add this application to any of the teams?</h3>
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-form-field fxLayout="row">
-    <mat-label>Name</mat-label>
-    <input type="string" matInput formControlName="name" value=".png" />
-  </mat-form-field>
-  <mat-form-field fxLayout="row">
+  <mat-form-field fxLayout="column" fxLayoutAlign="start center" class="team-select">
     <mat-label>Teams</mat-label>
-    <mat-select multiple matNativeControl formControlName="teamIDs">
-      <mat-option *ngFor="let team of availableTeams" [value]="team.id">{{
+    <mat-select multiple [ngModel]="file.teamIds" formControlName="teams" class="team-select">
+      <mat-option *ngFor="let team of currentTeams" [value]="team.team.id">{{
         team.name
       }}</mat-option>
     </mat-select>
   </mat-form-field>
 
   <div fxLayout="row" fxLayoutAlign="space-around center">
-    <button mat-flat-button color="primary" class="action-button" type="submit">
-      Submit
+    <button mat-stroked-button class="action-button" type="submit">Add to Selected</button>
+    <button
+      mat-stroked-button
+      mat-dialog-close
+      type="button"
+      (click)="cancel()"
+    >
+      Do Not Add to any Teams
     </button>
   </div>
 </form>
