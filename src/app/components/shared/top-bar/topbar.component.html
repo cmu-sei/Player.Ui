@@ -89,7 +89,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-menu #menu="matMenu" [overlapTrigger]="false">
         <div fxLayout="row" fxLayoutAlign="start center">
           <button
-            *ngIf="team && team.canManage"
+            *ngIf="(team && team.canManage) || (team && currentUser.profile.isSystemAdmin !== null &&
+            currentUser.profile.isSystemAdmin)"
             (click)="editFn($event)"
             [ngClass]="(currentUser.profile.isSystemAdmin !== null &&
               currentUser.profile.isSystemAdmin) ? big-button : ''"
