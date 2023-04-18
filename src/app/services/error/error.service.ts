@@ -17,19 +17,21 @@ export class ErrorService implements ErrorHandler {
     const messageService = this.injector.get(SystemMessageService);
     // Http failure response for (unknown url): 0 Unknown Error
     if (err instanceof HttpErrorResponse) {
-      const apiError = <ApiError>err.error;
-      if (apiError.title !== undefined) {
-        messageService.displayMessage(apiError.title, apiError.detail);
-      } else if (
-        err.message ===
-        'Http failure response for (unknown url): 0 Unknown Error'
+      if (
+        err.message.startsWith('Http failure response for') &&
+        err.message.endsWith('0 Unknown Error')
       ) {
         messageService.displayMessage(
-          'Player API Error',
-          'The Player API could not be reached.'
+          'API Error',
+          'The API could not be reached.'
         );
+        console.log('API Error', 'The API could not be reached.');
+      } else if (err.error && err.error.title) {
+        messageService.displayMessage(err.statusText, err.error.title);
+        console.log(err.statusText + ' ==> ' + err.error.title);
       } else {
         messageService.displayMessage(err.statusText, err.message);
+        console.log(err.statusText + ' ==> ' + err.message);
       }
     } else if (err.message.startsWith('Uncaught (in promise)')) {
       if (err.rejection.message === 'Network Error') {
