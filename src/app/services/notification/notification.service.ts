@@ -30,8 +30,7 @@ export class NotificationService {
 
   constructor(
     private settingsSvc: ComnSettingsService,
-    private authService: ComnAuthService,
-    private router: Router
+    private authService: ComnAuthService
   ) {}
 
   connectToNotificationServer(
@@ -44,19 +43,19 @@ export class NotificationService {
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/view?bearer=${userToken}`
       )
-      .withAutomaticReconnect(new RetryPolicy(120, 0, 5, this.router))
+      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
       .build();
     this.teamConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/team?bearer=${userToken}`
       )
-      .withAutomaticReconnect(new RetryPolicy(120, 0, 5, this.router))
+      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
       .build();
     this.userConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/user?bearer=${userToken}`
       )
-      .withAutomaticReconnect(new RetryPolicy(120, 0, 5, this.router))
+      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
       .build();
 
     this.viewConnection.on('Reply', (data: NotificationData) => {
@@ -184,7 +183,7 @@ export class NotificationService {
             this.settingsSvc.settings.NotificationsSettings.url
           }/view?bearer=${this.authService.getAuthorizationToken()}`
         )
-        .withAutomaticReconnect(new RetryPolicy(120, 0, 5, this.router))
+        .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
         .build();
 
       this.viewConnection
@@ -237,8 +236,7 @@ class RetryPolicy {
   constructor(
     private maxSeconds: number,
     private minJitterSeconds: number,
-    private maxJitterSeconds: number,
-    private router: Router
+    private maxJitterSeconds: number
   ) {}
 
   nextRetryDelayInMilliseconds(
