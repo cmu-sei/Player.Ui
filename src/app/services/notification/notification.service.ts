@@ -7,7 +7,6 @@ import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
 import { BehaviorSubject } from 'rxjs';
 import { NotificationData } from '../../models/notification-data';
 import { ViewPresence } from '../../models/view-presence';
-import { Router } from '@angular/router';
 
 @Injectable()
 export class NotificationService {
