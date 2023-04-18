@@ -145,7 +145,6 @@ export class NotificationService {
     this.userConnection.onreconnected(() => {
       this.userConnection.invoke('Join', viewGuid, userGuid);
       console.log('User reconnected');
-      window.location.reload();
     });
   }
 
