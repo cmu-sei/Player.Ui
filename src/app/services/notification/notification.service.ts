@@ -7,6 +7,7 @@ import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
 import { BehaviorSubject } from 'rxjs';
 import { NotificationData } from '../../models/notification-data';
 import { ViewPresence } from '../../models/view-presence';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class NotificationService {
@@ -29,7 +30,8 @@ export class NotificationService {
 
   constructor(
     private settingsSvc: ComnSettingsService,
-    private authService: ComnAuthService
+    private authService: ComnAuthService,
+    private router: Router
   ) {}
 
   connectToNotificationServer(
@@ -42,19 +44,19 @@ export class NotificationService {
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/view?bearer=${userToken}`
       )
-      .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
+      .withAutomaticReconnect(new RetryPolicy(30, 0, 5, this.router))
       .build();
     this.teamConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/team?bearer=${userToken}`
       )
-      .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
+      .withAutomaticReconnect(new RetryPolicy(30, 0, 5, this.router))
       .build();
     this.userConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/user?bearer=${userToken}`
       )
-      .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
+      .withAutomaticReconnect(new RetryPolicy(30, 0, 5, this.router))
       .build();
 
     this.viewConnection.on('Reply', (data: NotificationData) => {
@@ -111,6 +113,7 @@ export class NotificationService {
 
     this.viewConnection.onreconnected(() => {
       this.viewConnection.invoke('Join', viewGuid);
+      console.log('View reconnected');
     });
 
     this.teamConnection
@@ -126,6 +129,7 @@ export class NotificationService {
 
     this.teamConnection.onreconnected(() => {
       this.teamConnection.invoke('Join', teamGuid);
+      console.log('Team reconnected');
     });
 
     this.userConnection
@@ -141,6 +145,8 @@ export class NotificationService {
 
     this.userConnection.onreconnected(() => {
       this.userConnection.invoke('Join', viewGuid, userGuid);
+      console.log('User reconnected');
+      window.location.reload();
     });
   }
 
@@ -178,7 +184,7 @@ export class NotificationService {
             this.settingsSvc.settings.NotificationsSettings.url
           }/view?bearer=${this.authService.getAuthorizationToken()}`
         )
-        .withAutomaticReconnect(new RetryPolicy(60, 0, 5))
+        .withAutomaticReconnect(new RetryPolicy(30, 0, 5, this.router))
         .build();
 
       this.viewConnection
@@ -231,16 +237,16 @@ class RetryPolicy {
   constructor(
     private maxSeconds: number,
     private minJitterSeconds: number,
-    private maxJitterSeconds: number
+    private maxJitterSeconds: number,
+    private router: Router
   ) {}
 
   nextRetryDelayInMilliseconds(
     retryContext: signalR.RetryContext
   ): number | null {
     let nextRetrySeconds = Math.pow(2, retryContext.previousRetryCount + 1);
-
-    if (nextRetrySeconds > this.maxSeconds) {
-      nextRetrySeconds = this.maxSeconds;
+    if (retryContext.elapsedMilliseconds / 1000 > this.maxSeconds) {
+      this.router.navigate(['/']);
     }
 
     nextRetrySeconds +=
