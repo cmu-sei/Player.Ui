@@ -419,7 +419,6 @@ export class AdminViewEditComponent implements OnInit {
         'events',
         true
       )
-      .pipe(take(1))
       .subscribe((event) => {
         if (event.type === HttpEventType.UploadProgress) {
           this.uploadProgess = Math.round((100 * event.loaded) / event.total);
