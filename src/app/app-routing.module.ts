@@ -45,7 +45,14 @@ export const ROUTES: Routes = [
     canActivate: [ComnAuthGuardService],
   },
   {
+    // deprecated: viewId is not used in this component, use /file instead
+    // leaving route for backwards compatibility for now.
     path: 'view/:id/file',
+    component: OpenFileComponent,
+    canActivate: [ComnAuthGuardService],
+  },
+  {
+    path: 'file',
     component: OpenFileComponent,
     canActivate: [ComnAuthGuardService],
   },
@@ -53,7 +60,7 @@ export const ROUTES: Routes = [
     path: 'view/:id/presence',
     component: UserPresencePageComponent,
     canActivate: [ComnAuthGuardService],
-  }
+  },
 ];
 
 @NgModule({

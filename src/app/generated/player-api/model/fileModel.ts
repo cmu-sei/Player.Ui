@@ -21,6 +21,5 @@ export interface FileModel {
     name?: string | null;
     viewId?: string;
     teamIds?: Array<string> | null;
-    path?: string | null;
 }
 
