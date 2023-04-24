@@ -61,7 +61,8 @@ export class AdminViewEditComponent implements OnInit {
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
   @ViewChild(AdminViewEditComponent) child;
   @ViewChild('stepper') stepper: MatStepper;
-  @ViewChild(EditFileDialogComponent) editFileComponent: EditFileDialogComponent;
+  @ViewChild(EditFileDialogComponent)
+  editFileComponent: EditFileDialogComponent;
 
   public viewNameFormControl = new FormControl('', [
     Validators.required,
@@ -123,9 +124,12 @@ export class AdminViewEditComponent implements OnInit {
    * Updates the list of available app templates
    */
   updateApplicationTemplates() {
-    this.applicationService.getApplicationTemplates().pipe(take(1)).subscribe((templates) => {
-      this.applicationTemplates = templates;
-    });
+    this.applicationService
+      .getApplicationTemplates()
+      .pipe(take(1))
+      .subscribe((templates) => {
+        this.applicationTemplates = templates;
+      });
   }
 
   /**
@@ -136,36 +140,42 @@ export class AdminViewEditComponent implements OnInit {
       // Update the teams arrays
       this.isLoadingTeams = true;
       this.teams = new Array<TeamUserApp>();
-      this.teamService.getViewTeams(this.view.id).pipe(take(1)).subscribe((tms) => {
-        const userTeams = new Array<TeamUserApp>();
-        tms.forEach((tm) => {
-          this.userService.getTeamUsers(tm.id).pipe(take(1)).subscribe((usrs) => {
-            this.teams.push(new TeamUserApp(tm.name, tm, usrs));
-            this.teams.sort((t1, t2) => {
-              if (t1.name === null || t2.name === null) {
-                return 0;
-              }
-              if (t1.name.toLowerCase() < t2.name.toLowerCase()) {
-                return -1;
-              }
-              if (t1.name.toLowerCase() > t2.name.toLowerCase()) {
-                return 1;
-              }
-              return 0;
-            });
-            if (this.teams.length === tms.length) {
-              this.isLoadingTeams = false;
-            }
+      this.teamService
+        .getViewTeams(this.view.id)
+        .pipe(take(1))
+        .subscribe((tms) => {
+          const userTeams = new Array<TeamUserApp>();
+          tms.forEach((tm) => {
+            this.userService
+              .getTeamUsers(tm.id)
+              .pipe(take(1))
+              .subscribe((usrs) => {
+                this.teams.push(new TeamUserApp(tm.name, tm, usrs));
+                this.teams.sort((t1, t2) => {
+                  if (t1.name === null || t2.name === null) {
+                    return 0;
+                  }
+                  if (t1.name.toLowerCase() < t2.name.toLowerCase()) {
+                    return -1;
+                  }
+                  if (t1.name.toLowerCase() > t2.name.toLowerCase()) {
+                    return 1;
+                  }
+                  return 0;
+                });
+                if (this.teams.length === tms.length) {
+                  this.isLoadingTeams = false;
+                }
+              });
           });
         });
-      });
     }
   }
 
   /**
    * Sets the contents of the current view
    */
-   setView(view: View): void {
+  setView(view: View): void {
     if (view) {
       this.view = view;
       this.viewNameFormControl.setValue(view.name);
@@ -243,10 +253,13 @@ export class AdminViewEditComponent implements OnInit {
       )
       .subscribe((result) => {
         if (result['confirm']) {
-          this.viewService.deleteView(this.view.id).pipe(take(1)).subscribe((deleted) => {
-            console.log('successfully deleted view');
-            this.returnToViewSearch();
-          });
+          this.viewService
+            .deleteView(this.view.id)
+            .pipe(take(1))
+            .subscribe((deleted) => {
+              console.log('successfully deleted view');
+              this.returnToViewSearch();
+            });
         }
       });
   }
@@ -255,7 +268,6 @@ export class AdminViewEditComponent implements OnInit {
    * Saves the current view
    */
   saveView(): void {
-
     if (
       !this.viewNameFormControl.hasError('minlength') &&
       !this.viewNameFormControl.hasError('required')
@@ -322,13 +334,16 @@ export class AdminViewEditComponent implements OnInit {
    * @param id team Guid
    */
   saveTeamName(name: string, id: string): void {
-    this.teamService.getTeam(id).pipe(take(1)).subscribe((tm) => {
-      tm.name = name;
-      this.teamService.updateTeam(id, tm).subscribe((updatedTeam) => {
-        this.teams.find((t) => t.team.id === id).team = updatedTeam;
-        console.log('Team updated:  ' + updatedTeam.name);
+    this.teamService
+      .getTeam(id)
+      .pipe(take(1))
+      .subscribe((tm) => {
+        tm.name = name;
+        this.teamService.updateTeam(id, tm).subscribe((updatedTeam) => {
+          this.teams.find((t) => t.team.id === id).team = updatedTeam;
+          console.log('Team updated:  ' + updatedTeam.name);
+        });
       });
-    });
   }
 
   /**
@@ -356,6 +371,7 @@ export class AdminViewEditComponent implements OnInit {
       this.staged = new Array<PlayerFile>();
       this.getViewFiles();
       this.getExistingApps();
+      this.updateViewTeams();
     } else if (event.selectedIndex === 2) {
       // index 2 is the Teams step.  Refresh when selected to ensure latest information updated
       this.currentTeam = undefined;
@@ -447,35 +463,35 @@ export class AdminViewEditComponent implements OnInit {
    */
   removeFile(file: PlayerFile) {
     console.log(file);
-    this.staged = this.staged.filter((f) => f.path !== file.path);
+    this.staged = this.staged.filter((f) => f.file.name !== file.file.name);
   }
 
   /**
    * Returns a link to the download endpoint for a particular file
    */
-  getDownloadLink(id: string, name: string) {
-    console.log(`id = ${id} name = ${name}`);
-    this.clipboard.copy(
-      `${window.location.origin}/view/${this.view.id}/file?id=${id}&name=${name}`
-    );
+  getDownloadLink(file: FileModel) {
+    this.clipboard.copy(this.getFileUri(file));
   }
 
   /**
    * Get the files in this view that can be accessed by the user
    */
   getViewFiles() {
-    this.fileService.getViewFiles(this.view.id).pipe(take(1)).subscribe(
-      (data) => {
-        for (const elem of data) {
-          if (!this.viewFiles.some((f) => f.name === elem.name)) {
-            this.viewFiles.push(elem);
+    this.fileService
+      .getViewFiles(this.view.id)
+      .pipe(take(1))
+      .subscribe(
+        (data) => {
+          for (const elem of data) {
+            if (!this.viewFiles.some((f) => f.name === elem.name)) {
+              this.viewFiles.push(elem);
+            }
           }
+        },
+        (err) => {
+          console.log('Error getting files ' + err);
         }
-      },
-      (err) => {
-        console.log('Error getting files ' + err);
-      }
-    );
+      );
   }
 
   /**
@@ -485,24 +501,27 @@ export class AdminViewEditComponent implements OnInit {
    * @param name: The name to use when triggering the download
    */
   downloadFile(id: string, name: string) {
-    this.fileService.download(id).pipe(take(1)).subscribe(
-      (data) => {
-        const url = window.URL.createObjectURL(data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        if (!this.isImageOrPdf(name)) {
-          link.download = name;
+    this.fileService
+      .download(id)
+      .pipe(take(1))
+      .subscribe(
+        (data) => {
+          const url = window.URL.createObjectURL(data);
+          const link = document.createElement('a');
+          link.href = url;
+          link.target = '_blank';
+          if (!this.isImageOrPdf(name)) {
+            link.download = name;
+          }
+          link.click();
+        },
+        (err) => {
+          window.alert('Error downloading file');
+        },
+        () => {
+          console.log('Got a next value');
         }
-        link.click();
-      },
-      (err) => {
-        window.alert('Error downloading file');
-      },
-      () => {
-        console.log('Got a next value');
-      }
-    );
+      );
   }
 
   /**
@@ -545,52 +564,57 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
-   * 
+   *
    * @param file Creates a player application pointing to this file
    */
   createApplication(file: FileModel) {
-
     const payload: Application = {
       name: file.name,
-      url: `${window.location.origin}/view/${this.view.id}/file?id=${file.id}&name=${file.name}`,
+      url: this.getFileUri(file),
       embeddable: true,
       loadInBackground: false,
       viewId: this.view.id,
       icon: '/assets/img/SP_Icon_Intel.png', // Default icon rather than no icon
     };
 
-    this.applicationService.createApplication(this.view.id, payload).pipe(take(1)).subscribe(
-      (application) => {
-        this.appNames.push(application.name);
-        this.dialogService
-        .createApplication(application.id, file, this.view.name, this.teams)
-        .subscribe((val) => {
-          if (val !== undefined) {
-            console.log('Create app for teams:  ', val);
-          }
-        });
-      },
-      (err) => {
-        console.log('Error creating application ' + err);
-      }
-    );
+    this.applicationService
+      .createApplication(this.view.id, payload)
+      .pipe(take(1))
+      .subscribe(
+        (application) => {
+          this.appNames.push(application.name);
+          this.dialogService
+            .createApplication(application.id, file, this.view.name, this.teams)
+            .subscribe((val) => {
+              if (val !== undefined) {
+                console.log('Create app for teams:  ', val);
+              }
+            });
+        },
+        (err) => {
+          console.log('Error creating application ' + err);
+        }
+      );
   }
 
   /**
    * Gets the names of the apps already in this view so we don't duplicate an application
    */
   getExistingApps() {
-    this.applicationService.getViewApplications(this.view.id).pipe(take(1)).subscribe(
-      (data) => {
-        this.appNames = new Array<string>();
-        for (const app of data) {
-          this.appNames.push(app.name);
+    this.applicationService
+      .getViewApplications(this.view.id)
+      .pipe(take(1))
+      .subscribe(
+        (data) => {
+          this.appNames = new Array<string>();
+          for (const app of data) {
+            this.appNames.push(app.name);
+          }
+        },
+        (err) => {
+          console.log('Error fetching apps');
         }
-      },
-      (err) => {
-        console.log('Error fetching apps');
-      }
-    );
+      );
   }
 
   /**
@@ -600,7 +624,10 @@ export class AdminViewEditComponent implements OnInit {
    */
   teamsForFileUpdated(event: any, file: FileModel) {
     file.teamIds = event.value;
-    this.fileService.updateFile(file.id, file.name, file.teamIds, null).pipe(take(1)).subscribe();
+    this.fileService
+      .updateFile(file.id, file.name, file.teamIds, null)
+      .pipe(take(1))
+      .subscribe();
   }
 
   /**
@@ -619,6 +646,16 @@ export class AdminViewEditComponent implements OnInit {
       file.endsWith('.gif')
     );
   }
+
+  private getFileUri(file: FileModel) {
+    let baseURI = document.baseURI;
+
+    if (baseURI.endsWith('/')) {
+      baseURI = baseURI.slice(0, baseURI.length - 1);
+    }
+
+    return `${baseURI}/file?id=${file.id}&name=${file.name}`;
+  }
 } // End Class
 
 /** Error when invalid control is dirty, touched, or submitted. */
@@ -634,7 +671,6 @@ export class UserErrorStateMatcher implements ErrorStateMatcher {
 
 class PlayerFile {
   file: File;
-  path: string;
   id: string;
 
   constructor(file: File) {

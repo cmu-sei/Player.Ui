@@ -275,7 +275,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               </div>
               <div
                 fxLayout="row"
-                fxLayoutAlign="end center" 
+                fxLayoutAlign="end center"
                 class="top-button"
                 *ngIf="staged.length !== 0"
               >
@@ -304,7 +304,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                       >
                     </mat-select>
                   </mat-form-field>
-                  <button mat-stroked-button (click)="uploadFile()" style="height: 35px;">
+                  <button
+                    mat-stroked-button
+                    (click)="uploadFile()"
+                    style="height: 35px"
+                  >
                     Upload File
                   </button>
                   <mat-progress-bar
@@ -336,10 +340,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             </mat-expansion-panel-header>
 
             <div fxLayout="column">
-              <div fxLayout="row" fxLayoutAlign="space-around center" >
+              <div fxLayout="row" fxLayoutAlign="space-around center">
                 <mat-form-field id="teamSelect" style="width: 600px">
                   <mat-label>Teams with Permission to View</mat-label>
-                  <mat-select multiple [ngModel]="viewFile.teamIds" (selectionChange)="teamsForFileUpdated($event, viewFile)">
+                  <mat-select
+                    multiple
+                    [ngModel]="viewFile.teamIds"
+                    (selectionChange)="teamsForFileUpdated($event, viewFile)"
+                  >
                     <mat-option
                       *ngFor="let teamWrapper of teams"
                       [value]="teamWrapper.team.id"
@@ -348,7 +356,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div fxLayout="row" fxLayoutAlign="space-around center" >
+              <div fxLayout="row" fxLayoutAlign="space-around center">
                 <button
                   mat-stroked-button
                   (click)="downloadFile(viewFile.id, viewFile.name)"
@@ -373,7 +381,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 </button>
                 <button
                   mat-stroked-button
-                  (click)="getDownloadLink(viewFile.id, viewFile.name)"
+                  (click)="getDownloadLink(viewFile)"
                   title="Copy Link"
                 >
                   Copy Link
