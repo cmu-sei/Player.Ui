@@ -68,10 +68,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
 
   refreshApps() {
     this.applications$ = this.applicationsService
-      .getApplicationsByTeam(
-        this.teams.find((t) => t.isPrimary).id,
-        this.viewId
-      )
+      .getApplicationsByTeam(this.teams.find((t) => t.isPrimary).id)
       .pipe(
         map((apps) => ({ apps })),
         map(({ apps }) => {

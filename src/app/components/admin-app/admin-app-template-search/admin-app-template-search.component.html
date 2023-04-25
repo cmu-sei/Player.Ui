@@ -28,7 +28,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           placeholder="Search"
         />
         <button
-          *ngIf="filterString != ''"
+          *ngIf="filterString !== ''"
           mat-icon-button
           matSuffix
           (click)="clearFilter()"
@@ -53,9 +53,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           Template Name
         </mat-header-cell>
         <mat-cell *matCellDef="let element">
-          <img class="app-icon" src="{{ element.icon }}" />&nbsp;&nbsp;{{
-            element.name
-          }}
+          <img
+            class="app-icon"
+            src="{{ element.icon }}"
+            alt="{{ element.name }} Icon"
+          />&nbsp;&nbsp;{{ element.name }}
         </mat-cell>
       </ng-container>
 

@@ -1,16 +1,16 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Observable, config } from 'rxjs';
-import {
-  MatLegacyDialogRef as MatDialogRef,
-  MatLegacyDialog as MatDialog,
-  MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA,
-} from '@angular/material/legacy-dialog';
+import { Observable } from 'rxjs';
+import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
 import { Injectable } from '@angular/core';
 import { ConfirmDialogComponent } from '../../components/shared/confirm-dialog/confirm-dialog.component';
 import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
-import { FileModel, Team, WebhookSubscription } from '../../generated/player-api';
+import {
+  FileModel,
+  Team,
+  WebhookSubscription,
+} from '../../generated/player-api';
 import { CreatePermissionDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
 import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
 import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
@@ -28,8 +28,9 @@ export class DialogService {
     message: string,
     data?: any
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<ConfirmDialogComponent>;
-    dialogRef = this.dialog.open(ConfirmDialogComponent, { data: data || {} });
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: data || {},
+    });
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.message = message;
 
@@ -41,8 +42,7 @@ export class DialogService {
     permission: any,
     configData?: any
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<CreatePermissionDialogComponent>;
-    dialogRef = this.dialog.open(
+    const dialogRef = this.dialog.open(
       CreatePermissionDialogComponent,
       configData || {}
     );
@@ -57,8 +57,10 @@ export class DialogService {
     name: string,
     configData?: any
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<CreateRoleDialogComponent>;
-    dialogRef = this.dialog.open(CreateRoleDialogComponent, configData || {});
+    const dialogRef = this.dialog.open(
+      CreateRoleDialogComponent,
+      configData || {}
+    );
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.name = name;
 
@@ -71,8 +73,7 @@ export class DialogService {
     permissions: any[],
     configData?: any
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<SelectRolePermissionsDialogComponent>;
-    dialogRef = this.dialog.open(
+    const dialogRef = this.dialog.open(
       SelectRolePermissionsDialogComponent,
       configData || {}
     );
@@ -88,8 +89,7 @@ export class DialogService {
     team: Team,
     configData?: any
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<AddRemoveUsersDialogComponent>;
-    dialogRef = this.dialog.open(
+    const dialogRef = this.dialog.open(
       AddRemoveUsersDialogComponent,
       configData || {}
     );
@@ -104,8 +104,7 @@ export class DialogService {
     oldName: string,
     oldTeams: string[]
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<EditFileDialogComponent>;
-    dialogRef = this.dialog.open(EditFileDialogComponent);
+    const dialogRef = this.dialog.open(EditFileDialogComponent);
     dialogRef.componentInstance.fileId = fileId;
     dialogRef.componentInstance.viewId = viewId;
     dialogRef.componentInstance.oldName = oldName;
@@ -116,8 +115,7 @@ export class DialogService {
   public editSubscription(
     subscription?: WebhookSubscription
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<EditSubscriptionComponent>;
-    dialogRef = this.dialog.open(EditSubscriptionComponent);
+    const dialogRef = this.dialog.open(EditSubscriptionComponent);
     dialogRef.componentInstance.currentSub = subscription;
     return dialogRef.afterClosed();
   }
@@ -128,8 +126,7 @@ export class DialogService {
     viewName: string,
     currentTeams: TeamUserApp[]
   ): Observable<boolean> {
-    let dialogRef: MatDialogRef<CreateApplicationDialogComponent>;
-    dialogRef = this.dialog.open(CreateApplicationDialogComponent);
+    const dialogRef = this.dialog.open(CreateApplicationDialogComponent);
     dialogRef.componentInstance.applicationId = applicationId;
     dialogRef.componentInstance.file = file;
     dialogRef.componentInstance.viewName = viewName;

@@ -28,7 +28,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           placeholder="Search"
         />
         <button
-          *ngIf="filterString != ''"
+          *ngIf="filterString !== ''"
           mat-icon-button
           matSuffix
           (click)="clearFilter()"
@@ -74,11 +74,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             svgIcon="ic_clipboard_copy"
           ></mat-icon>
         </button>
-        <a
-          style="cursor: pointer"
+        <button
+          mat-button
+          class="px-0"
           (click)="executeViewAction('edit', element.id)"
-          >{{ element.name }}</a
         >
+          {{ element.name }}
+        </button>
       </mat-cell>
     </ng-container>
 

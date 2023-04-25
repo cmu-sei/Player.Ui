@@ -46,7 +46,7 @@ export class FileBrowseComponent implements OnInit {
     );
     this.teamService.getMyViewTeams(viewId).subscribe(
       (data) => {
-        for (let team of data) {
+        for (const team of data) {
           this.teams.add(team);
         }
       },
@@ -71,6 +71,7 @@ export class FileBrowseComponent implements OnInit {
       },
       (err) => {
         window.alert('Error downloading file');
+        console.log(err);
       },
       () => {
         console.log('Got a next value');
@@ -79,8 +80,8 @@ export class FileBrowseComponent implements OnInit {
   }
 
   filtered() {
-    let ret = new Array<FileModel>();
-    for (let file of this.files) {
+    const ret = new Array<FileModel>();
+    for (const file of this.files) {
       if (file.teamIds.includes(this.currentTeam)) {
         ret.push(file);
       }

@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import {
   ApplicationTemplate,
   ApplicationService,
@@ -13,7 +13,7 @@ import { DialogService } from '../../../../services/dialog/dialog.service';
   templateUrl: './admin-template-details.component.html',
   styleUrls: ['./admin-template-details.component.scss'],
 })
-export class AdminTemplateDetailsComponent implements OnInit {
+export class AdminTemplateDetailsComponent {
   @Input() appTemplate: ApplicationTemplate;
   @Output() refresh = new EventEmitter<boolean>();
 
@@ -21,8 +21,6 @@ export class AdminTemplateDetailsComponent implements OnInit {
     public applicationService: ApplicationService,
     public dialogService: DialogService
   ) {}
-
-  ngOnInit() {}
 
   /**
    * Edit an application template

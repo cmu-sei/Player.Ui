@@ -47,8 +47,8 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   public teamUserDataSource = new MatTableDataSource<TeamUser>(
     new Array<TeamUser>()
   );
-  public isLoading: Boolean;
-  public isBusy: Boolean;
+  public isLoading: boolean;
+  public isBusy: boolean;
 
   public filterString: string;
   public defaultPageSize = 7;
@@ -317,7 +317,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       let users = text.includes('\r') ? text.split('\r\n') : text.split('\n');
       users = users.filter((u) => u != '');
 
-      for (let user of users) {
+      for (const user of users) {
         // Add users to team
         this.userService
           .addUserToTeam(this.team.id, user)
@@ -340,7 +340,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             const lhsNew = lhsUsers.filter((usr) => usr != addedUser);
 
             // Add the user we just uploaded to the teamUser data source array
-            let teamUsers = this.teamUserDataSource.data;
+            const teamUsers = this.teamUserDataSource.data;
             teamUsers.push(
               new TeamUser(addedUser.name, addedUser, relevantMembership)
             );

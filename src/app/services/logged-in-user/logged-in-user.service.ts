@@ -17,7 +17,7 @@ export const SUPER_USER = 'Super User';
 @Injectable({ providedIn: 'root' })
 export class LoggedInUserService implements OnDestroy {
   public loggedInUser$: BehaviorSubject<AuthUser> = new BehaviorSubject(null);
-  public isSuperUser$: BehaviorSubject<Boolean> = new BehaviorSubject(false);
+  public isSuperUser$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   unsubscribe$: Subject<null> = new Subject<null>();
 
   constructor(

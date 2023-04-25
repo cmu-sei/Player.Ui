@@ -5,10 +5,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <div class="scrollable-div">
   <mat-list class="appitems-container">
-    <mat-list-item
-      *ngFor="let app of applications$ | async"
-      class="showhand highlight"
-    >
+    <mat-list-item *ngFor="let app of applications$ | async" class="">
       <iframe
         *ngIf="app.loadInBackground"
         aria-hidden="true"
@@ -16,30 +13,24 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         [src]="app.safeUrl"
       ></iframe>
 
-      <img
-        *ngIf="app.embeddable"
-        class="lefticon"
-        src="{{ app.icon }}"
-        alt="{{ app.name }}"
-        (click)="openInFocusedApp(app)"
-      />
-      <img
-        *ngIf="!app.embeddable"
-        class="lefticon"
-        src="{{ app.icon }}"
-        alt="{{ app.name }}"
-        (click)="openInTab(app)"
-      />
-
-      <div *ngIf="app.embeddable" class="grow" (click)="openInFocusedApp(app)">
-        {{ app.name }}
-      </div>
-      <div *ngIf="!app.embeddable" class="grow" (click)="openInTab(app)">
-        {{ app.name }}
-      </div>
-
-      <div class="righticon">
-        <button mat-icon-button [matMenuTriggerFor]="menu" style="outline: none" title="{{ app.name }}">
+      <div class="app-button-container">
+        <button
+          mat-button
+          class="px-0 w-100"
+          (click)="app.embeddable ? openInFocusedApp(app) : openInTab(app)"
+        >
+          <div class="d-flex align-items-center">
+            <img class="lefticon" src="{{ app.icon }}" alt="{{ app.name }}" />
+            <div>
+              {{ app.name }}
+            </div>
+          </div>
+        </button>
+        <button
+          mat-icon-button
+          [matMenuTriggerFor]="menu"
+          aria-label="{{ app.name }} Menu"
+        >
           <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
         </button>
       </div>

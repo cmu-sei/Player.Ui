@@ -183,9 +183,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                         svgIcon="ic_clipboard_copy"
                       ></mat-icon>
                     </button>
-                    <label style="font-size: xx-small">{{
-                      teamContainer.team.id
-                    }}</label>
+                    <span style="font-size: xx-small">
+                      {{ teamContainer.team.id }}
+                    </span>
                   </div>
                   <mat-form-field class="w-100">
                     <input
@@ -198,7 +198,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                       "
                       value="{{ teamContainer.team.name }}"
                       [errorStateMatcher]="matcher"
-                      autofocus
                     />
                     <mat-error
                       *ngIf="

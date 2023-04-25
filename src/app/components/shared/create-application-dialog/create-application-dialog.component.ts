@@ -17,7 +17,7 @@ import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/a
 })
 export class CreateApplicationDialogComponent implements OnInit {
 
-  @Input() applicationId: String;
+  @Input() applicationId: string;
   @Input() file: FileModel;
   @Input() viewName: string;
   @Input() currentTeams: TeamUserApp[];

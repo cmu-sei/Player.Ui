@@ -40,7 +40,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               placeholder="Search"
             />
             <button
-              *ngIf="filterRoleString != ''"
+              *ngIf="filterRoleString !== ''"
               mat-icon-button
               matSuffix
               (click)="clearRoleFilter()"
@@ -142,7 +142,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               placeholder="Search"
             />
             <button
-              *ngIf="filterPermissionString != ''"
+              *ngIf="filterPermissionString !== ''"
               mat-icon-button
               matSuffix
               (click)="clearPermissionFilter()"
@@ -169,7 +169,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <ng-container matColumnDef="key">
           <mat-header-cell *matHeaderCellDef> Permission </mat-header-cell>
           <mat-cell *matCellDef="let permission">
-            <label *ngIf="permission.readOnly">{{ permission.key }}</label>
+            <p *ngIf="permission.readOnly">{{ permission.key }}</p>
             <button
               *ngIf="!permission.readOnly"
               mat-button
@@ -198,7 +198,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <ng-container matColumnDef="id">
           <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
           <mat-cell *matCellDef="let permission">
-            <label *ngIf="permission.readOnly">Read Only</label>
+            <p *ngIf="permission.readOnly">Read Only</p>
             <div *ngIf="!permission.readOnly">
               <button mat-icon-button [matMenuTriggerFor]="menu">
                 <mat-icon title="Menu">
@@ -206,6 +206,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                     style="transform: scaleX(-1)"
                     width="32"
                     src="assets/img/SP_Icon_Collapse.png"
+                    alt="Open Actions Menu"
                   />
                 </mat-icon>
               </button>

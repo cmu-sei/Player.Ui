@@ -22,7 +22,7 @@ export class ViewListComponent implements OnInit, OnDestroy {
   public displayedColumns: string[] = ['name', 'teamName', 'description'];
 
   public filterString: string;
-  public isLoading: Boolean;
+  public isLoading: boolean;
   private unsubscribe$: Subject<null> = new Subject<null>();
 
   constructor(

@@ -106,7 +106,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
     };
     this.applicationService
       .createApplicationInstance(this.team.id, appInstance)
-      .subscribe((rslt) => {
+      .subscribe(() => {
         this.refreshTeamApplications();
       });
   }
@@ -135,10 +135,10 @@ export class TeamApplicationsSelectComponent implements OnInit {
 
     this.applicationService
       .updateApplicationInstance(app1.id, a1)
-      .subscribe((result1) => {
+      .subscribe(() => {
         this.applicationService
           .updateApplicationInstance(app2.id, a2)
-          .subscribe((result2) => {
+          .subscribe(() => {
             this.refreshTeamApplications();
           });
       });
@@ -162,7 +162,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
         if (result['confirm']) {
           this.applicationService
             .deleteApplicationInstance(app.id)
-            .subscribe((rslt) => {
+            .subscribe(() => {
               // Verify display orders and fix if necessary
               let index = 0;
               const apps = this.applications.filter((a) => a.id !== app.id);

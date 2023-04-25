@@ -67,27 +67,19 @@ export class EditSubscriptionComponent implements OnInit {
       this.webhookService
         .createWebhookSubscription(webhook)
         .pipe(take(1))
-        .subscribe(
-          (data) => {
-            this.dialogRef.close(false);
-          },
-          (err) => {
-            this.dialogRef.close(true);
-          }
-        );
+        .subscribe({
+          next: () => this.dialogRef.close(false),
+          error: () => this.dialogRef.close(true),
+        });
     } else {
       // Update an existing subscription
       this.webhookService
         .partialUpdateWebhookSubscription(this.currentSub.id, webhook)
         .pipe(take(1))
-        .subscribe(
-          (data) => {
-            this.dialogRef.close(false);
-          },
-          (err) => {
-            this.dialogRef.close(true);
-          }
-        );
+        .subscribe({
+          next: () => this.dialogRef.close(false),
+          error: () => this.dialogRef.close(true),
+        });
     }
   }
 
@@ -102,14 +94,14 @@ export class EditSubscriptionComponent implements OnInit {
           this.webhookService
             .deleteWebhookSubscription(this.currentSub.id)
             .pipe(take(1))
-            .subscribe(
-              (data) => {
+            .subscribe({
+              next: () => {
                 this.dialogRef.close(false);
               },
-              (err) => {
+              error: () => {
                 this.dialogRef.close(true);
-              }
-            );
+              },
+            });
         }
       });
   }

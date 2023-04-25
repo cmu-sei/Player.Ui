@@ -24,7 +24,7 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
   public displayedColumns: string[] = ['name', 'lastError', 'eventTypes'];
-  public editing: boolean = false;
+  public editing = false;
   public filterStr = '';
   public unsubscribe$: Subject<null> = new Subject<null>();
 

@@ -17,7 +17,7 @@
           />
           <button
             matSuffix
-            *ngIf="searchTerm != ''"
+            *ngIf="searchTerm !== ''"
             mat-icon-button
             (click)="clearFilter()"
             matTooltip="Clear Search"

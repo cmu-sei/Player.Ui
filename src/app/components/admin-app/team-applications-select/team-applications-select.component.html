@@ -30,7 +30,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-expansion-panel-header>
       <mat-panel-title>
         <div class="d-flex align-items-center">
-          <img class="app-icon" src="{{ app.icon }}" /> {{ getAppName(app) }}
+          <img
+            class="app-icon"
+            src="{{ app.icon }}"
+            alt="{{ getAppName(app) }} Icon"
+          />
+          {{ getAppName(app) }}
         </div>
       </mat-panel-title>
     </mat-expansion-panel-header>
