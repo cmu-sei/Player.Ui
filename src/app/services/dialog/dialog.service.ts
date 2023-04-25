@@ -3,10 +3,10 @@
 
 import { Observable, config } from 'rxjs';
 import {
-  MatDialogRef,
-  MatDialog,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
+  MatLegacyDialogRef as MatDialogRef,
+  MatLegacyDialog as MatDialog,
+  MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA,
+} from '@angular/material/legacy-dialog';
 import { Injectable } from '@angular/core';
 import { ConfirmDialogComponent } from '../../components/shared/confirm-dialog/confirm-dialog.component';
 import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remove-users-dialog/add-remove-users-dialog.component';

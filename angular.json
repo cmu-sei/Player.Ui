@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "player.ui": {
+    "player-ui": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -17,59 +17,71 @@
             "tsConfig": "src/tsconfig.app.json",
             "polyfills": "src/polyfills.ts",
             "assets": ["src/assets"],
-            "styles": ["src/styles/styles.scss"],
+            "styles": [
+              "src/styles/styles.scss",
+              "./node_modules/bootstrap/scss/bootstrap-utilities.scss"
+            ],
             "stylePreprocessorOptions": {
-              "includePaths": ["src/styles"]
+              "includePaths": [
+                "src/styles",
+                "./node_modules/bootstrap/scss/bootstrap-utilities.scss"
+              ]
             },
-            "scripts": [],
-            "preserveSymlinks": true,
-            "vendorChunk": true,
-            "extractLicenses": false,
-            "buildOptimizer": false,
-            "sourceMap": true,
-            "optimization": false,
-            "namedChunks": true
+            "scripts": []
           },
           "configurations": {
             "production": {
               "budgets": [
+                // TODO: Uncomment after optimizing initial bundle size
+                // {
+                //   "type": "initial",
+                //   "maximumWarning": "500kb",
+                //   "maximumError": "1mb"
+                // },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kb"
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
                 }
               ],
-              "optimization": true,
               "outputHashing": "all",
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
               ]
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "player.ui:build",
             "port": 4301
           },
           "configurations": {
             "production": {
-              "browserTarget": "player.ui:build:production"
+              "browserTarget": "player-ui:build:production"
+            },
+            "development": {
+              "browserTarget": "player-ui:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "player.ui:build"
+            "browserTarget": "player-ui:build"
           }
         },
         "test": {
@@ -81,22 +93,15 @@
             "tsConfig": "src/tsconfig.spec.json",
             "scripts": [],
             "styles": [
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "./node_modules/bootstrap/scss/bootstrap-utilities.scss",
               "src/styles.css"
             ],
             "assets": ["src/assets"]
           }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": ["src/tsconfig.app.json", "src/tsconfig.spec.json"],
-            "exclude": ["**/node_modules/**"]
-          }
         }
       }
     },
-    "player.ui-e2e": {
+    "player-ui-e2e": {
       "root": "",
       "sourceRoot": "",
       "projectType": "application",
@@ -105,20 +110,12 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "player.ui:serve"
-          }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": ["e2e/tsconfig.e2e.json"],
-            "exclude": ["**/node_modules/**"]
+            "devServerTarget": "player-ui:serve"
           }
         }
       }
     }
   },
-  "defaultProject": "player.ui",
   "schematics": {
     "@schematics/angular:component": {
       "prefix": "app",
@@ -127,5 +124,8 @@
     "@schematics/angular:directive": {
       "prefix": "app"
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }

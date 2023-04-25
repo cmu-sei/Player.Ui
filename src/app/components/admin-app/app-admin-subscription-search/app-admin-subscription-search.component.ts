@@ -5,7 +5,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
@@ -24,9 +24,8 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
   public displayedColumns: string[] = ['name', 'lastError', 'eventTypes'];
-  public filterString: string;
   public editing: boolean = false;
-  public filterStr: string;
+  public filterStr = '';
   public unsubscribe$: Subject<null> = new Subject<null>();
 
   constructor(
@@ -40,7 +39,6 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
     );
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.dataSource.sort = this.sort;
-    this.filterString = '';
 
     this.refreshSubs();
   }
@@ -77,6 +75,7 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
 
   applyFilter(filterStr: string) {
     filterStr = filterStr.trim().toLowerCase();
+    this.filterStr = filterStr;
     this.dataSource.filter = filterStr;
   }
 

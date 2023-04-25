@@ -2,19 +2,14 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<div
-  class="center-text"
-  fxLayout="column"
-  fxLayoutAlign="center stretch"
-  fxFlexFill
->
+<div class="container background">
   <app-topbar
     [title]="title"
     [topbarColor]="topbarColor"
     [topbarView]="TopbarView.PLAYER_HOME"
     [topbarTextColor]="topbarTextColor"
   ></app-topbar>
-  <div class="background" fxFlex="1 1 93vh">
+  <div>
     <app-view-list></app-view-list>
   </div>
 </div>

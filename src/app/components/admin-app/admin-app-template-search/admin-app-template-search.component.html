@@ -4,16 +4,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="list-container mat-elevation-z8">
-  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
-    <div class="sp-icon">
-      <img
-        height="35"
-        src="assets/img/SP_Icon_Intel.png"
-        alt="Application Templates"
-      />
+  <div class="d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+      <div class="sp-icon">
+        <img
+          height="35"
+          src="assets/img/SP_Icon_Intel.png"
+          alt="Application Templates"
+        />
+      </div>
+      <span class="header-text">Application Templates</span>
     </div>
-    <span>Application Templates</span>
-    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
+    <div class="d-flex align-items-center">
       <mat-icon
         style="transform: scale(0.85); margin-right: 5px"
         svgIcon="ic_magnify_search"
@@ -25,35 +27,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
-      </mat-form-field>
-      <button
-        *ngIf="filterString != ''"
-        fxLayoutAlign="start center"
-        mat-icon-button
-        (click)="clearFilter()"
-        style="outline: none"
-        title="Clear Search"
-      >
-        <mat-icon
-          style="transform: scale(0.85)"
-          svgIcon="ic_cancel_circle"
-        ></mat-icon>
-      </button>
-      <div class="button-end">
-        <button mat-stroked-button (click)="addAppTemplate()">
-          Add Application Template
+        <button
+          *ngIf="filterString != ''"
+          mat-icon-button
+          matSuffix
+          (click)="clearFilter()"
+          title="Clear Search"
+        >
+          <mat-icon
+            style="transform: scale(0.85)"
+            svgIcon="ic_cancel_circle"
+          ></mat-icon>
         </button>
-      </div>
+      </mat-form-field>
     </div>
+    <button class="me-2" mat-stroked-button (click)="addAppTemplate()">
+      Add Application Template
+    </button>
   </div>
 
   <mat-accordion>
     <mat-table #table [dataSource]="appTemplateDataSource" matSort>
       <ng-container matColumnDef="name">
-        <mat-header-cell fxFlex="30" *matHeaderCellDef mat-sort-header>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
           Template Name
         </mat-header-cell>
-        <mat-cell fxFlex="30" *matCellDef="let element">
+        <mat-cell *matCellDef="let element">
           <img class="app-icon" src="{{ element.icon }}" />&nbsp;&nbsp;{{
             element.name
           }}
@@ -61,11 +60,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </ng-container>
 
       <ng-container matColumnDef="url">
-        <mat-header-cell fxFlex="70" *matHeaderCellDef mat-sort-header>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
           Url
         </mat-header-cell>
-        <mat-cell fxFlex="70" *matCellDef="let element; let i = index">
-          <div fxFlex="100">
+        <mat-cell *matCellDef="let element; let i = index">
+          <div class="w-100">
             <mat-expansion-panel
               [expanded]="
                 currentAppTemplate !== undefined &&

@@ -12,7 +12,7 @@ import {
 import { ErrorStateMatcher } from '@angular/material/core';
 import { MatStepper } from '@angular/material/stepper';
 import {
-  FormControl,
+  UntypedFormControl,
   FormGroupDirective,
   NgForm,
   Validators,
@@ -64,17 +64,17 @@ export class AdminViewEditComponent implements OnInit {
   @ViewChild(EditFileDialogComponent)
   editFileComponent: EditFileDialogComponent;
 
-  public viewNameFormControl = new FormControl('', [
+  public viewNameFormControl = new UntypedFormControl('', [
     Validators.required,
     Validators.minLength(4),
   ]);
 
-  public teamNameFormControl = new FormControl('', [
+  public teamNameFormControl = new UntypedFormControl('', [
     Validators.required,
     Validators.minLength(3),
   ]);
 
-  public descriptionFormControl = new FormControl('', [Validators.required]);
+  public descriptionFormControl = new UntypedFormControl('', [Validators.required]);
   public matcher = new UserErrorStateMatcher();
   public viewStates = Object.values(ViewStatus);
   public isLinear = false;
@@ -661,7 +661,7 @@ export class AdminViewEditComponent implements OnInit {
 /** Error when invalid control is dirty, touched, or submitted. */
 export class UserErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
-    control: FormControl | null,
+    control: UntypedFormControl | null,
     form: FormGroupDirective | NgForm | null
   ): boolean {
     const isSubmitted = form && form.submitted;

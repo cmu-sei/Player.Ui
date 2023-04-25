@@ -12,7 +12,7 @@ import {
   TemplateRef,
   ViewChild,
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client';
 import { Observable, Subject } from 'rxjs';

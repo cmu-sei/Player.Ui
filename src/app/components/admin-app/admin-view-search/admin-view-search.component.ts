@@ -3,7 +3,7 @@
 
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { ActivatedRoute } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';

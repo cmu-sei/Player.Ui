@@ -2,9 +2,9 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatLegacyPaginator as MatPaginator, LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 

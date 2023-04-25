@@ -13,7 +13,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-list class="appitems-container">
       <mat-list-item class="appslist">
         <a class="nolink" [routerLink]="['/']">
-          <div fxLayout="row" fxLayoutAlign="start center">
+          <div class="d-flex align-items-center">
             <mat-icon
               class="player-icon"
               svgIcon="ic_crucible_player"
@@ -137,7 +137,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <button
             title="subscriptions"
             mat-icon-button
-            style="outline: none;"
+            style="outline: none"
             (click)="sectionChangedFn(Section.ADMIN_SUBS)"
           >
             <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
@@ -163,34 +163,25 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       [title]="title"
     ></app-topbar>
 
-    <div [ngSwitch]="section$ | async">
+    <div [ngSwitch]="section$ | async" class="d-flex justify-content-center">
       <app-admin-view-search
         *ngSwitchCase="Section.ADMIN_VIEWS"
-        fxFlex
-        fxLayoutAlign="center"
       ></app-admin-view-search>
 
       <app-admin-user-search
         *ngSwitchCase="Section.ADMIN_USERS"
-        fxFlex
-        fxLayoutAlign="center"
       ></app-admin-user-search>
 
       <app-admin-app-template-search
         *ngSwitchCase="Section.ADMIN_APP_TEMP"
-        fxFlex
-        fxLayoutAlign="center"
       ></app-admin-app-template-search>
+
       <app-admin-role-permission-search
         *ngSwitchCase="Section.ADMIN_ROLE_PERM"
-        fxFlex
-        fxLayoutAlign="center"
       ></app-admin-role-permission-search>
 
       <app-admin-subscription-search
         *ngSwitchCase="Section.ADMIN_SUBS"
-        fxFlex
-        fxLayoutAlign = "center"
       ></app-admin-subscription-search>
     </div>
   </mat-sidenav-content>

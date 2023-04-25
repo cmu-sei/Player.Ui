@@ -13,10 +13,6 @@
   margin-top: 10px;
 }
 
-.full-width {
-  width: 70%;
-}
-
 .add-margin {
   margin-top: 8px;
   margin-bottom: 8px;
@@ -41,20 +37,9 @@
   margin-bottom: 10px;
 }
 
-.header-text {
-  margin-left: 10px;
-  font-family: open_sansbold;
-}
-
-.block {
-  display: flex;
-  flex-direction: row;
-  justify-content: left;
-  align-items: center;
-}
-
 #teamSelect {
   margin-right: 25px;
+  width: 300px;
 }
 
 #viewFiles {
@@ -80,4 +65,8 @@
 .file_buttons > button {
   display: inline-block;
   white-space: normal;
+}
+
+.view-info-container {
+  margin-left: 20%;
 }

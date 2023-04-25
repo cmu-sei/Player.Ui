@@ -3,14 +3,21 @@
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatAccordion } from '@angular/material/expansion';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
 import { Team, TeamService } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
-import { firstBy } from 'thenby';
 
 @Component({
   selector: 'app-user-presence',
@@ -32,7 +39,9 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this._teams = this.teamService
       .getMyViewTeams(this.viewId)
-      .pipe(map((x) => x.sort(firstBy('name'))));
+      .pipe(
+        map((x) => x.sort((a: Team, b: Team) => (a.name < b.name ? -1 : 1)))
+      );
     this.notificationService.joinPresence(this.viewId);
   }
 
@@ -66,9 +75,14 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
       map((x) => x.filter((y) => y.teamIds.includes(teamId))),
       map((x) =>
         x.sort(
-          firstBy(
-            (a: ViewPresence, b: ViewPresence) => +b.online - +a.online
-          ).thenBy('userName')
+          // first by online, then by username
+          (a: ViewPresence, b: ViewPresence) => {
+            if (a.online === b.online) {
+              return a.userName < b.userName ? -1 : 1;
+            } else {
+              return b.online < a.online ? -1 : 1;
+            }
+          }
         )
       )
     );

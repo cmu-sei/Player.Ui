@@ -5,7 +5,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <mat-card
   *ngIf="isLoading"
-  style="display: flex; justify-content: center; align-items: center"
+  class="d-flex justify-content-center align-items-center"
 >
   <mat-progress-spinner
     color="primary"
@@ -21,20 +21,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   >
     <mat-expansion-panel-header>
       <mat-panel-title>
-        <div fxLayout="row" fxLayoutAlign="start center">
+        <div class="d-flex align-items-center">
           <img class="app-icon" src="{{ getAppIcon(app) }}" />
           {{ getAppName(app) }}
         </div>
       </mat-panel-title>
     </mat-expansion-panel-header>
 
-    <div fxLayout="row">
-      <div fxFlex fxLayoutAlign="center">
-        <div
-          fxLayout="column"
-          fxLayoutAlign="space-between none"
-          style="width: 80%"
-        >
+    <div>
+      <div class="d-flex justify-content-center">
+        <div class="d-flex flex-column app-form-section">
           <mat-form-field>
             <input
               matInput
@@ -127,14 +123,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         app.applicationTemplateId &&
         getTemplate(app.applicationTemplateId) as template
       "
-      fxLayout="row"
+      class="d-flex"
     >
-      <div fxFlex fxLayoutAlign="center">
-        <div
-          fxLayout="column"
-          fxLayoutAlign="space-between none"
-          style="width: 80%"
-        >
+      <div class="d-flex w-100 justify-content-center">
+        <div class="d-flex flex-column app-form-section">
           <mat-form-field>
             <input
               matInput
@@ -191,12 +183,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </div>
     </div>
 
-    <div fxLayout="row" class="bottom-button">
-      <div fxFlex fxLayoutAlign="end">
-        <button mat-stroked-button (click)="deleteViewApplication(app)">
-          Delete Application
-        </button>
-      </div>
+    <div class="bottom-button d-flex justify-content-end">
+      <button mat-stroked-button (click)="deleteViewApplication(app)">
+        Delete Application
+      </button>
     </div>
   </mat-expansion-panel>
 </mat-accordion>
