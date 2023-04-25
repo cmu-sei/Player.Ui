@@ -4,7 +4,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { MatCheckboxChange } from '@angular/material/checkbox';
 import { MatDialogRef } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
@@ -24,14 +24,14 @@ import { DialogService } from '../../../../services/dialog/dialog.service';
 export class EditSubscriptionComponent implements OnInit {
   @Input() currentSub: WebhookSubscription;
 
-  public form: FormGroup;
+  public form: UntypedFormGroup;
   public eventTypes = Object.keys(EventType);
 
   private readonly redactedSecret = '******';
 
   constructor(
     private webhookService: WebhookService,
-    private formBuilder: FormBuilder,
+    private formBuilder: UntypedFormBuilder,
     private dialogRef: MatDialogRef<EditSubscriptionComponent>,
     private dialogService: DialogService
   ) {}

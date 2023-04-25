@@ -18,7 +18,7 @@ import {
 } from '../../../../generated/player-api';
 import { ErrorStateMatcher } from '@angular/material/core';
 import {
-  FormControl,
+  UntypedFormControl,
   FormGroupDirective,
   NgForm,
   Validators,
@@ -33,7 +33,7 @@ export class AdminUserEditComponent implements OnChanges {
   @Input() user: User;
   @Output() editComplete = new EventEmitter<boolean>();
 
-  public nameFormControl = new FormControl('', [
+  public nameFormControl = new UntypedFormControl('', [
     Validators.required,
     Validators.minLength(4),
   ]);
@@ -130,7 +130,7 @@ export class AdminUserEditComponent implements OnChanges {
 /** Error when invalid control is dirty, touched, or submitted. */
 export class UserErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
-    control: FormControl | null,
+    control: UntypedFormControl | null,
     form: FormGroupDirective | NgForm | null
   ): boolean {
     const isSubmitted = form && form.submitted;

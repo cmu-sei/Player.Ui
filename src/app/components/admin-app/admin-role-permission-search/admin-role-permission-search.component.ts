@@ -11,7 +11,7 @@ import {
 } from '../../../generated/player-api';
 import { Role, RoleService, RoleForm } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
-import { FormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 
 export interface Action {
   Value: string;
@@ -33,7 +33,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
   public isSuperUser: boolean;
   public filterRoleString: string;
   public filterPermissionString: string;
-  public selected: FormControl;
+  public selected: UntypedFormControl;
 
   public permissionActions: Action[] = [
     { Value: 'edit', Text: 'Edit Permission' },
@@ -53,7 +53,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.selected = new FormControl(0);
+    this.selected = new UntypedFormControl(0);
 
     // Initial datasource
     this.permissionDataSource = new MatTableDataSource<Permission>(

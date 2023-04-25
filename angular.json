@@ -104,7 +104,6 @@
       }
     }
   },
-  "defaultProject": "player.ui",
   "schematics": {
     "@schematics/angular:component": {
       "prefix": "app",
