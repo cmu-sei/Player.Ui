@@ -54,7 +54,6 @@ import {
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { PushNotificationsModule } from 'ng-push-ivy';
 import { ClipboardModule } from 'ngx-clipboard';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
@@ -208,7 +207,6 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     ReactiveFormsModule,
     NgbModule,
     AppRoutingModule,
-    PushNotificationsModule,
     FlexLayoutModule,
     SwaggerCodegenApiModule,
     ClipboardModule,
