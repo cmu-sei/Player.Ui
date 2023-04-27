@@ -8,7 +8,7 @@
 /* END VENDER IMPORTS */
 
 $mdi-font-path: '~@mdi/font/fonts';
-@import '~@mdi/font/scss/materialdesignicons';
+@import '@mdi/font/scss/materialdesignicons';
 
 /* LOCAL IMPORTS */
 @import 'theme';

@@ -3,7 +3,15 @@
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Input, Output, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatAccordion } from '@angular/material/expansion';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
@@ -66,9 +74,14 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
       map((x) => x.filter((y) => y.teamIds.includes(teamId))),
       map((x) =>
         x.sort(
-          firstBy(
-            (a: ViewPresence, b: ViewPresence) => +b.online - +a.online
-          ).thenBy('userName')
+          // first by online, then by username
+          (a: ViewPresence, b: ViewPresence) => {
+            if (a.online === b.online) {
+              return a.userName < b.userName ? -1 : 1;
+            } else {
+              return b.online < a.online ? -1 : 1;
+            }
+          }
         )
       )
     );
