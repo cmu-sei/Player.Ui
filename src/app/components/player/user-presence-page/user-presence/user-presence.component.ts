@@ -18,7 +18,6 @@ import { debounceTime, map } from 'rxjs/operators';
 import { Team, TeamService } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
-import { firstBy } from 'thenby';
 
 @Component({
   selector: 'app-user-presence',
@@ -40,7 +39,9 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this._teams = this.teamService
       .getMyViewTeams(this.viewId)
-      .pipe(map((x) => x.sort(firstBy('name'))));
+      .pipe(
+        map((x) => x.sort((a: Team, b: Team) => (a.name < b.name ? -1 : 1)))
+      );
     this.notificationService.joinPresence(this.viewId);
   }
 
