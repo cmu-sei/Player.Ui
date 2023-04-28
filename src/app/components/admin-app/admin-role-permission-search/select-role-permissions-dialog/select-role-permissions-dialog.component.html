@@ -3,10 +3,10 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div style="max-height: 800px" fxLayout="column" fxLayoutAlign="center none">
+<div class="max-h-[800px]">
   <h1 mat-dialog-title>Select Permissions for {{ role.name }}</h1>
   <mat-selection-list
-    style="max-height: 600px; overflow-y: auto"
+    class="max-h-[600px] overflow-y-auto"
     [(ngModel)]="selectedPermissions"
   >
     <mat-list-option
@@ -18,7 +18,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </mat-list-option>
   </mat-selection-list>
   <p>Options selected: {{ selectedPermissions.length }}</p>
-  <div fxlayout="row" fxLayoutAlign="center center">
+  <div class="flex justify-center">
     <button mat-stroked-button (click)="close()" tabIndex="4">Done</button>
   </div>
 </div>

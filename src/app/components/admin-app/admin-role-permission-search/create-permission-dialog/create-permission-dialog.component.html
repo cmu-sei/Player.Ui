@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div sytle="max-height: 400px;" fxLayout="column" fxLayoutAlign="center none">
+<div class="flex flex-col">
   <h1 mat-dialog-title>{{ title }}</h1>
   <form (ngSubmit)="done()">
     <mat-form-field>
@@ -33,7 +33,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         [(ngModel)]="permission.description"
       /> </mat-form-field
     ><br />
-    <mat-dialog-actions fxlayout="row" fxLayoutAlign="space-evenly center">
+    <mat-dialog-actions class="justify-evenly">
       <button mat-stroked-button type="submit" tabindex="5">Done</button>
     </mat-dialog-actions>
   </form>

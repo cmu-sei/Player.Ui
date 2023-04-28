@@ -3,19 +3,11 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<app-admin-user-edit
-  fxFlex
-  fxLayoutAlign="center"
-  [class.hidden]="userToEdit === undefined"
-  [user]="userToEdit"
-  (editComplete)="refreshUsers()"
-></app-admin-user-edit>
-
 <div
   [class.hidden]="userToEdit !== undefined"
   class="user-list-container mat-elevation-z8"
 >
-  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
+  <div class="flex items-center gap-4">
     <div class="sp-icon">
       <img height="35" src="assets/img/SP_Icon_User.png" alt="Users" />
     </div>
@@ -34,7 +26,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </mat-form-field>
     <button
       *ngIf="filterString != ''"
-      fxLayoutAlign="start center"
       mat-icon-button
       (click)="clearFilter()"
       style="outline: none"
@@ -47,10 +38,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </button>
   </div>
 
-  <mat-card
-    *ngIf="isLoading"
-    style="display: flex; justify-content: center; align-items: center"
-  >
+  <mat-card *ngIf="isLoading" class="flex justify-center items-center">
     <mat-progress-spinner color="primary" mode="indeterminate">
     </mat-progress-spinner>
   </mat-card>
@@ -58,10 +46,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-accordion>
     <mat-table #table [dataSource]="userDataSource" matSort>
       <ng-container matColumnDef="name">
-        <mat-header-cell fxFlex="30" *matHeaderCellDef mat-sort-header
+        <mat-header-cell class="max-w-[30%]" *matHeaderCellDef mat-sort-header
           >User Name</mat-header-cell
         >
-        <mat-cell fxFlex="30" *matCellDef="let element">
+        <mat-cell class="max-w-[30%]" *matCellDef="let element">
           <button
             mat-icon-button
             ngxClipboard
@@ -79,19 +67,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </ng-container>
 
       <ng-container matColumnDef="roleName">
-        <mat-header-cell fxFlex="70" *matHeaderCellDef mat-sort-header>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
           Role / Permissions
         </mat-header-cell>
-        <mat-cell fxFlex="70" *matCellDef="let element; let i = index">
-          <div fxFlex="100">
+        <mat-cell *matCellDef="let element; let i = index">
+          <div class="flex-auto">
             <mat-expansion-panel>
               <mat-expansion-panel-header>
                 <mat-panel-title style="font-size: small">
-                  <div fxLayout="column">
+                  <div>
                     <div [hidden]="!element.roleId">
                       Role: {{ element.roleName }}
                     </div>
-                    <div fxLayout="row">
+                    <div>
                       <div [hidden]="!(element.permissions.length > 0)">
                         {{ permissionsString(element.permissions) }}
                       </div>

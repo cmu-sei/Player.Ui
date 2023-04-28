@@ -4,7 +4,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="list-container mat-elevation-z8">
-  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
+  <div class="flex justify-start items-center gap-4">
     <div class="sp-icon">
       <img
         height="35"
@@ -13,7 +13,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       />
     </div>
     <span>Application Templates</span>
-    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
+    <div class="flex justify-start items-center ml-[5%]">
       <mat-icon
         style="transform: scale(0.85); margin-right: 5px"
         svgIcon="ic_magnify_search"
@@ -28,7 +28,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-form-field>
       <button
         *ngIf="filterString != ''"
-        fxLayoutAlign="start center"
         mat-icon-button
         (click)="clearFilter()"
         style="outline: none"
@@ -50,10 +49,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-accordion>
     <mat-table #table [dataSource]="appTemplateDataSource" matSort>
       <ng-container matColumnDef="name">
-        <mat-header-cell fxFlex="30" *matHeaderCellDef mat-sort-header>
+        <mat-header-cell class="max-w-[30%]" *matHeaderCellDef mat-sort-header>
           Template Name
         </mat-header-cell>
-        <mat-cell fxFlex="30" *matCellDef="let element">
+        <mat-cell class="max-w-[30%]" *matCellDef="let element">
           <img class="app-icon" src="{{ element.icon }}" />&nbsp;&nbsp;{{
             element.name
           }}
@@ -61,11 +60,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </ng-container>
 
       <ng-container matColumnDef="url">
-        <mat-header-cell fxFlex="70" *matHeaderCellDef mat-sort-header>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
           Url
         </mat-header-cell>
-        <mat-cell fxFlex="70" *matCellDef="let element; let i = index">
-          <div fxFlex="100">
+        <mat-cell *matCellDef="let element; let i = index">
+          <div class="flex-auto">
             <mat-expansion-panel
               [expanded]="
                 currentAppTemplate !== undefined &&

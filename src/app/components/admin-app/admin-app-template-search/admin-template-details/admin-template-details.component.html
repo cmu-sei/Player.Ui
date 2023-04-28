@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div fxLayout="column">
+<div class="flex flex-col">
   <mat-form-field>
     <input
       matInput
@@ -54,7 +54,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >Load in background</mat-checkbox
     >
   </mat-form-field>
-  <div fxLayout="row" fxLayoutAlign="end" class="bottom-button">
+  <div class="bottom-button">
     <button mat-stroked-button (click)="deleteApplicationTemplate()">
       Delete Application Template
     </button>

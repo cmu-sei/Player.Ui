@@ -7,22 +7,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   *ngIf="user != undefined"
   class="user-container mat-elevation-z8 scroll-container"
 >
-  <div fxLayout="row" class="title">
-    <div fxFlexOffset="9">
+  <div class="flex title">
+    <div class="ml-[9%]">
       <h4>Edit User {{ user.name }}</h4>
     </div>
   </div>
 
-  <div fxLayout="row">
-    <div fxFlex fxLayoutAlign="center center">
+  <div class="flex">
+    <div class="flex-1 items-center place-content-center">
       <app-roles-permissions-select
         [user]="user"
       ></app-roles-permissions-select>
     </div>
   </div>
 
-  <div fxLayout="row" class="bottom-button">
-    <div fxFlex fxLayoutAlign="center center">
+  <div class="flex bottom-button">
+    <div class="flex-1 items-center place-content-center">
       <button mat-stroked-button (click)="returnToUserSearch()">Done</button>
     </div>
   </div>
