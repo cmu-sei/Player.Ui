@@ -4,7 +4,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="list-container mat-elevation-z8">
-  <div class="flex justify-start items-center gap-4">
+  <div class="flex justify-start items-center gap-sm">
     <div class="sp-icon">
       <img
         height="35"
@@ -13,7 +13,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       />
     </div>
     <span>Application Templates</span>
-    <div class="flex justify-start items-center ml-[5%]">
+    <div class="flex justify-start items-center ml-med">
       <mat-icon
         style="transform: scale(0.85); margin-right: 5px"
         svgIcon="ic_magnify_search"
@@ -25,19 +25,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
+        <button
+          *ngIf="filterString != ''"
+          mat-icon-button
+          matSuffix
+          (click)="clearFilter()"
+          title="Clear Search"
+        >
+          <mat-icon
+            style="transform: scale(0.85)"
+            svgIcon="ic_cancel_circle"
+          ></mat-icon>
+        </button>
       </mat-form-field>
-      <button
-        *ngIf="filterString != ''"
-        mat-icon-button
-        (click)="clearFilter()"
-        style="outline: none"
-        title="Clear Search"
-      >
-        <mat-icon
-          style="transform: scale(0.85)"
-          svgIcon="ic_cancel_circle"
-        ></mat-icon>
-      </button>
       <div class="button-end">
         <button mat-stroked-button (click)="addAppTemplate()">
           Add Application Template
@@ -49,10 +49,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-accordion>
     <mat-table #table [dataSource]="appTemplateDataSource" matSort>
       <ng-container matColumnDef="name">
-        <mat-header-cell class="max-w-[30%]" *matHeaderCellDef mat-sort-header>
+        <mat-header-cell class="name-column" *matHeaderCellDef mat-sort-header>
           Template Name
         </mat-header-cell>
-        <mat-cell class="max-w-[30%]" *matCellDef="let element">
+        <mat-cell class="name-column" *matCellDef="let element">
           <img class="app-icon" src="{{ element.icon }}" />&nbsp;&nbsp;{{
             element.name
           }}

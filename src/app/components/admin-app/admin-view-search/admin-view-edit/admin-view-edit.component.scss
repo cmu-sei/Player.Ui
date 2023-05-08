@@ -13,7 +13,7 @@
   margin-top: 10px;
 }
 
-.full-width {
+.width-70 {
   width: 70%;
 }
 
@@ -46,15 +46,9 @@
   font-family: open_sansbold;
 }
 
-.block {
-  display: flex;
-  flex-direction: row;
-  justify-content: left;
-  align-items: center;
-}
-
 #teamSelect {
   margin-right: 25px;
+  width: 300px;
 }
 
 #viewFiles {

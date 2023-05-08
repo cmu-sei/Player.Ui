@@ -6,11 +6,6 @@
 @include mat.core();
 /* END VENDER IMPORTS */
 
-// Tailwind
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 $mdi-font-path: '~@mdi/font/fonts';
 @import '@mdi/font/scss/materialdesignicons';
 
@@ -35,4 +30,94 @@ $mdi-font-path: '~@mdi/font/fonts';
 .mat-select-panel:not([class*='mat-elevation-z']) {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14),
     0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+// flex box utility classes
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-auto {
+  flex: 1 1 auto;
+}
+
+.flex-0 {
+  flex: 1 1 0%;
+}
+
+.flex-10 {
+  flex: 1 1 10%;
+}
+
+.flex-25 {
+  flex: 1 1 25%;
+}
+
+.flex-40 {
+  flex: 1 1 40%;
+}
+
+.flex-50 {
+  flex: 1 1 50%;
+}
+
+.flex-90 {
+  flex: 1 1 90%;
+}
+
+.flex-100 {
+  flex: 1 1 100%;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-start {
+  justify-content: start;
+}
+
+.justify-end {
+  justify-content: end;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.gap-sm {
+  gap: 1em;
+}
+
+// margin
+.ml-med {
+  margin-left: 2em;
+}
+.ml-lg {
+  margin-left: 4em;
+}
+
+.ml-5 {
+  margin-left: 5%;
+}
+
+.ml-20 {
+  margin-left: 20%;
+}
+
+// width
+.w-full {
+  width: 100%;
 }

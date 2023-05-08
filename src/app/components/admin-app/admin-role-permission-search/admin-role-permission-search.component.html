@@ -18,7 +18,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         Roles
       </ng-template>
 
-      <div class="flex justify-start items-center gap-4">
+      <div class="flex justify-start items-center gap-sm">
         <div class="sp-icon">
           <img
             width="30"
@@ -27,7 +27,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           />
         </div>
         <span>Roles</span>
-        <div class="flex items-center ml-[5%]">
+        <div class="flex items-center ml-med">
           <mat-icon
             style="transform: scale(0.85); margin-right: 5px"
             svgIcon="ic_magnify_search"
@@ -39,19 +39,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               (keyup)="applyRoleFilter($event.target.value)"
               placeholder="Search"
             />
+            <button
+              *ngIf="filterRoleString != ''"
+              mat-icon-button
+              matSuffix
+              (click)="clearRoleFilter()"
+              title="Clear Search"
+            >
+              <mat-icon
+                style="transform: scale(0.85)"
+                svgIcon="ic_cancel_circle"
+              ></mat-icon>
+            </button>
           </mat-form-field>
-          <button
-            *ngIf="filterRoleString != ''"
-            mat-icon-button
-            (click)="clearRoleFilter()"
-            style="outline: none"
-            title="Clear Search"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_cancel_circle"
-            ></mat-icon>
-          </button>
           <div class="button-end">
             <button mat-stroked-button (click)="addRole()">Add New Role</button>
           </div>
@@ -124,12 +124,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         Permissions
       </ng-template>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-sm">
         <div class="sp-icon">
           <img width="30" src="assets/img/SP_ICON_Permission.png" alt="Views" />
         </div>
         <span>Permissions</span>
-        <div class="flex items-center ml-[5%]">
+        <div class="flex items-center ml-med">
           <mat-icon
             style="transform: scale(0.85); margin-right: 5px"
             svgIcon="ic_magnify_search"
@@ -141,19 +141,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               (keyup)="applyPermissionFilter($event.target.value)"
               placeholder="Search"
             />
+            <button
+              *ngIf="filterPermissionString != ''"
+              mat-icon-button
+              matSuffix
+              (click)="clearPermissionFilter()"
+              title="Clear Search"
+            >
+              <mat-icon
+                style="transform: scale(0.85)"
+                svgIcon="ic_cancel_circle"
+              ></mat-icon>
+            </button>
           </mat-form-field>
-          <button
-            *ngIf="filterPermissionString != ''"
-            mat-icon-button
-            (click)="clearPermissionFilter()"
-            style="outline: none"
-            title="Clear Search"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_cancel_circle"
-            ></mat-icon>
-          </button>
           <div class="button-end">
             <button mat-stroked-button (click)="addPermission()">
               Add New Permission

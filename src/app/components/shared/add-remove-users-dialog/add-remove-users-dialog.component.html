@@ -3,13 +3,13 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div fxLayout="row" fxLayoutAlign="space-between none">
+<div class="flex">
   <div class="user-list-container mat-elevation-z8">
     <div class="sp-icon">
       <img height="35" src="assets/img/SP_Icon_User.png" alt="Users" />
       All Users
     </div>
-    <div fxLayout="row" fxLayoutAlign="start center">
+    <div class="flex items-center">
       <mat-icon
         style="transform: scale(0.85); margin-right: 5px; margin-left: 10px"
         svgIcon="ic_magnify_search"
@@ -21,26 +21,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
+        <button
+          *ngIf="filterString != ''"
+          mat-icon-button
+          matSuffix
+          (click)="clearFilter()"
+          title="Clear Search"
+        >
+          <mat-icon
+            style="transform: scale(0.85)"
+            svgIcon="ic_cancel_circle"
+          ></mat-icon>
+        </button>
       </mat-form-field>
-      <button
-        *ngIf="filterString != ''"
-        fxLayoutAlign="start center"
-        mat-icon-button
-        (click)="clearFilter()"
-        style="outline: none"
-        title="Clear Search"
-      >
-        <mat-icon
-          style="transform: scale(0.85)"
-          svgIcon="ic_cancel_circle"
-        ></mat-icon>
-      </button>
     </div>
 
-    <mat-card
-      *ngIf="isLoading"
-      style="display: flex; justify-content: center; align-items: center"
-    >
+    <mat-card *ngIf="isLoading" class="flex justify-center items-center">
       <mat-progress-spinner color="primary" mode="indeterminate">
       </mat-progress-spinner>
     </mat-card>
@@ -110,10 +106,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         />
       </div>
 
-      <mat-card
-        *ngIf="isLoading"
-        style="display: flex; justify-content: center; align-items: center"
-      >
+      <mat-card *ngIf="isLoading" class="flex justify-center items-center">
         <mat-progress-spinner color="primary" mode="indeterminate">
         </mat-progress-spinner>
       </mat-card>
@@ -136,23 +129,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <ng-container matColumnDef="teamMembership">
           <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
           <mat-cell *matCellDef="let element">
-            <div fxLayout="row">
-              <div fxFlex fxLayoutAlign="center">
-                <mat-form-field>
-                  <mat-select
-                    placeholder="Role"
-                    name="teamMembershipRole"
-                    [(ngModel)]="element.teamMembership.roleId"
-                    (selectionChange)="updateMembership(element)"
-                    [(value)]="element.teamMembership.roleId"
-                  >
-                    <mat-option *ngFor="let role of roles" [value]="role.id">
-                      {{ role.name }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-            </div>
+            <mat-form-field>
+              <mat-select
+                placeholder="Role"
+                name="teamMembershipRole"
+                [(ngModel)]="element.teamMembership.roleId"
+                (selectionChange)="updateMembership(element)"
+                [(value)]="element.teamMembership.roleId"
+              >
+                <mat-option *ngFor="let role of roles" [value]="role.id">
+                  {{ role.name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
           </mat-cell>
         </ng-container>
 
@@ -176,10 +165,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   </div>
 </div>
 
-<div fxLayout="row">
-  <div fxFlex fxLayoutAlign="center">
-    <mat-dialog-actions>
-      <button mat-stroked-button (click)="done()">Done</button>
-    </mat-dialog-actions>
-  </div>
+<div class="flex justify-center">
+  <mat-dialog-actions>
+    <button mat-stroked-button (click)="done()">Done</button>
+  </mat-dialog-actions>
 </div>

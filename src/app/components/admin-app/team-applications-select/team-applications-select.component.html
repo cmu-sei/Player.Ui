@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div fxLayout="row" fxLayoutAlign="end" class="top-button">
+<div class="top-button flex justify-end">
   <button
     *ngIf="viewApplications != null && viewApplications.length > 0"
     mat-stroked-button
@@ -29,14 +29,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   >
     <mat-expansion-panel-header>
       <mat-panel-title>
-        <div fxLayout="row" fxLayoutAlign="start center">
+        <div class="flex items-center">
           <img class="app-icon" src="{{ app.icon }}" /> {{ getAppName(app) }}
         </div>
       </mat-panel-title>
     </mat-expansion-panel-header>
 
     <div>
-      <div fxLayout="column">
+      <div class="flex flex-col">
         <div class="wrap">
           <b>{{ app.url }}</b>
         </div>
@@ -47,8 +47,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </div>
     </div>
 
-    <div fxLayout="row" class="bottom-button">
-      <div fxflex fxLayoutAlign="space-between center">
+    <div class="bottom-button flex">
+      <div class="flex items-center">
         Display order:&nbsp;&nbsp;<b>{{ app.displayOrder }}</b>
         <button
           *ngIf="{ disabled: app.displayOrder === 0 } as moveUp"
@@ -76,14 +76,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>
         </button>
       </div>
-      <div fxFlex fxLayoutAlign="end">
-        <button
-          mat-stroked-button
-          (click)="removeApplicationInstanceFromTeam(app)"
-        >
-          Remove Application
-        </button>
-      </div>
+      <button
+        mat-stroked-button
+        (click)="removeApplicationInstanceFromTeam(app)"
+      >
+        Remove Application
+      </button>
     </div>
   </mat-expansion-panel>
 </mat-accordion>

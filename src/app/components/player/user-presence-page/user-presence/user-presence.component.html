@@ -4,26 +4,28 @@
 -->
 
 <div>
-  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="0.5em" style="width: 100%;">
-    <span fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="0.5em" style="width: 90%;">
-      <mat-icon svgIcon="ic_magnify_search"></mat-icon>
-      <mat-form-field fxFlex="20">
-        <input
-          matInput
-          [(ngModel)]="searchTerm"
-          (keyup)="applyFilter($event.target.value)"
-          placeholder="Search"
-        />
-        <button
-          matSuffix
-          *ngIf="searchTerm != ''"
-          mat-icon-button
-          (click)="clearFilter()"
-          matTooltip="Clear Search"
-        >
-          <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
-        </button>
-      </mat-form-field>
+  <div class="flex items-center w-full">
+    <span class="flex items-center w-full gap-sm">
+      <div class="flex items-center">
+        <mat-icon svgIcon="ic_magnify_search"></mat-icon>
+        <mat-form-field>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (keyup)="applyFilter($event.target.value)"
+            placeholder="Search"
+          />
+          <button
+            matSuffix
+            *ngIf="searchTerm != ''"
+            mat-icon-button
+            (click)="clearFilter()"
+            matTooltip="Clear Search"
+          >
+            <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
       <button mat-raised-button color="primary" (click)="accordion.openAll()">
         Expand All
       </button>
@@ -37,15 +39,17 @@
         >Hide Offline</mat-checkbox
       >
     </span>
-    <span style="width: 10%;">
+    <span>
       <button
         mat-icon-button
         (click)="closeMe.emit()"
         title="Close"
-        style="float: right;"
         tabindex="-1"
       >
-        <mat-icon class="mdi-24px self-center" fontIcon="mdi-close-circle-outline"></mat-icon>
+        <mat-icon
+          class="mdi-24px self-center"
+          fontIcon="mdi-close-circle-outline"
+        ></mat-icon>
       </button>
     </span>
   </div>

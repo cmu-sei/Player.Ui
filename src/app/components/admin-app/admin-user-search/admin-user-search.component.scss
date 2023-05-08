@@ -1,6 +1,5 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
-
 .user-list-container {
   min-width: 600px;
   margin-top: 40px;
@@ -20,10 +19,18 @@
   padding-right: 0;
 }
 
+.mat-expansion-panel-header {
+  padding-left: 0;
+}
+
 .sp-icon {
   margin-left: 10px;
 }
 
 .hidden {
   display: none !important;
+}
+
+.name-column {
+  max-width: 30%;
 }

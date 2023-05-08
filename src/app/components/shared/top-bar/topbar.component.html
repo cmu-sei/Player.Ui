@@ -36,11 +36,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <ng-container *ngIf="teams && team && teams.length > 0">
       <div class="team-text">Team:</div>
       <span class="team-text">{{ team.name }}</span>
-      <div *ngIf="teams.length > 1" fxLayout="row" fxLayoutAlign="start center">
+      <div *ngIf="teams.length > 1">
         <button
           mat-button
           [matMenuTriggerFor]="teamMenu"
-          style="outline: none"
           matTooltip="Select a Team"
           aria-label="Select a Team"
         >
@@ -70,16 +69,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       ></mat-icon>
     </button>
     <span class="spacer"></span>
-    <div
-      fxFlex
-      class="team-text"
-      fxLayoutAlign="end center"
-      *ngIf="currentUser$ | async as currentUser"
-    >
+    <div class="team-text" *ngIf="currentUser$ | async as currentUser">
       <button
         mat-button
         [matMenuTriggerFor]="menu"
-        style="outline: none"
         matTooltip="Menu"
         aria-label="Menu"
       >
@@ -87,26 +80,37 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false">
-        <div fxLayout="row" fxLayoutAlign="start center">
+        <div class="flex">
           <button
-            *ngIf="(team && team.canManage) || (team && currentUser.profile.isSystemAdmin !== null &&
-            currentUser.profile.isSystemAdmin)"
+            *ngIf="
+              (team && team.canManage) ||
+              (team &&
+                currentUser.profile.isSystemAdmin !== null &&
+                currentUser.profile.isSystemAdmin)
+            "
             (click)="editFn($event)"
-            [ngClass]="(currentUser.profile.isSystemAdmin !== null &&
-              currentUser.profile.isSystemAdmin) ? big-button : ''"
+            [ngClass]="
+              currentUser.profile.isSystemAdmin !== null &&
+              currentUser.profile.isSystemAdmin
+                ? big - button
+                : ''
+            "
             mat-menu-item
           >
             Edit View
           </button>
           <button
-          title="Open in Browser Tab"
-          *ngIf="team && currentUser.profile.isSystemAdmin !== null &&
-            currentUser.profile.isSystemAdmin"
-          (click)="editFnNewTab($event)"
-          class="small-button"
-          mat-menu-item
+            title="Open in Browser Tab"
+            *ngIf="
+              team &&
+              currentUser.profile.isSystemAdmin !== null &&
+              currentUser.profile.isSystemAdmin
+            "
+            (click)="editFnNewTab($event)"
+            class="small-button"
+            mat-menu-item
           >
-          <mat-icon svgIcon="ic_open_tab"></mat-icon>
+            <mat-icon svgIcon="ic_open_tab"></mat-icon>
           </button>
         </div>
         <button
@@ -154,5 +158,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 </mat-toolbar>
 
 <ng-template #userPresenceDialog>
-  <app-user-presence [viewId]="viewId" (closeMe)="closeUserPresence()"></app-user-presence>
+  <app-user-presence
+    [viewId]="viewId"
+    (closeMe)="closeUserPresence()"
+  ></app-user-presence>
 </ng-template>

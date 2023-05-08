@@ -5,20 +5,28 @@ Released under a MIT (SEI)-style license, please see license.txt or contact perm
 [DISTRIBUTION STATEMENT A] This material has been approved for public release and unlimited distribution.  Please see Copyright notice for non-US Government use and distribution.
 Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark Office by Carnegie Mellon University.
 DM20-0181 -->
-<h2>An application named {{file.name}} has been created.</h2>
+<h2>An application named {{ file.name }} has been created.</h2>
 <h3>Would you like to add this application to any of the teams?</h3>
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-form-field fxLayout="column" fxLayoutAlign="start center" class="team-select">
-    <mat-label>Teams</mat-label>
-    <mat-select multiple [ngModel]="file.teamIds" formControlName="teams" class="team-select">
-      <mat-option *ngFor="let team of currentTeams" [value]="team.team.id">{{
-        team.name
-      }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <div fxLayout="row" fxLayoutAlign="space-around center">
-    <button mat-stroked-button class="action-button" type="submit">Add to Selected</button>
+  <div class="flex justify-center">
+    <mat-form-field class="team-select">
+      <mat-label>Teams</mat-label>
+      <mat-select
+        multiple
+        [ngModel]="file.teamIds"
+        formControlName="teams"
+        class="team-select"
+      >
+        <mat-option *ngFor="let team of currentTeams" [value]="team.team.id">{{
+          team.name
+        }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div class="flex justify-around">
+    <button mat-stroked-button class="action-button" type="submit">
+      Add to Selected
+    </button>
     <button
       mat-stroked-button
       mat-dialog-close

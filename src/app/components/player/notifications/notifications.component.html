@@ -8,9 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   (opened)="notificationPanelToggle('open')"
   (closed)="notificationPanelToggle('close')"
 >
-  <mat-expansion-panel-header
-    [ngClass]="notificationDisplayClass()"
-  >
+  <mat-expansion-panel-header [ngClass]="notificationDisplayClass()">
     <mat-panel-title>
       <span
         *ngIf="useBadge"
@@ -23,27 +21,23 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matBadgeSize="small"
       >
       </span>
-      <span class="notification-panel-title" >
-        <b>
-          Notifications
-        </b>
+      <span class="notification-panel-title">
+        <b> Notifications </b>
       </span>
       <mat-icon
-        *ngIf="hasViewAdmin && showSystemNotifications && notificationsHistory.length > 0"
+        *ngIf="
+          hasViewAdmin &&
+          showSystemNotifications &&
+          notificationsHistory.length > 0
+        "
         fontIcon="mdi-trash-can"
         title="Delete ALL notifications"
         (click)="deleteViewNotifications()"
       ></mat-icon>
     </mat-panel-title>
   </mat-expansion-panel-header>
-  <mat-list
-    *ngIf="notificationsHistory != undefined"
-  >
-    <mat-list-item
-      *ngFor="
-        let notif of notificationsHistory
-      "
-    >
+  <mat-list *ngIf="notificationsHistory != undefined">
+    <mat-list-item *ngFor="let notif of notificationsHistory">
       <div id="wrapper">
         <div
           id="time"
@@ -93,11 +87,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           mat-button
           type="submit"
           matSuffix
-          mat-icon-button
           aria-label="Send"
           [disabled]="!notificationForm.form.valid"
         >
-          <mat-icon>Send</mat-icon>
+          Send
         </button>
       </mat-form-field>
     </form>

@@ -3,20 +3,20 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 <h3>{{ currentSub == null ? 'Add Subscription' : 'Edit Subscription' }}</h3>
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <mat-form-field fxLayout="row">
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col">
+  <mat-form-field>
     <mat-label>Name</mat-label>
     <input type="text" matNativeControl formControlName="name" />
   </mat-form-field>
-  <mat-form-field fxLayout="row">
+  <mat-form-field>
     <mat-label>Callback URL</mat-label>
     <input type="text" matNativeControl formControlName="callbackUri" />
   </mat-form-field>
-  <mat-form-field fxLayout="row">
+  <mat-form-field>
     <mat-label>Client ID</mat-label>
     <input type="text" matNativeControl formControlName="clientId" />
   </mat-form-field>
-  <div fxLayout="row">
+  <div>
     <mat-form-field matTooltip="Only viewable on creation">
       <mat-label>Client Secret</mat-label>
       <input type="text" matNativeControl formControlName="clientSecret" />
@@ -28,13 +28,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >Edit</mat-checkbox
     >
   </div>
-  <mat-form-field fxLayout="row">
+  <mat-form-field>
     <mat-label>Events</mat-label>
     <mat-select multiple formControlName="eventTypes">
       <mat-option *ngFor="let e of eventTypes" [value]="e">{{ e }}</mat-option>
     </mat-select>
   </mat-form-field>
-  <div fxLayout="row" fxLayoutAlign="space-around center">
+  <div class="flex justify-around">
     <button mat-flat-button color="primary" type="submit">Save</button>
     <button mat-flat-button color="primary" type="button" (click)="onDelete()">
       Delete

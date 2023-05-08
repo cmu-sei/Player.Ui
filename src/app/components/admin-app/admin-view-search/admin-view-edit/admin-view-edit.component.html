@@ -7,8 +7,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   *ngIf="view !== undefined"
   class="view-container mat-elevation-z8 scroll-container"
 >
-  <div fxLayout="row" class="title">
-    <div fxFlex="10" fxLayoutAlign="start center">
+  <div class="flex title">
+    <div class="flex flex-10 items-center">
       <button
         [disabled]="
           viewNameFormControl.invalid || descriptionFormControl.invalid
@@ -20,7 +20,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-icon svgIcon="ic_back_arrow"></mat-icon>
       </button>
     </div>
-    <div fxFlex="90" fxLayoutAlign="start center">
+    <div class="flex-90">
       <h4 class="header-text">Edit View: {{ view.name }}</h4>
     </div>
   </div>
@@ -35,68 +35,73 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <ng-template matStepperIcon="done">&#10004;</ng-template>
 
       <mat-step label="View Information">
-        <div fxLayout="row" class="add-margin">
-          <div fxFlex fxFlexOffset="20">
-            <mat-form-field class="full-width">
-              <mat-label>Name (required)</mat-label>
-              <input
-                type="text"
-                matInput
-                [formControl]="viewNameFormControl"
-                (change)="saveView()"
-                [errorStateMatcher]="matcher"
-              />
-              <mat-error
-                *ngIf="
-                  viewNameFormControl.hasError('minlength') &&
-                  !viewNameFormControl.hasError('required')
-                "
-              >
-                Must contain 4 or more characters
-              </mat-error>
-              <mat-error *ngIf="viewNameFormControl.hasError('required')">
-                Name is <strong>required</strong>
-              </mat-error>
-            </mat-form-field>
+        <div class="ml-20">
+          <div class="add-margin">
+            <div>
+              <mat-form-field class="width-70">
+                <mat-label>Name (required)</mat-label>
+                <input
+                  type="text"
+                  matInput
+                  [formControl]="viewNameFormControl"
+                  (change)="saveView()"
+                  [errorStateMatcher]="matcher"
+                />
+                <mat-error
+                  *ngIf="
+                    viewNameFormControl.hasError('minlength') &&
+                    !viewNameFormControl.hasError('required')
+                  "
+                >
+                  Must contain 4 or more characters
+                </mat-error>
+                <mat-error *ngIf="viewNameFormControl.hasError('required')">
+                  Name is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="add-margin">
+            <div>
+              <mat-form-field class="width-70">
+                <mat-label>Description (required)</mat-label>
+                <textarea
+                  matInput
+                  [formControl]="descriptionFormControl"
+                  (change)="saveView()"
+                  [errorStateMatcher]="matcher"
+                ></textarea>
+                <mat-error *ngIf="descriptionFormControl.hasError('required')">
+                  Description is <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="add-margin">
+            <div>
+              <mat-form-field>
+                <mat-select
+                  placeholder="Status"
+                  [(ngModel)]="view.status"
+                  name="viewStatus"
+                  (selectionChange)="saveViewStatus()"
+                >
+                  <mat-option
+                    *ngFor="let status of viewStates"
+                    [value]="status"
+                  >
+                    {{ status }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
           </div>
         </div>
 
-        <div fxLayout="row" class="add-margin">
-          <div fxFlex fxFlexOffset="20">
-            <mat-form-field class="full-width">
-              <mat-label>Description (required)</mat-label>
-              <textarea
-                matInput
-                [formControl]="descriptionFormControl"
-                (change)="saveView()"
-                [errorStateMatcher]="matcher"
-              ></textarea>
-              <mat-error *ngIf="descriptionFormControl.hasError('required')">
-                Description is <strong>required</strong>
-              </mat-error>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <div fxLayout="row" class="add-margin">
-          <div fxFlex fxFlexOffset="20">
-            <mat-form-field>
-              <mat-select
-                placeholder="Status"
-                [(ngModel)]="view.status"
-                name="viewStatus"
-                (selectionChange)="saveViewStatus()"
-              >
-                <mat-option *ngFor="let status of viewStates" [value]="status">
-                  {{ status }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <div fxLayout="row">
-          <div fxFlex fxLayoutAlign="end" class="delete-button">
+        <div>
+          <div class="delete-button flex justify-end">
             <button mat-stroked-button (click)="deleteView()">
               Delete View
             </button>
@@ -105,7 +110,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-step>
 
       <mat-step label="Applications">
-        <div fxLayout="row" fxLayoutAlign="end" class="top-button">
+        <div class="top-button flex justify-end">
           <button mat-stroked-button [matMenuTriggerFor]="viewAppsMenu">
             Add New Application
           </button>
@@ -136,7 +141,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-step label="Teams">
         <mat-card
           *ngIf="isLoadingTeams"
-          style="display: flex; justify-content: center; align-items: center"
+          class="flex justify-center items-center"
         >
           <mat-progress-spinner
             color="primary"
@@ -144,7 +149,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           ></mat-progress-spinner>
         </mat-card>
         <mat-accordion *ngIf="!isLoadingTeams">
-          <div fxLayout="row" fxLayoutAlign="end" class="top-button">
+          <div class="top-button flex justify-end">
             <button mat-stroked-button (click)="addNewTeam()">
               Add New Team
             </button>
@@ -163,9 +168,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               </mat-panel-title>
             </mat-expansion-panel-header>
 
-            <div fxLayout="row">
-              <div fxFlex="50" fxLayoutAlign="center">
-                <div fxLayout="column" fxLayoutAlign="space-between none">
+            <div class="flex">
+              <div class="flex flex-50 justify-center">
+                <div>
                   <div>
                     <button
                       mat-icon-button
@@ -182,7 +187,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                       teamContainer.team.id
                     }}</label>
                   </div>
-                  <mat-form-field>
+                  <mat-form-field class="w-full">
                     <input
                       id="teamName{{ teamContainer.team.id }}"
                       matInput
@@ -210,7 +215,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <app-roles-permissions-select
                     [team]="teamContainer.team"
                   ></app-roles-permissions-select>
-                  <div fxLayout="row" fxLayoutAlign="center">
+                  <div class="flex justify-center">
                     <button
                       mat-button
                       (click)="openUsersDialog(teamContainer.team)"
@@ -231,7 +236,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   </div>
                 </div>
               </div>
-              <div fxFlex="50">
+              <div class="flex-50">
                 <app-team-applications-select
                   [view]="view"
                   [team]="teamContainer.team"
@@ -239,8 +244,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               </div>
             </div>
 
-            <div fxLayout="row">
-              <div fxFlex fxLayoutAlign="end" class="delete-button">
+            <div>
+              <div class="delete-button flex justify-end">
                 <button
                   mat-stroked-button
                   (click)="deleteTeam(teamContainer.team)"
@@ -253,7 +258,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </mat-accordion>
       </mat-step>
 
-      <mat-step label="Files" fxLayout="row">
+      <mat-step label="Files">
         <mat-accordion>
           <div>
             <input
@@ -264,9 +269,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             />
             <div>
               <div
-                fxLayout="row"
-                fxLayoutAlign="end"
-                class="top-button"
+                class="top-button flex justify-end"
                 *ngIf="staged.length === 0"
               >
                 <button mat-stroked-button (click)="fileInput.click()">
@@ -274,9 +277,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 </button>
               </div>
               <div
-                fxLayout="row"
-                fxLayoutAlign="end center"
-                class="top-button"
+                class="top-button flex justify-end items-center"
                 *ngIf="staged.length !== 0"
               >
                 <mat-list>
@@ -293,8 +294,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   </mat-list-item>
                 </mat-list>
 
-                <div fxLayout="row">
-                  <mat-form-field id="teamSelect" style="width: 300px">
+                <div>
+                  <mat-form-field id="teamSelect">
                     <mat-label>Select Teams</mat-label>
                     <mat-select multiple [(ngModel)]="teamsForFile">
                       <mat-option
@@ -329,7 +330,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           >
             <mat-expansion-panel-header>
               <mat-panel-title>
-                <div fxLayout="row" fxLayoutAlign="start center">
+                <div class="flex items-center">
                   <img
                     height="25"
                     src="assets/img/SP_Icon_Intel.png"
@@ -339,8 +340,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               </mat-panel-title>
             </mat-expansion-panel-header>
 
-            <div fxLayout="column">
-              <div fxLayout="row" fxLayoutAlign="space-around center">
+            <div>
+              <div class="flex justify-around">
                 <mat-form-field id="teamSelect" style="width: 600px">
                   <mat-label>Teams with Permission to View</mat-label>
                   <mat-select
@@ -356,7 +357,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   </mat-select>
                 </mat-form-field>
               </div>
-              <div fxLayout="row" fxLayoutAlign="space-around center">
+              <div class="flex justify-around">
                 <button
                   mat-stroked-button
                   (click)="downloadFile(viewFile.id, viewFile.name)"
@@ -423,17 +424,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </mat-vertical-stepper>
   </mat-dialog-content>
 
-  <div fxLayout="row" class="bottom-button">
-    <div fxFlex fxLayoutAlign="center center">
-      <button
-        [disabled]="
-          viewNameFormControl.invalid || descriptionFormControl.invalid
-        "
-        mat-stroked-button
-        (click)="returnToViewSearch()"
-      >
-        Done
-      </button>
-    </div>
+  <div class="bottom-button flex justify-center">
+    <button
+      [disabled]="viewNameFormControl.invalid || descriptionFormControl.invalid"
+      mat-stroked-button
+      (click)="returnToViewSearch()"
+    >
+      Done
+    </button>
   </div>
 </div>

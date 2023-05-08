@@ -4,7 +4,6 @@
 import { CdkTableModule } from '@angular/cdk/table';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -53,7 +52,6 @@ import {
 } from '@cmusei/crucible-common';
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ClipboardModule } from 'ngx-clipboard';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
@@ -150,6 +148,7 @@ const settings: ComnSettingsConfig = {
     MatBadgeModule,
     ScrollingModule,
   ],
+  imports: [],
 })
 export class AngularMaterialModule {}
 
@@ -161,83 +160,81 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
 };
 
 @NgModule({
-    declarations: [
-        AppComponent,
-        ApplicationListComponent,
-        NotificationsComponent,
-        FocusedAppComponent,
-        PlayerComponent,
-        HomeAppComponent,
-        ViewListComponent,
-        ConfirmDialogComponent,
-        CreatePermissionDialogComponent,
-        CreateRoleDialogComponent,
-        SelectRolePermissionsDialogComponent,
-        SystemMessageComponent,
-        AdminAppComponent,
-        AdminViewSearchComponent,
-        AdminUserSearchComponent,
-        AdminAppTemplateSearchComponent,
-        AdminRolePermissionSearchComponent,
-        AdminUserEditComponent,
-        AdminViewEditComponent,
-        AddRemoveUsersDialogComponent,
-        RolesPermissionsSelectComponent,
-        TeamApplicationsSelectComponent,
-        ViewApplicationsSelectComponent,
-        AdminTemplateDetailsComponent,
-        TopbarComponent,
-        FileBrowseComponent,
-        OpenFileComponent,
-        EditFileDialogComponent,
-        UserPresencePageComponent,
-        UserPresenceComponent,
-        TeamUserPresenceComponent,
-        AppAdminSubscriptionSearchComponent,
-        EditSubscriptionComponent,
-        CreateApplicationDialogComponent,
-    ],
-    imports: [
-        BrowserModule,
-        BrowserAnimationsModule,
-        FormsModule,
-        HttpClientModule,
-        AngularMaterialModule,
-        MatNativeDateModule,
-        ReactiveFormsModule,
-        NgbModule,
-        AppRoutingModule,
-        FlexLayoutModule,
-        SwaggerCodegenApiModule,
-        ClipboardModule,
-        environment.production ? [] : AkitaNgDevtools.forRoot(),
-        AkitaNgRouterStoreModule,
-        ComnSettingsModule.forRoot(),
-        ComnAuthModule.forRoot(),
-        TableVirtualScrollModule,
-    ],
-    providers: [
-        AppService,
-        FocusedAppService,
-        NotificationService,
-        TeamsService,
-        LoggedInUserService,
-        ViewsService,
-        DialogService,
-        ApplicationsService,
-        SystemMessageService,
-        {
-            provide: BASE_PATH,
-            useFactory: getBasePath,
-            deps: [ComnSettingsService],
-        },
-        {
-            provide: ErrorHandler,
-            useClass: ErrorService,
-        },
-        { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
-    ],
-    bootstrap: [AppComponent]
+  declarations: [
+    AppComponent,
+    ApplicationListComponent,
+    NotificationsComponent,
+    FocusedAppComponent,
+    PlayerComponent,
+    HomeAppComponent,
+    ViewListComponent,
+    ConfirmDialogComponent,
+    CreatePermissionDialogComponent,
+    CreateRoleDialogComponent,
+    SelectRolePermissionsDialogComponent,
+    SystemMessageComponent,
+    AdminAppComponent,
+    AdminViewSearchComponent,
+    AdminUserSearchComponent,
+    AdminAppTemplateSearchComponent,
+    AdminRolePermissionSearchComponent,
+    AdminUserEditComponent,
+    AdminViewEditComponent,
+    AddRemoveUsersDialogComponent,
+    RolesPermissionsSelectComponent,
+    TeamApplicationsSelectComponent,
+    ViewApplicationsSelectComponent,
+    AdminTemplateDetailsComponent,
+    TopbarComponent,
+    FileBrowseComponent,
+    OpenFileComponent,
+    EditFileDialogComponent,
+    UserPresencePageComponent,
+    UserPresenceComponent,
+    TeamUserPresenceComponent,
+    AppAdminSubscriptionSearchComponent,
+    EditSubscriptionComponent,
+    CreateApplicationDialogComponent,
+  ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    FormsModule,
+    HttpClientModule,
+    AngularMaterialModule,
+    MatNativeDateModule,
+    ReactiveFormsModule,
+    AppRoutingModule,
+    SwaggerCodegenApiModule,
+    ClipboardModule,
+    environment.production ? [] : AkitaNgDevtools.forRoot(),
+    AkitaNgRouterStoreModule,
+    ComnSettingsModule.forRoot(),
+    ComnAuthModule.forRoot(),
+    TableVirtualScrollModule,
+  ],
+  providers: [
+    AppService,
+    FocusedAppService,
+    NotificationService,
+    TeamsService,
+    LoggedInUserService,
+    ViewsService,
+    DialogService,
+    ApplicationsService,
+    SystemMessageService,
+    {
+      provide: BASE_PATH,
+      useFactory: getBasePath,
+      deps: [ComnSettingsService],
+    },
+    {
+      provide: ErrorHandler,
+      useClass: ErrorService,
+    },
+    { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
+  ],
+  bootstrap: [AppComponent],
 })
 export class AppModule {}
 
