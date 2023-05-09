@@ -15,7 +15,7 @@
 @include mat.legacy-core();
 /* END VENDER IMPORTS */
 
-$mdi-font-path: '~@mdi/font/fonts';
+$mdi-font-path: '../../node_modules/@mdi/font/fonts/';
 @import '@mdi/font/scss/materialdesignicons';
 
 /* LOCAL IMPORTS */
