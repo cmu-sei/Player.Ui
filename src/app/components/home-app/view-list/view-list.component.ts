@@ -3,7 +3,7 @@
 
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { ViewData } from '../../../models/view-data';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { ViewsService } from '../../../services/views/views.service';

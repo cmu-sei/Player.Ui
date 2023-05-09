@@ -143,10 +143,10 @@ $custom-colors: (
   );
 }
 
-$custom-typography: mat.define-typography-config(
+$custom-typography: mat.define-legacy-typography-config(
   $font-family: '"Open Sans", sans-serif',
 );
-@include mat.all-component-typographies($custom-typography);
+@include mat.all-legacy-component-typographies($custom-typography);
 
 //globals mixin for edge cases.
 @mixin globals($theme) {

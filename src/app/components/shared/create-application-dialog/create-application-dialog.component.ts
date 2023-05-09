@@ -5,7 +5,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 import { Component, Input, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
 import { take } from 'rxjs/operators';
 import { ApplicationInstanceForm, ApplicationService, FileModel } from '../../../generated/player-api';
 import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
