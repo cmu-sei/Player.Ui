@@ -7,16 +7,25 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181 -->
 <h2>Edit File</h2>
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-form-field fxLayout="row">
+  <mat-form-field>
     <mat-label>Name</mat-label>
-    <input type="string" matInput formControlName="name" value=".png" class="name-input"/>
+    <input
+      type="string"
+      matInput
+      formControlName="name"
+      value=".png"
+      class="name-input"
+    />
   </mat-form-field>
 
-  <div fxLayout="row" fxLayoutAlign="space-around center">
-    <button mat-stroked-button  class="action-button" type="submit">
-      Save
-    </button>
-    <button mat-stroked-button mat-dialog-close type="button" (click)="cancel()">
+  <div class="d-flex justify-content-around">
+    <button mat-stroked-button class="action-button" type="submit">Save</button>
+    <button
+      mat-stroked-button
+      mat-dialog-close
+      type="button"
+      (click)="cancel()"
+    >
       Cancel
     </button>
   </div>

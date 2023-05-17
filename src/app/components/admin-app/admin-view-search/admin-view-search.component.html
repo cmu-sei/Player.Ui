@@ -4,8 +4,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <app-admin-view-edit
-  fxFlex
-  fxLayoutAlign="center"
   [class.hidden]="!showEditScreen"
   (editComplete)="refreshViews()"
 ></app-admin-view-edit>
@@ -14,10 +12,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   [class.hidden]="showEditScreen"
   class="view-list-container mat-elevation-z8"
 >
-  <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="15px">
+  <div class="d-flex align-items-center gap-1">
     <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon>
-    <h3 class="header-text">Views</h3>
-    <div fxLayout="row" fxLayoutAlign="start center" fxFlexOffset="5">
+    <h3 class="header-text ms-2">Views</h3>
+    <div class="d-flex align-items-center ms-5">
       <mat-icon
         style="transform: scale(0.85); margin-right: 5px"
         svgIcon="ic_magnify_search"
@@ -29,20 +27,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
+        <button
+          *ngIf="filterString != ''"
+          mat-icon-button
+          matSuffix
+          (click)="clearFilter()"
+          title="Clear Search"
+        >
+          <mat-icon
+            style="transform: scale(0.85)"
+            svgIcon="ic_cancel_circle"
+          ></mat-icon>
+        </button>
       </mat-form-field>
-      <button
-        *ngIf="filterString != ''"
-        fxLayoutAlign="start center"
-        mat-icon-button
-        (click)="clearFilter()"
-        style="outline: none"
-        title="Clear Search"
-      >
-        <mat-icon
-          style="transform: scale(0.85)"
-          svgIcon="ic_cancel_circle"
-        ></mat-icon>
-      </button>
       <div class="button-end">
         <button mat-stroked-button (click)="addNewView()">Add New View</button>
       </div>
@@ -51,7 +48,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
   <mat-card
     *ngIf="isLoading"
-    style="display: flex; justify-content: center; align-items: center"
+    class="d-flex justify-content-center align-items-center"
   >
     <mat-progress-spinner color="primary" mode="indeterminate">
     </mat-progress-spinner>
@@ -62,10 +59,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             The actual rendered columns are set as a property on the row definition" -->
     <!-- Name Column -->
     <ng-container matColumnDef="name">
-      <mat-header-cell fxFlex="50" *matHeaderCellDef mat-sort-header>
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
         View Name
       </mat-header-cell>
-      <mat-cell fxFlex="50" *matCellDef="let element">
+      <mat-cell *matCellDef="let element">
         <button
           mat-icon-button
           ngxClipboard
@@ -87,10 +84,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
     <!-- Description Column -->
     <ng-container matColumnDef="description">
-      <mat-header-cell fxFlex="40" *matHeaderCellDef>
-        Description
-      </mat-header-cell>
-      <mat-cell fxFlex="40" *matCellDef="let element">
+      <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
+      <mat-cell *matCellDef="let element">
         <div class="description-text" style="margin: 5px">
           {{ element.description }}
         </div>
@@ -99,10 +94,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
     <!-- Status Column -->
     <ng-container matColumnDef="status">
-      <mat-header-cell fxFlex="10" *matHeaderCellDef mat-sort-header>
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
         Status
       </mat-header-cell>
-      <mat-cell fxFlex="10" *matCellDef="let element">
+      <mat-cell *matCellDef="let element">
         <div class="team-text">{{ element.status }}</div>
       </mat-cell>
     </ng-container>

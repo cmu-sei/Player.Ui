@@ -4,8 +4,8 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
 import { take } from 'rxjs/operators';
 import { ApplicationInstanceForm, ApplicationService, FileModel } from '../../../generated/player-api';
 import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
@@ -22,10 +22,10 @@ export class CreateApplicationDialogComponent implements OnInit {
   @Input() viewName: string;
   @Input() currentTeams: TeamUserApp[];
 
-  form: FormGroup;
+  form: UntypedFormGroup;
 
   constructor(
-    public formBuilder: FormBuilder,
+    public formBuilder: UntypedFormBuilder,
     private applicationService: ApplicationService,
     private dialogRef: MatDialogRef<CreateApplicationDialogComponent>
     ) { }

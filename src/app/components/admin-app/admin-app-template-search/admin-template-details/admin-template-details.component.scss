@@ -3,4 +3,12 @@
 
 .bottom-button {
   margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  place-content: stretch flex-end;
+  align-items: stretch;
+}
+
+.hide {
+  display: none;
 }

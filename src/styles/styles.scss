@@ -2,25 +2,45 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 /* VENDER IMPORTS */
-@use '~@angular/material' as mat;
-@include mat.core();
-
+@use '@angular/material' as mat;
+// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
+//  The following line adds:
+//    1. Default typography styles for all components
+//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
+//  If you specify typography styles for the components you use elsewhere, you should delete this line.
+//  If you don't need the default component typographies but still want the hierarchy styles,
+//  you can delete this line and instead use:
+//    `@include mat.legacy-typography-hierarchy(mat.define-legacy-typography-config());`
+@include mat.legacy-core();
 /* END VENDER IMPORTS */
 
+/* BOOTSTRAP IMPORTS */
+/* Required */
+@import '../../node_modules/bootstrap/scss/functions';
+@import '../../node_modules/bootstrap/scss/variables';
+@import '../../node_modules/bootstrap/scss/maps';
+@import '../../node_modules/bootstrap/scss/mixins';
+@import '../../node_modules/bootstrap/scss/root';
+
+/* Optional */
+@import '../../node_modules/bootstrap/scss/utilities';
+/* END BOOTSRAP IMPORTS */
+
 $mdi-font-path: '~@mdi/font/fonts';
-@import '~@mdi/font/scss/materialdesignicons';
+@import '@mdi/font/scss/materialdesignicons';
 
 /* LOCAL IMPORTS */
 @import 'theme';
 /* END LOCAL IMPORTS */
 
+@include mat.all-legacy-component-themes($light-theme);
+
 .light-theme {
-  @include mat.all-component-themes($light-theme);
   @include globals($light-theme);
 }
 
 .dark-theme {
-  @include mat.all-component-themes($dark-theme);
+  @include mat.all-legacy-component-colors($dark-theme);
   @include globals($dark-theme);
 }
 
@@ -31,4 +51,8 @@ $mdi-font-path: '~@mdi/font/fonts';
 .mat-select-panel:not([class*='mat-elevation-z']) {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14),
     0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.header-text {
+  font-family: open_sansbold;
 }

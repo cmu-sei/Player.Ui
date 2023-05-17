@@ -2,20 +2,15 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 .mat-table {
-    overflow: auto;
-    max-height: 700px;
+  overflow: auto;
+  max-height: 700px;
 }
 
 .button-end {
-	margin-right: 25px;
+  margin-left: 25px;
+  margin-right: 25px;
 }
 
-.player-icon-small {
-	transform: scale(1.5); 
-	margin-left: 20px;
-}
-  
-.header-text {
-	margin-left: 10px; 
-	font-family: open_sansbold;
+.subscriptions-container {
+  margin-top: 40px;
 }

@@ -26,7 +26,14 @@
   margin-left: 20px;
 }
 
-.header-text {
-  margin-left: 10px;
-  font-family: open_sansbold;
+.mat-column-status {
+  flex: 1 1 10%;
+}
+
+.mat-column-name {
+  flex: 1 1 50%;
+}
+
+.mat-column-description {
+  flex: 1 1 40%;
 }

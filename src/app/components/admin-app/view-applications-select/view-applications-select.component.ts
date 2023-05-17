@@ -10,7 +10,7 @@ import {
 } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import {
-  FormControl,
+  UntypedFormControl,
   FormGroupDirective,
   NgForm,
   Validators,
@@ -26,14 +26,14 @@ export class ViewApplicationsSelectComponent implements OnInit {
   @Input() view: View;
   @ViewChild(ViewApplicationsSelectComponent) child;
 
-  public nameFormControl = new FormControl('', [
+  public nameFormControl = new UntypedFormControl('', [
     Validators.required,
     Validators.minLength(3),
   ]);
 
-  public urlFormControl = new FormControl('', [Validators.required]);
+  public urlFormControl = new UntypedFormControl('', [Validators.required]);
 
-  public iconFormControl = new FormControl('', [Validators.required]);
+  public iconFormControl = new UntypedFormControl('', [Validators.required]);
 
   public matcher = new AppErrorStateMatcher();
 
@@ -248,7 +248,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
 /** Error when invalid control is dirty, touched, or submitted. */
 export class AppErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
-    control: FormControl | null,
+    control: UntypedFormControl | null,
     form: FormGroupDirective | NgForm | null
   ): boolean {
     const isSubmitted = form && form.submitted;

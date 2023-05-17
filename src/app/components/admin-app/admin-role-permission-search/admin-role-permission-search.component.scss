@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 @function tint($color, $percentage) {
-  @return mix(#FFF, $color, $percentage);
+  @return mix(#fff, $color, $percentage);
 }
 
 @function shade($color, $percentage) {
@@ -39,5 +39,5 @@
 }
 
 .actions-button {
-  background: tint(black, 60);
+  background: tint(black, 60%);
 }

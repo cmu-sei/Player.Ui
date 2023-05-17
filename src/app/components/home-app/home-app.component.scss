@@ -1,20 +1,11 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-.center-text {
+.container {
   text-align: center;
-}
-
-.bar-height {
-  height: 40px;
-  color: white;
-  border-width: 0.25pt;
-  border-color: darkgray;
-}
-
-.title-text {
-  text-align: left;
-  margin-left: 10px;
-  font-weight: bold;
-  font-size: large;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 }

@@ -9,8 +9,8 @@ DM20-0181
 */
 
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
 import { FileService } from '../../../generated/player-api';
 
 @Component({
@@ -19,7 +19,7 @@ import { FileService } from '../../../generated/player-api';
   styleUrls: ['./edit-file-dialog.component.scss'],
 })
 export class EditFileDialogComponent implements OnInit {
-  form: FormGroup;
+  form: UntypedFormGroup;
 
   @Input() fileId: string;
   @Input() viewId: string;
@@ -30,7 +30,7 @@ export class EditFileDialogComponent implements OnInit {
 
   constructor(
     private fileService: FileService,
-    private formBuilder: FormBuilder,
+    private formBuilder: UntypedFormBuilder,
     private dialogRef: MatDialogRef<EditFileDialogComponent>
   ) {}
 

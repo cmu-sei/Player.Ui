@@ -67,7 +67,7 @@ export const ROUTES: Routes = [
   exports: [RouterModule],
   imports: [
     CommonModule,
-    RouterModule.forRoot(ROUTES, { relativeLinkResolution: 'legacy' }),
+    RouterModule.forRoot(ROUTES, {}),
   ],
 })
 export class AppRoutingModule {}
