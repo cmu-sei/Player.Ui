@@ -20,14 +20,6 @@
   cursor: pointer;
 }
 
-.showhand {
-  cursor: pointer;
-}
-
-.grow {
-  flex: 1 0 auto;
-}
-
 .hidden-app-iframe {
   width: 0;
   height: 0;
@@ -41,9 +33,11 @@
   padding-right: 1.5em;
   height: 35px;
   text-align: center;
-  cursor: pointer;
 }
 
-.righticon {
-  align-self: flex-end;
+.app-button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }

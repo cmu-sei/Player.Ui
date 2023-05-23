@@ -1,15 +1,15 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA, MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
-import { Component, Inject, OnInit, AfterContentInit } from '@angular/core';
 import {
-  PermissionService,
-  RoleService,
-} from '../../../../generated/player-api';
+  MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA,
+  MatLegacyDialogRef as MatDialogRef,
+} from '@angular/material/legacy-dialog';
+import { Component, Inject, OnInit } from '@angular/core';
+import { PermissionService } from '../../../../generated/player-api';
 
 @Component({
-  selector: 'select-role-permissions-dialog',
+  selector: 'app-select-role-permissions-dialog',
   templateUrl: './select-role-permissions-dialog.component.html',
 })
 export class SelectRolePermissionsDialogComponent implements OnInit {

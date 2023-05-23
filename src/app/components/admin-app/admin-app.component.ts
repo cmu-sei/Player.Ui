@@ -10,9 +10,8 @@ import {
   ComnAuthQuery,
 } from '@cmusei/crucible-common';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import { Observable, of, Subject } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
-import { Section } from '../../models/section.model';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 
 @Component({
@@ -35,6 +34,39 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     this.routerQuery.selectQueryParams('section');
   public title = '';
 
+  public sectionItems: Array<SectionItem> = [
+    {
+      name: 'Views',
+      section: Section.ADMIN_VIEWS,
+      icon: 'ic_crucible_player',
+      svgIcon: true,
+    },
+    {
+      name: 'Users',
+      section: Section.ADMIN_USERS,
+      icon: 'assets/img/SP_Icon_User.png',
+      svgIcon: false,
+    },
+    {
+      name: 'Application Templates',
+      section: Section.ADMIN_APP_TEMP,
+      icon: 'assets/img/SP_Icon_Intel.png',
+      svgIcon: false,
+    },
+    {
+      name: 'Roles / Permissions',
+      section: Section.ADMIN_ROLE_PERM,
+      icon: 'assets/img/SP_Icon_Alert.png',
+      svgIcon: false,
+    },
+    {
+      name: 'Subscriptions',
+      section: Section.ADMIN_SUBS,
+      icon: 'assets/img/subscription.png',
+      svgIcon: false,
+    },
+  ];
+
   constructor(
     private settingsService: ComnSettingsService,
     private router: Router,
@@ -49,15 +81,16 @@ export class AdminAppComponent implements OnInit, OnDestroy {
    */
   ngOnInit() {
     this.routerQuery
-      .selectQueryParams()
-      .pipe(
-        switchMap((params: any) => of(params)),
-        takeUntil(this.unsubscribe$)
-      )
-      .subscribe((params: any) => {
-        // Redirect if no query params
-        const { section } = params;
-        this.sectionChangedFn(this.queryParams['section']);
+      .selectQueryParams<string>('section')
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((section) => {
+        const sectionEnum: Section = section as Section;
+
+        if (sectionEnum != null) {
+          this.sectionChangedFn(sectionEnum);
+        } else {
+          this.sectionChangedFn(Section.ADMIN_VIEWS);
+        }
       });
 
     // Set the topbar color from config file
@@ -98,4 +131,19 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
   }
+}
+
+export enum Section {
+  ADMIN_VIEWS = 'views',
+  ADMIN_USERS = 'users',
+  ADMIN_APP_TEMP = 'application-templates',
+  ADMIN_ROLE_PERM = 'role-perm',
+  ADMIN_SUBS = 'subscriptions',
+}
+
+export interface SectionItem {
+  name: string;
+  icon: string;
+  section: Section;
+  svgIcon: boolean;
 }

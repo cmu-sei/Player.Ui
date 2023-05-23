@@ -33,8 +33,8 @@ export class AdminViewSearchComponent implements OnInit {
   public viewDataSource: MatTableDataSource<View>;
   public displayedColumns: string[] = ['name', 'description', 'status'];
   public filterString: string;
-  public showEditScreen: Boolean;
-  public isLoading: Boolean;
+  public showEditScreen: boolean;
+  public isLoading: boolean;
 
   constructor(
     private viewService: ViewService,
@@ -57,7 +57,7 @@ export class AdminViewSearchComponent implements OnInit {
     // Initial datasource
     this.filterString = '';
 
-    this.loggedInUserService.loggedInUser$.subscribe((user) => {
+    this.loggedInUserService.loggedInUser$.subscribe(() => {
       this.refreshViews();
     });
 

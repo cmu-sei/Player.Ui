@@ -46,7 +46,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {
   ComnAuthModule,
-  ComnSettingsConfig,
   ComnSettingsModule,
   ComnSettingsService,
 } from '@cmusei/crucible-common';
@@ -104,11 +103,6 @@ import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-
 import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from './components/shared/create-application-dialog/create-application-dialog.component';
 
-declare var require: any;
-const settings: ComnSettingsConfig = {
-  url: 'assets/config/settings.json',
-  envUrl: 'assets/config/settings.env.json',
-};
 @NgModule({
   exports: [
     CdkTableModule,

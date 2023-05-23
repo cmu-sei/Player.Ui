@@ -4,7 +4,6 @@
 import { Injectable, Injector, ErrorHandler } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SystemMessageService } from '../system-message/system-message.service';
-import { ApiError } from '../../generated/player-api/model/apiError';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +11,7 @@ import { ApiError } from '../../generated/player-api/model/apiError';
 export class ErrorService implements ErrorHandler {
   constructor(private injector: Injector) {}
 
-  handleError(err: any) {
+  handleError(err) {
     console.log(err);
     const messageService = this.injector.get(SystemMessageService);
     // Http failure response for (unknown url): 0 Unknown Error

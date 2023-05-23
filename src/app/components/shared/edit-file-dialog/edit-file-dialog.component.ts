@@ -35,7 +35,6 @@ export class EditFileDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
     const nameSplit = this.oldName.split('.');
     const name = nameSplit[0];
     this.extension = '.' + nameSplit[1];
@@ -54,7 +53,7 @@ export class EditFileDialogComponent implements OnInit {
     const teams = this.oldTeams; // Note that teams are no longer updated in this popup but in the main edit panel
     console.log('submit');
     this.fileService.updateFile(this.fileId, name, teams, null).subscribe(
-      (data) => {
+      () => {
         this.dialogRef.close({
           name: name,
           teams: teams,

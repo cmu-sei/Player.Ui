@@ -25,7 +25,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           placeholder="Search"
         />
         <button
-          *ngIf="filterStr != ''"
+          *ngIf="filterStr !== ''"
           mat-icon-button
           matSuffix
           (click)="clearFilter()"

@@ -186,7 +186,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   playBeep() {
     if (this.useBeep) {
-      var audio = new Audio('assets/sounds/beep.mp3');
+      const audio = new Audio('assets/sounds/beep.mp3');
       audio.play();
     }
   }
@@ -203,7 +203,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         if (result['confirm']) {
           this.viewService
             .deleteNotification(this.viewGuid, notification.key)
-            .subscribe((deleted) => {
+            .subscribe(() => {
               const index = this.notificationsHistory.findIndex(
                 (n) => n.key === notification.key
               );
@@ -226,7 +226,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         if (result['confirm']) {
           this.viewService
             .deleteViewNotifications(this.viewGuid)
-            .subscribe((deleted) => {
+            .subscribe(() => {
               this.notificationsHistory.length = 0;
             });
         }

@@ -74,14 +74,16 @@ export class AdminViewEditComponent implements OnInit {
     Validators.minLength(3),
   ]);
 
-  public descriptionFormControl = new UntypedFormControl('', [Validators.required]);
+  public descriptionFormControl = new UntypedFormControl('', [
+    Validators.required,
+  ]);
   public matcher = new UserErrorStateMatcher();
   public viewStates = Object.values(ViewStatus);
   public isLinear = false;
   public view: View;
   public teams: Array<TeamUserApp>;
   public currentTeam: TeamUserApp;
-  public isLoadingTeams: Boolean;
+  public isLoadingTeams: boolean;
   public applicationTemplates: Array<ApplicationTemplate>;
   public BLANK_TEMPLATE = <ApplicationTemplate>{
     name: 'New Application',
@@ -144,7 +146,6 @@ export class AdminViewEditComponent implements OnInit {
         .getViewTeams(this.view.id)
         .pipe(take(1))
         .subscribe((tms) => {
-          const userTeams = new Array<TeamUserApp>();
           tms.forEach((tm) => {
             this.userService
               .getTeamUsers(tm.id)
@@ -256,7 +257,7 @@ export class AdminViewEditComponent implements OnInit {
           this.viewService
             .deleteView(this.view.id)
             .pipe(take(1))
-            .subscribe((deleted) => {
+            .subscribe(() => {
               console.log('successfully deleted view');
               this.returnToViewSearch();
             });
@@ -320,7 +321,7 @@ export class AdminViewEditComponent implements OnInit {
       )
       .subscribe((result) => {
         if (result['confirm']) {
-          this.teamService.deleteTeam(tm.id).subscribe((deleted) => {
+          this.teamService.deleteTeam(tm.id).subscribe(() => {
             console.log('successfully deleted team');
             this.updateViewTeams();
           });
@@ -504,8 +505,8 @@ export class AdminViewEditComponent implements OnInit {
     this.fileService
       .download(id)
       .pipe(take(1))
-      .subscribe(
-        (data) => {
+      .subscribe({
+        next: (data) => {
           const url = window.URL.createObjectURL(data);
           const link = document.createElement('a');
           link.href = url;
@@ -515,13 +516,14 @@ export class AdminViewEditComponent implements OnInit {
           }
           link.click();
         },
-        (err) => {
+        error: (err) => {
           window.alert('Error downloading file');
+          console.log(err);
         },
-        () => {
+        complete: () => {
           console.log('Got a next value');
-        }
-      );
+        },
+      });
   }
 
   /**
@@ -604,17 +606,18 @@ export class AdminViewEditComponent implements OnInit {
     this.applicationService
       .getViewApplications(this.view.id)
       .pipe(take(1))
-      .subscribe(
-        (data) => {
+      .subscribe({
+        next: (data) => {
           this.appNames = new Array<string>();
           for (const app of data) {
             this.appNames.push(app.name);
           }
         },
-        (err) => {
+        error: (err) => {
           console.log('Error fetching apps');
-        }
-      );
+          console.log(err);
+        },
+      });
   }
 
   /**

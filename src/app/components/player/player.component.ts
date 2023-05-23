@@ -76,7 +76,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   checkParam(params: string[]): Observable<boolean> {
-    return this.routerQuery.selectQueryParams([...params]).pipe(takeUntil(this.unsubscribe$),
+    return this.routerQuery.selectQueryParams([...params]).pipe(
+      takeUntil(this.unsubscribe$),
       switchMap((p) => {
         return p.every((x) => x != null) ? of(true) : of(false);
       })
@@ -92,8 +93,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
       switchMap((state) =>
         combineLatest([
           this.loggedInUserService.loggedInUser$,
-          state.params['id'] ? this.viewService.getView(state.params['id']) : new Observable<View>(),
-          state.params['id'] ? this.teamService.getMyViewTeams(state.params['id']) : new Observable<any>(),
+          state.params['id']
+            ? this.viewService.getView(state.params['id'])
+            : new Observable<View>(),
+          state.params['id']
+            ? this.teamService.getMyViewTeams(state.params['id'])
+            : new Observable<any>(),
         ]).pipe(
           // this pipe allows us to return all previous observable values.
           map(([user, view, teams]) => ({
@@ -106,7 +111,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
           }))
         )
       ),
-      tap(({ state, view, user, teams }) => {
+      tap(({ state, teams }) => {
         if (teams.length === 0) {
           this.messageService.displayMessage(
             'Not a Member',
@@ -166,23 +171,25 @@ export class PlayerComponent implements OnInit, OnDestroy {
   editViewFn(event) {
     if (event.isNewBrowserTab === true) {
       const url = this.router.serializeUrl(
-        this.router.createUrlTree(
-          ['/admin'],
-          { queryParams: { section: 'admin-views', view: this.routerQuery.getParams('id') }}
-          )
-        );
+        this.router.createUrlTree(['/admin'], {
+          queryParams: {
+            section: 'admin-views',
+            view: this.routerQuery.getParams('id'),
+          },
+        })
+      );
       console.log('url', url);
       window.open(url, '_blank');
     } else {
       const dialogRef = this.dialog.open(AdminViewEditComponent);
-        this.data$.subscribe((data) => {
-          dialogRef.componentInstance.resetStepper();
-          dialogRef.componentInstance.updateApplicationTemplates();
-          dialogRef.componentInstance.updateView();
-          if (data.view) {
-            dialogRef.componentInstance.setView(data.view);
-          }
-        });
+      this.data$.subscribe((data) => {
+        dialogRef.componentInstance.resetStepper();
+        dialogRef.componentInstance.updateApplicationTemplates();
+        dialogRef.componentInstance.updateView();
+        if (data.view) {
+          dialogRef.componentInstance.setView(data.view);
+        }
+      });
       dialogRef.componentInstance.editComplete.subscribe(() => {
         dialogRef.close();
       });

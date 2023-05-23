@@ -88,14 +88,11 @@ export class AdminRolePermissionSearchComponent implements OnInit {
           value: permission.value,
           description: permission.description,
         };
-        this.permissionService
-          .createPermission(newPermission)
-          .subscribe((result) => {
-            const x = result;
-            this.permissionService.getPermissions().subscribe((permissions) => {
-              this.permissionDataSource.data = permissions;
-            });
+        this.permissionService.createPermission(newPermission).subscribe(() => {
+          this.permissionService.getPermissions().subscribe((permissions) => {
+            this.permissionDataSource.data = permissions;
           });
+        });
       });
   }
 
@@ -114,8 +111,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
         };
         this.permissionService
           .updatePermission(permission.id, newPermission)
-          .subscribe((result) => {
-            const x = result;
+          .subscribe(() => {
             this.permissionService.getPermissions().subscribe((permissions) => {
               this.permissionDataSource.data = permissions;
             });
@@ -143,7 +139,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
             if (confirmed) {
               this.permissionService
                 .deletePermission(permission.id)
-                .subscribe((result) => {
+                .subscribe(() => {
                   this.permissionService
                     .getPermissions()
                     .subscribe((permissions) => {
@@ -188,8 +184,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
       const newRole: RoleForm = {
         name: enteredInfo['name'],
       };
-      this.roleService.createRole(newRole).subscribe((result) => {
-        const x = result;
+      this.roleService.createRole(newRole).subscribe(() => {
         this.roleService.getRoles().subscribe((roles) => {
           this.roleDataSource.data = roles;
         });
@@ -212,7 +207,6 @@ export class AdminRolePermissionSearchComponent implements OnInit {
           name: enteredInfo['name'],
         };
         this.roleService.updateRole(role.id, newRole).subscribe((result) => {
-          const x = result;
           this.roleService.getRoles().subscribe((roles) => {
             this.roleDataSource.data = roles;
           });
@@ -232,7 +226,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
         const permissions = this.permissionDataSource.data;
         this.dialogService
           .selectRolePermissions('Select Permissions', role, permissions)
-          .subscribe((enteredInfo) => {
+          .subscribe(() => {
             this.roleService.getRoles().subscribe((roles) => {
               this.roleDataSource.data = roles;
             });
@@ -253,7 +247,7 @@ export class AdminRolePermissionSearchComponent implements OnInit {
           )
           .subscribe((confirmed) => {
             if (confirmed) {
-              this.roleService.deleteRole(role.id).subscribe((result) => {
+              this.roleService.deleteRole(role.id).subscribe(() => {
                 this.roleService.getRoles().subscribe((roles) => {
                   this.roleDataSource.data = roles;
                 });

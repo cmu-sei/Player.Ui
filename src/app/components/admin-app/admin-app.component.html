@@ -23,130 +23,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </a>
         <mat-divider></mat-divider>
       </mat-list-item>
-      <mat-list-item class="showhand highlight">
-        <mat-icon
-          class="lefticon player-icon-small"
-          svgIcon="ic_crucible_player"
-          (click)="sectionChangedFn(Section.ADMIN_VIEWS)"
-        ></mat-icon>
-
-        <div class="grow" (click)="sectionChangedFn(Section.ADMIN_VIEWS)">
-          Views
-        </div>
-
-        <div class="righticon">
-          <button
-            title="views"
-            mat-icon-button
-            class="right-icon"
-            (click)="sectionChangedFn(Section.ADMIN_VIEWS)"
-          >
-            <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-          </button>
-        </div>
-      </mat-list-item>
-      <mat-list-item class="applist showhand highlight">
-        <img
-          class="lefticon"
-          src="assets/img/SP_Icon_User.png"
-          alt="Users"
-          (click)="sectionChangedFn(Section.ADMIN_USERS)"
-        />
-
-        <div class="grow" (click)="sectionChangedFn(Section.ADMIN_USERS)">
-          Users
-        </div>
-
-        <div class="righticon">
-          <button
-            title="users"
-            mat-icon-button
-            style="outline: none"
-            (click)="sectionChangedFn(Section.ADMIN_USERS)"
-          >
-            <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-          </button>
-        </div>
-      </mat-list-item>
-      <mat-list-item class="showhand highlight">
-        <img
-          class="lefticon"
-          src="assets/img/SP_Icon_Intel.png"
-          alt="Users"
-          (click)="sectionChangedFn(Section.ADMIN_APP_TEMP)"
-        />
-
-        <div class="grow" (click)="sectionChangedFn(Section.ADMIN_APP_TEMP)">
-          Application Templates
-        </div>
-
-        <div>
-          <button
-            title="application templates"
-            mat-icon-button
-            style="outline: none"
-            (click)="sectionChangedFn(Section.ADMIN_APP_TEMP)"
-          >
-            <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-          </button>
-        </div>
-      </mat-list-item>
-      <mat-list-item class="showhand highlight">
-        <img
-          class="lefticon"
-          src="assets/img/SP_Icon_Alert.png"
-          alt="Users"
-          (click)="sectionChangedFn(Section.ADMIN_ROLE_PERM)"
-        />
-
-        <div
-          class="grow center-self"
-          (click)="sectionChangedFn(Section.ADMIN_ROLE_PERM)"
+      <mat-list-item *ngFor="let sectionItem of sectionItems">
+        <button
+          mat-button
+          (click)="sectionChangedFn(sectionItem.section)"
+          class="px-0 w-100"
         >
-          Roles / Permissions
-        </div>
-
-        <div>
-          <button
-            title="roles and permissions"
-            mat-icon-button
-            style="outline: none"
-            (click)="sectionChangedFn(Section.ADMIN_ROLE_PERM)"
-          >
-            <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-          </button>
-        </div>
-      </mat-list-item>
-
-      <mat-list-item class="showhand highlight">
-        <img
-          class="lefticon"
-          src="assets/img/subscription.png"
-          alt="Subscriptions"
-          (click)="sectionChangedFn(Section.ADMIN_SUBS)"
-        />
-
-        <div
-          class="grow center-self"
-          (click)="sectionChangedFn(Section.ADMIN_SUBS)"
-        >
-          Subscriptions
-        </div>
-
-        <div>
-          <button
-            title="subscriptions"
-            mat-icon-button
-            style="outline: none"
-            (click)="sectionChangedFn(Section.ADMIN_SUBS)"
-          >
-            <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-          </button>
-        </div>
+          <div class="d-flex align-items-center">
+            <mat-icon
+              *ngIf="sectionItem.svgIcon"
+              class="lefticon player-icon-small"
+              svgIcon="{{ sectionItem.icon }}"
+            ></mat-icon>
+            <img
+              *ngIf="!sectionItem.svgIcon"
+              class="lefticon"
+              src="{{ sectionItem.icon }}"
+              alt="{{ sectionItem.name }}"
+            />
+            <div>{{ sectionItem.name }}</div>
+          </div>
+        </button>
       </mat-list-item>
     </mat-list>
     <img
       class="crucible-logo"
+      alt="Crucible Logo"
       [src]="
         (theme$ | async) === 'light-theme'
           ? 'assets/img/crucible-logo-light.png'

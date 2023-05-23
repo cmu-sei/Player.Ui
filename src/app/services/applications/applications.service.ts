@@ -16,8 +16,7 @@ export class ApplicationsService {
   ) {}
 
   public getApplicationsByTeam(
-    teamId: string,
-    viewId: string
+    teamId: string
   ): Observable<Array<ApplicationData>> {
     return this.http
       .get<Array<ApplicationData>>(

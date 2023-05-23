@@ -40,7 +40,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
   public applications: Array<Application>;
   public applicationTemplates = new Array<ApplicationTemplate>();
   public currentApp: Application;
-  public isLoading: Boolean;
+  public isLoading: boolean;
 
   constructor(
     public applicationService: ApplicationService,
@@ -168,7 +168,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
    * Generically saves the application for the view and updates the applications list
    */
   saveApplication(app: Application) {
-    this.applicationService.updateApplication(app.id, app).subscribe((rslt) => {
+    this.applicationService.updateApplication(app.id, app).subscribe(() => {
       this.applicationService
         .getViewApplications(this.view.id)
         .subscribe((appInsts) => {
@@ -192,12 +192,10 @@ export class ViewApplicationsSelectComponent implements OnInit {
       )
       .subscribe((result) => {
         if (result['confirm']) {
-          this.applicationService
-            .deleteApplication(app.id)
-            .subscribe((deleted) => {
-              console.log('successfully deleted application');
-              this.updateApplications();
-            });
+          this.applicationService.deleteApplication(app.id).subscribe(() => {
+            console.log('successfully deleted application');
+            this.updateApplications();
+          });
         }
       });
   }

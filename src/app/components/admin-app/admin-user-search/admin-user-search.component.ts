@@ -38,7 +38,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public pageEvent: PageEvent;
   public uploading = false;
   public uploadProgress = 0;
-  public isLoading: Boolean;
+  public isLoading: boolean;
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;

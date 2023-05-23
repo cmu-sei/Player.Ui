@@ -58,10 +58,10 @@ export class RolesPermissionsSelectComponent implements OnInit {
         'The roles and permissions component requires either a user or a team, therefore the dropdowns will be non-functional.'
       );
       return;
-    } else if (!!this.team) {
+    } else if (this.team) {
       this.subjectType = ObjectType.Team;
       this.subject = this.team;
-    } else if (!!this.user) {
+    } else if (this.user) {
       this.subjectType = ObjectType.User;
       this.subject = this.user;
     }

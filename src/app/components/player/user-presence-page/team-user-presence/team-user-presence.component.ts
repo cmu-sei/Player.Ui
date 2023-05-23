@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { TableVirtualScrollDataSource } from 'ng-table-virtual-scroll';
 import { Team } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
@@ -13,7 +13,7 @@ import { ViewPresence } from '../../../../models/view-presence';
   templateUrl: './team-user-presence.component.html',
   styleUrls: ['./team-user-presence.component.scss'],
 })
-export class TeamUserPresenceComponent implements OnInit {
+export class TeamUserPresenceComponent {
   @Input() team: Team = null;
 
   @Input() set hideInactive(val: boolean) {
@@ -51,8 +51,6 @@ export class TeamUserPresenceComponent implements OnInit {
       return data.userName.toLowerCase().indexOf(filter.toLowerCase()) !== -1;
     };
   }
-
-  ngOnInit(): void {}
 
   private updateDataSource() {
     if (this.hideInactiveInternal) {
