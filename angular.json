@@ -16,7 +16,14 @@
             "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
             "polyfills": "src/polyfills.ts",
-            "assets": ["src/assets"],
+            "assets": [
+              "src/assets",
+              {
+                "glob": "auth-callback-silent.html",
+                "input": "node_modules/@cmusei/crucible-common/src/lib/comn-auth/assets/",
+                "output": "/"
+              }
+            ],
             "styles": [
               "src/styles/styles.scss",
               "./node_modules/bootstrap/scss/bootstrap-utilities.scss"
@@ -58,7 +65,8 @@
               "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
-              "namedChunks": true
+              "namedChunks": true,
+              "preserveSymlinks": true
             }
           },
           "defaultConfiguration": "production"

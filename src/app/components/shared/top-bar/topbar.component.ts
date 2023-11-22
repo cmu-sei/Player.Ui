@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
-import { User as AuthUser } from 'oidc-client';
+import { User as AuthUser } from 'oidc-client-ts';
 import { Observable, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';

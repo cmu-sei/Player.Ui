@@ -3,7 +3,7 @@
 
 import { Injectable, OnDestroy } from '@angular/core';
 import { ComnAuthQuery } from '@cmusei/crucible-common';
-import { User as AuthUser } from 'oidc-client';
+import { User as AuthUser } from 'oidc-client-ts';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import {
@@ -46,7 +46,7 @@ export class LoggedInUserService implements OnDestroy {
       .subscribe((playerUser: PlayerUser) => {
         // combine player properties into the AuthUser profile.
         authUser.profile = { ...authUser.profile, ...playerUser };
-        this.isSuperUser$.next(authUser.profile.isSystemAdmin);
+        this.isSuperUser$.next(authUser.profile.isSystemAdmin as boolean);
         this.loggedInUser$.next(authUser);
       });
   }

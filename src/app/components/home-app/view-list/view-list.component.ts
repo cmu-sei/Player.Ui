@@ -45,18 +45,22 @@ export class ViewListComponent implements OnInit, OnDestroy {
 
     // Subscribe to the service
     this.isLoading = true;
-    this.viewsService.viewList.pipe(takeUntil(this.unsubscribe$)).subscribe((views) => {
-      this.viewDataSource.data = views;
-      this.isLoading = false;
-    });
+    this.viewsService.viewList
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((views) => {
+        this.viewDataSource.data = views;
+        this.isLoading = false;
+      });
 
     // Tell the service to update once a user is officially logged in
-    this.loggedInUserService.loggedInUser$.pipe(takeUntil(this.unsubscribe$)).subscribe((loggedInUser) => {
-      if (loggedInUser == null) {
-        return;
-      }
-      this.viewsService.getViewList(loggedInUser.profile.id);
-    });
+    this.loggedInUserService.loggedInUser$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((loggedInUser) => {
+        if (loggedInUser == null) {
+          return;
+        }
+        this.viewsService.getViewList(loggedInUser.profile.id as string);
+      });
   }
 
   /**
@@ -81,5 +85,4 @@ export class ViewListComponent implements OnInit, OnDestroy {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
   }
-
 }
