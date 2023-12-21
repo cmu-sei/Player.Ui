@@ -124,39 +124,6 @@ export class TeamApplicationsSelectComponent implements OnInit {
   }
 
   /**
-   * Swaps the display orders of two teams in the application
-   * @param app1
-   * @param app2
-   */
-  swapDisplayOrders(
-    app1: ApplicationInstance,
-    app2: ApplicationInstance
-  ): void {
-    const a1 = <ApplicationInstanceForm>{
-      id: app1.id,
-      teamId: this.team.id,
-      applicationId: app1.applicationId,
-      displayOrder: app2.displayOrder,
-    };
-    const a2 = <ApplicationInstanceForm>{
-      id: app2.id,
-      teamId: this.team.id,
-      applicationId: app2.applicationId,
-      displayOrder: app1.displayOrder,
-    };
-
-    this.applicationService
-      .updateApplicationInstance(app1.id, a1)
-      .subscribe(() => {
-        this.applicationService
-          .updateApplicationInstance(app2.id, a2)
-          .subscribe(() => {
-            this.refreshTeamApplications();
-          });
-      });
-  }
-
-  /**
    * Removes an application from a team
    * @param app App to remove
    */
