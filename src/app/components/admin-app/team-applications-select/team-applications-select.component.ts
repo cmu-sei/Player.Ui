@@ -111,6 +111,18 @@ export class TeamApplicationsSelectComponent implements OnInit {
       });
   }
 
+  public moveAppUp(id: string) {
+    this.applicationService
+      .moveUpApplicationInstance(id)
+      .subscribe((x) => (this.applications = x));
+  }
+
+  public moveAppDown(id: string) {
+    this.applicationService
+      .moveDownApplicationInstance(id)
+      .subscribe((x) => (this.applications = x));
+  }
+
   /**
    * Swaps the display orders of two teams in the application
    * @param app1
