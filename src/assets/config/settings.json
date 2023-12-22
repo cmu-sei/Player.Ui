@@ -8,7 +8,8 @@
     "response_type": "code",
     "scope": "openid profile player",
     "automaticSilentRenew": true,
-    "silent_redirect_uri": "http://localhost:4301/auth-callback-silent"
+    "silent_redirect_uri": "http://localhost:4301/auth-callback-silent",
+    "redirectMethod": "replace"
   },
   "NotificationsSettings": {
     "url": "http://localhost:4300/hubs",
@@ -20,5 +21,6 @@
   "AppTopBarText": "Player",
   "AppTopBarHexColor": "#4c7aa2",
   "AppTopBarHexTextColor": "#FFFFFF",
-  "UseLocalAuthStorage": false
+  "UseLocalAuthStorage": false,
+  "DebugLogging": false
 }
