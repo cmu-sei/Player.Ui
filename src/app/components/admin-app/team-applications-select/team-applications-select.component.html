@@ -61,7 +61,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [ngClass]="moveUp.disabled ? 'disabled-button' : null"
           mat-icon-button
           title="Move Up"
-          (click)="swapDisplayOrders(app, applications[i - 1])"
+          (click)="moveAppUp(app.id)"
         >
           <mat-icon
             svgIcon="ic_expand_more_black_24px"
@@ -76,7 +76,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [ngClass]="moveDown.disabled ? 'disabled-button' : null"
           title="Move Down"
           mat-icon-button
-          (click)="swapDisplayOrders(app, applications[i + 1])"
+          (click)="moveAppDown(app.id)"
         >
           <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>
         </button>
