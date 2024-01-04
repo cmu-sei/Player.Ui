@@ -119,6 +119,10 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     return url;
   }
 
+  trackByFn(index, item) {
+    return item.id;
+  }
+
   ngOnDestroy() {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
