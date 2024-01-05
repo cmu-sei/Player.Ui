@@ -38,6 +38,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public opened$: Observable<boolean> =
     this.routerQuery.selectQueryParams('opened');
 
+  public user$ = this.loggedInUserService.loggedInUser$;
+
   public view: View;
   public viewId: string;
   public opened: boolean;
@@ -92,7 +94,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       // switchMap in case router state changes.
       switchMap((state) =>
         combineLatest([
-          this.loggedInUserService.loggedInUser$,
           state.params['id']
             ? this.viewService.getView(state.params['id'])
             : new Observable<View>(),
@@ -101,9 +102,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
             : new Observable<any>(),
         ]).pipe(
           // this pipe allows us to return all previous observable values.
-          map(([user, view, teams]) => ({
+          map(([view, teams]) => ({
             state,
-            user,
             view,
             teams: teams.filter((t) => t.isMember),
             team: teams.find((t) => t.isPrimary),
