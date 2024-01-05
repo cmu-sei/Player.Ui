@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
-import { User } from 'oidc-client-ts';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
 import { ApplicationData } from '../../../models/application-data';
@@ -28,7 +27,6 @@ import { FocusedAppService } from '../../../services/focused-app/focused-app.ser
 })
 export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() viewId: string;
-  @Input() user: User;
   @Input() teams: TeamData[];
 
   public applications$: Observable<ApplicationData[]>;
