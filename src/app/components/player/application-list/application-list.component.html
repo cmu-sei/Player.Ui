@@ -5,7 +5,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <div class="scrollable-div">
   <mat-list class="appitems-container">
-    <mat-list-item *ngFor="let app of applications$ | async" class="">
+    <mat-list-item
+      *ngFor="let app of applications$ | async; trackBy: trackByFn"
+      class=""
+    >
       <iframe
         *ngIf="app.loadInBackground"
         aria-hidden="true"

@@ -6,7 +6,7 @@ import { FocusedAppService } from '../../../services/focused-app/focused-app.ser
 import { SafeUrl, DomSanitizer } from '@angular/platform-browser';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
-import { map, shareReplay } from 'rxjs/operators';
+import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 
 @Component({
   selector: 'app-focused-app',
@@ -23,10 +23,6 @@ export class FocusedAppComponent implements OnDestroy {
     private sanitizer: DomSanitizer,
     private authQuery: ComnAuthQuery
   ) {
-    this.focusedAppUrl$ = this.focusedAppService.focusedAppUrl.pipe(
-      map((url) => this.sanitizer.bypassSecurityTrustResourceUrl(url))
-    );
-
     this.focusedAppUrl$ = combineLatest([
       this.focusedAppService.focusedAppUrl,
       this.authQuery.userTheme$,
@@ -47,12 +43,14 @@ export class FocusedAppComponent implements OnDestroy {
           themedUrl =
             url.substring(0, themeIndex) + themeText + theme + urlEnding;
         }
-        return this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl);
+
+        return themedUrl;
       }),
-      shareReplay(1)
-      // share({
-      //   connector: () => new ReplaySubject(1),
-      // })
+      shareReplay(1),
+      distinctUntilChanged(),
+      map((themedUrl) =>
+        this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl)
+      )
     );
   }
 
