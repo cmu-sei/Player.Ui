@@ -143,19 +143,18 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   /**
    * Set the primary team instance by the team Guid.  This is only valid when a user belongs to multiple
-   * teams.  If a new primary team is set int he database, the page must be reloaded
+   * teams.  If a new primary team is set in the database, the page must be reloaded
    * @param teamId
    */
   setPrimaryTeam(newTeamId) {
-    combineLatest([of(newTeamId), this.data$])
+    combineLatest([of(newTeamId), this.data$, this.user$])
       .pipe(
-        switchMap(([newTeamId, data]) => {
+        switchMap(([newTeamId, data, user]) => {
           if (newTeamId !== data.team.id) {
             this.addParam({ teamId: newTeamId });
-            return this.viewsService.setPrimaryTeamId(
-              data.user.profile.id,
-              newTeamId
-            );
+            return this.viewsService
+              .setPrimaryTeamId(user.profile.sub, newTeamId)
+              .pipe(tap(() => window.location.reload()));
           } else {
             return of(EMPTY);
           }
