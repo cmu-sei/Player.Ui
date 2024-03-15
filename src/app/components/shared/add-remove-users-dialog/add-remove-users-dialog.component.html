@@ -20,6 +20,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
+          #searchBox
         />
         <button
           *ngIf="filterString !== ''"

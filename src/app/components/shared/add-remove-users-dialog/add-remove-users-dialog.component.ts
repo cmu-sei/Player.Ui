@@ -3,7 +3,10 @@
 
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
-import { LegacyPageEvent as PageEvent, MatLegacyPaginator as MatPaginator } from '@angular/material/legacy-paginator';
+import {
+  LegacyPageEvent as PageEvent,
+  MatLegacyPaginator as MatPaginator,
+} from '@angular/material/legacy-paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import {
@@ -56,7 +59,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
   public roles: Array<Role>;
 
-  @ViewChild('usersInput') usersInput: ElementRef<HTMLInputElement>;
+  @ViewChild('searchBox') searchBox: ElementRef<HTMLInputElement>;
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -234,6 +237,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             this.userDataSource.sort = this.sort;
             this.userDataSource.paginator = this.paginator;
             this.applyFilter('');
+            this.searchBox.nativeElement.focus();
             this.isBusy = false;
           });
       });
@@ -265,6 +269,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           this.userDataSource.sort = this.sort;
           this.userDataSource.paginator = this.paginator;
           this.applyFilter('');
+          this.searchBox.nativeElement.focus();
           this.isBusy = false;
         });
     }
