@@ -80,40 +80,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false">
-        <div class="d-flex">
-          <button
-            *ngIf="
-              (team && team.canManage) ||
-              (team &&
-                currentUser.profile.isSystemAdmin !== null &&
-                currentUser.profile.isSystemAdmin)
-            "
-            (click)="editFn($event)"
-            [ngClass]="
+        <a
+          *ngIf="
+            (team && team.canManage) ||
+            (team &&
               currentUser.profile.isSystemAdmin !== null &&
-              currentUser.profile.isSystemAdmin
-                ? big - button
-                : ''
-            "
-            mat-menu-item
-          >
-            Edit View
-          </button>
-          <button
-            title="Open in Browser Tab"
-            *ngIf="
-              team &&
-              currentUser.profile.isSystemAdmin !== null &&
-              currentUser.profile.isSystemAdmin
-            "
-            (click)="editFnNewTab($event)"
-            class="small-button"
-            mat-menu-item
-          >
-            <mat-icon svgIcon="ic_open_tab"></mat-icon>
-          </button>
-        </div>
-        <button
+              currentUser.profile.isSystemAdmin)
+          "
+          mat-menu-item
+          (click)="editFn($event)"
+          [href]="getEditViewUrl()"
+        >
+          Edit View
+        </a>
+        <a
           *ngIf="
             currentUser.profile.isSystemAdmin !== null &&
             currentUser.profile.isSystemAdmin &&
@@ -123,8 +103,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           mat-menu-item
         >
           Exit Administration
-        </button>
-        <button
+        </a>
+        <a
           *ngIf="
             currentUser.profile.isSystemAdmin &&
             topbarView !== TopbarView.PLAYER_ADMIN
@@ -133,14 +113,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           mat-menu-item
         >
           Administration
-        </button>
-        <button
+        </a>
+        <a
           *ngIf="topbarView === 'player-player'"
           [routerLink]="['/']"
           mat-menu-item
         >
           Exit View
-        </button>
+        </a>
         <button mat-menu-item (click)="logout()">Logout</button>
         <mat-slide-toggle
           aria-labelledby="theme-toggle"
