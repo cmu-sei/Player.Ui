@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     class="appbarmenu-container"
     #sidenav
     mode="side"
-    [opened]="true"
+    [opened]="loggedInUserService.isSuperUser$ | async"
   >
     <mat-list class="appitems-container">
       <mat-list-item class="appslist">

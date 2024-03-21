@@ -172,7 +172,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       const url = this.router.serializeUrl(
         this.router.createUrlTree(['/admin'], {
           queryParams: {
-            section: 'admin-views',
+            section: 'views',
             view: this.routerQuery.getParams('id'),
           },
         })

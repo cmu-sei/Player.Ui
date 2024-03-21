@@ -5,7 +5,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <app-admin-view-edit
   [class.hidden]="!showEditScreen"
-  (editComplete)="refreshViews()"
+  (editComplete)="onEditComplete($event)"
 ></app-admin-view-edit>
 
 <div

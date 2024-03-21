@@ -20,6 +20,7 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { UserPresenceComponent } from '../../player/user-presence-page/user-presence/user-presence.component';
 import { TopbarView } from './topbar.models';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-topbar',
   templateUrl: './topbar.component.html',
@@ -50,6 +51,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private authService: ComnAuthService,
     private loggedInUserService: LoggedInUserService,
     private authQuery: ComnAuthQuery,
+    private router: Router,
     private dialog: MatDialog
   ) {}
 
@@ -73,6 +75,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   editFn(event) {
+    event.preventDefault();
     this.editView.emit(event);
   }
 
@@ -101,6 +104,17 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   closeUserPresence() {
     this.dialog.closeAll();
+  }
+
+  getEditViewUrl() {
+    return this.router.serializeUrl(
+      this.router.createUrlTree(['/admin'], {
+        queryParams: {
+          section: 'views',
+          view: this.viewId,
+        },
+      })
+    );
   }
 
   ngOnDestroy(): void {

@@ -56,7 +56,7 @@ export class TeamUserApp {
   styleUrls: ['./admin-view-edit.component.scss'],
 })
 export class AdminViewEditComponent implements OnInit {
-  @Output() editComplete = new EventEmitter<boolean>();
+  @Output() editComplete = new EventEmitter<string>();
   @ViewChild(ViewApplicationsSelectComponent)
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
   @ViewChild(AdminViewEditComponent) child;
@@ -214,7 +214,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   returnToViewSearch(): void {
     this.currentTeam = undefined;
-    this.editComplete.emit(true);
+    this.editComplete.emit(this.view.id);
   }
 
   addViewApplication(template: ApplicationTemplate) {
