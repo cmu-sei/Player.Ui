@@ -5,9 +5,15 @@
 // TODO: Set notification status in query string.
 // TODO: Set active application in query string.
 
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
-import { MatSidenav } from '@angular/material/sidenav';
+import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import {
   ComnAuthQuery,
@@ -15,7 +21,14 @@ import {
   Theme,
 } from '@cmusei/crucible-common';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import { combineLatest, EMPTY, Observable, of, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  EMPTY,
+  Observable,
+  of,
+  Subject,
+} from 'rxjs';
 import { map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { View } from '../../generated/player-api';
 import { TeamService } from '../../generated/player-api/api/team.service';
@@ -29,25 +42,35 @@ import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-vie
   selector: 'app-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
 
   public loaded = false;
   public data$: Observable<any>;
-  public opened$: Observable<boolean> =
-    this.routerQuery.selectQueryParams('opened');
+
+  public openedSubject = new BehaviorSubject<boolean>(true);
+  public opened$: Observable<boolean> = this.openedSubject.asObservable();
+
+  public miniSubject = new BehaviorSubject<boolean>(false);
+  public mini$: Observable<boolean> = this.miniSubject.asObservable();
 
   public user$ = this.loggedInUserService.loggedInUser$;
 
   public view: View;
   public viewId: string;
+  public teamId: string;
   public opened: boolean;
   public topbarColor = '#4c7aa2';
   public topbarTextColor = '#ffffff';
   queryParams: any = {};
   unsubscribe$: Subject<null> = new Subject<null>();
   theme$: Observable<Theme>;
+  public resizeStyle = {};
+  public sidenavWidth: number;
+  public sidenavMode: MatDrawerMode = 'side';
+  public autosizeSidenav = true;
 
   constructor(
     private router: Router,
@@ -111,7 +134,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
           }))
         )
       ),
-      tap(({ state, teams }) => {
+      tap(({ teams, team }) => {
         if (teams.length === 0) {
           this.messageService.displayMessage(
             'Not a Member',
@@ -119,15 +142,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
           );
         } else if (!this.loaded) {
           const params = {
-            teamId: teams.find((t) => t.isPrimary).id,
-            opened:
-              state.queryParams['opened'] != null
-                ? state.queryParams['opened']
-                : true,
+            teamId: team.id,
           };
           this.addParam(params);
           this.loaded = true;
         }
+
+        this.teamId = team.id;
+        this.restoreUIState();
       }),
       takeUntil(this.unsubscribe$)
     );
@@ -135,7 +157,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   addParam(params) {
     this.queryParams = { ...this.queryParams, ...params };
-    this.router.navigate([], {
+    return this.router.navigate([], {
       queryParams: { ...this.queryParams },
       queryParamsHandling: 'merge',
     });
@@ -151,7 +173,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       .pipe(
         switchMap(([newTeamId, data, user]) => {
           if (newTeamId !== data.team.id) {
-            this.addParam({ teamId: newTeamId });
             return this.viewsService
               .setPrimaryTeamId(user.profile.sub, newTeamId)
               .pipe(tap(() => window.location.reload()));
@@ -196,11 +217,116 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   sidenavToggleFn() {
-    this.addParam({ opened: !this.sidenav.opened });
+    if (this.sidenav.opened) {
+      if (this.miniSubject.getValue()) {
+        this.miniSubject.next(false);
+        this.openedSubject.next(false);
+      } else {
+        this.miniSubject.next(true);
+        this.resizeStyle = {};
+      }
+    } else {
+      this.miniSubject.next(false);
+      this.openedSubject.next(true);
+      this.setResizeStyle();
+    }
+
+    this.autosizeSidenav = true;
+    this.updateUIState(
+      null,
+      this.openedSubject.getValue(),
+      this.miniSubject.getValue()
+    );
+  }
+
+  resizingFn(event) {
+    if (!this.miniSubject.getValue()) {
+      this.autosizeSidenav = false;
+      this.sidenav.mode = 'push';
+      this.sidenavWidth = event.rectangle.width;
+      this.setResizeStyle();
+    }
+  }
+
+  resizeEnd(event) {
+    if (!this.miniSubject.getValue()) {
+      this.setSidenavMode();
+
+      this.updateUIState(this.sidenavWidth);
+    }
+  }
+
+  setResizeStyle() {
+    if (!this.miniSubject.getValue()) {
+      this.resizeStyle = {
+        'min-width': '10vw',
+        'max-width': '33vw',
+        width: this.sidenavWidth != null ? `${this.sidenavWidth}px` : null,
+      };
+    } else {
+      this.resizeStyle = {};
+    }
+  }
+
+  setSidenavMode() {
+    this.sidenav.mode = this.sidenavMode;
+  }
+
+  updateUIState(width?: number, opened?: boolean, mini?: boolean) {
+    let newState: TeamUIState = {
+      width: width,
+      opened: opened,
+      mini: mini,
+    };
+
+    if (this.teamId) {
+      let existingState: TeamUIState = JSON.parse(
+        localStorage.getItem(this.teamId)
+      );
+
+      if (existingState) {
+        existingState.width = width ?? existingState.width;
+        existingState.opened = opened ?? existingState.opened;
+        existingState.mini = mini ?? existingState.mini;
+        newState = existingState;
+      }
+
+      localStorage.setItem(this.teamId, JSON.stringify(newState));
+    }
+  }
+
+  restoreUIState() {
+    if (!this.teamId) {
+      return;
+    }
+
+    const teamState: TeamUIState = JSON.parse(
+      localStorage.getItem(this.teamId)
+    );
+
+    if (teamState) {
+      this.sidenavWidth = teamState.width;
+
+      if (teamState.mini != null) {
+        this.miniSubject.next(teamState.mini);
+      }
+
+      if (teamState.opened != null) {
+        this.openedSubject.next(teamState.opened);
+      }
+
+      this.setResizeStyle();
+    }
   }
 
   ngOnDestroy() {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
   }
+}
+
+export class TeamUIState {
+  width: number;
+  opened: boolean;
+  mini: boolean;
 }

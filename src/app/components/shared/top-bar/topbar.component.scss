@@ -33,9 +33,3 @@
   font-size: large;
   font-weight: bold;
 }
-a {
-  &:hover,
-  &:focus {
-    color: var(--mat-app-text-color);
-  }
-}

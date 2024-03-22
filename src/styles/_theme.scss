@@ -171,10 +171,6 @@ $custom-typography: mat.define-legacy-typography-config(
 
   a {
     color: map-get($foreground, text);
-    &:hover,
-    &:focus {
-      color: map-get($foreground, disabled);
-    }
   }
 
   .mat-column-online,

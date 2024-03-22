@@ -28,6 +28,7 @@ import { FocusedAppService } from '../../../services/focused-app/focused-app.ser
 export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() viewId: string;
   @Input() teams: TeamData[];
+  @Input() mini: boolean;
 
   public applications$: Observable<ApplicationData[]>;
   public viewGUID: string;
