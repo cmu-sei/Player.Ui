@@ -37,6 +37,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public data$: Observable<any>;
   public opened$: Observable<boolean> =
     this.routerQuery.selectQueryParams('opened');
+  public mini$: Observable<boolean> =
+    this.routerQuery.selectQueryParams('mini');
 
   public user$ = this.loggedInUserService.loggedInUser$;
 
@@ -45,6 +47,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public opened: boolean;
   public topbarColor = '#4c7aa2';
   public topbarTextColor = '#ffffff';
+  public miniSidenav = true;
   queryParams: any = {};
   unsubscribe$: Subject<null> = new Subject<null>();
   theme$: Observable<Theme>;
@@ -196,7 +199,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   sidenavToggleFn() {
-    this.addParam({ opened: !this.sidenav.opened });
+    if (this.sidenav.opened) {
+      if (this.routerQuery.getQueryParams('mini')) {
+        this.addParam({ opened: false, mini: null });
+      } else {
+        this.addParam({ mini: true });
+      }
+    } else {
+      this.addParam({ opened: true, mini: null });
+    }
   }
 
   ngOnDestroy() {

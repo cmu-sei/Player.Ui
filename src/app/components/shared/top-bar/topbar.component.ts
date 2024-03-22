@@ -36,6 +36,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   @Input() topbarTextColor?;
   @Input() topbarView?: TopbarView;
   @Input() viewId: string;
+  @Input() mini: boolean;
   @Output() sidenavToggle?: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() setTeam?: EventEmitter<string> = new EventEmitter<string>();
   @Output() editView?: EventEmitter<any> = new EventEmitter<any>();

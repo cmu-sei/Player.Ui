@@ -30,7 +30,6 @@
 .lefticon {
   font-size: 75%;
   padding: 0.5em;
-  padding-right: 1.5em;
   height: 35px;
   text-align: center;
 }
@@ -40,4 +39,25 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+}
+
+a {
+  &:hover,
+  &:focus {
+    color: var(--mat-app-text-color);
+  }
+}
+
+::ng-deep .list-item-mini > .mat-list-item-content {
+  padding: 0 !important;
+}
+
+::ng-deep .list-item > .mat-list-item-content {
+  padding-left: 16px !important;
+  padding-right: 0px !important;
+}
+
+.app-name {
+  max-width: 150px;
+  text-wrap: pretty;
 }
