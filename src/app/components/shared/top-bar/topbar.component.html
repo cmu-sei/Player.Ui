@@ -122,6 +122,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           Exit View
         </a>
         <button mat-menu-item (click)="logout()">Logout</button>
+        <button
+          *ngIf="topbarView === 'player-player'"
+          mat-menu-item
+          (click)="resetUI()"
+        >
+          Reset UI
+        </button>
         <mat-slide-toggle
           aria-labelledby="theme-toggle"
           class="mat-menu-item"
