@@ -47,10 +47,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public opened: boolean;
   public topbarColor = '#4c7aa2';
   public topbarTextColor = '#ffffff';
-  public miniSidenav = true;
   queryParams: any = {};
   unsubscribe$: Subject<null> = new Subject<null>();
   theme$: Observable<Theme>;
+  public resizeStyle = {};
+  public sidenavWidth: number;
 
   constructor(
     private router: Router,
@@ -204,10 +205,27 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.addParam({ opened: false, mini: null });
       } else {
         this.addParam({ mini: true });
+        this.resizeStyle = {};
       }
     } else {
       this.addParam({ opened: true, mini: null });
+      this.setResizeStyle();
     }
+  }
+
+  resizingFn(event) {
+    if (!this.routerQuery.getQueryParams('mini')) {
+      this.sidenavWidth = event.rectangle.width;
+    }
+    this.setResizeStyle();
+  }
+
+  setResizeStyle() {
+    this.resizeStyle = {
+      'min-width': '10vw',
+      'max-width': '33vw',
+      width: `${this.sidenavWidth}px`,
+    };
   }
 
   ngOnDestroy() {

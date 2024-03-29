@@ -11,6 +11,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         class="appbarmenu-container"
         mode="side"
         [opened]="opened$ | async"
+        mwlResizable
+        mwlResizeHandle
+        [resizeEdges]="{ right: true }"
+        (resizing)="resizingFn($event)"
+        [ngStyle]="resizeStyle"
       >
         <mat-list>
           <mat-list-item
@@ -48,6 +53,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               : 'assets/img/crucible-logo-dark.png'
           "
         />
+        <!-- <div
+          class="resize-handle-right"
+          mwlResizeHandle
+          [resizeEdges]="{ right: true }"
+        ></div> -->
       </mat-sidenav>
       <mat-sidenav-content class="noscroll">
         <app-topbar

@@ -15,6 +15,7 @@
 
 .appbarmenu-container {
   min-width: 50px;
+  max-width: 20vw;
 }
 
 .player-icon {
@@ -69,3 +70,11 @@
 .player-title-mini {
   justify-content: center;
 }
+
+// .resize-handle-right {
+//   height: 100%;
+//   cursor: col-resize;
+//   width: 10px;
+//   position: relative;
+//   right: 10px;
+// }
