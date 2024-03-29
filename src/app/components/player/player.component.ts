@@ -5,13 +5,7 @@
 // TODO: Set notification status in query string.
 // TODO: Set active application in query string.
 
-import {
-  AfterViewInit,
-  Component,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
@@ -140,6 +134,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
           this.addParam(params);
           this.loaded = true;
         }
+
+        const teamWidth = localStorage.getItem(
+          this.routerQuery.getQueryParams('teamId')
+        );
+
+        if (teamWidth) {
+          this.sidenavWidth = +teamWidth;
+          this.setResizeStyle();
+        }
       }),
       takeUntil(this.unsubscribe$)
     );
@@ -151,6 +154,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
       queryParams: { ...this.queryParams },
       queryParamsHandling: 'merge',
     });
+
+    const teamId = this.routerQuery.getQueryParams('teamId');
+
+    if (teamId) {
+      localStorage.setItem(
+        `${teamId}-params`,
+        JSON.stringify(this.queryParams)
+      );
+    }
   }
 
   /**
@@ -234,15 +246,21 @@ export class PlayerComponent implements OnInit, OnDestroy {
   resizeEnd(event) {
     if (!this.routerQuery.getQueryParams('mini')) {
       this.setSidenavMode();
+      localStorage.setItem(
+        this.routerQuery.getQueryParams('teamId'),
+        this.sidenavWidth.toString()
+      );
     }
   }
 
   setResizeStyle() {
-    this.resizeStyle = {
-      'min-width': '10vw',
-      'max-width': '33vw',
-      width: `${this.sidenavWidth}px`,
-    };
+    if (!this.routerQuery.getQueryParams('mini')) {
+      this.resizeStyle = {
+        'min-width': '10vw',
+        'max-width': '33vw',
+        width: `${this.sidenavWidth}px`,
+      };
+    }
   }
 
   setSidenavMode() {
