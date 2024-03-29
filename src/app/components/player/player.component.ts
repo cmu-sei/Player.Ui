@@ -5,9 +5,15 @@
 // TODO: Set notification status in query string.
 // TODO: Set active application in query string.
 
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
-import { MatSidenav } from '@angular/material/sidenav';
+import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import {
   ComnAuthQuery,
@@ -52,6 +58,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   theme$: Observable<Theme>;
   public resizeStyle = {};
   public sidenavWidth: number;
+  public sidenavMode: MatDrawerMode = 'side';
+  public autosizeSidenav = true;
 
   constructor(
     private router: Router,
@@ -211,13 +219,22 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.addParam({ opened: true, mini: null });
       this.setResizeStyle();
     }
+    this.autosizeSidenav = true;
   }
 
   resizingFn(event) {
     if (!this.routerQuery.getQueryParams('mini')) {
+      this.autosizeSidenav = false;
+      this.sidenav.mode = 'push';
       this.sidenavWidth = event.rectangle.width;
+      this.setResizeStyle();
     }
-    this.setResizeStyle();
+  }
+
+  resizeEnd(event) {
+    if (!this.routerQuery.getQueryParams('mini')) {
+      this.setSidenavMode();
+    }
   }
 
   setResizeStyle() {
@@ -226,6 +243,10 @@ export class PlayerComponent implements OnInit, OnDestroy {
       'max-width': '33vw',
       width: `${this.sidenavWidth}px`,
     };
+  }
+
+  setSidenavMode() {
+    this.sidenav.mode = this.sidenavMode;
   }
 
   ngOnDestroy() {
