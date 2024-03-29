@@ -5,7 +5,13 @@
 // TODO: Set notification status in query string.
 // TODO: Set active application in query string.
 
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
@@ -15,7 +21,14 @@ import {
   Theme,
 } from '@cmusei/crucible-common';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import { combineLatest, EMPTY, Observable, of, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  EMPTY,
+  Observable,
+  of,
+  Subject,
+} from 'rxjs';
 import { map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { View } from '../../generated/player-api';
 import { TeamService } from '../../generated/player-api/api/team.service';
@@ -29,16 +42,19 @@ import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-vie
   selector: 'app-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
 
   public loaded = false;
   public data$: Observable<any>;
-  public opened$: Observable<boolean> =
-    this.routerQuery.selectQueryParams('opened');
-  public mini$: Observable<boolean> =
-    this.routerQuery.selectQueryParams('mini');
+
+  public openedSubject = new BehaviorSubject<boolean>(true);
+  public opened$: Observable<boolean> = this.openedSubject.asObservable();
+
+  public miniSubject = new BehaviorSubject<boolean>(false);
+  public mini$: Observable<boolean> = this.miniSubject.asObservable();
 
   public user$ = this.loggedInUserService.loggedInUser$;
 
@@ -126,23 +142,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
         } else if (!this.loaded) {
           const params = {
             teamId: teams.find((t) => t.isPrimary).id,
-            opened:
-              state.queryParams['opened'] != null
-                ? state.queryParams['opened']
-                : true,
           };
           this.addParam(params);
           this.loaded = true;
         }
 
-        const teamWidth = localStorage.getItem(
-          this.routerQuery.getQueryParams('teamId')
-        );
-
-        if (teamWidth) {
-          this.sidenavWidth = +teamWidth;
-          this.setResizeStyle();
-        }
+        this.restoreUIState();
       }),
       takeUntil(this.unsubscribe$)
     );
@@ -154,15 +159,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       queryParams: { ...this.queryParams },
       queryParamsHandling: 'merge',
     });
-
-    const teamId = this.routerQuery.getQueryParams('teamId');
-
-    if (teamId) {
-      localStorage.setItem(
-        `${teamId}-params`,
-        JSON.stringify(this.queryParams)
-      );
-    }
   }
 
   /**
@@ -221,21 +217,29 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   sidenavToggleFn() {
     if (this.sidenav.opened) {
-      if (this.routerQuery.getQueryParams('mini')) {
-        this.addParam({ opened: false, mini: null });
+      if (this.miniSubject.getValue()) {
+        this.miniSubject.next(false);
+        this.openedSubject.next(false);
       } else {
-        this.addParam({ mini: true });
+        this.miniSubject.next(true);
         this.resizeStyle = {};
       }
     } else {
-      this.addParam({ opened: true, mini: null });
+      this.miniSubject.next(false);
+      this.openedSubject.next(true);
       this.setResizeStyle();
     }
+
     this.autosizeSidenav = true;
+    this.updateUIState(
+      null,
+      this.openedSubject.getValue(),
+      this.miniSubject.getValue()
+    );
   }
 
   resizingFn(event) {
-    if (!this.routerQuery.getQueryParams('mini')) {
+    if (!this.miniSubject.getValue()) {
       this.autosizeSidenav = false;
       this.sidenav.mode = 'push';
       this.sidenavWidth = event.rectangle.width;
@@ -244,17 +248,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   resizeEnd(event) {
-    if (!this.routerQuery.getQueryParams('mini')) {
+    if (!this.miniSubject.getValue()) {
       this.setSidenavMode();
-      localStorage.setItem(
-        this.routerQuery.getQueryParams('teamId'),
-        this.sidenavWidth.toString()
-      );
+
+      this.updateUIState(this.sidenavWidth);
     }
   }
 
   setResizeStyle() {
-    if (!this.routerQuery.getQueryParams('mini')) {
+    if (!this.miniSubject.getValue()) {
       this.resizeStyle = {
         'min-width': '10vw',
         'max-width': '33vw',
@@ -267,8 +269,56 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.sidenav.mode = this.sidenavMode;
   }
 
+  updateUIState(width?: number, opened?: boolean, mini?: boolean) {
+    const teamId = this.routerQuery.getQueryParams('teamId');
+    let newState: TeamUIState = {
+      width: width,
+      opened: opened,
+      mini: mini,
+    };
+
+    if (teamId) {
+      let existingState: TeamUIState = JSON.parse(localStorage.getItem(teamId));
+
+      if (existingState) {
+        existingState.width = width ?? existingState.width;
+        existingState.opened = opened ?? existingState.opened;
+        existingState.mini = mini ?? existingState.mini;
+        newState = existingState;
+      }
+
+      localStorage.setItem(teamId, JSON.stringify(newState));
+    }
+  }
+
+  restoreUIState() {
+    const teamState: TeamUIState = JSON.parse(
+      localStorage.getItem(this.routerQuery.getQueryParams('teamId'))
+    );
+
+    if (teamState) {
+      this.sidenavWidth = teamState.width;
+
+      if (teamState.mini) {
+        this.miniSubject.next(teamState.mini);
+      }
+
+      if (teamState.opened) {
+        this.openedSubject.next(teamState.opened);
+      }
+
+      this.setResizeStyle();
+    }
+  }
+
   ngOnDestroy() {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
   }
+}
+
+export class TeamUIState {
+  width: number;
+  opened: boolean;
+  mini: boolean;
 }
