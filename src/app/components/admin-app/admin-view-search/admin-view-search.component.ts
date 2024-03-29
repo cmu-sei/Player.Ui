@@ -4,7 +4,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
@@ -40,7 +40,8 @@ export class AdminViewSearchComponent implements OnInit {
     private viewService: ViewService,
     public loggedInUserService: LoggedInUserService,
     public dialogService: DialogService,
-    public route: ActivatedRoute
+    public route: ActivatedRoute,
+    public router: Router
   ) {}
 
   /**
@@ -57,9 +58,9 @@ export class AdminViewSearchComponent implements OnInit {
     // Initial datasource
     this.filterString = '';
 
-    this.loggedInUserService.loggedInUser$.subscribe(() => {
+    if (this.loggedInUserService.isSuperUser$.getValue()) {
       this.refreshViews();
-    });
+    }
 
     // Check to see if a view was specified in the URL
     const viewId = this.route.snapshot.queryParamMap.get('view');
@@ -168,6 +169,14 @@ export class AdminViewSearchComponent implements OnInit {
       this.viewDataSource.data = views;
       this.isLoading = false;
     });
+  }
+
+  onEditComplete($event) {
+    if (this.loggedInUserService.isSuperUser$.getValue()) {
+      this.refreshViews();
+    } else {
+      this.router.navigate(['view', $event]);
+    }
   }
 
   /**

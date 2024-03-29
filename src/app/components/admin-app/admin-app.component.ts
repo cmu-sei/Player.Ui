@@ -13,6 +13,7 @@ import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TopbarView } from '../shared/top-bar/topbar.models';
+import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 
 @Component({
   selector: 'app-admin-app',
@@ -71,7 +72,8 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     private settingsService: ComnSettingsService,
     private router: Router,
     private routerQuery: RouterQuery,
-    private authQuery: ComnAuthQuery
+    private authQuery: ComnAuthQuery,
+    public loggedInUserService: LoggedInUserService
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
