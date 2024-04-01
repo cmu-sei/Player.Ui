@@ -88,7 +88,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.data$ = this.checkParam(['teamId', 'opened']).pipe(
+    this.data$ = this.checkParam(['teamId']).pipe(
       tap((paramsExist) =>
         paramsExist ? (this.loaded = true) : (this.loaded = false)
       ),
