@@ -9,6 +9,8 @@ import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
+import { filter, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface Action {
   Value: string;
@@ -42,7 +44,15 @@ export class AdminViewSearchComponent implements OnInit {
     public dialogService: DialogService,
     public route: ActivatedRoute,
     public router: Router
-  ) {}
+  ) {
+    this.loggedInUserService.isSuperUser$
+      .pipe(
+        filter((x) => x),
+        tap(() => this.refreshViews()),
+        takeUntilDestroyed()
+      )
+      .subscribe();
+  }
 
   /**
    * Initialization
@@ -57,10 +67,6 @@ export class AdminViewSearchComponent implements OnInit {
 
     // Initial datasource
     this.filterString = '';
-
-    if (this.loggedInUserService.isSuperUser$.getValue()) {
-      this.refreshViews();
-    }
 
     // Check to see if a view was specified in the URL
     const viewId = this.route.snapshot.queryParamMap.get('view');
