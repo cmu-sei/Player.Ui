@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
 import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
@@ -28,12 +28,12 @@ import { FocusedAppService } from '../../../services/focused-app/focused-app.ser
 export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() viewId: string;
   @Input() teams: TeamData[];
+  @Input() mini: boolean;
 
   public applications$: Observable<ApplicationData[]>;
   public viewGUID: string;
   public titleText: string;
   private unsubscribe$: Subject<null> = new Subject<null>();
-  private currentTheme = Theme.LIGHT;
   private currentApp: ApplicationData;
 
   constructor(
@@ -42,11 +42,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     private authService: ComnAuthService,
     private sanitizer: DomSanitizer,
     private authQuery: ComnAuthQuery
-  ) {
-    authQuery.userTheme$
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((t) => (this.currentTheme = t));
-  }
+  ) {}
 
   ngOnInit() {
     this.refreshApps();
@@ -60,33 +56,34 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
 
   // Local Component functions
   openInTab(app: ApplicationData) {
-    const url = this.insertThemeToUrl(app.url);
-    window.open(url, '_blank');
+    window.open(app.themedUrl, '_blank');
   }
 
   refreshApps() {
-    this.applications$ = this.applicationsService
-      .getApplicationsByTeam(this.teams.find((t) => t.isPrimary).id)
-      .pipe(
-        map((apps) => ({ apps })),
-        map(({ apps }) => {
-          apps.forEach(
-            (app) =>
-              (app.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-                app.url
-              ))
+    this.applications$ = combineLatest([
+      this.authQuery.userTheme$,
+      this.applicationsService.getApplicationsByTeam(
+        this.teams.find((t) => t.isPrimary).id
+      ),
+    ]).pipe(
+      map(([theme, apps]) => {
+        apps.forEach((app) => {
+          app.themedUrl = this.insertThemeToUrl(app.url, theme);
+          app.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            app.themedUrl
           );
-          return apps;
-        }),
-        tap((apps) => {
-          if (apps.length > 0) {
-            this.currentApp === undefined
-              ? this.openInFocusedApp(apps[0])
-              : this.openInFocusedApp(this.currentApp);
-          }
-        }),
-        takeUntil(this.unsubscribe$)
-      );
+        });
+        return apps;
+      }),
+      tap((apps) => {
+        if (apps.length > 0) {
+          this.currentApp === undefined
+            ? this.openInFocusedApp(apps[0])
+            : this.openInFocusedApp(this.currentApp);
+        }
+      }),
+      takeUntil(this.unsubscribe$)
+    );
   }
 
   openInFocusedApp(app: ApplicationData) {
@@ -98,20 +95,19 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
         );
         window.location.reload();
       } else {
-        const url = this.insertThemeToUrl(app.url);
-        this.focusedAppService.focusedAppUrl.next(url);
+        this.focusedAppService.focusedAppUrl.next(app.themedUrl);
       }
     });
   }
 
-  insertThemeToUrl(url: string) {
+  insertThemeToUrl(url: string, theme: Theme) {
     if (url.includes('{theme}')) {
       if (url.includes('?')) {
-        url = url.replace('?{theme}', '?theme=' + this.currentTheme);
-        url = url.replace('&{theme}', '&theme=' + this.currentTheme);
-        url = url.replace('{theme}', '&theme=' + this.currentTheme);
+        url = url.replace('?{theme}', '?theme=' + theme);
+        url = url.replace('&{theme}', '&theme=' + theme);
+        url = url.replace('{theme}', '&theme=' + theme);
       } else {
-        url = url.replace('{theme}', '?theme=' + this.currentTheme);
+        url = url.replace('{theme}', '?theme=' + theme);
       }
     }
     return url;

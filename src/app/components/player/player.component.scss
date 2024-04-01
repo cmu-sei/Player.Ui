@@ -15,11 +15,16 @@
 
 .appbarmenu-container {
   min-width: 50px;
+  max-width: 20vw;
 }
 
 .player-icon {
   transform: scale(2);
   width: 60px;
+}
+
+.player-icon-mini {
+  transform: scale(2);
 }
 
 .crucible-logo {
@@ -46,18 +51,6 @@
 
 .nolink {
   text-decoration: none;
-  position: absolute;
-  left: 0px;
-}
-
-.display {
-  position: absolute;
-  left: 80px;
-  top: 10px;
-}
-
-.expand {
-  margin-top: -2px;
 }
 
 .view-text {
@@ -68,4 +61,26 @@
 .team-text {
   text-align: right;
   margin-right: 10px;
+}
+
+::ng-deep .player-title > .mat-list-item-content {
+  padding: 0 !important;
+}
+
+.player-title-mini {
+  justify-content: center;
+}
+
+.resize-handle-right {
+  height: 100%;
+  cursor: col-resize;
+  width: 10px;
+  position: relative;
+  right: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 0px;
+  height: 100%;
 }

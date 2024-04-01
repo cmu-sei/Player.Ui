@@ -102,6 +102,7 @@ import { TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-admin-subscription-search/app-admin-subscription-search.component';
 import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from './components/shared/create-application-dialog/create-application-dialog.component';
+import { ResizableModule } from 'angular-resizable-element';
 
 @NgModule({
   exports: [
@@ -206,6 +207,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     ComnSettingsModule.forRoot(),
     ComnAuthModule.forRoot(),
     TableVirtualScrollModule,
+    ResizableModule,
   ],
   providers: [
     AppService,

@@ -5,43 +5,68 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <ng-container *ngIf="data$ | async as data; else loading">
   <ng-container *ngIf="loaded" ; else loading>
-    <mat-sidenav-container class="appcontent-container" autosize>
+    <mat-sidenav-container
+      class="appcontent-container"
+      [autosize]="autosizeSidenav"
+    >
       <mat-sidenav
         #sidenav
         class="appbarmenu-container"
         mode="side"
         [opened]="opened$ | async"
+        mwlResizable
+        (resizing)="resizingFn($event)"
+        (resizeEnd)="resizeEnd($event)"
+        [ngStyle]="resizeStyle"
       >
-        <mat-list class="appitems-container">
-          <mat-list-item>
-            <a class="nolink" [routerLink]="['/']">
-              <div class="d-flex align-items-center">
-                <mat-icon
-                  class="player-icon"
-                  svgIcon="ic_crucible_player"
-                ></mat-icon>
-                <h2>
-                  <b>{{ data.title }}</b>
-                </h2>
-              </div>
-            </a>
+        <div class="grid">
+          <div>
+            <mat-list>
+              <mat-list-item
+                class="d-flex"
+                [ngClass]="
+                  (mini$ | async) ? 'player-title-mini' : 'player-title'
+                "
+              >
+                <a class="nolink" [routerLink]="['/']">
+                  <div class="d-flex align-items-center">
+                    <mat-icon
+                      [ngClass]="
+                        (mini$ | async) ? 'player-icon-mini' : 'player-icon'
+                      "
+                      svgIcon="ic_crucible_player"
+                    ></mat-icon>
+                    <h2 *ngIf="!(mini$ | async)">
+                      <b>{{ data.title }}</b>
+                    </h2>
+                  </div>
+                </a>
+              </mat-list-item>
+            </mat-list>
             <mat-divider></mat-divider>
-          </mat-list-item>
-        </mat-list>
-        <app-application-list
-          [viewId]="data.view.id"
-          [teams]="data.teams"
-          (toggleSideNavEvent)="sidenavToggleFn()"
-        ></app-application-list>
-        <img
-          alt="crucible logo"
-          class="crucible-logo"
-          [src]="
-            (theme$ | async) === 'light-theme'
-              ? 'assets/img/crucible-logo-light.png'
-              : 'assets/img/crucible-logo-dark.png'
-          "
-        />
+            <app-application-list
+              [viewId]="data.view.id"
+              [teams]="data.teams"
+              [mini]="mini$ | async"
+            ></app-application-list>
+            <img
+              *ngIf="!(mini$ | async)"
+              alt="crucible logo"
+              class="crucible-logo"
+              [src]="
+                (theme$ | async) === 'light-theme'
+                  ? 'assets/img/crucible-logo-light.png'
+                  : 'assets/img/crucible-logo-dark.png'
+              "
+            />
+          </div>
+          <div
+            *ngIf="!(mini$ | async)"
+            class="resize-handle-right"
+            mwlResizeHandle
+            [resizeEdges]="{ right: true }"
+          ></div>
+        </div>
       </mat-sidenav>
       <mat-sidenav-content class="noscroll">
         <app-topbar
@@ -52,6 +77,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [teams]="data.teams"
           [team]="data.team"
           [viewId]="viewId"
+          [mini]="mini$ | async"
           (setTeam)="setPrimaryTeam($event)"
           (sidenavToggle)="sidenavToggleFn($event)"
           (editView)="editViewFn($event)"

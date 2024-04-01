@@ -43,6 +43,7 @@
     "@mdi/font": "^7.2.96",
     "@microsoft/signalr": "^6.0.0",
     "@popperjs/core": "^2.10.2",
+    "angular-resizable-element": "^7.0.2",
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^5.2.3",
     "core-js": "^3.18.3",

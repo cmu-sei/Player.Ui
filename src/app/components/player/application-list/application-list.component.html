@@ -7,7 +7,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-list class="appitems-container">
     <mat-list-item
       *ngFor="let app of applications$ | async; trackBy: trackByFn"
-      class=""
+      [ngClass]="mini ? 'list-item-mini' : 'list-item'"
     >
       <iframe
         *ngIf="app.loadInBackground"
@@ -17,19 +17,28 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       ></iframe>
 
       <div class="app-button-container">
-        <button
+        <a
           mat-button
+          [title]="app.name"
           class="px-0 w-100"
-          (click)="app.embeddable ? openInFocusedApp(app) : openInTab(app)"
+          [href]="app.themedUrl"
+          (click)="
+            $event.preventDefault();
+            app.embeddable ? openInFocusedApp(app) : openInTab(app)
+          "
         >
-          <div class="d-flex align-items-center">
+          <div
+            class="d-flex align-items-center"
+            [ngClass]="mini ? 'justify-content-center' : null"
+          >
             <img class="lefticon" src="{{ app.icon }}" alt="{{ app.name }}" />
-            <div>
+            <div *ngIf="!mini" class="app-name ps-2">
               {{ app.name }}
             </div>
           </div>
-        </button>
+        </a>
         <button
+          *ngIf="!mini"
           mat-icon-button
           [matMenuTriggerFor]="menu"
           aria-label="{{ app.name }} Menu"

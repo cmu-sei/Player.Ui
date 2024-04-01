@@ -21,6 +21,7 @@ import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-
 import { UserPresenceComponent } from '../../player/user-presence-page/user-presence/user-presence.component';
 import { TopbarView } from './topbar.models';
 import { Router } from '@angular/router';
+import { DialogService } from '../../../services/dialog/dialog.service';
 @Component({
   selector: 'app-topbar',
   templateUrl: './topbar.component.html',
@@ -36,6 +37,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   @Input() topbarTextColor?;
   @Input() topbarView?: TopbarView;
   @Input() viewId: string;
+  @Input() mini: boolean;
   @Output() sidenavToggle?: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() setTeam?: EventEmitter<string> = new EventEmitter<string>();
   @Output() editView?: EventEmitter<any> = new EventEmitter<any>();
@@ -52,7 +54,8 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private loggedInUserService: LoggedInUserService,
     private authQuery: ComnAuthQuery,
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit() {
@@ -115,6 +118,20 @@ export class TopbarComponent implements OnInit, OnDestroy {
         },
       })
     );
+  }
+
+  resetUI() {
+    this.dialogService
+      .confirm(
+        'Reset UI?',
+        `Are you sure that you want to reset your UI preferences for the ${this.team.name} Team?`
+      )
+      .subscribe((result) => {
+        if (result['confirm']) {
+          localStorage.removeItem(this.team.id);
+          window.location.reload();
+        }
+      });
   }
 
   ngOnDestroy(): void {
