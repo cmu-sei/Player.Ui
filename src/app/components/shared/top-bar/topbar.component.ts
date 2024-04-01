@@ -110,14 +110,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   getEditViewUrl() {
-    return this.router.serializeUrl(
-      this.router.createUrlTree(['/admin'], {
-        queryParams: {
-          section: 'views',
-          view: this.viewId,
-        },
-      })
-    );
+    return `${document.baseURI}/admin?section=views&view=${this.viewId}`;
   }
 
   resetUI() {
