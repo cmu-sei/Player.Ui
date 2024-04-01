@@ -14,4 +14,5 @@ export interface ApplicationData {
   loadInBackground: boolean;
   viewId: string;
   safeUrl: SafeUrl;
+  themedUrl: string;
 }

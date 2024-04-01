@@ -21,7 +21,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           mat-button
           [title]="app.name"
           class="px-0 w-100"
-          [href]="insertThemeToUrl(app.url)"
+          [href]="app.themedUrl"
           (click)="
             $event.preventDefault();
             app.embeddable ? openInFocusedApp(app) : openInTab(app)
