@@ -32,31 +32,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             [ngClass]="mini ? 'justify-content-center' : null"
           >
             <img class="lefticon" src="{{ app.icon }}" alt="{{ app.name }}" />
-            <div *ngIf="!mini" class="app-name ps-2">
+            <div *ngIf="!mini" class="app-name px-2">
               {{ app.name }}
             </div>
           </div>
         </a>
-        <button
-          *ngIf="!mini"
-          mat-icon-button
-          [matMenuTriggerFor]="menu"
-          aria-label="{{ app.name }} Menu"
-        >
-          <mat-icon svgIcon="ic_chevron_right_24px"></mat-icon>
-        </button>
       </div>
-
-      <mat-menu #menu="matMenu">
-        <button
-          mat-menu-item
-          *ngIf="app.embeddable"
-          (click)="openInFocusedApp(app)"
-        >
-          Open Here
-        </button>
-        <button mat-menu-item (click)="openInTab(app)">Open in New Tab</button>
-      </mat-menu>
     </mat-list-item>
   </mat-list>
 </div>
