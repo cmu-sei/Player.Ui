@@ -55,8 +55,11 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   // Local Component functions
-  openInTab(app: ApplicationData) {
-    window.open(app.themedUrl, '_blank');
+  openApplication(app: ApplicationData, event: MouseEvent) {
+    if (app.embeddable && !event.ctrlKey) {
+      event.preventDefault();
+      this.openInFocusedApp(app);
+    }
   }
 
   refreshApps() {
