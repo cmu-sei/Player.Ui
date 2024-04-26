@@ -22,6 +22,8 @@ import { UserPresenceComponent } from '../../player/user-presence-page/user-pres
 import { TopbarView } from './topbar.models';
 import { Router } from '@angular/router';
 import { DialogService } from '../../../services/dialog/dialog.service';
+import { MatLegacySnackBar } from '@angular/material/legacy-snack-bar';
+
 @Component({
   selector: 'app-topbar',
   templateUrl: './topbar.component.html',
@@ -55,7 +57,8 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private authQuery: ComnAuthQuery,
     private router: Router,
     private dialog: MatDialog,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private snackbar: MatLegacySnackBar
   ) {}
 
   ngOnInit() {
@@ -125,6 +128,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
           window.location.reload();
         }
       });
+  }
+
+  openSnackBar(message: string) {
+    this.snackbar.open(message, '', {
+      verticalPosition: 'top',
+      duration: 2000,
+    });
   }
 
   ngOnDestroy(): void {

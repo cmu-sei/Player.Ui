@@ -34,7 +34,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </span>
     <span class="view-text">{{ title }}</span>
     <ng-container *ngIf="teams && team && teams.length > 0">
-      <div class="team-text">Team:</div>
+      <div
+        class="team-text copy-text"
+        ngxClipboard
+        [cbContent]="team.id"
+        (cbOnSuccess)="openSnackBar('Copied Team Id to clipboard')"
+        [matTooltip]="'Click to copy Team Id: ' + team.id"
+      >
+        Team:
+      </div>
       <span class="team-text">{{ team.name }}</span>
       <div *ngIf="teams.length > 1">
         <button

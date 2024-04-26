@@ -47,7 +47,6 @@ import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-vie
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
 
-  public loaded = false;
   public data$: Observable<any>;
 
   public openedSubject = new BehaviorSubject<boolean>(true);
@@ -88,12 +87,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.data$ = this.checkParam(['teamId']).pipe(
-      tap((paramsExist) =>
-        paramsExist ? (this.loaded = true) : (this.loaded = false)
-      ),
-      switchMap(() => this.loadData())
-    );
+    this.data$ = this.loadData();
 
     // Set the topbar color from config file.
     this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
@@ -140,12 +134,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
             'Not a Member',
             'You are not a member of any Teams in this View'
           );
-        } else if (!this.loaded) {
-          const params = {
-            teamId: team.id,
-          };
-          this.addParam(params);
-          this.loaded = true;
         }
 
         this.teamId = team.id;
@@ -153,14 +141,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       }),
       takeUntil(this.unsubscribe$)
     );
-  }
-
-  addParam(params) {
-    this.queryParams = { ...this.queryParams, ...params };
-    return this.router.navigate([], {
-      queryParams: { ...this.queryParams },
-      queryParamsHandling: 'merge',
-    });
   }
 
   /**
