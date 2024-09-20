@@ -42,18 +42,21 @@ export class NotificationService {
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/view?bearer=${userToken}`
       )
+      .withStatefulReconnect()
       .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
       .build();
     this.teamConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/team?bearer=${userToken}`
       )
+      .withStatefulReconnect()
       .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
       .build();
     this.userConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/user?bearer=${userToken}`
       )
+      .withStatefulReconnect()
       .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
       .build();
 
@@ -181,6 +184,7 @@ export class NotificationService {
             this.settingsSvc.settings.NotificationsSettings.url
           }/view?bearer=${this.authService.getAuthorizationToken()}`
         )
+        .withStatefulReconnect()
         .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
         .build();
 
