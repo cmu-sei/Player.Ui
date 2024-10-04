@@ -42,22 +42,22 @@ export class NotificationService {
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/view?bearer=${userToken}`
       )
-      .withStatefulReconnect()
       .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
+      .withStatefulReconnect()
       .build();
     this.teamConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/team?bearer=${userToken}`
       )
-      .withStatefulReconnect()
       .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
+      .withStatefulReconnect()
       .build();
     this.userConnection = new signalR.HubConnectionBuilder()
       .withUrl(
         `${this.settingsSvc.settings.NotificationsSettings.url}/user?bearer=${userToken}`
       )
-      .withStatefulReconnect()
       .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
+      .withStatefulReconnect()
       .build();
 
     this.viewConnection.on('Reply', (data: NotificationData) => {
@@ -205,7 +205,6 @@ export class NotificationService {
       this.invokeJoinPresence(viewId);
 
       this.viewConnection.onreconnected(() => {
-        this.viewConnection.invoke('JoinView', viewId);
         this.viewConnection.invoke('JoinPresence', viewId);
       });
     }
