@@ -41,7 +41,7 @@
     "@datorama/akita": "^8.0.1",
     "@datorama/akita-ng-router-store": "^8.0.0",
     "@mdi/font": "^7.2.96",
-    "@microsoft/signalr": "^6.0.0",
+    "@microsoft/signalr": "^8.0.7",
     "@popperjs/core": "^2.10.2",
     "angular-resizable-element": "^7.0.2",
     "babel-polyfill": "^6.26.0",
