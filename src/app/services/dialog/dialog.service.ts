@@ -18,17 +18,26 @@ import { EditFileDialogComponent } from '../../components/shared/edit-file-dialo
 import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from '../../components/shared/create-application-dialog/create-application-dialog.component';
 import { TeamUserApp } from '../../components/admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
+import { NameDialogComponent } from '../../components/shared/name-dialog/name-dialog.component';
 
 @Injectable()
 export class DialogService {
+  public WAS_CANCELLED = 'wasCancelled';
+
   constructor(private dialog: MatDialog) {}
 
-  public confirm(
-    title: string,
-    message: string,
-    data?: any
-  ): Observable<boolean> {
+  public confirm(title: string, message: string, data?: any): Observable<any> {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: data || {},
+    });
+    dialogRef.componentInstance.title = title;
+    dialogRef.componentInstance.message = message;
+
+    return dialogRef.afterClosed();
+  }
+
+  public name(title: string, message: string, data?: any): Observable<any> {
+    const dialogRef = this.dialog.open(NameDialogComponent, {
       data: data || {},
     });
     dialogRef.componentInstance.title = title;

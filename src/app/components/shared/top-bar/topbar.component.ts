@@ -23,6 +23,12 @@ import { TopbarView } from './topbar.models';
 import { Router } from '@angular/router';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { MatLegacySnackBar } from '@angular/material/legacy-snack-bar';
+import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import {
+  SystemPermission,
+  TeamPermission,
+  ViewPermission,
+} from '../../../generated/player-api';
 
 @Component({
   selector: 'app-topbar',
@@ -48,6 +54,14 @@ export class TopbarComponent implements OnInit, OnDestroy {
   unsubscribe$: Subject<null> = new Subject<null>();
   TopbarView = TopbarView;
 
+  showAdministration$ = this.permissionsService.canViewAdminstration();
+  showEditView$ = this.permissionsService.can(
+    SystemPermission.ManageViews,
+    null,
+    null,
+    ViewPermission.ManageView
+  );
+
   @ViewChild('userPresenceDialog')
   userPresenceDialog: TemplateRef<UserPresenceComponent>;
 
@@ -55,10 +69,10 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private authService: ComnAuthService,
     private loggedInUserService: LoggedInUserService,
     private authQuery: ComnAuthQuery,
-    private router: Router,
     private dialog: MatDialog,
     private dialogService: DialogService,
-    private snackbar: MatLegacySnackBar
+    private snackbar: MatLegacySnackBar,
+    private permissionsService: UserPermissionsService
   ) {}
 
   ngOnInit() {

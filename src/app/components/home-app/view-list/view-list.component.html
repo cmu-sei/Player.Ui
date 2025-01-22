@@ -9,6 +9,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
     </div>
     <span class="views-title text">My Views</span>
+    <button
+      *ngIf="canCreate$ | async"
+      mat-icon-button
+      matTooltip="Add New View"
+      (click)="create()"
+    >
+      <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle"> </mat-icon>
+    </button>
     <div class="searchBox d-flex align-items-center">
       <mat-icon
         class="text"
@@ -46,7 +54,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </mat-progress-spinner>
   </mat-card>
 
-  <mat-table #table [dataSource]="viewDataSource" matSort>
+  <mat-table
+    #table
+    [dataSource]="dataSource"
+    matSort
+    matSortActive="name"
+    matSortDirection="asc"
+  >
     <!--- Note that these columns can be defined in any order.
           The actual rendered columns are set as a property on the row definition" -->
     <!-- Name Column -->
@@ -65,14 +79,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-cell>
     </ng-container>
 
-    <!-- Team Column -->
-    <ng-container matColumnDef="teamName">
-      <mat-header-cell *matHeaderCellDef> Primary Team </mat-header-cell>
-      <mat-cell *matCellDef="let element">
-        <div class="team-text">{{ element.teamName }}</div>
-      </mat-cell>
-    </ng-container>
-
     <!-- Name Column -->
     <ng-container matColumnDef="description">
       <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
@@ -84,7 +90,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
   </mat-table>
-  <div class="text no-results" *ngIf="viewDataSource.filteredData.length === 0">
+  <div class="text no-results" *ngIf="dataSource.filteredData.length === 0">
     No results found
   </div>
 </div>

@@ -28,7 +28,6 @@ import {
   FileModel,
 } from '../../../../generated/player-api';
 import {
-  TeamForm,
   ApplicationTemplate,
   ApplicationService,
   Application,
@@ -40,6 +39,9 @@ import { ViewApplicationsSelectComponent } from '../../view-applications-select/
 import { Clipboard } from '@angular/cdk/clipboard';
 import { EditFileDialogComponent } from '../../../shared/edit-file-dialog/edit-file-dialog.component';
 import { HttpEventType, HttpResponse } from '@angular/common/http';
+import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
+import { TeamRolesService } from '../../../../services/roles/team-roles.service';
+import { forkJoin } from 'rxjs';
 
 /** Team node with related user and application information */
 export class TeamUserApp {
@@ -106,7 +108,9 @@ export class AdminViewEditComponent implements OnInit {
     public fileService: FileService,
     public applicationService: ApplicationService,
     public zone: NgZone,
-    public clipboard: Clipboard
+    public clipboard: Clipboard,
+    public teamPermissionsService: TeamPermissionsService,
+    public teamRolesService: TeamRolesService
   ) {}
 
   /**
@@ -120,6 +124,11 @@ export class AdminViewEditComponent implements OnInit {
     this.teamsForFile = new Array<string>();
     this.appNames = new Array<string>();
     this.viewFiles = new Array<FileModel>();
+
+    forkJoin([
+      this.teamPermissionsService.load(),
+      this.teamRolesService.getRoles(),
+    ]).subscribe();
   }
 
   /**
@@ -389,7 +398,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   addNewTeam() {
     this.teamService
-      .createTeam(this.view.id, <TeamForm>{ name: 'New Team' })
+      .createTeam(this.view.id, { name: 'New Team' })
       .pipe(take(1))
       .subscribe((newTeam) => {
         const team = new TeamUserApp('New Team', newTeam, new Array<User>());

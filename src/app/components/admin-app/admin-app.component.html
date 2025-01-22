@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     class="appbarmenu-container"
     #sidenav
     mode="side"
-    [opened]="loggedInUserService.isSuperUser$ | async"
+    [opened]="true"
   >
     <mat-list class="appitems-container">
       <mat-list-item class="appslist">
@@ -23,28 +23,34 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </a>
         <mat-divider></mat-divider>
       </mat-list-item>
-      <mat-list-item *ngFor="let sectionItem of sectionItems">
-        <button
-          mat-button
-          (click)="sectionChangedFn(sectionItem.section)"
-          class="px-0 w-100"
-        >
-          <div class="d-flex align-items-center">
-            <mat-icon
-              *ngIf="sectionItem.svgIcon"
-              class="lefticon player-icon-small"
-              svgIcon="{{ sectionItem.icon }}"
-            ></mat-icon>
-            <img
-              *ngIf="!sectionItem.svgIcon"
-              class="lefticon"
-              src="{{ sectionItem.icon }}"
-              alt="{{ sectionItem.name }}"
-            />
-            <div>{{ sectionItem.name }}</div>
-          </div>
-        </button>
-      </mat-list-item>
+      <ng-container *ngFor="let sectionItem of sectionItems">
+        <ng-container *ngIf="permissions$ | async as permissions">
+          <mat-list-item *ngIf="permissions.includes(sectionItem.permission)">
+            <ng-container>
+              <button
+                mat-button
+                (click)="sectionChangedFn(sectionItem.section)"
+                class="px-0 w-100"
+              >
+                <div class="d-flex align-items-center">
+                  <mat-icon
+                    *ngIf="sectionItem.svgIcon"
+                    class="lefticon player-icon-small"
+                    svgIcon="{{ sectionItem.icon }}"
+                  ></mat-icon>
+                  <img
+                    *ngIf="!sectionItem.svgIcon"
+                    class="lefticon"
+                    src="{{ sectionItem.icon }}"
+                    alt="{{ sectionItem.name }}"
+                  />
+                  <div>{{ sectionItem.name }}</div>
+                </div>
+              </button>
+            </ng-container>
+          </mat-list-item>
+        </ng-container>
+      </ng-container>
     </mat-list>
     <img
       class="crucible-logo"
@@ -78,9 +84,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         *ngSwitchCase="Section.ADMIN_APP_TEMP"
       ></app-admin-app-template-search>
 
-      <app-admin-role-permission-search
+      <app-admin-roles
+        class="w-100"
         *ngSwitchCase="Section.ADMIN_ROLE_PERM"
-      ></app-admin-role-permission-search>
+      ></app-admin-roles>
 
       <app-admin-subscription-search
         *ngSwitchCase="Section.ADMIN_SUBS"

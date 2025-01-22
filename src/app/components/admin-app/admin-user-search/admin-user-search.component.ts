@@ -2,16 +2,14 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { LegacyPageEvent as PageEvent, MatLegacyPaginator as MatPaginator } from '@angular/material/legacy-paginator';
+import {
+  LegacyPageEvent as PageEvent,
+  MatLegacyPaginator as MatPaginator,
+} from '@angular/material/legacy-paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
-import { SUPER_USER } from '../../../services/logged-in-user/logged-in-user.service';
-import {
-  User,
-  UserService,
-  RoleService,
-  Role,
-} from '../../../generated/player-api';
+import { User, UserService, RoleService } from '../../../generated/player-api';
+import { RolesService } from '../../../services/roles/roles.service';
 
 export interface Action {
   Value: string;
@@ -25,9 +23,7 @@ export interface Action {
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public displayedColumns: string[] = ['name', 'roleName'];
-  public isSuperUser: boolean;
   public filterString: string;
-  public superUserRole: Role;
 
   public editUserText = 'Edit User';
   public userToEdit: User;
@@ -45,7 +41,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
 
   constructor(
     private userService: UserService,
-    private roleService: RoleService
+    private rolesService: RolesService
   ) {}
 
   /**
@@ -61,15 +57,9 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
     this.isLoading = false;
 
     // Initial datasource
-    this.isSuperUser = false;
     this.filterString = '';
-
-    // Get the superUser Role for the action later
-    this.roleService.getRoles().subscribe((roles) => {
-      this.superUserRole = roles.find((r) => r.name === SUPER_USER);
-    });
-
     this.refreshUsers();
+    this.rolesService.getRoles().subscribe();
   }
 
   /**

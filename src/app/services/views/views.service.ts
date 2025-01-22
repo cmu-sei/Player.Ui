@@ -2,17 +2,23 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import {
   BehaviorSubject,
   Observable,
   throwError as observableThrowError,
 } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { TeamData } from '../../models/team-data';
 import { ViewData } from '../../models/view-data';
-import { ViewStatus } from '../../generated/player-api';
+import {
+  CreateViewCommand,
+  TeamService,
+  View,
+  ViewService,
+  ViewStatus,
+} from '../../generated/player-api';
 
 const httpOptions = {
   headers: new HttpHeaders({
@@ -22,80 +28,46 @@ const httpOptions = {
 
 @Injectable()
 export class ViewsService {
-  public readonly currentViewGuid: BehaviorSubject<string>;
-  public viewList: BehaviorSubject<Array<ViewData>>;
+  private viewsApi = inject(ViewService);
+  private teamsApi = inject(TeamService);
 
-  constructor(private http: HttpClient, private settings: ComnSettingsService) {
-    this.currentViewGuid = new BehaviorSubject<string>('');
-    this.viewList = new BehaviorSubject<Array<ViewData>>(new Array<ViewData>());
+  viewsSubject = new BehaviorSubject<View[]>([]);
+  views$ = this.viewsSubject.asObservable();
+
+  loadMyViews() {
+    return this.viewsApi
+      .getMyViews()
+      .pipe(tap((x) => this.viewsSubject.next(x)));
   }
 
-  /**
-   * Makes a call to the API and updates the viewList
-   * @param userGuid
-   */
-  public getViewList(userGuid: string): void {
-    this.http
-      .get<Array<ViewData>>(
-        `${this.settings.settings.ApiUrl}/api/users/${userGuid}/views`
-      )
-      .subscribe((views) => {
-        const viewArray = new Array<ViewData>();
-        views.forEach((view) => {
-          this.http
-            .get<Array<TeamData>>(
-              `${this.settings.settings.ApiUrl}/api/users/${userGuid}/views/${view.id}/teams`
-            )
-            .pipe(map((teams) => teams.filter((t) => t.isMember)))
-            .subscribe((teams) => {
-              teams.forEach((team) => {
-                if (team.isPrimary && view.status === ViewStatus.Active) {
-                  const ex = <ViewData>{
-                    id: view.id,
-                    name: view.name,
-                    description: view.description,
-                    status: view.status,
-                    teamId: team.id,
-                    teamName: team.name,
-                  };
-                  viewArray.push(ex);
-                }
-              });
-              this.viewList.next(viewArray);
-            });
-        });
-      }),
-      (err) => {
-        console.log(err);
-        return observableThrowError(err || 'Server error');
-      };
+  createView(command: CreateViewCommand) {
+    return this.viewsApi.createView(command).pipe(
+      tap((x) => {
+        this.upsert(x.id, x);
+      })
+    );
   }
 
-  public setPrimaryTeamId(userGuid: string, teamGuid: string): Observable<any> {
-    return this.http
-      .post<any>(
-        `${this.settings.settings.ApiUrl}/api/users/${userGuid}/teams/${teamGuid}/primary`,
-        null,
-        httpOptions
-      )
-      .pipe(
-        catchError((err) => {
-          return observableThrowError(err || 'Server error');
-        })
-      );
+  upsert(id: string, role: Partial<View>) {
+    const views = this.viewsSubject.getValue();
+    let viewToUpdate = views.find((x) => x.id === id);
+
+    if (viewToUpdate != null) {
+      Object.assign(viewToUpdate, role);
+    } else {
+      views.push({ ...role, id } as View);
+    }
+
+    this.viewsSubject.next(views);
   }
 
-  /**
-   * Returns a single instance of the specified view
-   * @param viewGuid
-   */
-  public getViewById(viewGuid: string): Observable<ViewData> {
-    return this.http
-      .get<ViewData>(`${this.settings.settings.ApiUrl}/api/views/${viewGuid}`)
-      .pipe(
-        catchError((err) => {
-          return observableThrowError(err || 'Server error');
-        })
-      );
+  remove(id: string) {
+    let views = this.viewsSubject.getValue();
+    views = views.filter((x) => x.id != id);
+    this.viewsSubject.next(views);
+  }
+
+  public setPrimaryTeamId(userId: string, teamId: string): Observable<any> {
+    return this.teamsApi.setUserPrimaryTeam(userId, teamId);
   }
 }

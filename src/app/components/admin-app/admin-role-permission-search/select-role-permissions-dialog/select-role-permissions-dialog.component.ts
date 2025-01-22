@@ -30,9 +30,9 @@ export class SelectRolePermissionsDialogComponent implements OnInit {
    * Initialization
    */
   ngOnInit() {
-    this.permissions.sort(function (a, b) {
-      return a.key.toLowerCase().localeCompare(b.key.toLowerCase());
-    });
+    // this.permissions.sort(function (a, b) {
+    //   return a.key.toLowerCase().localeCompare(b.key.toLowerCase());
+    // });
     this.role.permissions.forEach((permission) => {
       this.selectedPermissions.push(permission.id);
     });

@@ -9,7 +9,7 @@ import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
-import { filter, tap } from 'rxjs';
+import { filter, map, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface Action {
@@ -44,20 +44,14 @@ export class AdminViewSearchComponent implements OnInit {
     public dialogService: DialogService,
     public route: ActivatedRoute,
     public router: Router
-  ) {
-    this.loggedInUserService.isSuperUser$
-      .pipe(
-        filter((x) => x),
-        tap(() => this.refreshViews()),
-        takeUntilDestroyed()
-      )
-      .subscribe();
-  }
+  ) {}
 
   /**
    * Initialization
    */
   ngOnInit() {
+    this.refreshViews();
+
     // Initial datasource
     this.viewDataSource = new MatTableDataSource<View>(new Array<View>());
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
@@ -171,18 +165,25 @@ export class AdminViewSearchComponent implements OnInit {
   refreshViews() {
     this.showEditScreen = false;
     this.isLoading = true;
-    this.viewService.getViews().subscribe((views) => {
-      this.viewDataSource.data = views;
-      this.isLoading = false;
-    });
+    this.viewService
+      .getViews()
+      .pipe(
+        map((views) => {
+          this.viewDataSource.data = views;
+          this.isLoading = false;
+        })
+      )
+      .subscribe();
   }
 
   onEditComplete($event) {
-    if (this.loggedInUserService.isSuperUser$.getValue()) {
-      this.refreshViews();
-    } else {
-      this.router.navigate(['view', $event]);
-    }
+    this.refreshViews();
+
+    // if (this.loggedInUserService.isSuperUser$.getValue()) {
+    //   this.refreshViews();
+    // } else {
+    //   this.router.navigate(['view', $event]);
+    // }
   }
 
   /**

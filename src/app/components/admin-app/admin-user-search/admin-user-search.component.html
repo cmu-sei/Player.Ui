@@ -69,30 +69,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
       <ng-container matColumnDef="roleName">
         <mat-header-cell *matHeaderCellDef mat-sort-header>
-          Role / Permissions
+          Role
         </mat-header-cell>
         <mat-cell *matCellDef="let element; let i = index">
-          <div class="w-100">
-            <mat-expansion-panel>
-              <mat-expansion-panel-header>
-                <mat-panel-title style="font-size: small">
-                  <div>
-                    <div [hidden]="!element.roleId">
-                      Role: {{ element.roleName }}
-                    </div>
-                    <div>
-                      <div [hidden]="!(element.permissions.length > 0)">
-                        {{ permissionsString(element.permissions) }}
-                      </div>
-                    </div>
-                  </div>
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-              <app-roles-permissions-select
-                [user]="element"
-              ></app-roles-permissions-select>
-            </mat-expansion-panel>
-          </div>
+          <app-roles-permissions-select
+            [user]="element"
+          ></app-roles-permissions-select>
         </mat-cell>
       </ng-container>
 

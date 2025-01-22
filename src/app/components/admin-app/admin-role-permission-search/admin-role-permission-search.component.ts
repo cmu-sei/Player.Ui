@@ -5,11 +5,11 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import {
+  CreatePermissionCommand,
   Permission,
   PermissionService,
-  PermissionForm,
 } from '../../../generated/player-api';
-import { Role, RoleService, RoleForm } from '../../../generated/player-api';
+import { Role, RoleService } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { UntypedFormControl } from '@angular/forms';
 
@@ -61,9 +61,10 @@ export class AdminRolePermissionSearchComponent implements OnInit {
     );
     this.filterPermissionString = '';
     this.permissionService.getPermissions().subscribe((permissions) => {
-      this.permissionDataSource.data = permissions.sort((k1, k2) =>
-        k1.key.toLowerCase() < k2.key.toLowerCase() ? -1 : 1
-      );
+      this.permissionDataSource.data = permissions;
+      // permissions.sort((k1, k2) =>
+      //   k1.key.toLowerCase() < k2.key.toLowerCase() ? -1 : 1
+      // );
     });
 
     this.roleDataSource = new MatTableDataSource<Role>(new Array<Role>());
@@ -83,9 +84,9 @@ export class AdminRolePermissionSearchComponent implements OnInit {
         if (!permission.key) {
           return;
         }
-        const newPermission: PermissionForm = {
-          key: permission.key,
-          value: permission.value,
+        const newPermission: CreatePermissionCommand = {
+          name: permission.key,
+          // value: permission.value,
           description: permission.description,
         };
         this.permissionService.createPermission(newPermission).subscribe(() => {
@@ -101,16 +102,15 @@ export class AdminRolePermissionSearchComponent implements OnInit {
       .createPermission('Edit Permission', permission)
       .subscribe((enteredInfo) => {
         permission = enteredInfo['permission'];
-        if (!permission.key) {
+        if (!permission.name) {
           return;
         }
-        const newPermission: PermissionForm = {
-          key: permission.key,
-          value: permission.value,
-          description: permission.description,
-        };
         this.permissionService
-          .updatePermission(permission.id, newPermission)
+          .updatePermission(permission.id, {
+            name: permission.name,
+            // value: permission.value,
+            description: permission.description,
+          })
           .subscribe(() => {
             this.permissionService.getPermissions().subscribe((permissions) => {
               this.permissionDataSource.data = permissions;
@@ -126,14 +126,10 @@ export class AdminRolePermissionSearchComponent implements OnInit {
         break;
       }
       case 'delete': {
-        // Delete permission
-        const permissionName = !permission.value
-          ? permission.key
-          : permission.key + '(' + permission.value + ')';
         this.dialogService
           .confirm(
             'Delete Permission',
-            'Are you sure you want to delete ' + permissionName + '?'
+            'Are you sure you want to delete ' + permission.name + '?'
           )
           .subscribe((confirmed) => {
             if (confirmed) {
@@ -181,14 +177,16 @@ export class AdminRolePermissionSearchComponent implements OnInit {
       if (!enteredInfo['name']) {
         return;
       }
-      const newRole: RoleForm = {
-        name: enteredInfo['name'],
-      };
-      this.roleService.createRole(newRole).subscribe(() => {
-        this.roleService.getRoles().subscribe((roles) => {
-          this.roleDataSource.data = roles;
+
+      this.roleService
+        .createRole({
+          name: enteredInfo['name'],
+        })
+        .subscribe(() => {
+          this.roleService.getRoles().subscribe((roles) => {
+            this.roleDataSource.data = roles;
+          });
         });
-      });
     });
   }
 
@@ -203,14 +201,16 @@ export class AdminRolePermissionSearchComponent implements OnInit {
         if (!enteredInfo['name']) {
           return;
         }
-        const newRole: RoleForm = {
-          name: enteredInfo['name'],
-        };
-        this.roleService.updateRole(role.id, newRole).subscribe((result) => {
-          this.roleService.getRoles().subscribe((roles) => {
-            this.roleDataSource.data = roles;
+
+        this.roleService
+          .updateRole(role.id, {
+            name: enteredInfo['name'],
+          })
+          .subscribe((result) => {
+            this.roleService.getRoles().subscribe((roles) => {
+              this.roleDataSource.data = roles;
+            });
           });
-        });
       });
   }
 

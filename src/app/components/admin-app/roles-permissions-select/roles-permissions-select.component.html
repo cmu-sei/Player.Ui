@@ -9,25 +9,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <app-roles-permissions-select [user]="userObject"></app-roles-permissions-select>
     <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 -->
-<div class="add-margin">
-  <div>
-    <mat-form-field>
-      <mat-select
-        placeholder="Role"
-        [(ngModel)]="subject.roleId"
-        name="userRole"
-        (selectionChange)="updateRole($event.value)"
-      >
-        <mat-option [value]="">None</mat-option>
-        <mat-option *ngFor="let role of roles" [value]="role.id">
-          {{ role.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
-</div>
 
-<div class="add-margin">
+<mat-form-field>
+  <mat-select
+    [value]="subject.roleId ?? ''"
+    name="userRole"
+    (selectionChange)="updateRole($event.value)"
+    placeholder="Role"
+  >
+    <mat-option value="">None</mat-option>
+    <mat-option *ngFor="let role of roles$ | async" [value]="role.id">
+      {{ role.name }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+<div class="add-margin" *ngIf="showPermissions">
   <div>
     <mat-form-field>
       <mat-select
@@ -37,11 +34,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         multiple
       >
         <mat-option
-          *ngFor="let item of permissions"
+          *ngFor="let item of permissions$ | async"
           [value]="item.id"
-          (click)="updatePermissions(item)"
+          (onSelectionChange)="
+            $event.isUserInput
+              ? updatePermissions(item, $event.source.selected)
+              : null
+          "
         >
-          {{ item.key }}
+          {{ item.key ?? item.name }}
         </mat-option>
       </mat-select>
     </mat-form-field>

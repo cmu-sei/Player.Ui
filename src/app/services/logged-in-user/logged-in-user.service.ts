@@ -4,13 +4,14 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { ComnAuthQuery } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, Subject } from 'rxjs';
+import { filter, takeUntil, tap } from 'rxjs/operators';
 import {
   RoleService,
   User as PlayerUser,
   UserService,
 } from '../../generated/player-api';
+import { UserPermissionsService } from '../permissions/user-permissions.service';
 // Used to display Super User text
 export const SUPER_USER = 'Super User';
 
@@ -23,7 +24,7 @@ export class LoggedInUserService implements OnDestroy {
   constructor(
     private userService: UserService,
     private authQuery: ComnAuthQuery,
-    private roleService: RoleService
+    private permissionsService: UserPermissionsService
   ) {
     this.authQuery.user$
       .pipe(
@@ -40,15 +41,17 @@ export class LoggedInUserService implements OnDestroy {
    * @param guid
    */
   public setLoggedInUser(authUser: AuthUser) {
-    this.userService
-      .getUser(authUser.profile.sub)
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((playerUser: PlayerUser) => {
-        // combine player properties into the AuthUser profile.
-        authUser.profile = { ...authUser.profile, ...playerUser };
-        this.isSuperUser$.next(authUser.profile.isSystemAdmin as boolean);
-        this.loggedInUser$.next(authUser);
-      });
+    forkJoin([
+      this.permissionsService.load(),
+      this.userService.getUser(authUser.profile.sub).pipe(
+        tap((playerUser: PlayerUser) => {
+          // combine player properties into the AuthUser profile.
+          authUser.profile = { ...authUser.profile, ...playerUser };
+          this.loggedInUser$.next(authUser);
+        }),
+        takeUntil(this.unsubscribe$)
+      ),
+    ]).subscribe();
   }
 
   ngOnDestroy() {

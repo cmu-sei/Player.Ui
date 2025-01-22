@@ -44,29 +44,14 @@ export class AdminUserEditComponent implements OnChanges {
   public selectedPermissions: string[] = [];
   public roles: Role[] = [];
 
-  constructor(
-    private userService: UserService,
-    private permissionService: PermissionService,
-    private roleService: RoleService
-  ) {}
+  constructor(private userService: UserService) {}
 
   /**
    * Called when the form changes
    */
   ngOnChanges() {
     this.originalUser = this.user;
-    this.permissionService.getPermissions().subscribe((permissions) => {
-      this.permissions = permissions;
-    });
-    this.roleService.getRoles().subscribe((roles) => {
-      this.roles = roles;
-    });
     this.selectedPermissions = [];
-    if (!!this.user && !!this.user.permissions) {
-      this.user.permissions.forEach((permission) => {
-        this.selectedPermissions.push(permission.id);
-      });
-    }
   }
 
   /**
@@ -95,20 +80,20 @@ export class AdminUserEditComponent implements OnChanges {
    * @param permission
    */
   updatePermissions(permission) {
-    const index = this.user.permissions.findIndex(
-      (x) => x.id === permission.id
-    );
-    if (index === -1) {
-      this.user.permissions.push(permission);
-      this.permissionService
-        .addPermissionToUser(this.user.id, permission.id)
-        .subscribe();
-    } else {
-      this.user.permissions.slice(index);
-      this.permissionService
-        .removePermissionFromUser(this.user.id, permission.id)
-        .subscribe();
-    }
+    // const index = this.user.permissions.findIndex(
+    //   (x) => x.id === permission.id
+    // );
+    // if (index === -1) {
+    //   this.user.permissions.push(permission);
+    //   this.permissionService
+    //     .addPermissionToUser(this.user.id, permission.id)
+    //     .subscribe();
+    // } else {
+    //   this.user.permissions.slice(index);
+    //   this.permissionService
+    //     .removePermissionFromUser(this.user.id, permission.id)
+    //     .subscribe();
+    // }
   }
 
   /**
