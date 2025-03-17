@@ -14,7 +14,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Permission } from './permission';
 
 
 export interface User { 
@@ -22,7 +21,5 @@ export interface User {
     name?: string | null;
     roleId?: string | null;
     roleName?: string | null;
-    permissions?: Array<Permission> | null;
-    isSystemAdmin?: boolean;
 }
 

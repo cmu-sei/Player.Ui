@@ -29,7 +29,16 @@ import {
   of,
   Subject,
 } from 'rxjs';
-import { map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import {
+  catchError,
+  map,
+  mergeMap,
+  shareReplay,
+  switchMap,
+  take,
+  takeUntil,
+  tap,
+} from 'rxjs/operators';
 import { View } from '../../generated/player-api';
 import { TeamService } from '../../generated/player-api/api/team.service';
 import { ViewService } from '../../generated/player-api/api/view.service';
@@ -37,6 +46,7 @@ import { LoggedInUserService } from '../../services/logged-in-user/logged-in-use
 import { SystemMessageService } from '../../services/system-message/system-message.service';
 import { ViewsService } from '../../services/views/views.service';
 import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
+import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 
 @Component({
   selector: 'app-player',
@@ -81,13 +91,22 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private settingsService: ComnSettingsService,
     private dialog: MatDialog,
     private messageService: SystemMessageService,
-    private authQuery: ComnAuthQuery
+    private authQuery: ComnAuthQuery,
+    private permissionsService: UserPermissionsService
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
 
   ngOnInit() {
-    this.data$ = this.loadData();
+    this.data$ = this.loadData().pipe();
+
+    this.data$
+      .pipe(
+        mergeMap((data) =>
+          this.permissionsService.loadTeamPermissions(null, data.team.id, true)
+        )
+      )
+      .subscribe();
 
     // Set the topbar color from config file.
     this.topbarColor = this.settingsService.settings.AppTopBarHexColor;

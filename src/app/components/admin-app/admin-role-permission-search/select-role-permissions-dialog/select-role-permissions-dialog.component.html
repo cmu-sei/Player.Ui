@@ -11,7 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       [value]="item.id"
       (click)="updateSelection(item.id)"
     >
-      {{ item.key }}
+      {{ item.key ?? item.name }}
     </mat-list-option>
   </mat-selection-list>
   <p>Options selected: {{ selectedPermissions.length }}</p>

@@ -24,9 +24,13 @@ import { Observable }                                        from 'rxjs';
 
 import { Application } from '../model/models';
 import { ApplicationInstance } from '../model/models';
-import { ApplicationInstanceForm } from '../model/models';
 import { ApplicationTemplate } from '../model/models';
-import { ApplicationTemplateForm } from '../model/models';
+import { CreateApplicationCommand } from '../model/models';
+import { CreateApplicationInstanceCommand } from '../model/models';
+import { CreateApplicationTemplateCommand } from '../model/models';
+import { EditApplicationCommand } from '../model/models';
+import { EditApplicationInstanceCommand } from '../model/models';
+import { EditApplicationTemplateCommand } from '../model/models';
 import { ProblemDetails } from '../model/models';
 
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -96,19 +100,19 @@ export class ApplicationService {
     }
 
     /**
-     * Creates a new Application within an View
-     * Creates a new Application within an View with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team within the specified View
-     * @param id The id of the View
-     * @param application The data to create the Application with
+     * Creates a new Application within a View.
+     * Creates a new Application within a View with the attributes specified. An Application Template is a top-level resource that can optionally be the parent of an View specific Application resource, which would inherit it\&#39;s properties
+     * @param viewId 
+     * @param createApplicationCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createApplication(id: string, application?: Application, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Application>;
-    public createApplication(id: string, application?: Application, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Application>>;
-    public createApplication(id: string, application?: Application, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Application>>;
-    public createApplication(id: string, application?: Application, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
-        if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling createApplication.');
+    public createApplication(viewId: string, createApplicationCommand?: CreateApplicationCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Application>;
+    public createApplication(viewId: string, createApplicationCommand?: CreateApplicationCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Application>>;
+    public createApplication(viewId: string, createApplicationCommand?: CreateApplicationCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Application>>;
+    public createApplication(viewId: string, createApplicationCommand?: CreateApplicationCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
+        if (viewId === null || viewId === undefined) {
+            throw new Error('Required parameter viewId was null or undefined when calling createApplication.');
         }
 
         let headers = this.defaultHeaders;
@@ -125,9 +129,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -138,9 +140,7 @@ export class ApplicationService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -152,8 +152,8 @@ export class ApplicationService {
             responseType = 'text';
         }
 
-        return this.httpClient.post<Application>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(id))}/applications`,
-            application,
+        return this.httpClient.post<Application>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(viewId))}/applications`,
+            createApplicationCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -165,17 +165,17 @@ export class ApplicationService {
     }
 
     /**
-     * Creates a new Application Instance within a Team
-     * Creates a new Application Instance within a Team with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team within the specified Team\&#39;s View
-     * @param id The id of the Team
-     * @param applicationInstanceForm The data to create the Application Instance with
+     * Creates a new Application Instance within a Team.
+     * Creates a new Application Instance within a Team with the attributes specified
+     * @param id 
+     * @param createApplicationInstanceCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<ApplicationInstance>;
-    public createApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<ApplicationInstance>>;
-    public createApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<ApplicationInstance>>;
-    public createApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public createApplicationInstance(id: string, createApplicationInstanceCommand?: CreateApplicationInstanceCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ApplicationInstance>;
+    public createApplicationInstance(id: string, createApplicationInstanceCommand?: CreateApplicationInstanceCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ApplicationInstance>>;
+    public createApplicationInstance(id: string, createApplicationInstanceCommand?: CreateApplicationInstanceCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ApplicationInstance>>;
+    public createApplicationInstance(id: string, createApplicationInstanceCommand?: CreateApplicationInstanceCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling createApplicationInstance.');
         }
@@ -194,9 +194,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -207,9 +205,7 @@ export class ApplicationService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -222,7 +218,7 @@ export class ApplicationService {
         }
 
         return this.httpClient.post<ApplicationInstance>(`${this.configuration.basePath}/api/teams/${encodeURIComponent(String(id))}/application-instances`,
-            applicationInstanceForm,
+            createApplicationInstanceCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -234,16 +230,16 @@ export class ApplicationService {
     }
 
     /**
-     * Creates a new Application Template
-     * Creates a new Application Template with the attributes specified  &lt;para /&gt;  An Application Template is a top-level resource that can optionally be the parent of an View specific Application resource, which would inherit it\&#39;s properties  &lt;para /&gt;  Accessible only to a SuperUser
-     * @param applicationTemplateForm 
+     * Creates a new Application Template.
+     * Creates a new Application Template with the attributes specified. An Application Template is a top-level resource that can optionally be the parent of an View specific Application resource, which would inherit it\&#39;s properties
+     * @param createApplicationTemplateCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createApplicationTemplate(applicationTemplateForm?: ApplicationTemplateForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<ApplicationTemplate>;
-    public createApplicationTemplate(applicationTemplateForm?: ApplicationTemplateForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<ApplicationTemplate>>;
-    public createApplicationTemplate(applicationTemplateForm?: ApplicationTemplateForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<ApplicationTemplate>>;
-    public createApplicationTemplate(applicationTemplateForm?: ApplicationTemplateForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public createApplicationTemplate(createApplicationTemplateCommand?: CreateApplicationTemplateCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ApplicationTemplate>;
+    public createApplicationTemplate(createApplicationTemplateCommand?: CreateApplicationTemplateCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ApplicationTemplate>>;
+    public createApplicationTemplate(createApplicationTemplateCommand?: CreateApplicationTemplateCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ApplicationTemplate>>;
+    public createApplicationTemplate(createApplicationTemplateCommand?: CreateApplicationTemplateCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
 
         let headers = this.defaultHeaders;
 
@@ -259,9 +255,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -272,9 +266,7 @@ export class ApplicationService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -287,7 +279,7 @@ export class ApplicationService {
         }
 
         return this.httpClient.post<ApplicationTemplate>(`${this.configuration.basePath}/api/application-templates`,
-            applicationTemplateForm,
+            createApplicationTemplateCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -299,9 +291,9 @@ export class ApplicationService {
     }
 
     /**
-     * Deletes an Application
-     * Deletes an Application with the specified id  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team within the specified Team\&#39;s View
-     * @param id The id of the Application
+     * Deletes an Application.
+     * Deletes an Application with the specified id.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -353,9 +345,9 @@ export class ApplicationService {
     }
 
     /**
-     * Deletes an Application Instance
-     * Deletes an Application Instance with the specified id  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team in the Application Instances\&#39;s Team\&#39;s View
-     * @param id The id of the Application
+     * Deletes an Application Instance.
+     * Deletes an Application Instance with the specified id.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -407,9 +399,9 @@ export class ApplicationService {
     }
 
     /**
-     * Deletes an Application Template
-     * Deletes an Application Template with the specified id  &lt;para /&gt;  Accessible only to a SuperUser
-     * @param id The id of the Application Template to delete
+     * Deletes an Application Template.
+     * Deletes an Application Template with the specified id.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -461,16 +453,16 @@ export class ApplicationService {
     }
 
     /**
-     * Gets a specific Application by id
-     * Returns the Application with the id specified  &lt;para /&gt;  Accessible to a SuperUser or a User on an Admin Team in the Application\&#39;s assigned View
-     * @param id The id of the Application
+     * Gets a specific Application by id.
+     * Returns the Application with the id specified.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getApplication(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Application>;
-    public getApplication(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Application>>;
-    public getApplication(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Application>>;
-    public getApplication(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public getApplication(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Application>;
+    public getApplication(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Application>>;
+    public getApplication(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Application>>;
+    public getApplication(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getApplication.');
         }
@@ -489,9 +481,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -517,16 +507,16 @@ export class ApplicationService {
     }
 
     /**
-     * Gets a specific Application Instance by id
-     * Returns the Application Instance with the id specified  &lt;para /&gt;  Accessible to a SuperUser or a User on an Admin Team in the Application Instance\&#39;s Team\&#39;s View
-     * @param id The id of the Application Instance
+     * Gets a specific Application Instance by id.
+     * Returns the Application Instance with the id specified.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getApplicationInstance(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<ApplicationInstance>;
-    public getApplicationInstance(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<ApplicationInstance>>;
-    public getApplicationInstance(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<ApplicationInstance>>;
-    public getApplicationInstance(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public getApplicationInstance(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ApplicationInstance>;
+    public getApplicationInstance(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ApplicationInstance>>;
+    public getApplicationInstance(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ApplicationInstance>>;
+    public getApplicationInstance(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getApplicationInstance.');
         }
@@ -545,9 +535,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -573,16 +561,16 @@ export class ApplicationService {
     }
 
     /**
-     * Gets a specific Application Template by id
-     * Returns the Application Template with the id specified  &lt;para /&gt;  Only accessible to a SuperUser
-     * @param id The id of the Application Template
+     * Gets a specific Application Template by id.
+     * Returns the Application Template with the id specified.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getApplicationTemplate(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<ApplicationTemplate>;
-    public getApplicationTemplate(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<ApplicationTemplate>>;
-    public getApplicationTemplate(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<ApplicationTemplate>>;
-    public getApplicationTemplate(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public getApplicationTemplate(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ApplicationTemplate>;
+    public getApplicationTemplate(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ApplicationTemplate>>;
+    public getApplicationTemplate(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ApplicationTemplate>>;
+    public getApplicationTemplate(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getApplicationTemplate.');
         }
@@ -601,9 +589,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -629,15 +615,15 @@ export class ApplicationService {
     }
 
     /**
-     * Gets all Application Templates in the system
-     * Returns a list of all of the Application Templates in the system.  &lt;para /&gt;  Only accessible to a SuperUser
+     * Gets all Application Templates in the system.
+     * Returns a list of all of the Application Templates in the system.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getApplicationTemplates(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<ApplicationTemplate>>;
-    public getApplicationTemplates(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<ApplicationTemplate>>>;
-    public getApplicationTemplates(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<ApplicationTemplate>>>;
-    public getApplicationTemplates(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public getApplicationTemplates(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Array<ApplicationTemplate>>;
+    public getApplicationTemplates(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Array<ApplicationTemplate>>>;
+    public getApplicationTemplates(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Array<ApplicationTemplate>>>;
+    public getApplicationTemplates(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
 
         let headers = this.defaultHeaders;
 
@@ -653,9 +639,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -681,16 +665,16 @@ export class ApplicationService {
     }
 
     /**
-     * Gets all Applications Instances for a Team
-     * Returns all Application Instances assigned to a specific Team  &lt;para /&gt;  Accessible to a SuperUser, a User on an Admin Team in the Team\&#39;s View, or any User on the specified Team
-     * @param id The id of the Team
+     * Gets all Applications Instances for a Team.
+     * Returns all Application Instances assigned to a specific Team.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getTeamApplicationInstances(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<ApplicationInstance>>;
-    public getTeamApplicationInstances(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<ApplicationInstance>>>;
-    public getTeamApplicationInstances(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<ApplicationInstance>>>;
-    public getTeamApplicationInstances(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public getTeamApplicationInstances(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Array<ApplicationInstance>>;
+    public getTeamApplicationInstances(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Array<ApplicationInstance>>>;
+    public getTeamApplicationInstances(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Array<ApplicationInstance>>>;
+    public getTeamApplicationInstances(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getTeamApplicationInstances.');
         }
@@ -709,9 +693,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -737,18 +719,18 @@ export class ApplicationService {
     }
 
     /**
-     * Gets all Applications for an View
-     * Returns all Applications assigned to a specific View  &lt;para /&gt;  Accessible to a SuperUser or a User on an Admin Team within that View
-     * @param id The id of the View
+     * Gets all Applications for a View.
+     * Returns all Applications assigned to a specific View.
+     * @param viewId 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getViewApplications(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<Application>>;
-    public getViewApplications(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<Application>>>;
-    public getViewApplications(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<Application>>>;
-    public getViewApplications(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
-        if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling getViewApplications.');
+    public getViewApplications(viewId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Array<Application>>;
+    public getViewApplications(viewId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Array<Application>>>;
+    public getViewApplications(viewId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Array<Application>>>;
+    public getViewApplications(viewId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
+        if (viewId === null || viewId === undefined) {
+            throw new Error('Required parameter viewId was null or undefined when calling getViewApplications.');
         }
 
         let headers = this.defaultHeaders;
@@ -765,9 +747,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -781,7 +761,7 @@ export class ApplicationService {
             responseType = 'text';
         }
 
-        return this.httpClient.get<Array<Application>>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(id))}/applications`,
+        return this.httpClient.get<Array<Application>>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(viewId))}/applications`,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -793,16 +773,16 @@ export class ApplicationService {
     }
 
     /**
-     * Moves an Application Instance down
-     * Moves an Application Instance down one spot in the list  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team in the Application Instances\&#39;s Team\&#39;s View
-     * @param id The id of the Application Instance
+     * Moves an Application Instance down.
+     * Moves an Application Instance down one spot in the list.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public moveDownApplicationInstance(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<ApplicationInstance>>;
-    public moveDownApplicationInstance(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<ApplicationInstance>>>;
-    public moveDownApplicationInstance(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<ApplicationInstance>>>;
-    public moveDownApplicationInstance(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public moveDownApplicationInstance(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Array<ApplicationInstance>>;
+    public moveDownApplicationInstance(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Array<ApplicationInstance>>>;
+    public moveDownApplicationInstance(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Array<ApplicationInstance>>>;
+    public moveDownApplicationInstance(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling moveDownApplicationInstance.');
         }
@@ -821,9 +801,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -850,16 +828,16 @@ export class ApplicationService {
     }
 
     /**
-     * Moves an Application Instance up
-     * Moves an Application Instance up one spot in the list  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team in the Application Instances\&#39;s Team\&#39;s View
-     * @param id The id of the Application Instance
+     * Moves an Application Instance up.
+     * Moves an Application Instance up one spot in the list.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public moveUpApplicationInstance(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<ApplicationInstance>>;
-    public moveUpApplicationInstance(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<ApplicationInstance>>>;
-    public moveUpApplicationInstance(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<ApplicationInstance>>>;
-    public moveUpApplicationInstance(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public moveUpApplicationInstance(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Array<ApplicationInstance>>;
+    public moveUpApplicationInstance(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Array<ApplicationInstance>>>;
+    public moveUpApplicationInstance(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Array<ApplicationInstance>>>;
+    public moveUpApplicationInstance(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling moveUpApplicationInstance.');
         }
@@ -878,9 +856,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -907,17 +883,17 @@ export class ApplicationService {
     }
 
     /**
-     * Updates an Application
-     * Updates an Application with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team in the Application\&#39;s assigned View
+     * Updates an Application.
+     * Updates an Application with the attributes specified
      * @param id 
-     * @param application 
+     * @param editApplicationCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateApplication(id: string, application?: Application, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Application>;
-    public updateApplication(id: string, application?: Application, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Application>>;
-    public updateApplication(id: string, application?: Application, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Application>>;
-    public updateApplication(id: string, application?: Application, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateApplication(id: string, editApplicationCommand?: EditApplicationCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Application>;
+    public updateApplication(id: string, editApplicationCommand?: EditApplicationCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Application>>;
+    public updateApplication(id: string, editApplicationCommand?: EditApplicationCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Application>>;
+    public updateApplication(id: string, editApplicationCommand?: EditApplicationCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateApplication.');
         }
@@ -936,9 +912,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -949,9 +923,7 @@ export class ApplicationService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -964,7 +936,7 @@ export class ApplicationService {
         }
 
         return this.httpClient.put<Application>(`${this.configuration.basePath}/api/applications/${encodeURIComponent(String(id))}`,
-            application,
+            editApplicationCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -976,17 +948,17 @@ export class ApplicationService {
     }
 
     /**
-     * Updates an Application Instance
-     * Updates an Application Instance with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser or a User on an Admin Team in the Application Instances\&#39;s Team\&#39;s View
-     * @param id The id of the Application Instance
-     * @param applicationInstanceForm The updated instance values
+     * Updates an Application Instance.
+     * Updates an Application Instance with the attributes specified.
+     * @param id 
+     * @param editApplicationInstanceCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<ApplicationInstance>;
-    public updateApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<ApplicationInstance>>;
-    public updateApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<ApplicationInstance>>;
-    public updateApplicationInstance(id: string, applicationInstanceForm?: ApplicationInstanceForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateApplicationInstance(id: string, editApplicationInstanceCommand?: EditApplicationInstanceCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ApplicationInstance>;
+    public updateApplicationInstance(id: string, editApplicationInstanceCommand?: EditApplicationInstanceCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ApplicationInstance>>;
+    public updateApplicationInstance(id: string, editApplicationInstanceCommand?: EditApplicationInstanceCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ApplicationInstance>>;
+    public updateApplicationInstance(id: string, editApplicationInstanceCommand?: EditApplicationInstanceCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateApplicationInstance.');
         }
@@ -1005,9 +977,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -1018,9 +988,7 @@ export class ApplicationService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -1033,7 +1001,7 @@ export class ApplicationService {
         }
 
         return this.httpClient.put<ApplicationInstance>(`${this.configuration.basePath}/api/application-instances/${encodeURIComponent(String(id))}`,
-            applicationInstanceForm,
+            editApplicationInstanceCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -1045,17 +1013,17 @@ export class ApplicationService {
     }
 
     /**
-     * Updates an Application Template
-     * Updates an Application Template with the attributes specified  &lt;para /&gt;  Accessible only to a SuperUser
+     * Updates an Application Template.
+     * Updates an Application Template with the attributes specified
      * @param id 
-     * @param applicationTemplateForm The updated Application Template values
+     * @param editApplicationTemplateCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateApplicationTemplate(id: string, applicationTemplateForm?: ApplicationTemplateForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<ApplicationTemplate>;
-    public updateApplicationTemplate(id: string, applicationTemplateForm?: ApplicationTemplateForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<ApplicationTemplate>>;
-    public updateApplicationTemplate(id: string, applicationTemplateForm?: ApplicationTemplateForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<ApplicationTemplate>>;
-    public updateApplicationTemplate(id: string, applicationTemplateForm?: ApplicationTemplateForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateApplicationTemplate(id: string, editApplicationTemplateCommand?: EditApplicationTemplateCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ApplicationTemplate>;
+    public updateApplicationTemplate(id: string, editApplicationTemplateCommand?: EditApplicationTemplateCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ApplicationTemplate>>;
+    public updateApplicationTemplate(id: string, editApplicationTemplateCommand?: EditApplicationTemplateCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ApplicationTemplate>>;
+    public updateApplicationTemplate(id: string, editApplicationTemplateCommand?: EditApplicationTemplateCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateApplicationTemplate.');
         }
@@ -1074,9 +1042,7 @@ export class ApplicationService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -1087,9 +1053,7 @@ export class ApplicationService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -1102,7 +1066,7 @@ export class ApplicationService {
         }
 
         return this.httpClient.put<ApplicationTemplate>(`${this.configuration.basePath}/api/application-templates/${encodeURIComponent(String(id))}`,
-            applicationTemplateForm,
+            editApplicationTemplateCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,

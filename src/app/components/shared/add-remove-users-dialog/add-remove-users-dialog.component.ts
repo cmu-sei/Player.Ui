@@ -16,15 +16,13 @@ import {
   TeamService,
   TeamMembershipService,
   TeamMembership,
+  TeamRole,
+  TeamPermissionModel,
 } from '../../../generated/player-api';
-import {
-  Role,
-  RoleService,
-  TeamMembershipForm,
-  Permission,
-} from '../../../generated/player-api';
+import { Role, RoleService, Permission } from '../../../generated/player-api';
 import { forkJoin, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { TeamRolesService } from '../../../services/roles/team-roles.service';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -68,7 +66,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     public userService: UserService,
     public teamService: TeamService,
     public teamMembershipService: TeamMembershipService,
-    public roleService: RoleService
+    public roleService: TeamRolesService
   ) {
     this.dialogRef.disableClose = true;
     this.isLoading = false;
@@ -88,10 +86,10 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     this.pageEvent.pageSize = this.defaultPageSize;
 
     this.roleService.getRoles().subscribe((roles) => {
-      const nullRole = <Role>{
+      const nullRole = <TeamRole>{
         id: '',
         name: 'None',
-        permissions: new Array<Permission>(),
+        permissions: new Array<TeamPermissionModel>(),
       };
 
       roles.unshift(nullRole);
@@ -142,8 +140,8 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           tUsers.forEach((tu) => {
             membershipObservable.push(
               this.teamMembershipService.getTeamMemberships(
-                this.team.viewId,
-                tu.id
+                tu.id,
+                this.team.viewId
               )
             );
           });
@@ -219,7 +217,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
         const tUsers = this.teamUserDataSource.data.slice(0);
 
         this.teamMembershipService
-          .getTeamMemberships(this.team.viewId, user.id)
+          .getTeamMemberships(user.id, this.team.viewId)
           .subscribe((tmbs) => {
             const teamMembership = tmbs.find(
               (tmb) => tmb.teamId === this.team.id
@@ -282,15 +280,14 @@ export class AddRemoveUsersDialogComponent implements OnInit {
         '   role: ' +
         teamUser.teamMembership.roleId
     );
-    const form = <TeamMembershipForm>{
-      roleId:
-        teamUser.teamMembership.roleId === ''
-          ? null
-          : teamUser.teamMembership.roleId,
-    };
 
     this.teamMembershipService
-      .updateTeamMembership(teamUser.teamMembership.id, form)
+      .updateTeamMembership(teamUser.teamMembership.id, {
+        roleId:
+          teamUser.teamMembership.roleId === ''
+            ? null
+            : teamUser.teamMembership.roleId,
+      })
       .subscribe(() => {
         console.log('Update complete');
       });

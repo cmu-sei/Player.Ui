@@ -103,6 +103,10 @@ import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-
 import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from './components/shared/create-application-dialog/create-application-dialog.component';
 import { ResizableModule } from 'angular-resizable-element';
+import { SystemRolesComponent } from './components/admin-app/admin-roles/roles/roles.component';
+import { AdminRolesComponent } from './components/admin-app/admin-roles/admin-roles.component';
+import { NameDialogComponent } from './components/shared/name-dialog/name-dialog.component';
+import { TeamRolesComponent } from './components/admin-app/admin-roles/team-roles/team-roles.component';
 
 @NgModule({
   exports: [
@@ -190,6 +194,10 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     AppAdminSubscriptionSearchComponent,
     EditSubscriptionComponent,
     CreateApplicationDialogComponent,
+    NameDialogComponent,
+    SystemRolesComponent,
+    AdminRolesComponent,
+    TeamRolesComponent,
   ],
   imports: [
     BrowserModule,

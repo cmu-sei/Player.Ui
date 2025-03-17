@@ -89,12 +89,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false">
         <a
-          *ngIf="
-            (team && team.canManage) ||
-            (team &&
-              currentUser.profile.isSystemAdmin !== null &&
-              currentUser.profile.isSystemAdmin)
-          "
+          *ngIf="team && showEditView$ | async"
           mat-menu-item
           (click)="editFn($event)"
           [href]="getEditViewUrl()"
@@ -102,11 +97,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           Edit View
         </a>
         <a
-          *ngIf="
-            currentUser.profile.isSystemAdmin !== null &&
-            currentUser.profile.isSystemAdmin &&
-            topbarView === 'player-admin'
-          "
+          *ngIf="(showAdministration$ | async) && topbarView === 'player-admin'"
           [routerLink]="['/']"
           mat-menu-item
         >
@@ -114,7 +105,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </a>
         <a
           *ngIf="
-            currentUser.profile.isSystemAdmin &&
+            (showAdministration$ | async) &&
             topbarView !== TopbarView.PLAYER_ADMIN
           "
           [routerLink]="['/admin']"

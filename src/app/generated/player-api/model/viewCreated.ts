@@ -19,5 +19,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 export interface ViewCreated { 
     viewId?: string;
     parentId?: string | null;
+    viewName?: string | null;
 }
 

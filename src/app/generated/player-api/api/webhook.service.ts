@@ -22,6 +22,7 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
+import { CreateWebhookSubscriptionCommand } from '../model/models';
 import { ProblemDetails } from '../model/models';
 import { WebhookSubscription } from '../model/models';
 import { WebhookSubscriptionForm } from '../model/models';
@@ -94,15 +95,16 @@ export class WebhookService {
     }
 
     /**
-     * Subscribes to an event in the Player API
-     * @param webhookSubscriptionForm 
+     * Subscribes to an event.
+     * Creates a subscription to send specified events to the target.
+     * @param createWebhookSubscriptionCommand 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public createWebhookSubscription(webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<any>;
-    public createWebhookSubscription(webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<any>>;
-    public createWebhookSubscription(webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<any>>;
-    public createWebhookSubscription(webhookSubscriptionForm?: WebhookSubscriptionForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
+    public createWebhookSubscription(createWebhookSubscriptionCommand?: CreateWebhookSubscriptionCommand, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<WebhookSubscription>;
+    public createWebhookSubscription(createWebhookSubscriptionCommand?: CreateWebhookSubscriptionCommand, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<WebhookSubscription>>;
+    public createWebhookSubscription(createWebhookSubscriptionCommand?: CreateWebhookSubscriptionCommand, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<WebhookSubscription>>;
+    public createWebhookSubscription(createWebhookSubscriptionCommand?: CreateWebhookSubscriptionCommand, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
 
         let headers = this.defaultHeaders;
 
@@ -129,9 +131,7 @@ export class WebhookService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -143,8 +143,8 @@ export class WebhookService {
             responseType = 'text';
         }
 
-        return this.httpClient.post<any>(`${this.configuration.basePath}/api/webhooks/subscribe`,
-            webhookSubscriptionForm,
+        return this.httpClient.post<WebhookSubscription>(`${this.configuration.basePath}/api/webhooks/subscribe`,
+            createWebhookSubscriptionCommand,
             {
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
@@ -156,8 +156,9 @@ export class WebhookService {
     }
 
     /**
-     * Deletes the subscription with the given id
-     * @param id The Id of the subscription to delete
+     * Deletes a Webhook Subscription.
+     * Deletes the Webhook Subscription with the specified id.
+     * @param id 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -209,14 +210,15 @@ export class WebhookService {
     }
 
     /**
-     * Returns all subscriptions in the system
+     * Gets all Webhook Subscriptions in the system.
+     * Returns a list of all of the Webhook Subscriptions in the system.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getAllWebhooks(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<Array<WebhookSubscription>>;
-    public getAllWebhooks(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<Array<WebhookSubscription>>>;
-    public getAllWebhooks(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<Array<WebhookSubscription>>>;
-    public getAllWebhooks(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public getAllWebhooks(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<Array<WebhookSubscription>>;
+    public getAllWebhooks(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<Array<WebhookSubscription>>>;
+    public getAllWebhooks(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<Array<WebhookSubscription>>>;
+    public getAllWebhooks(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
 
         let headers = this.defaultHeaders;
 
@@ -232,9 +234,7 @@ export class WebhookService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -260,16 +260,17 @@ export class WebhookService {
     }
 
     /**
-     * Partially updates a subscription
-     * @param id The Id of the subscription to update
+     * Partially updates a Webhook Subscription.
+     * Partially updates a Webhook Subscription with the attributes specified.
+     * @param id 
      * @param webhookSubscriptionPartialEditForm 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<WebhookSubscription>;
-    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<WebhookSubscription>>;
-    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<WebhookSubscription>>;
-    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<WebhookSubscription>;
+    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<WebhookSubscription>>;
+    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<WebhookSubscription>>;
+    public partialUpdateWebhookSubscription(id: string, webhookSubscriptionPartialEditForm?: WebhookSubscriptionPartialEditForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling partialUpdateWebhookSubscription.');
         }
@@ -288,9 +289,7 @@ export class WebhookService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -301,9 +300,7 @@ export class WebhookService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {
@@ -328,16 +325,17 @@ export class WebhookService {
     }
 
     /**
-     * Updates a subscription
-     * @param id The Id of the subscription to update
+     * Updates a Webhook Subscription.
+     * Updates a Webhook Subscription with the attributes specified.
+     * @param id 
      * @param webhookSubscriptionForm 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<WebhookSubscription>;
-    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpResponse<WebhookSubscription>>;
-    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<HttpEvent<WebhookSubscription>>;
-    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/plain' | 'application/json' | 'text/json'}): Observable<any> {
+    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<WebhookSubscription>;
+    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<WebhookSubscription>>;
+    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<WebhookSubscription>>;
+    public updateWebhookSubscription(id: string, webhookSubscriptionForm?: WebhookSubscriptionForm, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateWebhookSubscription.');
         }
@@ -356,9 +354,7 @@ export class WebhookService {
         if (httpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'text/plain',
-                'application/json',
-                'text/json'
+                'application/json'
             ];
             httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -369,9 +365,7 @@ export class WebhookService {
 
         // to determine the Content-Type header
         const consumes: string[] = [
-            'application/json',
-            'text/json',
-            'application/_*+json'
+            'application/json'
         ];
         const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
         if (httpContentTypeSelected !== undefined) {

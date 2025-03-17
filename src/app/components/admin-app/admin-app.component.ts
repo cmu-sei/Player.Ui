@@ -10,10 +10,12 @@ import {
   ComnAuthQuery,
 } from '@cmusei/crucible-common';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { combineLatest, Observable, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
+import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
+import { SystemPermission } from '../../generated/player-api';
 
 @Component({
   selector: 'app-admin-app',
@@ -25,15 +27,12 @@ export class AdminAppComponent implements OnInit, OnDestroy {
   public topbarColor = '#4c7aa2';
   public topbarTextColor = '#FFFFFF';
   public TopbarView = TopbarView;
-  public queryParams: any = {
-    section: Section.ADMIN_VIEWS,
-  };
+  public queryParams: any;
   Section = Section;
   unsubscribe$: Subject<null> = new Subject<null>();
   theme$: Observable<Theme>;
-  public section$: Observable<Section> =
-    this.routerQuery.selectQueryParams('section');
   public title = '';
+  public permissions$ = this.permissionsService.permissions$;
 
   public sectionItems: Array<SectionItem> = [
     {
@@ -41,39 +40,64 @@ export class AdminAppComponent implements OnInit, OnDestroy {
       section: Section.ADMIN_VIEWS,
       icon: 'ic_crucible_player',
       svgIcon: true,
+      permission: SystemPermission.ViewViews,
     },
     {
       name: 'Users',
       section: Section.ADMIN_USERS,
       icon: 'assets/img/SP_Icon_User.png',
       svgIcon: false,
+      permission: SystemPermission.ViewUsers,
     },
     {
       name: 'Application Templates',
       section: Section.ADMIN_APP_TEMP,
       icon: 'assets/img/SP_Icon_Intel.png',
       svgIcon: false,
+      permission: SystemPermission.ViewApplications,
     },
     {
-      name: 'Roles / Permissions',
+      name: 'Roles',
       section: Section.ADMIN_ROLE_PERM,
       icon: 'assets/img/SP_Icon_Alert.png',
       svgIcon: false,
+      permission: SystemPermission.ViewRoles,
     },
     {
       name: 'Subscriptions',
       section: Section.ADMIN_SUBS,
       icon: 'assets/img/subscription.png',
       svgIcon: false,
+      permission: SystemPermission.ViewWebhookSubscriptions,
     },
   ];
+
+  public section$: Observable<Section> = combineLatest([
+    this.routerQuery.selectQueryParams('section'),
+    this.permissions$,
+  ]).pipe(
+    map(([queryParam, permissions]) => {
+      if (
+        queryParam &&
+        Object.values(Section).includes(queryParam as Section)
+      ) {
+        return queryParam as Section;
+      } else {
+        const sectionItem = this.sectionItems.find((x) =>
+          permissions.includes(x.permission)
+        );
+        return sectionItem?.section;
+      }
+    })
+  );
 
   constructor(
     private settingsService: ComnSettingsService,
     private router: Router,
     private routerQuery: RouterQuery,
     private authQuery: ComnAuthQuery,
-    public loggedInUserService: LoggedInUserService
+    public loggedInUserService: LoggedInUserService,
+    public permissionsService: UserPermissionsService
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
@@ -91,7 +115,7 @@ export class AdminAppComponent implements OnInit, OnDestroy {
         if (sectionEnum != null) {
           this.sectionChangedFn(sectionEnum);
         } else {
-          this.sectionChangedFn(Section.ADMIN_VIEWS);
+          //this.sectionChangedFn(Section.ADMIN_VIEWS);
         }
       });
 
@@ -148,4 +172,5 @@ export interface SectionItem {
   icon: string;
   section: Section;
   svgIcon: boolean;
+  permission: SystemPermission;
 }

@@ -7,7 +7,6 @@ import {
   ApplicationService,
   ApplicationInstance,
   Application,
-  ApplicationInstanceForm,
   View,
   ApplicationTemplate,
 } from '../../../generated/player-api';
@@ -99,13 +98,12 @@ export class TeamApplicationsSelectComponent implements OnInit {
    * @param app The app to add
    */
   addViewAppToTeam(app: Application): void {
-    const appInstance = <ApplicationInstanceForm>{
-      teamId: this.team.id,
-      applicationId: app.id,
-      displayOrder: this.applications.length,
-    };
     this.applicationService
-      .createApplicationInstance(this.team.id, appInstance)
+      .createApplicationInstance(this.team.id, {
+        teamId: this.team.id,
+        applicationId: app.id,
+        displayOrder: this.applications.length,
+      })
       .subscribe(() => {
         this.refreshTeamApplications();
       });
@@ -147,14 +145,12 @@ export class TeamApplicationsSelectComponent implements OnInit {
               const apps = this.applications.filter((a) => a.id !== app.id);
               apps.forEach((a) => {
                 if (a.displayOrder !== index) {
-                  const appOrdered = <ApplicationInstanceForm>{
-                    id: a.id,
-                    teamId: this.team.id,
-                    applicationId: a.applicationId,
-                    displayOrder: index,
-                  };
                   this.applicationService
-                    .updateApplicationInstance(appOrdered.id, appOrdered)
+                    .updateApplicationInstance(a.id, {
+                      teamId: this.team.id,
+                      applicationId: a.applicationId,
+                      displayOrder: index,
+                    })
                     .subscribe(() => {
                       a.displayOrder = index; // Update here rather than calling again.
                     });

@@ -18,9 +18,8 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 export interface Permission { 
     id?: string;
-    key?: string | null;
-    value?: string | null;
+    name?: string | null;
     description?: string | null;
-    readOnly?: boolean;
+    immutable?: boolean;
 }
 

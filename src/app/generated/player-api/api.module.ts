@@ -15,6 +15,8 @@ import { PermissionService } from './api/permission.service';
 import { RoleService } from './api/role.service';
 import { TeamService } from './api/team.service';
 import { TeamMembershipService } from './api/teamMembership.service';
+import { TeamPermissionService } from './api/teamPermission.service';
+import { TeamRoleService } from './api/teamRole.service';
 import { UserService } from './api/user.service';
 import { ViewService } from './api/view.service';
 import { ViewMembershipService } from './api/viewMembership.service';
