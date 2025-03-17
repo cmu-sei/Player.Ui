@@ -76,27 +76,6 @@ export class AdminUserEditComponent implements OnChanges {
   }
 
   /**
-   * Updates the user permissions
-   * @param permission
-   */
-  updatePermissions(permission) {
-    // const index = this.user.permissions.findIndex(
-    //   (x) => x.id === permission.id
-    // );
-    // if (index === -1) {
-    //   this.user.permissions.push(permission);
-    //   this.permissionService
-    //     .addPermissionToUser(this.user.id, permission.id)
-    //     .subscribe();
-    // } else {
-    //   this.user.permissions.slice(index);
-    //   this.permissionService
-    //     .removePermissionFromUser(this.user.id, permission.id)
-    //     .subscribe();
-    // }
-  }
-
-  /**
    * Updates the user role
    */
   updateRole() {
