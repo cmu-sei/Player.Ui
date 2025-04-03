@@ -20,97 +20,84 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       (resizeEnd)="resizeEnd($event)"
       [ngStyle]="resizeStyle"
     >
-      <mat-sidenav
-        #sidenav
-        class="appbarmenu-container"
-        mode="side"
-        [opened]="opened$ | async"
-        mwlResizable
-        (resizing)="resizingFn($event)"
-        (resizeEnd)="resizeEnd($event)"
-        [ngStyle]="resizeStyle"
-      >
-        <div class="grid">
-          <div>
-            <mat-list>
-              <mat-list-item
-                class="d-flex"
-                [ngClass]="
-                  (mini$ | async) ? 'player-title-mini' : 'player-title'
-                "
-              >
-                <a class="nolink" [routerLink]="['/']">
-                  <div class="d-flex align-items-center">
-                    <mat-icon
-                      [ngClass]="
-                        (mini$ | async) ? 'player-icon-mini' : 'player-icon'
-                      "
-                      svgIcon="ic_crucible_player"
-                    ></mat-icon>
-                    <h2 *ngIf="!(mini$ | async)">
-                      <b>{{ data.title }}</b>
-                    </h2>
-                  </div>
-                </a>
-              </mat-list-item>
-            </mat-list>
-            <mat-divider></mat-divider>
-            <app-application-list
-              [viewId]="data.view.id"
-              [teams]="data.teams"
-              [mini]="mini$ | async"
-            ></app-application-list>
-            <img
-              *ngIf="!(mini$ | async)"
-              alt="crucible logo"
-              class="crucible-logo"
-              [src]="
-                (theme$ | async) === 'light-theme'
-                  ? 'assets/img/crucible-logo-light.png'
-                  : 'assets/img/crucible-logo-dark.png'
-              "
-            />
-          </div>
-          <div
+      <div class="grid">
+        <div>
+          <mat-list>
+            <mat-list-item
+              class="d-flex"
+              [ngClass]="(mini$ | async) ? 'player-title-mini' : 'player-title'"
+            >
+              <a class="nolink" [routerLink]="['/']">
+                <div class="d-flex align-items-center">
+                  <mat-icon
+                    [ngClass]="
+                      (mini$ | async) ? 'player-icon-mini' : 'player-icon'
+                    "
+                    svgIcon="ic_crucible_player"
+                  ></mat-icon>
+                  <h2 *ngIf="!(mini$ | async)">
+                    <b>{{ data.title }}</b>
+                  </h2>
+                </div>
+              </a>
+            </mat-list-item>
+          </mat-list>
+          <mat-divider></mat-divider>
+          <app-application-list
+            [viewId]="data.view.id"
+            [teams]="data.teams"
+            [mini]="mini$ | async"
+          ></app-application-list>
+          <img
             *ngIf="!(mini$ | async)"
-            class="resize-handle-right"
-            mwlResizeHandle
-            [resizeEdges]="{ right: true }"
-          ></div>
+            alt="crucible logo"
+            class="crucible-logo"
+            [src]="
+              (theme$ | async) === 'light-theme'
+                ? 'assets/img/crucible-logo-light.png'
+                : 'assets/img/crucible-logo-dark.png'
+            "
+          />
         </div>
-      </mat-sidenav>
-      <mat-sidenav-content class="noscroll">
-        <app-topbar
-          [sidenav]="sidenav"
-          [title]="data.view.name"
-          [topbarColor]="topbarColor"
-          topbarView="player-player"
-          [teams]="data.teams"
-          [team]="data.team"
-          [viewId]="viewId"
-          [mini]="mini$ | async"
-          (setTeam)="setPrimaryTeam($event)"
-          (sidenavToggle)="sidenavToggleFn($event)"
-          (editView)="editViewFn($event)"
-          [topbarTextColor]="topbarTextColor"
-        ></app-topbar>
+        <div
+          *ngIf="!(mini$ | async)"
+          class="resize-handle-right"
+          mwlResizeHandle
+          [resizeEdges]="{ right: true }"
+        ></div>
+      </div>
+    </mat-sidenav>
+    <mat-sidenav-content class="noscroll">
+      <app-topbar
+        [sidenav]="sidenav"
+        [title]="data.view.name"
+        [topbarColor]="topbarColor"
+        topbarView="player-player"
+        [teams]="data.teams"
+        [team]="data.team"
+        [viewId]="viewId"
+        [mini]="mini$ | async"
+        (setTeam)="setPrimaryTeam($event)"
+        (sidenavToggle)="sidenavToggleFn($event)"
+        (editView)="editViewFn($event)"
+        [topbarTextColor]="topbarTextColor"
+      ></app-topbar>
 
-        <app-focused-app></app-focused-app>
+      <app-focused-app></app-focused-app>
 
-        <app-notifications
-          *ngIf="user$ | async as user; else loading"
-          [viewGuid]="data.view.id"
-          [teamGuid]="data.team.id"
-          [userGuid]="user.profile.id"
-          [userToken]="user.access_token"
-          [userName]="user.profile.name"
-          [topbarColor]="topbarColor"
-          class="notification-height"
-        >
-        </app-notifications>
-      </mat-sidenav-content>
-    </mat-sidenav-container>
-  </ng-container>
+      <app-notifications
+        *ngIf="user$ | async as user; else loading"
+        [viewGuid]="data.view.id"
+        [teamGuid]="data.team.id"
+        [userGuid]="user.profile.id"
+        [userToken]="user.access_token"
+        [userName]="user.profile.name"
+        [topbarColor]="topbarColor"
+        class="notification-height"
+      >
+      </app-notifications>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
 </ng-container>
 
 <ng-template #loading> LOADING </ng-template>
