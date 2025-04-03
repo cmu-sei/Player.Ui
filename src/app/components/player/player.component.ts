@@ -258,7 +258,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   setResizeStyle() {
     if (!this.miniSubject.getValue()) {
       this.resizeStyle = {
-        'min-width': '10vw',
+        'min-width': '201px',
         'max-width': '33vw',
         width: this.sidenavWidth != null ? `${this.sidenavWidth}px` : null,
       };
