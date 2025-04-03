@@ -9,7 +9,6 @@
 
 .notification-badge {
   margin-left: 20px;
-  margin-top: 9px;
 }
 
 .notification-panel-title {
@@ -22,7 +21,9 @@
 }
 
 @keyframes blinking {
-  0% { background-color: orangered; }
+  0% {
+    background-color: orangered;
+  }
 }
 
 .notificationslist-input {
