@@ -13,11 +13,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <span
         *ngIf="useBadge"
         class="notification-badge"
-        matBadge="{{ newNotificationCount }}"
+        matBadge="{{ newNotificationCount() }}"
         matBadgeOverlap="false"
         matBadgeColor="warn"
         matBadgePosition="before"
-        matBadgeHidden="{{ newNotificationCount < 1 }}"
+        matBadgeHidden="{{ newNotificationCount() < 1 }}"
         matBadgeSize="small"
       >
       </span>
@@ -41,9 +41,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <div id="wrapper">
         <div
           id="time"
-          title="{{ notif.broadcastTime | date: 'MM/dd/yyyy HH:mm' }}"
+          title="{{ notif.broadcastTime | date : 'MM/dd/yyyy HH:mm' }}"
         >
-          <b>{{ notif.broadcastTime | date: 'HH:mm' }}</b>
+          <b>{{ notif.broadcastTime | date : 'HH:mm' }}</b>
         </div>
         <div id="from">
           {{ notif.fromName }}

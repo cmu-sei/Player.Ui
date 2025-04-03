@@ -13,7 +13,7 @@
   },
   "NotificationsSettings": {
     "url": "http://localhost:4300/hubs",
-    "useBadge": false,
+    "useBadge": true,
     "useBlink": false,
     "useBeep": false
   },

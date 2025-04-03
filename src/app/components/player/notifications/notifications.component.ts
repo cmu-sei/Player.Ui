@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { NotificationDataStatus } from '../../../models/notification-data';
@@ -32,7 +32,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public sendMessagePlaceholder: string;
   public notificationsList: Array<NotificationDataStatus>;
   public notificationsHistory: Array<NotificationDataStatus>;
-  public newNotificationCount = 0;
+  public newNotificationCount = signal<number>(0);
   public useBadge = false;
   public useBlink = false;
   public useBeep = false;
@@ -87,7 +87,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         if (msg.broadcastTime != undefined) {
           this.notification = msg as NotificationDataStatus;
           this.notificationsHistory.unshift(this.notification);
-          this.setNewNotificationCount(this.newNotificationCount + 1);
+          this.setNewNotificationCount(this.newNotificationCount() + 1);
           this.playBeep();
 
           if ('Notification' in window) {
@@ -177,7 +177,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     if (
       this.useBlink &&
       !this.showSystemNotifications &&
-      this.newNotificationCount > 0
+      this.newNotificationCount() > 0
     ) {
       return 'blink';
     }
@@ -234,7 +234,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   setNewNotificationCount(count: number) {
-    this.newNotificationCount = count;
+    this.newNotificationCount.set(count);
     if (count < 1) {
       this.titleService.setTitle(this.settingsService.settings.AppTitle);
     } else if (count === 1) {
