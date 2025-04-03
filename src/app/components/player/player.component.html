@@ -4,10 +4,21 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <ng-container *ngIf="data$ | async as data; else loading">
-  <ng-container *ngIf="loaded" ; else loading>
-    <mat-sidenav-container
-      class="appcontent-container"
-      [autosize]="autosizeSidenav"
+  <mat-sidenav-container
+    class="appcontent-container"
+    [autosize]="autosizeSidenav"
+  >
+    <mat-sidenav
+      #sidenav
+      [ngClass]="
+        (mini$ | async) ? 'appbarmenu-container-mini' : 'appbarmenu-container'
+      "
+      mode="side"
+      [opened]="opened$ | async"
+      mwlResizable
+      (resizing)="resizingFn($event)"
+      (resizeEnd)="resizeEnd($event)"
+      [ngStyle]="resizeStyle"
     >
       <mat-sidenav
         #sidenav
