@@ -300,7 +300,7 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
-*/assets/config/settings.env.json
+*/assets/config/settings.env.json*
 
 /dist
 /docker
