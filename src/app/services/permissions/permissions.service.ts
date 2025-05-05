@@ -30,7 +30,7 @@ export class PermissionsService {
       return a.immutable ? -1 : 1; // Put `true` before `false`
     }
     // If 'immutable' values are the same, sort by 'name' (case-insensitive)
-    return a.name.localeCompare(b.name);
+    return a?.name?.localeCompare(b?.name);
   }
 
   load() {
