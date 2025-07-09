@@ -318,6 +318,15 @@ export class AdminViewEditComponent implements OnInit {
       });
   }
 
+  setDefaultTeam(teamId: string) {
+    this.view.defaultTeamId = teamId;
+    this.viewService
+      .updateView(this.view.id, this.view)
+      .subscribe((updatedView) => {
+        this.view = updatedView;
+      });
+  }
+
   /**
    * Delete a team after confirmation
    * @param tm The team to delete
