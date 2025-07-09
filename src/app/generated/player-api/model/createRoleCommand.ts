@@ -18,5 +18,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 export interface CreateRoleCommand { 
     name?: string | null;
+    allPermissions?: boolean;
 }
 

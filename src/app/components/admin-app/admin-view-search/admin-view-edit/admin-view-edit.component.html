@@ -98,6 +98,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               </mat-form-field>
             </div>
           </div>
+
+          <div class="add-margin">
+            <div>
+              <mat-checkbox
+                color="primary"
+                [(ngModel)]="view.isTemplate"
+                (change)="saveViewStatus()"
+                matTooltip="If this View should be considered a template to be used for creating other Views"
+              >
+                Template
+              </mat-checkbox>
+            </div>
+          </div>
         </div>
 
         <div>

@@ -23,5 +23,6 @@ export interface View {
     description?: string | null;
     status?: ViewStatus;
     parentViewId?: string | null;
+    isTemplate?: boolean;
 }
 

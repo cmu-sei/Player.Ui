@@ -329,7 +329,7 @@ export class TeamPermissionService {
 
     /**
      * Gets Team Permissions for the current User.
-     * Returns all TeamPermissions for the current user or those of a specified Team or View.                          If a Team is specified, can optionally include TeamPermissions for all Teams in the same View that the User is a member of.
+     * Returns all TeamPermissions for the current user or those of a specified Team or View.                         If a Team is specified, can optionally include TeamPermissions for all Teams in the same View that the User is a member of.
      * @param viewId 
      * @param teamId 
      * @param includeAllViewTeams 

@@ -21,5 +21,6 @@ export interface EditViewCommand {
     name?: string | null;
     description?: string | null;
     status?: ViewStatus;
+    isTemplate?: boolean;
 }
 
