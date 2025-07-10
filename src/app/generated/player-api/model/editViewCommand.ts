@@ -22,5 +22,6 @@ export interface EditViewCommand {
     description?: string | null;
     status?: ViewStatus;
     isTemplate?: boolean;
+    defaultTeamId?: string | null;
 }
 

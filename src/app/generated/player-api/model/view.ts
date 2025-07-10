@@ -24,5 +24,6 @@ export interface View {
     status?: ViewStatus;
     parentViewId?: string | null;
     isTemplate?: boolean;
+    defaultTeamId?: string | null;
 }
 

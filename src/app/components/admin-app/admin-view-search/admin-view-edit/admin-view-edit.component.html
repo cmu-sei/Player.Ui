@@ -227,6 +227,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <app-roles-permissions-select
                     [team]="teamContainer.team"
                   ></app-roles-permissions-select>
+                  <div>
+                    <mat-checkbox
+                      color="primary"
+                      [checked]="view.defaultTeamId == teamContainer.team.id"
+                      (change)="
+                        setDefaultTeam(
+                          view.defaultTeamId != teamContainer.team.id
+                            ? teamContainer.team.id
+                            : null
+                        )
+                      "
+                      matTooltip="If this is the default Team of the View"
+                    >
+                      Default
+                    </mat-checkbox>
+                  </div>
                   <div class="d-flex justify-content-center">
                     <button
                       mat-button
