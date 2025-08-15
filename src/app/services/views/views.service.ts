@@ -13,12 +13,14 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { TeamData } from '../../models/team-data';
 import { ViewData } from '../../models/view-data';
 import {
+  ArchiveType,
   CreateViewCommand,
   TeamService,
   View,
   ViewService,
   ViewStatus,
 } from '../../generated/player-api';
+import HttpHeaderUtils from '../../utilities/http-header-utils';
 
 const httpOptions = {
   headers: new HttpHeaders({
@@ -69,5 +71,29 @@ export class ViewsService {
 
   public setPrimaryTeamId(userId: string, teamId: string): Observable<any> {
     return this.teamsApi.setUserPrimaryTeam(userId, teamId);
+  }
+
+  export(ids: string[], archiveType: ArchiveType) {
+    return this.viewsApi.exportViews(archiveType, ids, 'response').pipe(
+      map((response) => {
+        return {
+          blob: response.body,
+          filename: HttpHeaderUtils.getFilename(response.headers),
+          hasErrors: HttpHeaderUtils.hasArchiveErrors(response.headers),
+        };
+      })
+    );
+  }
+
+  import(
+    matchApplicationTemplatesByName: boolean,
+    matchRolesByName: boolean,
+    archive: Blob
+  ) {
+    return this.viewsApi.importViews(
+      matchApplicationTemplatesByName,
+      matchRolesByName,
+      archive
+    );
   }
 }

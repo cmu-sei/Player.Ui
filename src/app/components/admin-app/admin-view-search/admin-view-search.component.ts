@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,8 +9,12 @@ import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
-import { filter, map, tap } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import {
+  MatLegacyDialog as MatDialog,
+  MatLegacyDialogRef as MatDialogRef,
+} from '@angular/material/legacy-dialog';
+import { SelectionModel } from '@angular/cdk/collections';
 
 export interface Action {
   Value: string;
@@ -33,17 +37,26 @@ export class AdminViewSearchComponent implements OnInit {
   ];
 
   public viewDataSource: MatTableDataSource<View>;
-  public displayedColumns: string[] = ['name', 'description', 'status'];
+  public displayedColumns: string[] = [
+    'select',
+    'name',
+    'description',
+    'status',
+  ];
   public filterString: string;
   public showEditScreen: boolean;
   public isLoading: boolean;
+
+  private dialogRef: MatDialogRef<any>;
+  selection = new SelectionModel<string>(true, []);
 
   constructor(
     private viewService: ViewService,
     public loggedInUserService: LoggedInUserService,
     public dialogService: DialogService,
     public route: ActivatedRoute,
-    public router: Router
+    public router: Router,
+    private dialog: MatDialog
   ) {}
 
   /**
@@ -191,5 +204,37 @@ export class AdminViewSearchComponent implements OnInit {
    */
   clearFilter() {
     this.applyFilter('');
+  }
+
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.viewDataSource.filteredData.length;
+    return numSelected == numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  toggleAllRows() {
+    this.isAllSelected()
+      ? this.selection.clear()
+      : this.viewDataSource.filteredData.forEach((row) =>
+          this.selection.select(row.id)
+        );
+  }
+
+  openDialog(templateRef: TemplateRef<any>) {
+    this.dialogRef = this.dialog.open(templateRef, {
+      disableClose: true,
+      autoFocus: true,
+    });
+  }
+
+  closeDialog() {
+    this.dialogRef.close();
+  }
+
+  importComplete() {
+    this.dialogRef.close();
+    this.refreshViews();
   }
 }
