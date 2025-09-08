@@ -26,13 +26,12 @@ import { BehaviorSubject, finalize, map } from 'rxjs';
   styleUrls: ['./admin-app-template-export.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminAppTemplateExportComponent implements OnInit {
+export class AdminAppTemplateExportComponent {
   @Input() ids: string[];
 
   @Output() complete = new EventEmitter<boolean>();
 
   form: UntypedFormGroup;
-  isArchiveable: boolean = true;
   archiveTypes = Object.keys(ArchiveType);
   typeString: string;
   includeIcons: AbstractControl;
@@ -61,8 +60,6 @@ export class AdminAppTemplateExportComponent implements OnInit {
       }
     });
   }
-
-  ngOnInit() {}
 
   export() {
     this.onExport(

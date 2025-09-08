@@ -44,8 +44,6 @@ export class AdminAppViewImportComponent {
     });
   }
 
-  ngOnInit() {}
-
   import() {
     this.onImport(
       this.form.value.archive,

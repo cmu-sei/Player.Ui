@@ -28,7 +28,7 @@ import { ApplicationsService } from '../../../services/applications/applications
   styleUrls: ['./admin-app-template-import.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminAppTemplateImportComponent implements OnInit {
+export class AdminAppTemplateImportComponent {
   @Output() complete = new EventEmitter<boolean>();
 
   form: UntypedFormGroup;
@@ -52,8 +52,6 @@ export class AdminAppTemplateImportComponent implements OnInit {
       overwriteExisting: [false, Validators.required],
     });
   }
-
-  ngOnInit() {}
 
   import() {
     this.onImport(this.form.value.archive, this.form.value.overwriteExisting);

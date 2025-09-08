@@ -6,7 +6,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <h2>Export Views</h2>
 
 <form *ngIf="!(hasErrors$ | async)" [formGroup]="form" (ngSubmit)="export()">
-  <mat-form-field *ngIf="isArchiveable">
+  <mat-form-field>
     <mat-label>Archive Type</mat-label>
     <mat-select formControlName="archiveType">
       <mat-option

@@ -25,7 +25,6 @@ export class AdminAppViewExportComponent {
   @Output() complete = new EventEmitter<boolean>();
 
   form: UntypedFormGroup;
-  isArchiveable: boolean = true;
   archiveTypes = Object.keys(ArchiveType);
   typeString: string;
   loading = false;
@@ -40,8 +39,6 @@ export class AdminAppViewExportComponent {
       archiveType: [this.archiveTypes[0]],
     });
   }
-
-  ngOnInit() {}
 
   export() {
     this.onExport(this.ids, ArchiveType[this.form.value.archiveType]);
