@@ -22,9 +22,11 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
+import { ArchiveType } from '../model/models';
 import { CloneViewCommand } from '../model/models';
 import { CreateViewCommand } from '../model/models';
 import { EditViewCommand } from '../model/models';
+import { ImportViewsResult } from '../model/models';
 import { Notification } from '../model/models';
 import { ProblemDetails } from '../model/models';
 import { SendViewNotificationCommand } from '../model/models';
@@ -58,6 +60,19 @@ export class ViewService {
         this.encoder = this.configuration.encoder || new CustomHttpParameterCodec();
     }
 
+    /**
+     * @param consumes string[] mime-types
+     * @return true: consumes contains 'multipart/form-data', false: otherwise
+     */
+    private canConsumeForm(consumes: string[]): boolean {
+        const form = 'multipart/form-data';
+        for (const consume of consumes) {
+            if (form === consume) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     private addToHttpParams(httpParams: HttpParams, value: any, key?: string): HttpParams {
@@ -454,6 +469,70 @@ export class ViewService {
     }
 
     /**
+     * Exports Views.
+     * Exports the specified Views, or all Views if none specified.
+     * @param archiveType 
+     * @param ids 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public exportViews(archiveType: ArchiveType, ids?: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<Blob>;
+    public exportViews(archiveType: ArchiveType, ids?: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<HttpResponse<Blob>>;
+    public exportViews(archiveType: ArchiveType, ids?: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<HttpEvent<Blob>>;
+    public exportViews(archiveType: ArchiveType, ids?: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<any> {
+        if (archiveType === null || archiveType === undefined) {
+            throw new Error('Required parameter archiveType was null or undefined when calling exportViews.');
+        }
+
+        let queryParameters = new HttpParams({encoder: this.encoder});
+        if (ids) {
+            ids.forEach((element) => {
+                queryParameters = this.addToHttpParams(queryParameters,
+                  <any>element, 'Ids');
+            })
+        }
+        if (archiveType !== undefined && archiveType !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>archiveType, 'ArchiveType');
+        }
+
+        let headers = this.defaultHeaders;
+
+        // authentication (oauth2) required
+        if (this.configuration.accessToken) {
+            const accessToken = typeof this.configuration.accessToken === 'function'
+                ? this.configuration.accessToken()
+                : this.configuration.accessToken;
+            headers = headers.set('Authorization', 'Bearer ' + accessToken);
+        }
+
+        let httpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (httpHeaderAcceptSelected === undefined) {
+            // to determine the Accept header
+            const httpHeaderAccepts: string[] = [
+                'application/octet-stream',
+                'application/json'
+            ];
+            httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        }
+        if (httpHeaderAcceptSelected !== undefined) {
+            headers = headers.set('Accept', httpHeaderAcceptSelected);
+        }
+
+
+        return this.httpClient.get(`${this.configuration.basePath}/api/views/actions/export`,
+            {
+                params: queryParameters,
+                responseType: "blob",
+                withCredentials: this.configuration.withCredentials,
+                headers: headers,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Gets all Notifications for a View.
      * Gets all Notifications for a View.
      * @param id 
@@ -706,6 +785,99 @@ export class ViewService {
 
         return this.httpClient.get<Array<View>>(`${this.configuration.basePath}/api/views`,
             {
+                responseType: <any>responseType,
+                withCredentials: this.configuration.withCredentials,
+                headers: headers,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Imports Views.
+     * Imports the provided Views
+     * @param matchApplicationTemplatesByName 
+     * @param matchRolesByName 
+     * @param archive 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public importViews(matchApplicationTemplatesByName: boolean, matchRolesByName: boolean, archive?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ImportViewsResult>;
+    public importViews(matchApplicationTemplatesByName: boolean, matchRolesByName: boolean, archive?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ImportViewsResult>>;
+    public importViews(matchApplicationTemplatesByName: boolean, matchRolesByName: boolean, archive?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ImportViewsResult>>;
+    public importViews(matchApplicationTemplatesByName: boolean, matchRolesByName: boolean, archive?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
+        if (matchApplicationTemplatesByName === null || matchApplicationTemplatesByName === undefined) {
+            throw new Error('Required parameter matchApplicationTemplatesByName was null or undefined when calling importViews.');
+        }
+        if (matchRolesByName === null || matchRolesByName === undefined) {
+            throw new Error('Required parameter matchRolesByName was null or undefined when calling importViews.');
+        }
+
+        let queryParameters = new HttpParams({encoder: this.encoder});
+        if (matchApplicationTemplatesByName !== undefined && matchApplicationTemplatesByName !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>matchApplicationTemplatesByName, 'MatchApplicationTemplatesByName');
+        }
+        if (matchRolesByName !== undefined && matchRolesByName !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>matchRolesByName, 'MatchRolesByName');
+        }
+
+        let headers = this.defaultHeaders;
+
+        // authentication (oauth2) required
+        if (this.configuration.accessToken) {
+            const accessToken = typeof this.configuration.accessToken === 'function'
+                ? this.configuration.accessToken()
+                : this.configuration.accessToken;
+            headers = headers.set('Authorization', 'Bearer ' + accessToken);
+        }
+
+        let httpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (httpHeaderAcceptSelected === undefined) {
+            // to determine the Accept header
+            const httpHeaderAccepts: string[] = [
+                'application/json'
+            ];
+            httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        }
+        if (httpHeaderAcceptSelected !== undefined) {
+            headers = headers.set('Accept', httpHeaderAcceptSelected);
+        }
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'multipart/form-data'
+        ];
+
+        const canConsumeForm = this.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any; };
+        let useForm = false;
+        let convertFormParamsToString = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        // see https://stackoverflow.com/questions/4007969/application-x-www-form-urlencoded-or-multipart-form-data
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new HttpParams({encoder: this.encoder});
+        }
+
+        if (archive !== undefined) {
+            formParams = formParams.append('Archive', <any>archive) as any || formParams;
+        }
+
+        let responseType: 'text' | 'json' = 'json';
+        if(httpHeaderAcceptSelected && httpHeaderAcceptSelected.startsWith('text')) {
+            responseType = 'text';
+        }
+
+        return this.httpClient.post<ImportViewsResult>(`${this.configuration.basePath}/api/views/actions/import`,
+            convertFormParamsToString ? formParams.toString() : formParams,
+            {
+                params: queryParameters,
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
                 headers: headers,

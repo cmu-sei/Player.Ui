@@ -16,9 +16,10 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  */
 
 
-export interface InlineObject1 { 
-    viewId?: string;
-    teamIds?: Array<string>;
-    ToUpload?: Array<Blob>;
-}
+export type ArchiveType = 'zip' | 'tgz';
+
+export const ArchiveType = {
+    Zip: 'zip' as ArchiveType,
+    Tgz: 'tgz' as ArchiveType
+};
 

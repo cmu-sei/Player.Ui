@@ -26,12 +26,16 @@
   margin-left: 20px;
 }
 
+.mat-column-select {
+  flex: 1 1 10%;
+}
+
 .mat-column-status {
   flex: 1 1 10%;
 }
 
 .mat-column-name {
-  flex: 1 1 50%;
+  flex: 1 1 40%;
 }
 
 .mat-column-description {

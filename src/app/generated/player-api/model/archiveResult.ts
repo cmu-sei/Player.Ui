@@ -16,9 +16,9 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  */
 
 
-export interface InlineObject1 { 
-    viewId?: string;
-    teamIds?: Array<string>;
-    ToUpload?: Array<Blob>;
+export interface ArchiveResult { 
+    name?: string | null;
+    type?: string | null;
+    data?: Blob | null;
 }
 

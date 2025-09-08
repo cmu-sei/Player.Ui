@@ -4,7 +4,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="list-container mat-elevation-z8">
-  <div class="d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3">
     <div class="d-flex align-items-center gap-3">
       <div class="sp-icon">
         <img
@@ -41,57 +41,95 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </button>
       </mat-form-field>
     </div>
-    <button class="me-2" mat-stroked-button (click)="addAppTemplate()">
-      Add Application Template
-    </button>
+    <div class="ms-auto">
+      <button
+        mat-icon-button
+        matTooltip="Add a new Application Template"
+        (click)="addAppTemplate()"
+      >
+        <mat-icon fontIcon="mdi-plus" class="mdi-24px"></mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matTooltip="Import Application Templates"
+        (click)="openDialog(importDialog)"
+      >
+        <mat-icon fontIcon="mdi-file-import" class="mdi-24px"></mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matTooltip="Export Application Templates"
+        [matBadge]="
+          selection.selected.length > 0 ? selection.selected.length : ''
+        "
+        (click)="openDialog(exportDialog)"
+      >
+        <mat-icon fontIcon="mdi-file-export" class="mdi-24px"></mat-icon>
+      </button>
+    </div>
   </div>
 
-  <mat-accordion>
-    <mat-table #table [dataSource]="appTemplateDataSource" matSort>
-      <ng-container matColumnDef="name">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>
-          Template Name
-        </mat-header-cell>
-        <mat-cell *matCellDef="let element">
-          <img
-            class="app-icon"
-            src="{{ element.icon }}"
-            alt="{{ element.name }} Icon"
-          />&nbsp;&nbsp;{{ element.name }}
-        </mat-cell>
-      </ng-container>
+  <mat-table #table [dataSource]="appTemplateDataSource" matSort>
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+        >
+        </mat-checkbox>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row.id) : null"
+          [checked]="selection.isSelected(row.id)"
+        >
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
 
-      <ng-container matColumnDef="url">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>
-          Url
-        </mat-header-cell>
-        <mat-cell *matCellDef="let element; let i = index">
-          <div class="w-100">
-            <mat-expansion-panel
-              [expanded]="
-                currentAppTemplate !== undefined &&
-                element.id === currentAppTemplate.id
-              "
-              (opened)="currentAppTemplate = element"
-            >
-              <mat-expansion-panel-header>
-                <mat-panel-title style="font-size: small">
-                  {{ element.url }}
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-              <app-admin-template-details
-                (refresh)="refresh($event)"
-                [appTemplate]="element"
-              ></app-admin-template-details>
-            </mat-expansion-panel>
-          </div>
-        </mat-cell>
-      </ng-container>
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Template Name
+      </mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <img
+          class="app-icon"
+          src="{{ element.icon }}"
+          alt="{{ element.name }} Icon"
+        />&nbsp;&nbsp;{{ element.name }}
+      </mat-cell>
+    </ng-container>
 
-      <mat-header-row *matHeaderRowDef="appTemplateColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: appTemplateColumns"></mat-row>
-    </mat-table>
-  </mat-accordion>
+    <ng-container matColumnDef="url">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Url </mat-header-cell>
+      <mat-cell *matCellDef="let element; let i = index">
+        <div class="w-100">
+          <mat-expansion-panel
+            [expanded]="
+              currentAppTemplate !== undefined &&
+              element.id === currentAppTemplate.id
+            "
+            (opened)="currentAppTemplate = element"
+          >
+            <mat-expansion-panel-header>
+              <mat-panel-title style="font-size: small">
+                {{ element.url }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <app-admin-template-details
+              (refresh)="refresh($event)"
+              [appTemplate]="element"
+            ></app-admin-template-details>
+          </mat-expansion-panel>
+        </div>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="appTemplateColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: appTemplateColumns"></mat-row>
+  </mat-table>
   <div *ngIf="appTemplateDataSource.filteredData.length === 0">
     No Application Templates found
   </div>
@@ -104,3 +142,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   >
   </mat-paginator>
 </div>
+
+<ng-template #exportDialog>
+  <app-admin-app-template-export
+    [ids]="selection.selected"
+    (complete)="closeDialog()"
+  ></app-admin-app-template-export>
+</ng-template>
+
+<ng-template #importDialog>
+  <app-admin-app-template-import
+    (complete)="importComplete()"
+  ></app-admin-app-template-import>
+</ng-template>

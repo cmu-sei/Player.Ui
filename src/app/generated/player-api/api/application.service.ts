@@ -25,12 +25,14 @@ import { Observable }                                        from 'rxjs';
 import { Application } from '../model/models';
 import { ApplicationInstance } from '../model/models';
 import { ApplicationTemplate } from '../model/models';
+import { ArchiveType } from '../model/models';
 import { CreateApplicationCommand } from '../model/models';
 import { CreateApplicationInstanceCommand } from '../model/models';
 import { CreateApplicationTemplateCommand } from '../model/models';
 import { EditApplicationCommand } from '../model/models';
 import { EditApplicationInstanceCommand } from '../model/models';
 import { EditApplicationTemplateCommand } from '../model/models';
+import { ImportApplicationTemplatesResult } from '../model/models';
 import { ProblemDetails } from '../model/models';
 
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -61,6 +63,19 @@ export class ApplicationService {
         this.encoder = this.configuration.encoder || new CustomHttpParameterCodec();
     }
 
+    /**
+     * @param consumes string[] mime-types
+     * @return true: consumes contains 'multipart/form-data', false: otherwise
+     */
+    private canConsumeForm(consumes: string[]): boolean {
+        const form = 'multipart/form-data';
+        for (const consume of consumes) {
+            if (form === consume) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     private addToHttpParams(httpParams: HttpParams, value: any, key?: string): HttpParams {
@@ -453,6 +468,86 @@ export class ApplicationService {
     }
 
     /**
+     * Export Application Templates.
+     * Returns an archive of Application Templates and supporting files.
+     * @param includeIcons 
+     * @param embedIcons 
+     * @param archiveType 
+     * @param ids 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public exportApplicationTemplates(includeIcons: boolean, embedIcons: boolean, archiveType: ArchiveType, ids?: Array<string>, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<Blob>;
+    public exportApplicationTemplates(includeIcons: boolean, embedIcons: boolean, archiveType: ArchiveType, ids?: Array<string>, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<HttpResponse<Blob>>;
+    public exportApplicationTemplates(includeIcons: boolean, embedIcons: boolean, archiveType: ArchiveType, ids?: Array<string>, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<HttpEvent<Blob>>;
+    public exportApplicationTemplates(includeIcons: boolean, embedIcons: boolean, archiveType: ArchiveType, ids?: Array<string>, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/octet-stream' | 'application/json'}): Observable<any> {
+        if (includeIcons === null || includeIcons === undefined) {
+            throw new Error('Required parameter includeIcons was null or undefined when calling exportApplicationTemplates.');
+        }
+        if (embedIcons === null || embedIcons === undefined) {
+            throw new Error('Required parameter embedIcons was null or undefined when calling exportApplicationTemplates.');
+        }
+        if (archiveType === null || archiveType === undefined) {
+            throw new Error('Required parameter archiveType was null or undefined when calling exportApplicationTemplates.');
+        }
+
+        let queryParameters = new HttpParams({encoder: this.encoder});
+        if (ids) {
+            ids.forEach((element) => {
+                queryParameters = this.addToHttpParams(queryParameters,
+                  <any>element, 'Ids');
+            })
+        }
+        if (includeIcons !== undefined && includeIcons !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>includeIcons, 'IncludeIcons');
+        }
+        if (embedIcons !== undefined && embedIcons !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>embedIcons, 'EmbedIcons');
+        }
+        if (archiveType !== undefined && archiveType !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>archiveType, 'ArchiveType');
+        }
+
+        let headers = this.defaultHeaders;
+
+        // authentication (oauth2) required
+        if (this.configuration.accessToken) {
+            const accessToken = typeof this.configuration.accessToken === 'function'
+                ? this.configuration.accessToken()
+                : this.configuration.accessToken;
+            headers = headers.set('Authorization', 'Bearer ' + accessToken);
+        }
+
+        let httpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (httpHeaderAcceptSelected === undefined) {
+            // to determine the Accept header
+            const httpHeaderAccepts: string[] = [
+                'application/octet-stream',
+                'application/json'
+            ];
+            httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        }
+        if (httpHeaderAcceptSelected !== undefined) {
+            headers = headers.set('Accept', httpHeaderAcceptSelected);
+        }
+
+
+        return this.httpClient.get(`${this.configuration.basePath}/api/application-templates/actions/export`,
+            {
+                params: queryParameters,
+                responseType: "blob",
+                withCredentials: this.configuration.withCredentials,
+                headers: headers,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Gets a specific Application by id.
      * Returns the Application with the id specified.
      * @param id 
@@ -763,6 +858,91 @@ export class ApplicationService {
 
         return this.httpClient.get<Array<Application>>(`${this.configuration.basePath}/api/views/${encodeURIComponent(String(viewId))}/applications`,
             {
+                responseType: <any>responseType,
+                withCredentials: this.configuration.withCredentials,
+                headers: headers,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Import Application Templates.
+     * Import Application Templates
+     * @param overWriteExisting 
+     * @param archive 
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public importApplicationTemplates(overWriteExisting: boolean, archive?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<ImportApplicationTemplatesResult>;
+    public importApplicationTemplates(overWriteExisting: boolean, archive?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpResponse<ImportApplicationTemplatesResult>>;
+    public importApplicationTemplates(overWriteExisting: boolean, archive?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json'}): Observable<HttpEvent<ImportApplicationTemplatesResult>>;
+    public importApplicationTemplates(overWriteExisting: boolean, archive?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json'}): Observable<any> {
+        if (overWriteExisting === null || overWriteExisting === undefined) {
+            throw new Error('Required parameter overWriteExisting was null or undefined when calling importApplicationTemplates.');
+        }
+
+        let queryParameters = new HttpParams({encoder: this.encoder});
+        if (overWriteExisting !== undefined && overWriteExisting !== null) {
+          queryParameters = this.addToHttpParams(queryParameters,
+            <any>overWriteExisting, 'OverWriteExisting');
+        }
+
+        let headers = this.defaultHeaders;
+
+        // authentication (oauth2) required
+        if (this.configuration.accessToken) {
+            const accessToken = typeof this.configuration.accessToken === 'function'
+                ? this.configuration.accessToken()
+                : this.configuration.accessToken;
+            headers = headers.set('Authorization', 'Bearer ' + accessToken);
+        }
+
+        let httpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (httpHeaderAcceptSelected === undefined) {
+            // to determine the Accept header
+            const httpHeaderAccepts: string[] = [
+                'application/json'
+            ];
+            httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        }
+        if (httpHeaderAcceptSelected !== undefined) {
+            headers = headers.set('Accept', httpHeaderAcceptSelected);
+        }
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'multipart/form-data'
+        ];
+
+        const canConsumeForm = this.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any; };
+        let useForm = false;
+        let convertFormParamsToString = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        // see https://stackoverflow.com/questions/4007969/application-x-www-form-urlencoded-or-multipart-form-data
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new HttpParams({encoder: this.encoder});
+        }
+
+        if (archive !== undefined) {
+            formParams = formParams.append('Archive', <any>archive) as any || formParams;
+        }
+
+        let responseType: 'text' | 'json' = 'json';
+        if(httpHeaderAcceptSelected && httpHeaderAcceptSelected.startsWith('text')) {
+            responseType = 'text';
+        }
+
+        return this.httpClient.post<ImportApplicationTemplatesResult>(`${this.configuration.basePath}/api/application-templates/actions/import`,
+            convertFormParamsToString ? formParams.toString() : formParams,
+            {
+                params: queryParameters,
                 responseType: <any>responseType,
                 withCredentials: this.configuration.withCredentials,
                 headers: headers,

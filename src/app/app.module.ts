@@ -107,6 +107,10 @@ import { SystemRolesComponent } from './components/admin-app/admin-roles/roles/r
 import { AdminRolesComponent } from './components/admin-app/admin-roles/admin-roles.component';
 import { NameDialogComponent } from './components/shared/name-dialog/name-dialog.component';
 import { TeamRolesComponent } from './components/admin-app/admin-roles/team-roles/team-roles.component';
+import { AdminAppTemplateExportComponent } from './components/admin-app/admin-app-template-export/admin-app-template-export.component';
+import { AdminAppTemplateImportComponent } from './components/admin-app/admin-app-template-import/admin-app-template-import.component';
+import { AdminAppViewExportComponent } from './components/admin-app/admin-app-view-export/admin-app-view-export.component';
+import { AdminAppViewImportComponent } from './components/admin-app/admin-app-view-import/admin-app-view-import.component';
 
 @NgModule({
   exports: [
@@ -148,6 +152,7 @@ import { TeamRolesComponent } from './components/admin-app/admin-roles/team-role
     ScrollingModule,
   ],
   imports: [],
+  declarations: [],
 })
 export class AngularMaterialModule {}
 
@@ -198,6 +203,10 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     SystemRolesComponent,
     AdminRolesComponent,
     TeamRolesComponent,
+    AdminAppTemplateExportComponent,
+    AdminAppTemplateImportComponent,
+    AdminAppViewExportComponent,
+    AdminAppViewImportComponent,
   ],
   imports: [
     BrowserModule,

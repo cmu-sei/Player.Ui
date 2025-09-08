@@ -1,12 +1,27 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { MatLegacyPaginator as MatPaginator, LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator';
+import {
+  AfterViewInit,
+  Component,
+  OnInit,
+  TemplateRef,
+  ViewChild,
+} from '@angular/core';
+import {
+  MatLegacyPaginator as MatPaginator,
+  LegacyPageEvent as PageEvent,
+} from '@angular/material/legacy-paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
+import { SelectionModel } from '@angular/cdk/collections';
+import {
+  MatLegacyDialog as MatDialog,
+  MatLegacyDialogRef as MatDialogRef,
+} from '@angular/material/legacy-dialog';
+import { SafeHtml } from '@angular/platform-browser';
 
 export interface Action {
   Value: string;
@@ -20,7 +35,7 @@ export interface Action {
 })
 export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
   public appTemplateDataSource: MatTableDataSource<ApplicationTemplate>;
-  public appTemplateColumns: string[] = ['name', 'url'];
+  public appTemplateColumns: string[] = ['select', 'name', 'url'];
   public filterString: string;
   public currentAppTemplate: ApplicationTemplate;
 
@@ -30,10 +45,17 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
   public uploading = false;
   public uploadProgress = 0;
 
+  selection = new SelectionModel<string>(true, []);
+
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(private applicationService: ApplicationService) {}
+  private dialogRef: MatDialogRef<any>;
+
+  constructor(
+    private applicationService: ApplicationService,
+    private dialog: MatDialog
+  ) {}
 
   /**
    * Initialization
@@ -115,5 +137,37 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
    */
   clearFilter() {
     this.applyFilter('');
+  }
+
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.appTemplateDataSource.filteredData.length;
+    return numSelected == numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  toggleAllRows() {
+    this.isAllSelected()
+      ? this.selection.clear()
+      : this.appTemplateDataSource.filteredData.forEach((row) =>
+          this.selection.select(row.id)
+        );
+  }
+
+  openDialog(templateRef: TemplateRef<any>) {
+    this.dialogRef = this.dialog.open(templateRef, {
+      disableClose: true,
+      autoFocus: true,
+    });
+  }
+
+  closeDialog() {
+    this.dialogRef.close();
+  }
+
+  importComplete() {
+    this.dialogRef.close();
+    this.refresh(false);
   }
 }

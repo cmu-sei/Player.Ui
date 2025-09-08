@@ -14,11 +14,14 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ArchiveType } from './archiveType';
 
 
-export interface InlineObject1 { 
-    viewId?: string;
-    teamIds?: Array<string>;
-    ToUpload?: Array<Blob>;
+export interface ExportViewCommand { 
+    archiveType?: ArchiveType;
+    /**
+     * If true, View and Team Ids will be appended to their names to be optionally preserved on Import
+     */
+    includeIds?: boolean;
 }
 

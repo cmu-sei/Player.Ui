@@ -40,9 +40,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           ></mat-icon>
         </button>
       </mat-form-field>
-      <div class="button-end">
-        <button mat-stroked-button (click)="addNewView()">Add New View</button>
-      </div>
+    </div>
+    <div class="ms-auto">
+      <button
+        mat-icon-button
+        matTooltip="Add a new View"
+        (click)="addNewView()"
+      >
+        <mat-icon fontIcon="mdi-plus" class="mdi-24px"></mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matTooltip="Import Views"
+        (click)="openDialog(importDialog)"
+      >
+        <mat-icon fontIcon="mdi-file-import" class="mdi-24px"></mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        matTooltip="Export Views"
+        [matBadge]="
+          selection.selected.length > 0 ? selection.selected.length : ''
+        "
+        (click)="openDialog(exportDialog)"
+      >
+        <mat-icon fontIcon="mdi-file-export" class="mdi-24px"></mat-icon>
+      </button>
     </div>
   </div>
 
@@ -55,8 +78,25 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   </mat-card>
 
   <mat-table #table [dataSource]="viewDataSource" matSort>
-    <!--- Note that these columns can be defined in any order.
-            The actual rendered columns are set as a property on the row definition" -->
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef>
+        <mat-checkbox
+          (change)="$event ? toggleAllRows() : null"
+          [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()"
+        >
+        </mat-checkbox>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <mat-checkbox
+          (click)="$event.stopPropagation()"
+          (change)="$event ? selection.toggle(row.id) : null"
+          [checked]="selection.isSelected(row.id)"
+        >
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
@@ -111,3 +151,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   </mat-table>
   <div *ngIf="viewDataSource.filteredData.length === 0">No results found</div>
 </div>
+
+<ng-template #exportDialog>
+  <app-admin-app-view-export
+    [ids]="selection.selected"
+    (complete)="closeDialog()"
+  ></app-admin-app-view-export>
+</ng-template>
+
+<ng-template #importDialog>
+  <app-admin-app-view-import
+    (complete)="importComplete()"
+  ></app-admin-app-view-import>
+</ng-template>
