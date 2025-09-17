@@ -13,13 +13,10 @@ import {
   Team,
   UserService,
   TeamService,
-  RoleService,
   Permission,
-  PermissionService,
 } from '../../../generated/player-api';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { TeamPermissionsService } from '../../../services/permissions/team-permissions.service';
-import { forkJoin, tap } from 'rxjs';
 import { RolesService } from '../../../services/roles/roles.service';
 
 export enum ObjectType {
