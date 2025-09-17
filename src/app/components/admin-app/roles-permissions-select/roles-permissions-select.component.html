@@ -17,7 +17,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     (selectionChange)="updateRole($event.value)"
     placeholder="Role"
   >
-    <mat-option value="">None</mat-option>
+    <mat-option *ngIf="user" value="">None</mat-option>
     <mat-option *ngFor="let role of roles$ | async" [value]="role.id">
       {{ role.name }}
     </mat-option>
