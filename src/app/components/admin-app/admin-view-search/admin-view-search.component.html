@@ -11,7 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <div
   [class.hidden]="showEditScreen"
   class="view-list-container mat-elevation-z8"
->
+  >
   <div class="d-flex align-items-center gap-1">
     <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon>
     <h3 class="header-text ms-2">Views</h3>
@@ -26,19 +26,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
-        />
-        <button
-          *ngIf="filterString !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+          />
+        @if (filterString !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+            >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
     </div>
     <div class="ms-auto">
@@ -46,14 +47,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         mat-icon-button
         matTooltip="Add a new View"
         (click)="addNewView()"
-      >
+        >
         <mat-icon fontIcon="mdi-plus" class="mdi-24px"></mat-icon>
       </button>
       <button
         mat-icon-button
         matTooltip="Import Views"
         (click)="openDialog(importDialog)"
-      >
+        >
         <mat-icon fontIcon="mdi-file-import" class="mdi-24px"></mat-icon>
       </button>
       <button
@@ -63,19 +64,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           selection.selected.length > 0 ? selection.selected.length : ''
         "
         (click)="openDialog(exportDialog)"
-      >
+        >
         <mat-icon fontIcon="mdi-file-export" class="mdi-24px"></mat-icon>
       </button>
     </div>
   </div>
 
-  <mat-card
-    *ngIf="isLoading"
-    class="d-flex justify-content-center align-items-center"
-  >
-    <mat-progress-spinner color="primary" mode="indeterminate">
-    </mat-progress-spinner>
-  </mat-card>
+  @if (isLoading) {
+    <mat-card
+      class="d-flex justify-content-center align-items-center"
+      >
+      <mat-progress-spinner color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </mat-card>
+  }
 
   <mat-table #table [dataSource]="viewDataSource" matSort>
     <ng-container matColumnDef="select">
@@ -84,7 +86,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (change)="$event ? toggleAllRows() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
-        >
+          >
         </mat-checkbox>
       </mat-header-cell>
       <mat-cell *matCellDef="let row">
@@ -92,7 +94,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (click)="$event.stopPropagation()"
           (change)="$event ? selection.toggle(row.id) : null"
           [checked]="selection.isSelected(row.id)"
-        >
+          >
         </mat-checkbox>
       </mat-cell>
     </ng-container>
@@ -108,7 +110,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           ngxClipboard
           [cbContent]="element.id"
           title="Copy:  {{ element.id }}"
-        >
+          >
           <mat-icon
             style="transform: scale(0.85)"
             svgIcon="ic_clipboard_copy"
@@ -118,7 +120,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           mat-button
           class="px-0"
           (click)="executeViewAction('edit', element.id)"
-        >
+          >
           {{ element.name }}
         </button>
       </mat-cell>
@@ -149,7 +151,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     ></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
   </mat-table>
-  <div *ngIf="viewDataSource.filteredData.length === 0">No results found</div>
+  @if (viewDataSource.filteredData.length === 0) {
+    <div>No results found</div>
+  }
 </div>
 
 <ng-template #exportDialog>

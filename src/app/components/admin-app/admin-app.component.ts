@@ -18,9 +18,10 @@ import { UserPermissionsService } from '../../services/permissions/user-permissi
 import { SystemPermission } from '../../generated/player-api';
 
 @Component({
-  selector: 'app-admin-app',
-  templateUrl: './admin-app.component.html',
-  styleUrls: ['./admin-app.component.scss'],
+    selector: 'app-admin-app',
+    templateUrl: './admin-app.component.html',
+    styleUrls: ['./admin-app.component.scss'],
+    standalone: false
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;

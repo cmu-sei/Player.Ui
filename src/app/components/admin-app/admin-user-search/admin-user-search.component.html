@@ -5,7 +5,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <div
   [class.hidden]="userToEdit !== undefined"
   class="user-list-container mat-elevation-z8"
->
+  >
   <div class="d-flex align-items-center gap-4">
     <div class="sp-icon">
       <img height="35" src="assets/img/SP_Icon_User.png" alt="Users" />
@@ -22,73 +22,82 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
-        />
-        <button
-          *ngIf="filterString !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+          />
+        @if (filterString !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+            >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
     </div>
   </div>
 
-  <mat-card *ngIf="isLoading" class="d-flex content-center align-items-center">
-    <mat-progress-spinner color="primary" mode="indeterminate">
-    </mat-progress-spinner>
-  </mat-card>
+  @if (isLoading) {
+    <mat-card class="d-flex content-center align-items-center">
+      <mat-progress-spinner color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </mat-card>
+  }
 
   <mat-accordion>
     <mat-table #table [dataSource]="userDataSource" matSort>
       <ng-container matColumnDef="name">
         <mat-header-cell *matHeaderCellDef mat-sort-header
           >User Name</mat-header-cell
-        >
-        <mat-cell *matCellDef="let element">
-          <button
-            mat-icon-button
-            ngxClipboard
-            [cbContent]="element.id"
-            title="Copy:  {{ element.id }}"
           >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_clipboard_copy"
-            ></mat-icon>
-          </button>
-          <div *ngIf="element.name !== null">{{ element.name }}</div>
-          <div *ngIf="element.name === null">{{ element.id }}</div>
-        </mat-cell>
-      </ng-container>
+          <mat-cell *matCellDef="let element">
+            <button
+              mat-icon-button
+              ngxClipboard
+              [cbContent]="element.id"
+              title="Copy:  {{ element.id }}"
+              >
+              <mat-icon
+                style="transform: scale(0.85)"
+                svgIcon="ic_clipboard_copy"
+              ></mat-icon>
+            </button>
+            @if (element.name !== null) {
+              <div>{{ element.name }}</div>
+            }
+            @if (element.name === null) {
+              <div>{{ element.id }}</div>
+            }
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="roleName">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>
-          Role
-        </mat-header-cell>
-        <mat-cell *matCellDef="let element; let i = index">
-          <app-roles-permissions-select
-            [user]="element"
-          ></app-roles-permissions-select>
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="roleName">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>
+            Role
+          </mat-header-cell>
+          <mat-cell *matCellDef="let element; let i = index">
+            <app-roles-permissions-select
+              [user]="element"
+            ></app-roles-permissions-select>
+          </mat-cell>
+        </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-    </mat-table>
-  </mat-accordion>
-  <div *ngIf="userDataSource.filteredData.length === 0">No results found</div>
-  <mat-paginator
-    #paginator
-    [pageSize]="defaultPageSize"
-    [pageSizeOptions]="[10, 20, 30]"
-    [showFirstLastButtons]="true"
-    (page)="pageEvent = $event"
-  >
-  </mat-paginator>
-</div>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+      </mat-table>
+    </mat-accordion>
+    @if (userDataSource.filteredData.length === 0) {
+      <div>No results found</div>
+    }
+    <mat-paginator
+      #paginator
+      [pageSize]="defaultPageSize"
+      [pageSizeOptions]="[10, 20, 30]"
+      [showFirstLastButtons]="true"
+      (page)="pageEvent = $event"
+      >
+    </mat-paginator>
+  </div>

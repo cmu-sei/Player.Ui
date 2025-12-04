@@ -5,66 +5,68 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <h2>Export Application Templates</h2>
 
-<form *ngIf="!(hasErrors$ | async)" [formGroup]="form" (ngSubmit)="export()">
-  <mat-form-field *ngIf="isArchiveable">
-    <mat-label>Archive Type</mat-label>
-    <mat-select formControlName="archiveType">
-      <mat-option
-        *ngFor="let archiveType of archiveTypes"
-        [value]="archiveType"
-      >
-        {{ archiveType }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <div>
-    <mat-form-field floatLabel="always" appearance="none">
-      <mat-label>Include Icons</mat-label>
-      <mat-slide-toggle
-        formControlName="includeIcons"
-        matTooltip="Include icon files in the exported archive"
-      ></mat-slide-toggle>
-      <textarea matInput hidden></textarea>
-    </mat-form-field>
-
-    <mat-form-field floatLabel="always" appearance="none">
-      <mat-label>Embed Icons</mat-label>
-      <mat-slide-toggle
-        formControlName="embedIcons"
-        matTooltip="Embed included Icons into exported JSON as data URIs"
-      ></mat-slide-toggle>
-      <textarea matInput hidden></textarea>
-    </mat-form-field>
-  </div>
-
-  <div class="d-flex justify-content-around">
-    <button
-      type="submit"
-      color="primary"
-      mat-raised-button
-      [disabled]="!form.valid || loading"
-    >
-      {{
+@if (!(hasErrors$ | async)) {
+  <form [formGroup]="form" (ngSubmit)="export()">
+    @if (isArchiveable) {
+      <mat-form-field>
+        <mat-label>Archive Type</mat-label>
+        <mat-select formControlName="archiveType">
+          @for (archiveType of archiveTypes; track archiveType) {
+            <mat-option
+              [value]="archiveType"
+              >
+              {{ archiveType }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+    <div>
+      <mat-form-field floatLabel="always" appearance="none">
+        <mat-label>Include Icons</mat-label>
+        <mat-slide-toggle
+          formControlName="includeIcons"
+          matTooltip="Include icon files in the exported archive"
+        ></mat-slide-toggle>
+        <textarea matInput hidden></textarea>
+      </mat-form-field>
+      <mat-form-field floatLabel="always" appearance="none">
+        <mat-label>Embed Icons</mat-label>
+        <mat-slide-toggle
+          formControlName="embedIcons"
+          matTooltip="Embed included Icons into exported JSON as data URIs"
+        ></mat-slide-toggle>
+        <textarea matInput hidden></textarea>
+      </mat-form-field>
+    </div>
+    <div class="d-flex justify-content-around">
+      <button
+        type="submit"
+        color="primary"
+        mat-raised-button
+        [disabled]="!form.valid || loading"
+        >
+        {{
         loading
-          ? 'Exporting....'
-          : 'Export ' + (ids.length == 0 ? 'All' : '(' + ids.length + ')')
-      }}
-    </button>
+        ? 'Exporting....'
+        : 'Export ' + (ids.length == 0 ? 'All' : '(' + ids.length + ')')
+        }}
+      </button>
+      <button type="reset" color="primary" mat-raised-button (click)="cancel()">
+        Cancel
+      </button>
+    </div>
+  </form>
+}
 
-    <button type="reset" color="primary" mat-raised-button (click)="cancel()">
-      Cancel
-    </button>
+@if (hasErrors$ | async) {
+  <div>
+    <h3 class="text-danger">
+      Some errors occurred during export. Check errors.txt in the archive for
+      details.
+    </h3>
+    <div class="d-flex justify-content-around">
+      <button mat-raised-button color="primary" (click)="cancel()">OK</button>
+    </div>
   </div>
-</form>
-
-<div *ngIf="hasErrors$ | async">
-  <h3 class="text-danger">
-    Some errors occurred during export. Check errors.txt in the archive for
-    details.
-  </h3>
-
-  <div class="d-flex justify-content-around">
-    <button mat-raised-button color="primary" (click)="cancel()">OK</button>
-  </div>
-</div>
+}

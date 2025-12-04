@@ -5,8 +5,8 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 import { Component, Input, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { MatLegacyCheckboxChange as MatCheckboxChange } from '@angular/material/legacy-checkbox';
-import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
+import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatDialogRef } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
 import {
   EventType,
@@ -17,9 +17,10 @@ import {
 import { DialogService } from '../../../../services/dialog/dialog.service';
 
 @Component({
-  selector: 'app-edit-subscription',
-  templateUrl: './edit-subscription.component.html',
-  styleUrls: ['./edit-subscription.component.scss'],
+    selector: 'app-edit-subscription',
+    templateUrl: './edit-subscription.component.html',
+    styleUrls: ['./edit-subscription.component.scss'],
+    standalone: false
 })
 export class EditSubscriptionComponent implements OnInit {
   @Input() currentSub: WebhookSubscription;

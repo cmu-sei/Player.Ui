@@ -12,7 +12,7 @@ import {
   TemplateRef,
   ViewChild,
 } from '@angular/core';
-import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
 import { Observable, Subject } from 'rxjs';
@@ -22,7 +22,7 @@ import { UserPresenceComponent } from '../../player/user-presence-page/user-pres
 import { TopbarView } from './topbar.models';
 import { Router } from '@angular/router';
 import { DialogService } from '../../../services/dialog/dialog.service';
-import { MatLegacySnackBar } from '@angular/material/legacy-snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import {
   SystemPermission,
@@ -31,10 +31,11 @@ import {
 } from '../../../generated/player-api';
 
 @Component({
-  selector: 'app-topbar',
-  templateUrl: './topbar.component.html',
-  styleUrls: ['./topbar.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-topbar',
+    templateUrl: './topbar.component.html',
+    styleUrls: ['./topbar.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TopbarComponent implements OnInit, OnDestroy {
   @Input() title?: string;
@@ -71,7 +72,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private authQuery: ComnAuthQuery,
     private dialog: MatDialog,
     private dialogService: DialogService,
-    private snackbar: MatLegacySnackBar,
+    private snackbar: MatSnackBar,
     private permissionsService: UserPermissionsService
   ) {}
 

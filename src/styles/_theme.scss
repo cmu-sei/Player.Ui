@@ -3,7 +3,17 @@
 @use '@angular/material' as mat;
 @use 'sass:map';
 
-@import '@angular/material/theming';
+// Define theme variables for compatibility
+$dark-primary-text: rgba(black, 0.87);
+$light-primary-text: white;
+$dark-secondary-text: rgba(black, 0.54);
+$light-secondary-text: rgba(white, 0.7);
+$dark-disabled-text: rgba(black, 0.38);
+$light-disabled-text: rgba(white, 0.5);
+$dark-dividers: rgba(black, 0.12);
+$light-dividers: rgba(white, 0.12);
+$dark-focused: rgba(black, 0.12);
+$light-focused: rgba(white, 0.12);
 
 $mat-cmu-tartan: (
   50: #ff3838,
@@ -40,22 +50,22 @@ $mat-cmu-tartan: (
 
 // Background palette for light themes.
 $cmu-light-theme-background: (
-  status-bar: map_get(mat.$grey-palette, 300),
+  status-bar: map.get(mat.$m2-grey-palette, 300),
   app-bar: white,
   background: #f1f1f2,
-  hover: map-get(mat.$grey-palette, 300),
+  hover: map.get(mat.$m2-grey-palette, 300),
   card: #f1f1f2,
   dialog: white,
   expansion-panel: #f1f1f2,
   disabled-button: rgba(black, 0.12),
   raised-button: white,
   focused-button: $dark-focused,
-  selected-button: map_get(mat.$grey-palette, 300),
-  selected-disabled-button: map_get(mat.$grey-palette, 400),
-  disabled-button-toggle: map_get(mat.$grey-palette, 200),
-  unselected-chip: map_get(mat.$grey-palette, 300),
+  selected-button: map.get(mat.$m2-grey-palette, 300),
+  selected-disabled-button: map.get(mat.$m2-grey-palette, 400),
+  disabled-button-toggle: map.get(mat.$m2-grey-palette, 200),
+  unselected-chip: map.get(mat.$m2-grey-palette, 300),
   disabled-list-option: #f1f1f2,
-  presence-table: map_get(mat.$grey-palette, 300),
+  presence-table: map.get(mat.$m2-grey-palette, 300),
 );
 
 // Foreground palette for light themes.
@@ -81,21 +91,21 @@ $cmu-light-theme-foreground: (
 // Background palette for dark themes.
 $cmu-dark-theme-background: (
   status-bar: black,
-  app-bar: map_get(mat.$grey-palette, 900),
+  app-bar: map.get(mat.$m2-grey-palette, 900),
   background: #373739,
-  hover: map_get(mat.$gray-palette, 800),
-  card: map_get(mat.$grey-palette, 900),
-  dialog: map_get(mat.$grey-palette, 900),
-  button: map_get($mat-cmu-tartan, default),
+  hover: map.get(mat.$m2-gray-palette, 800),
+  card: map.get(mat.$m2-grey-palette, 900),
+  dialog: map.get(mat.$m2-grey-palette, 900),
+  button: map.get($mat-cmu-tartan, default),
   disabled-button: rgba(white, 0.12),
-  expansion-panel: map_get(mat.$grey-palette, 900),
-  raised-button: map-get(mat.$grey-palette, 900),
+  expansion-panel: map.get(mat.$m2-grey-palette, 900),
+  raised-button: map.get(mat.$m2-grey-palette, 900),
   focused-button: $light-focused,
-  selected-button: map_get(mat.$grey-palette, 900),
-  selected-disabled-button: map_get(mat.$grey-palette, 900),
+  selected-button: map.get(mat.$m2-grey-palette, 900),
+  selected-disabled-button: map.get(mat.$m2-grey-palette, 900),
   disabled-button-toggle: black,
-  unselected-chip: map_get(mat.$grey-palette, 700),
-  disabled-list-option: map_get(mat.$grey-palette, 900),
+  unselected-chip: map.get(mat.$m2-grey-palette, 700),
+  disabled-list-option: map.get(mat.$m2-grey-palette, 900),
   presence-table: black,
 );
 
@@ -124,66 +134,66 @@ $custom-colors: (
   top-bar-bg: #373739,
 );
 
-$custom-typography: mat.define-legacy-typography-config(
+$custom-typography: mat.m2-define-typography-config(
   $font-family: '"Open Sans", sans-serif',
 );
-@include mat.all-legacy-component-typographies($custom-typography);
+@include mat.all-component-typographies($custom-typography);
 
 //globals mixin for edge cases.
 @mixin globals($theme) {
-  $primary: map-get($theme, primary);
-  $accent: map-get($theme, accent);
-  $warn: map-get($theme, warn);
-  $foreground: map-get($theme, foreground);
-  $background: map-get($theme, 'background');
+  $primary: map.get($theme, primary);
+  $accent: map.get($theme, accent);
+  $warn: map.get($theme, warn);
+  $foreground: map.get($theme, foreground);
+  $background: map.get($theme, 'background');
 
   .selected {
-    background: mat.get-color-from-palette($primary);
+    background: mat.m2-get-color-from-palette($primary);
     &:hover,
     &:focus {
-      background: mat.get-color-from-palette($primary) !important;
+      background: mat.m2-get-color-from-palette($primary) !important;
     }
   }
 
   .disabled-text {
-    color: map-get($foreground, disabled-text);
+    color: map.get($foreground, disabled-text);
   }
 
   .background {
-    background-color: map-get($background, 'background');
+    background-color: map.get($background, 'background');
   }
 
   .highlight {
     &:hover,
     &:focus {
-      background: map-get($background, hover);
+      background: map.get($background, hover);
     }
   }
 
   .text {
-    color: map-get($foreground, 'text');
+    color: map.get($foreground, 'text');
   }
 
   .mat-tooltip {
-    background-color: map-get($background, hover);
-    color: map-get($foreground, text);
+    background-color: map.get($background, hover);
+    color: map.get($foreground, text);
   }
 
   a {
-    color: map-get($foreground, text);
+    color: map.get($foreground, text);
   }
 
   .mat-column-online,
   .mat-column-user-name {
-    background: map-get($background, 'presence-table') !important;
+    background: map.get($background, 'presence-table') !important;
   }
 
   .online {
-    color: map-get($foreground, 'online');
+    color: map.get($foreground, 'online');
   }
 
   .offline {
-    color: map-get($foreground, 'offline');
+    color: map.get($foreground, 'offline');
   }
 
   .mat-header-cell,
@@ -193,18 +203,18 @@ $custom-typography: mat.define-legacy-typography-config(
   .mat-paginator-page-size-label,
   .mat-paginator-range-label,
   .mat-expansion-panel-header-description {
-    color: map-get($foreground, 'text') !important;
+    color: map.get($foreground, 'text') !important;
   }
 
   .mat-expansion-panel,
   .mat-drawer {
-    background-color: map-get($background, 'expansion-panel') !important;
+    background-color: map.get($background, 'expansion-panel') !important;
   }
 }
 
-$primary: mat.define-palette($mat-cmu-tartan);
-$accent: mat.define-palette($mat-cmu-tartan, A400, A200, A700);
-$warn: mat.define-palette(mat.$red-palette);
+$primary: mat.m2-define-palette($mat-cmu-tartan);
+$accent: mat.m2-define-palette($mat-cmu-tartan, A400, A200, A700);
+$warn: mat.m2-define-palette(mat.$m2-red-palette);
 
 @function override-theme($theme, $background, $foreground) {
   $color: map.get($theme, color);
@@ -225,7 +235,7 @@ $warn: mat.define-palette(mat.$red-palette);
 }
 
 $light-theme: override-theme(
-  mat.define-light-theme(
+  mat.m2-define-light-theme(
     (
       color: (
         primary: $primary,
@@ -239,7 +249,7 @@ $light-theme: override-theme(
 );
 
 $dark-theme: override-theme(
-  mat.define-dark-theme(
+  mat.m2-define-dark-theme(
     (
       color: (
         primary: $primary,

@@ -53,9 +53,10 @@ export class TeamUserApp {
 }
 
 @Component({
-  selector: 'app-admin-view-edit',
-  templateUrl: './admin-view-edit.component.html',
-  styleUrls: ['./admin-view-edit.component.scss'],
+    selector: 'app-admin-view-edit',
+    templateUrl: './admin-view-edit.component.html',
+    styleUrls: ['./admin-view-edit.component.scss'],
+    standalone: false
 })
 export class AdminViewEditComponent implements OnInit {
   @Output() editComplete = new EventEmitter<string>();

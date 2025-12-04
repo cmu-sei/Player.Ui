@@ -12,9 +12,10 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-notifications',
-  templateUrl: './notifications.component.html',
-  styleUrls: ['./notifications.component.scss'],
+    selector: 'app-notifications',
+    templateUrl: './notifications.component.html',
+    styleUrls: ['./notifications.component.scss'],
+    standalone: false
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   @Input() viewGuid: string;

@@ -12,7 +12,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import {
@@ -49,10 +49,11 @@ import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-vie
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 
 @Component({
-  selector: 'app-player',
-  templateUrl: './player.component.html',
-  styleUrls: ['./player.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-player',
+    templateUrl: './player.component.html',
+    styleUrls: ['./player.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;

@@ -21,10 +21,11 @@ import HttpHeaderUtils from '../../../utilities/http-header-utils';
 import { BehaviorSubject, finalize, map } from 'rxjs';
 
 @Component({
-  selector: 'app-admin-app-template-export',
-  templateUrl: './admin-app-template-export.component.html',
-  styleUrls: ['./admin-app-template-export.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-admin-app-template-export',
+    templateUrl: './admin-app-template-export.component.html',
+    styleUrls: ['./admin-app-template-export.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AdminAppTemplateExportComponent {
   @Input() ids: string[];

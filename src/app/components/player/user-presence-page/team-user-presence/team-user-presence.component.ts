@@ -9,9 +9,10 @@ import { Team } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 
 @Component({
-  selector: 'app-team-user-presence',
-  templateUrl: './team-user-presence.component.html',
-  styleUrls: ['./team-user-presence.component.scss'],
+    selector: 'app-team-user-presence',
+    templateUrl: './team-user-presence.component.html',
+    styleUrls: ['./team-user-presence.component.scss'],
+    standalone: false
 })
 export class TeamUserPresenceComponent {
   @Input() team: Team = null;

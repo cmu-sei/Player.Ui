@@ -23,10 +23,11 @@ import { BehaviorSubject, finalize, Observable, tap } from 'rxjs';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 
 @Component({
-  selector: 'app-admin-app-template-import',
-  templateUrl: './admin-app-template-import.component.html',
-  styleUrls: ['./admin-app-template-import.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-admin-app-template-import',
+    templateUrl: './admin-app-template-import.component.html',
+    styleUrls: ['./admin-app-template-import.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AdminAppTemplateImportComponent {
   @Output() complete = new EventEmitter<boolean>();

@@ -1,6 +1,6 @@
 <!--
- Copyright 2021 Carnegie Mellon University. All Rights Reserved.
- Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+Copyright 2021 Carnegie Mellon University. All Rights Reserved.
+Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
 <div>
@@ -14,16 +14,17 @@
             [(ngModel)]="searchTerm"
             (keyup)="applyFilter($event.target.value)"
             placeholder="Search"
-          />
-          <button
-            matSuffix
-            *ngIf="searchTerm !== ''"
-            mat-icon-button
-            (click)="clearFilter()"
-            matTooltip="Clear Search"
-          >
-            <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
-          </button>
+            />
+          @if (searchTerm !== '') {
+            <button
+              matSuffix
+              mat-icon-button
+              (click)="clearFilter()"
+              matTooltip="Clear Search"
+              >
+              <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
+            </button>
+          }
         </mat-form-field>
       </div>
       <button mat-raised-button color="primary" (click)="accordion.openAll()">
@@ -37,31 +38,33 @@
         color="primary"
         (change)="setHideInactive($event.checked)"
         >Hide Offline</mat-checkbox
-      >
-    </span>
-    <span>
-      <button
-        mat-icon-button
-        (click)="closeMe.emit()"
-        title="Close"
-        tabindex="-1"
-      >
-        <mat-icon
-          class="mdi-24px self-center"
-          fontIcon="mdi-close-circle-outline"
-        ></mat-icon>
-      </button>
-    </span>
-  </div>
-
-  <mat-accordion multi>
-    <div *ngFor="let team of _teams | async; trackBy: trackByTeamId">
-      <app-team-user-presence
-        [team]="team"
-        [users]="getPresenceByTeamId(team.id) | async"
-        [searchTerm]="searchTerm$ | async"
-        [hideInactive]="hideInactive"
-      ></app-team-user-presence>
+        >
+      </span>
+      <span>
+        <button
+          mat-icon-button
+          (click)="closeMe.emit()"
+          title="Close"
+          tabindex="-1"
+          >
+          <mat-icon
+            class="mdi-24px self-center"
+            fontIcon="mdi-close-circle-outline"
+          ></mat-icon>
+        </button>
+      </span>
     </div>
-  </mat-accordion>
-</div>
+
+    <mat-accordion multi>
+      @for (team of _teams | async; track trackByTeamId(team)) {
+        <div>
+          <app-team-user-presence
+            [team]="team"
+            [users]="getPresenceByTeamId(team.id) | async"
+            [searchTerm]="searchTerm$ | async"
+            [hideInactive]="hideInactive"
+          ></app-team-user-presence>
+        </div>
+      }
+    </mat-accordion>
+  </div>

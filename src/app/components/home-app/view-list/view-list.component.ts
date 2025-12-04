@@ -10,7 +10,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import { ViewData } from '../../../models/view-data';
 import { ViewsService } from '../../../services/views/views.service';
 import { forkJoin, Observable, Subject } from 'rxjs';
@@ -21,9 +21,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 
 @Component({
-  selector: 'app-view-list',
-  templateUrl: './view-list.component.html',
-  styleUrls: ['./view-list.component.scss'],
+    selector: 'app-view-list',
+    templateUrl: './view-list.component.html',
+    styleUrls: ['./view-list.component.scss'],
+    standalone: false
 })
 export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
   private viewsService = inject(ViewsService);

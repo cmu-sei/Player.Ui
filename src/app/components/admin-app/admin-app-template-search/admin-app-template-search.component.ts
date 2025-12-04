@@ -9,18 +9,18 @@ import {
   ViewChild,
 } from '@angular/core';
 import {
-  MatLegacyPaginator as MatPaginator,
-  LegacyPageEvent as PageEvent,
-} from '@angular/material/legacy-paginator';
+  MatPaginator,
+  PageEvent,
+} from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import {
-  MatLegacyDialog as MatDialog,
-  MatLegacyDialogRef as MatDialogRef,
-} from '@angular/material/legacy-dialog';
+  MatDialog,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { SafeHtml } from '@angular/platform-browser';
 
 export interface Action {
@@ -29,9 +29,10 @@ export interface Action {
 }
 
 @Component({
-  selector: 'app-admin-app-template-search',
-  templateUrl: './admin-app-template-search.component.html',
-  styleUrls: ['./admin-app-template-search.component.scss'],
+    selector: 'app-admin-app-template-search',
+    templateUrl: './admin-app-template-search.component.html',
+    styleUrls: ['./admin-app-template-search.component.scss'],
+    standalone: false
 })
 export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
   public appTemplateDataSource: MatTableDataSource<ApplicationTemplate>;

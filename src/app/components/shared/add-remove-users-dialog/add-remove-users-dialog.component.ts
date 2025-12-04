@@ -2,13 +2,13 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import {
-  LegacyPageEvent as PageEvent,
-  MatLegacyPaginator as MatPaginator,
-} from '@angular/material/legacy-paginator';
+  PageEvent,
+  MatPaginator,
+} from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import {
   User,
   UserService,
@@ -34,9 +34,10 @@ export class TeamUser {
 }
 
 @Component({
-  selector: 'app-add-remove-users-dialog',
-  templateUrl: './add-remove-users-dialog.component.html',
-  styleUrls: ['./add-remove-users-dialog.component.scss'],
+    selector: 'app-add-remove-users-dialog',
+    templateUrl: './add-remove-users-dialog.component.html',
+    styleUrls: ['./add-remove-users-dialog.component.scss'],
+    standalone: false
 })
 export class AddRemoveUsersDialogComponent implements OnInit {
   public title: string;

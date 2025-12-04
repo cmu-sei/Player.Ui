@@ -13,15 +13,17 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       matInput
       placeholder="Name"
       autocomplete="off"
-    />
+      />
 
-    <mat-error *ngIf="name.invalid && (name.dirty || name.touched)">
-      <ng-container *ngFor="let validator of validators">
-        <ng-container *ngIf="name.hasError(validator.name)">
-          {{ validator.errorMessage }}<br />
-        </ng-container>
-      </ng-container>
-    </mat-error>
+    @if (name.invalid && (name.dirty || name.touched)) {
+      <mat-error>
+        @for (validator of validators; track validator) {
+          @if (name.hasError(validator.name)) {
+            {{ validator.errorMessage }}<br />
+          }
+        }
+      </mat-error>
+    }
   </mat-form-field>
 </form>
 
@@ -32,7 +34,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     (click)="onClick()"
     [disabled]="!form.valid || !form.dirty"
     tabindex="3"
-  >
+    >
     Save
   </button>
   <button mat-stroked-button (click)="onCancel()" tabindex="3">Cancel</button>

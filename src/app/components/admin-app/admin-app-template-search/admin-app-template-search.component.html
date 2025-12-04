@@ -11,7 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           height="35"
           src="assets/img/SP_Icon_Intel.png"
           alt="Application Templates"
-        />
+          />
       </div>
       <span class="header-text">Application Templates</span>
     </div>
@@ -26,19 +26,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
-        />
-        <button
-          *ngIf="filterString !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+          />
+        @if (filterString !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+            >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
     </div>
     <div class="ms-auto">
@@ -46,14 +47,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         mat-icon-button
         matTooltip="Add a new Application Template"
         (click)="addAppTemplate()"
-      >
+        >
         <mat-icon fontIcon="mdi-plus" class="mdi-24px"></mat-icon>
       </button>
       <button
         mat-icon-button
         matTooltip="Import Application Templates"
         (click)="openDialog(importDialog)"
-      >
+        >
         <mat-icon fontIcon="mdi-file-import" class="mdi-24px"></mat-icon>
       </button>
       <button
@@ -63,7 +64,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           selection.selected.length > 0 ? selection.selected.length : ''
         "
         (click)="openDialog(exportDialog)"
-      >
+        >
         <mat-icon fontIcon="mdi-file-export" class="mdi-24px"></mat-icon>
       </button>
     </div>
@@ -76,7 +77,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (change)="$event ? toggleAllRows() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
-        >
+          >
         </mat-checkbox>
       </mat-header-cell>
       <mat-cell *matCellDef="let row">
@@ -84,7 +85,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (click)="$event.stopPropagation()"
           (change)="$event ? selection.toggle(row.id) : null"
           [checked]="selection.isSelected(row.id)"
-        >
+          >
         </mat-checkbox>
       </mat-cell>
     </ng-container>
@@ -98,21 +99,21 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           class="app-icon"
           src="{{ element.icon }}"
           alt="{{ element.name }} Icon"
-        />&nbsp;&nbsp;{{ element.name }}
-      </mat-cell>
-    </ng-container>
+          />&nbsp;&nbsp;{{ element.name }}
+        </mat-cell>
+      </ng-container>
 
-    <ng-container matColumnDef="url">
-      <mat-header-cell *matHeaderCellDef mat-sort-header> Url </mat-header-cell>
-      <mat-cell *matCellDef="let element; let i = index">
-        <div class="w-100">
-          <mat-expansion-panel
+      <ng-container matColumnDef="url">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> Url </mat-header-cell>
+        <mat-cell *matCellDef="let element; let i = index">
+          <div class="w-100">
+            <mat-expansion-panel
             [expanded]="
               currentAppTemplate !== undefined &&
               element.id === currentAppTemplate.id
             "
-            (opened)="currentAppTemplate = element"
-          >
+              (opened)="currentAppTemplate = element"
+              >
             <mat-expansion-panel-header>
               <mat-panel-title style="font-size: small">
                 {{ element.url }}
@@ -130,16 +131,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-header-row *matHeaderRowDef="appTemplateColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: appTemplateColumns"></mat-row>
   </mat-table>
-  <div *ngIf="appTemplateDataSource.filteredData.length === 0">
-    No Application Templates found
-  </div>
+  @if (appTemplateDataSource.filteredData.length === 0) {
+    <div>
+      No Application Templates found
+    </div>
+  }
   <mat-paginator
     #paginator
     [pageSize]="defaultPageSize"
     [pageSizeOptions]="[10, 20, 30]"
     [showFirstLastButtons]="true"
     (page)="pageEvent = $event"
-  >
+    >
   </mat-paginator>
 </div>
 

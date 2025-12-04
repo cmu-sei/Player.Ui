@@ -7,92 +7,103 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   class="notifications-container"
   (opened)="notificationPanelToggle('open')"
   (closed)="notificationPanelToggle('close')"
->
+  >
   <mat-expansion-panel-header [ngClass]="notificationDisplayClass()">
     <mat-panel-title>
-      <span
-        *ngIf="useBadge"
-        class="notification-badge"
-        matBadge="{{ newNotificationCount() }}"
-        matBadgeOverlap="false"
-        matBadgeColor="warn"
-        matBadgePosition="before"
-        matBadgeHidden="{{ newNotificationCount() < 1 }}"
-        matBadgeSize="small"
-      >
-      </span>
+      @if (useBadge) {
+        <span
+          class="notification-badge"
+          matBadge="{{ newNotificationCount() }}"
+          matBadgeOverlap="false"
+          matBadgeColor="warn"
+          matBadgePosition="before"
+          matBadgeHidden="{{ newNotificationCount() < 1 }}"
+          matBadgeSize="small"
+          >
+        </span>
+      }
       <span class="notification-panel-title">
         <b> Notifications </b>
       </span>
-      <mat-icon
-        *ngIf="
-          hasViewAdmin &&
-          showSystemNotifications &&
-          notificationsHistory.length > 0
-        "
-        fontIcon="mdi-trash-can"
-        title="Delete ALL notifications"
-        (click)="deleteViewNotifications()"
-      ></mat-icon>
+      @if (
+        hasViewAdmin &&
+        showSystemNotifications &&
+        notificationsHistory.length > 0
+        ) {
+        <mat-icon
+          fontIcon="mdi-trash-can"
+          title="Delete ALL notifications"
+          (click)="deleteViewNotifications()"
+        ></mat-icon>
+      }
     </mat-panel-title>
   </mat-expansion-panel-header>
-  <mat-list *ngIf="notificationsHistory != undefined">
-    <mat-list-item *ngFor="let notif of notificationsHistory">
-      <div id="wrapper">
-        <div
-          id="time"
-          title="{{ notif.broadcastTime | date : 'MM/dd/yyyy HH:mm' }}"
-        >
-          <b>{{ notif.broadcastTime | date : 'HH:mm' }}</b>
-        </div>
-        <div id="from">
-          {{ notif.fromName }}
-        </div>
-        <div id="link">
-          <a
-            *ngIf="notif.link"
-            href="{{ notif.link }}"
-            target="_blank"
-            title="Goto:  {{ notif.link }}"
-            >Open</a
-          >
-        </div>
-        <div id="message">
-          {{ notif.text }}
-        </div>
-        <div *ngIf="hasViewAdmin" id="deleteButton">
-          <mat-icon
-            fontIcon="mdi-trash-can"
-            title="Delete notification"
-            (click)="deleteNotification(notif)"
-          ></mat-icon>
-        </div>
-      </div>
-    </mat-list-item>
-  </mat-list>
+  @if (notificationsHistory != undefined) {
+    <mat-list>
+      @for (notif of notificationsHistory; track notif) {
+        <mat-list-item>
+          <div id="wrapper">
+            <div
+              id="time"
+              title="{{ notif.broadcastTime | date : 'MM/dd/yyyy HH:mm' }}"
+              >
+              <b>{{ notif.broadcastTime | date : 'HH:mm' }}</b>
+            </div>
+            <div id="from">
+              {{ notif.fromName }}
+            </div>
+            <div id="link">
+              @if (notif.link) {
+                <a
+                  href="{{ notif.link }}"
+                  target="_blank"
+                  title="Goto:  {{ notif.link }}"
+                  >Open</a
+                  >
+                }
+              </div>
+              <div id="message">
+                {{ notif.text }}
+              </div>
+              @if (hasViewAdmin) {
+                <div id="deleteButton">
+                  <mat-icon
+                    fontIcon="mdi-trash-can"
+                    title="Delete notification"
+                    (click)="deleteNotification(notif)"
+                  ></mat-icon>
+                </div>
+              }
+            </div>
+          </mat-list-item>
+        }
+      </mat-list>
+    }
 
-  <div *ngIf="hasViewAdmin" class="send-message">
-    <form #notificationForm="ngForm" (ngSubmit)="sendMessage()">
-      <mat-form-field class="input-message">
-        <input
-          matInput
-          #msgtext
-          type="text"
-          placeholder="{{ sendMessagePlaceholder }}"
-          name="messageToSend"
-          [(ngModel)]="messageToSend"
-        />
-        <mat-hint align="end">{{ msgtext.value.length }} / 225</mat-hint>
-        <button
-          mat-button
-          type="submit"
-          matSuffix
-          aria-label="Send"
-          [disabled]="!notificationForm.form.valid"
-        >
-          Send
-        </button>
-      </mat-form-field>
-    </form>
-  </div>
-</mat-expansion-panel>
+    @if (hasViewAdmin) {
+      <div class="send-message">
+        <form #notificationForm="ngForm" (ngSubmit)="sendMessage()">
+          <mat-form-field class="input-message">
+            <input
+              matInput
+              #msgtext
+              type="text"
+              placeholder="{{ sendMessagePlaceholder }}"
+              name="messageToSend"
+              [(ngModel)]="messageToSend"
+              />
+            <mat-hint align="end">{{ msgtext.value.length }} / 225</mat-hint>
+            <button
+              mat-button
+              type="submit"
+              matSuffix
+              aria-label="Send"
+              [disabled]="!notificationForm.form.valid"
+              >
+              Send
+            </button>
+          </mat-form-field>
+        </form>
+      </div>
+    }
+  </mat-expansion-panel>

@@ -15,9 +15,10 @@ import { ViewsService } from '../../../services/views/views.service';
 import FileDownloadUtils from '../../../utilities/file-download-utils';
 
 @Component({
-  selector: 'app-admin-app-view-export',
-  templateUrl: './admin-app-view-export.component.html',
-  styleUrls: ['./admin-app-view-export.component.scss'],
+    selector: 'app-admin-app-view-export',
+    templateUrl: './admin-app-view-export.component.html',
+    styleUrls: ['./admin-app-view-export.component.scss'],
+    standalone: false
 })
 export class AdminAppViewExportComponent {
   @Input() ids: string[];

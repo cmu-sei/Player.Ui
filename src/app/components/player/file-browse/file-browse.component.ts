@@ -14,9 +14,10 @@ import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
 
 @Component({
-  selector: 'app-file-browse',
-  templateUrl: './file-browse.component.html',
-  styleUrls: ['./file-browse.component.scss'],
+    selector: 'app-file-browse',
+    templateUrl: './file-browse.component.html',
+    styleUrls: ['./file-browse.component.scss'],
+    standalone: false
 })
 export class FileBrowseComponent implements OnInit {
   public files = new Array<FileModel>();

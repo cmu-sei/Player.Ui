@@ -9,9 +9,10 @@ import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-focused-app',
-  templateUrl: './focused-app.component.html',
-  styleUrls: ['./focused-app.component.scss'],
+    selector: 'app-focused-app',
+    templateUrl: './focused-app.component.html',
+    styleUrls: ['./focused-app.component.scss'],
+    standalone: false
 })
 export class FocusedAppComponent implements OnDestroy {
   public focusedAppUrl$: Observable<SafeUrl>;

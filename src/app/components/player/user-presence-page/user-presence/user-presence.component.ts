@@ -20,9 +20,10 @@ import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
 
 @Component({
-  selector: 'app-user-presence',
-  templateUrl: './user-presence.component.html',
-  styleUrls: ['./user-presence.component.scss'],
+    selector: 'app-user-presence',
+    templateUrl: './user-presence.component.html',
+    styleUrls: ['./user-presence.component.scss'],
+    standalone: false
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
   @Input() viewId: string;

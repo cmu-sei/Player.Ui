@@ -3,7 +3,7 @@
 
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import {
   CreatePermissionCommand,
   Permission,
@@ -19,9 +19,10 @@ export interface Action {
 }
 
 @Component({
-  selector: 'app-admin-role-permission-search',
-  templateUrl: './admin-role-permission-search.component.html',
-  styleUrls: ['./admin-role-permission-search.component.scss'],
+    selector: 'app-admin-role-permission-search',
+    templateUrl: './admin-role-permission-search.component.html',
+    styleUrls: ['./admin-role-permission-search.component.scss'],
+    standalone: false
 })
 export class AdminRolePermissionSearchComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sortRoles: MatSort;

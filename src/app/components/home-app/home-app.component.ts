@@ -6,9 +6,10 @@ import { ComnSettingsService } from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 
 @Component({
-  selector: 'app-home-app',
-  templateUrl: './home-app.component.html',
-  styleUrls: ['./home-app.component.scss'],
+    selector: 'app-home-app',
+    templateUrl: './home-app.component.html',
+    styleUrls: ['./home-app.component.scss'],
+    standalone: false
 })
 export class HomeAppComponent implements OnInit {
   public title: string;

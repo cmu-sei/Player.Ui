@@ -9,14 +9,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
     </div>
     <span class="views-title text">My Views</span>
-    <button
-      *ngIf="canCreate$ | async"
-      mat-icon-button
-      matTooltip="Add New View"
-      (click)="create()"
-    >
-      <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle"> </mat-icon>
-    </button>
+    @if (canCreate$ | async) {
+      <button
+        mat-icon-button
+        matTooltip="Add New View"
+        (click)="create()"
+        >
+        <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle"> </mat-icon>
+      </button>
+    }
     <div class="searchBox d-flex align-items-center">
       <mat-icon
         class="text"
@@ -29,30 +30,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
-        />
-        <button
-          *ngIf="filterString !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+          />
+        @if (filterString !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+            >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
     </div>
   </div>
 
-  <mat-card
-    *ngIf="isLoading"
-    class="d-flex justify-content-center align-items-center"
-  >
-    <mat-progress-spinner color="primary" mode="indeterminate">
-    </mat-progress-spinner>
-  </mat-card>
+  @if (isLoading) {
+    <mat-card
+      class="d-flex justify-content-center align-items-center"
+      >
+      <mat-progress-spinner color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </mat-card>
+  }
 
   <mat-table
     #table
@@ -60,9 +63,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     matSort
     matSortActive="name"
     matSortDirection="asc"
-  >
+    >
     <!--- Note that these columns can be defined in any order.
-          The actual rendered columns are set as a property on the row definition" -->
+    The actual rendered columns are set as a property on the row definition" -->
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
@@ -74,23 +77,25 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             [routerLink]="['/view', element.id]"
             [queryParams]="{ teamId: asdf }"
             >{{ element.name }}</a
-          >
-        </div>
-      </mat-cell>
-    </ng-container>
+            >
+          </div>
+        </mat-cell>
+      </ng-container>
 
-    <!-- Name Column -->
-    <ng-container matColumnDef="description">
-      <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
-      <mat-cell *matCellDef="let element">
-        <div class="description-text">{{ element.description }}</div>
-      </mat-cell>
-    </ng-container>
+      <!-- Name Column -->
+      <ng-container matColumnDef="description">
+        <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <div class="description-text">{{ element.description }}</div>
+        </mat-cell>
+      </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-  </mat-table>
-  <div class="text no-results" *ngIf="dataSource.filteredData.length === 0">
-    No results found
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+    @if (dataSource.filteredData.length === 0) {
+      <div class="text no-results">
+        No results found
+      </div>
+    }
   </div>
-</div>

@@ -18,9 +18,10 @@ import {
 import { ErrorStateMatcher } from '@angular/material/core';
 
 @Component({
-  selector: 'app-view-applications-select',
-  templateUrl: './view-applications-select.component.html',
-  styleUrls: ['./view-applications-select.component.scss'],
+    selector: 'app-view-applications-select',
+    templateUrl: './view-applications-select.component.html',
+    styleUrls: ['./view-applications-select.component.scss'],
+    standalone: false
 })
 export class ViewApplicationsSelectComponent implements OnInit {
   @Input() view: View;

@@ -6,13 +6,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <div class="container">
   <h1 mat-dialog-title>Select Permissions for {{ role.name }}</h1>
   <mat-selection-list class="permission-list" [(ngModel)]="selectedPermissions">
-    <mat-list-option
-      *ngFor="let item of permissions"
-      [value]="item.id"
-      (click)="updateSelection(item.id)"
-    >
-      {{ item.key ?? item.name }}
-    </mat-list-option>
+    @for (item of permissions; track item) {
+      <mat-list-option
+        [value]="item.id"
+        (click)="updateSelection(item.id)"
+        >
+        {{ item.key ?? item.name }}
+      </mat-list-option>
+    }
   </mat-selection-list>
   <p>Options selected: {{ selectedPermissions.length }}</p>
   <div class="d-flex justify-content-center">
