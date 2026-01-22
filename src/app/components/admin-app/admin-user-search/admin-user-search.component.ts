@@ -10,6 +10,7 @@ import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { User, UserService, RoleService } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
+import { DialogService } from '../../../services/dialog/dialog.service';
 
 export interface Action {
   Value: string;
@@ -23,7 +24,7 @@ export interface Action {
     standalone: false
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
-  public displayedColumns: string[] = ['name', 'roleName'];
+  public displayedColumns: string[] = ['name', 'roleName', 'actions'];
   public filterString: string;
 
   public editUserText = 'Edit User';
@@ -42,7 +43,8 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
 
   constructor(
     private userService: UserService,
-    private rolesService: RolesService
+    private rolesService: RolesService,
+    private dialogService: DialogService
   ) {}
 
   /**
@@ -109,5 +111,29 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
       this.userDataSource.data = users;
       this.isLoading = false;
     });
+  }
+
+  /**
+   * Deletes a user after confirmation
+   * @param user The user to delete
+   */
+  deleteUser(user: User) {
+    this.dialogService
+      .confirm(
+        'Delete User?',
+        `Are you sure you want to delete ${user.name || user.id}?`,
+        {
+          buttonTrueText: 'Delete',
+          buttonFalseText: 'Cancel',
+        }
+      )
+      .subscribe((result) => {
+        if (result.confirm) {
+          this.userService.deleteUser(user.id).subscribe(() => {
+            // Refresh the users list after successful deletion
+            this.refreshUsers();
+          });
+        }
+      });
   }
 }
