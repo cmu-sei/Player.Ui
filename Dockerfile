@@ -1,12 +1,11 @@
-FROM node:20-alpine as builder
+FROM node:20-alpine AS builder
 
 COPY package.json package-lock.json ./
 
 # Storing node modules on a separate layer will prevent unnecessary npm install at each build
 RUN npm set progress=false && \
   npm config set depth 0 && \
-  npm cache clean --force && \
-  npm config set unsafe-perm true
+  npm cache clean --force
 
 RUN npm ci && mkdir -p /ng-app/dist && cp -R ./node_modules ./ng-app
 
