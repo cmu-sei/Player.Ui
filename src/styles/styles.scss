@@ -3,8 +3,7 @@
 
 /* IMPORTS - All @use statements must come first */
 @use '@angular/material' as mat;
-@use '@mdi/font/scss/materialdesignicons' with (
-  $mdi-font-path: '~@mdi/font/fonts'
+@use '@mdi/font/scss/materialdesignicons' with ($mdi-font-path: '~@mdi/font/fonts'
 );
 @use 'theme';
 /* END IMPORTS */
@@ -29,6 +28,7 @@
 .mat-select-panel {
   background: #fff;
 }
+
 .mat-select-panel:not([class*='mat-elevation-z']) {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14),
     0 1px 10px 0 rgba(0, 0, 0, 0.12);
@@ -36,4 +36,13 @@
 
 .header-text {
   font-family: open_sansbold;
+}
+
+/* Fix user dropdown menu scrollbar */
+.user-dropdown-menu {
+  min-height: 150px !important;
+}
+
+.toggle {
+  padding-left: 12px;
 }
