@@ -227,6 +227,8 @@ export class AdminViewSearchComponent implements OnInit {
     this.dialogRef = this.dialog.open(templateRef, {
       disableClose: true,
       autoFocus: true,
+      minHeight: '250px',
+      width: '350px',
     });
   }
 
