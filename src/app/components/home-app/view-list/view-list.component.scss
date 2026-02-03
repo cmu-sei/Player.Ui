@@ -26,6 +26,7 @@
 .mat-table {
   overflow: auto;
   max-height: 700px;
+  width: 100%;
 }
 
 .app-list-item {
@@ -68,14 +69,16 @@
 }
 
 .mat-column-name {
-  flex: 0 0 28%;
+  flex: 0 0 30%;
   padding: 1%;
 }
+
 .mat-column-teamName {
   flex: 0 0 20%;
 }
+
 .mat-column-description {
-  flex: 0 0 48%;
+  flex: 1 1 auto;
   padding: 1%;
 }
 
