@@ -50,3 +50,20 @@ body {
 .toggle {
   padding-left: 12px;
 }
+
+/* Consistent Material table background colors */
+.light-theme {
+  .mat-mdc-table,
+  .mat-mdc-header-row,
+  .mat-mdc-row {
+    background-color: #f1f1f2;
+  }
+}
+
+.dark-theme {
+  .mat-mdc-table,
+  .mat-mdc-header-row,
+  .mat-mdc-row {
+    background-color: #373739;
+  }
+}
