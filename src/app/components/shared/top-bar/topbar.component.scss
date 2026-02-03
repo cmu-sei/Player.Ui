@@ -3,36 +3,48 @@
 .margin-auto {
   margin: auto;
 }
+
 .spacer {
   flex: 1 1 auto;
 }
+
 .toolbar {
   max-height: 38px;
   min-height: 38px;
 }
+
 .team-text {
   font-size: large;
   text-align: right;
   margin-right: 10px;
   font-weight: bold;
 }
+
 .copy-text {
   cursor: pointer;
 }
+
 .view-text {
   font-size: large;
   margin-left: 50px;
   margin-right: 40px;
   font-weight: bold;
 }
+
 .big-button {
   width: 75%;
 }
+
 .small-button {
   width: 25%;
   padding-right: 40px;
 }
+
 .username-text {
   font-size: large;
   font-weight: bold;
+}
+
+.mat-mdc-button:not(:disabled) {
+  color: #fff;
 }
