@@ -13,6 +13,10 @@
 @include mat.app-background();
 /* END VENDER INCLUDES */
 
+body {
+  font-family: "Open Sans", sans-serif;
+}
+
 @include mat.all-component-themes(theme.$light-theme);
 
 .light-theme {
