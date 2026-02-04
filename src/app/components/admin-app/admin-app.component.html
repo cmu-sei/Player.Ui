@@ -9,7 +9,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     #sidenav
     mode="side"
     [opened]="true"
-    >
+  >
     <mat-list class="appitems-container">
       <mat-list-item class="appslist">
         <a class="nolink" [routerLink]="['/']">
@@ -31,8 +31,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 <button
                   mat-button
                   (click)="sectionChangedFn(sectionItem.section)"
-                  class="px-0 w-100"
-                  >
+                  class="px-0 w-100 justify-content-start"
+                >
                   <div class="d-flex align-items-center">
                     @if (sectionItem.svgIcon) {
                       <mat-icon
@@ -45,7 +45,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                         class="lefticon"
                         src="{{ sectionItem.icon }}"
                         alt="{{ sectionItem.name }}"
-                        />
+                      />
                     }
                     <div>{{ sectionItem.name }}</div>
                   </div>
@@ -64,7 +64,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           ? 'assets/img/crucible-logo-light.png'
           : 'assets/img/crucible-logo-dark.png'
       "
-      />
+    />
   </mat-sidenav>
   <!-- MAIN CONTENT -->
   <mat-sidenav-content>
@@ -78,25 +78,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="d-flex justify-content-center">
       @switch (section$ | async) {
         @case (Section.ADMIN_VIEWS) {
-          <app-admin-view-search
-          ></app-admin-view-search>
+          <app-admin-view-search></app-admin-view-search>
         }
         @case (Section.ADMIN_USERS) {
-          <app-admin-user-search
-          ></app-admin-user-search>
+          <app-admin-user-search></app-admin-user-search>
         }
         @case (Section.ADMIN_APP_TEMP) {
-          <app-admin-app-template-search
-          ></app-admin-app-template-search>
+          <app-admin-app-template-search></app-admin-app-template-search>
         }
         @case (Section.ADMIN_ROLE_PERM) {
-          <app-admin-roles
-            class="w-100"
-          ></app-admin-roles>
+          <app-admin-roles class="w-100"></app-admin-roles>
         }
         @case (Section.ADMIN_SUBS) {
-          <app-admin-subscription-search
-          ></app-admin-subscription-search>
+          <app-admin-subscription-search></app-admin-subscription-search>
         }
       }
     </div>
