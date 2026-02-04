@@ -52,6 +52,9 @@
 }
 
 .player-icon-small {
-  transform: scale(1.1);
   width: 35px;
+  height: 35px;
+  font-size: 35px;
+  padding: 5px 16px 5px 5px;
+  cursor: pointer;
 }
