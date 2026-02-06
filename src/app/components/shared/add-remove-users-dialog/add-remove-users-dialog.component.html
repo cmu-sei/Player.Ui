@@ -166,7 +166,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
         <ng-container matColumnDef="user">
           <mat-header-cell *matHeaderCellDef>&nbsp;</mat-header-cell>
-          <mat-cell style="margin-left: 20px" *matCellDef="let element">
+          <mat-cell *matCellDef="let element">
             <div>
               <button mat-stroked-button (click)="removeUserFromTeam(element)">
                 Remove
