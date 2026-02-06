@@ -5,10 +5,6 @@
   height: calc(100vh - 107px);
   overflow-y: auto;
 }
-/* mat-list-item must be overridden here due to a heigh sizing bug */
-.appitems-container .mat-list-item {
-  height: auto;
-}
 
 .appslist {
   margin-top: 10px;
@@ -39,15 +35,6 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-}
-
-::ng-deep .list-item-mini > .mat-list-item-content {
-  padding: 0 !important;
-}
-
-::ng-deep .list-item > .mat-list-item-content {
-  padding-left: 16px !important;
-  padding-right: 0px !important;
 }
 
 .app-name {

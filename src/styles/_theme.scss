@@ -174,11 +174,6 @@ $custom-typography: mat.m2-define-typography-config(
     color: map.get($foreground, 'text');
   }
 
-  .mat-tooltip {
-    background-color: map.get($background, hover);
-    color: map.get($foreground, text);
-  }
-
   a {
     color: map.get($foreground, text);
   }
@@ -196,18 +191,18 @@ $custom-typography: mat.m2-define-typography-config(
     color: map.get($foreground, 'offline');
   }
 
-  .mat-header-cell,
-  .mat-form-field,
-  .mat-form-field-label,
-  .mat-sort-header-content,
-  .mat-paginator-page-size-label,
-  .mat-paginator-range-label,
+  .mat-mdc-header-cell,
+  .mat-mdc-form-field,
+  .mat-mdc-floating-label,
+  .mat-mdc-sort-header-content,
+  .mat-mdc-paginator-page-size-label,
+  .mat-mdc-paginator-range-label,
   .mat-expansion-panel-header-description {
     color: map.get($foreground, 'text') !important;
   }
 
   .mat-expansion-panel,
-  .mat-drawer {
+  .mat-drawer-inner-container {
     background-color: map.get($background, 'expansion-panel') !important;
   }
 }
