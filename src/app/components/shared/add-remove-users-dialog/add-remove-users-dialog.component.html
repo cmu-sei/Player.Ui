@@ -146,7 +146,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <ng-container matColumnDef="teamMembership">
           <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
           <mat-cell *matCellDef="let element">
-            <mat-form-field>
+            <mat-form-field subscriptSizing="dynamic" class="my-1">
               <mat-select
                 placeholder="Role"
                 name="teamMembershipRole"
