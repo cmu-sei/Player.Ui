@@ -28,16 +28,6 @@ body {
   @include theme.globals(theme.$dark-theme);
 }
 
-/* The following overrides transparent select options after upgrading to Angular 7 */
-.mat-select-panel {
-  background: #fff;
-}
-
-.mat-select-panel:not([class*='mat-elevation-z']) {
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 10px 0 rgba(0, 0, 0, 0.12);
-}
-
 .header-text {
   font-family: open_sansbold;
 }
