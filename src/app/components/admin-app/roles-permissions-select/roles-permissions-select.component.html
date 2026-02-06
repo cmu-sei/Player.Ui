@@ -10,7 +10,7 @@ to use this component, add one of the following lines to the html of your edit p
 <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 -->
 
-<mat-form-field>
+<mat-form-field subscriptSizing="dynamic" class="my-1">
   <mat-select
     [value]="subject.roleId ?? ''"
     name="userRole"
@@ -31,7 +31,7 @@ to use this component, add one of the following lines to the html of your edit p
 @if (showPermissions) {
   <div class="add-margin">
     <div>
-      <mat-form-field>
+      <mat-form-field subscriptSizing="dynamic">
         <mat-select
           placeholder="Permissions"
           [(ngModel)]="selectedPermissions"
