@@ -5,7 +5,7 @@
 @use '@angular/material' as mat;
 @use '@mdi/font/scss/materialdesignicons' with ($mdi-font-path: '~@mdi/font/fonts'
 );
-@use 'theme';
+@use './theme-colors' as theme;
 /* END IMPORTS */
 
 /* VENDER INCLUDES */
@@ -13,19 +13,39 @@
 @include mat.app-background();
 /* END VENDER INCLUDES */
 
+html {
+  @include mat.theme((color: theme.$primary-palette,
+      typography: '"Open Sans", sans-serif',
+    ),
+    $overrides: ((background: #f1f1f2,
+        surface: var(--mat-sys-background),
+        surface-variant: var(--mat-sys-background),
+        icon: var(--mat-sys-primary),
+      )));
+  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary)));
+}
+
+.darkMode {
+  @include mat.theme((color: (primary: theme.$primary-palette,
+        typography: '"Open Sans", sans-serif',
+        theme-type: dark,
+      ),
+    ),
+    $overrides: ((background: #313131,
+        surface: var(--mat-sys-background),
+        surface-variant: var(--mat-sys-background),
+        icon: var(--mat-sys-primary),
+      )));
+  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary)));
+}
+
 body {
   font-family: "Open Sans", sans-serif;
 }
 
-@include mat.all-component-themes(theme.$light-theme);
-
-.light-theme {
-  @include theme.globals(theme.$light-theme);
-}
-
-.dark-theme {
-  @include mat.all-component-colors(theme.$dark-theme);
-  @include theme.globals(theme.$dark-theme);
+// Override the disabled icon color specifically for mat-icon-button
+.mat-mdc-icon-button[disabled] .mat-icon {
+  --mat-icon-color-disabled: var(--mat-sys-outline-variant);
 }
 
 .header-text {
@@ -42,18 +62,110 @@ body {
 }
 
 /* Consistent Material table background colors */
-.light-theme {
-  .mat-mdc-table,
-  .mat-mdc-header-row,
-  .mat-mdc-row {
-    background-color: #f1f1f2;
+.mat-mdc-table,
+.mat-mdc-header-row,
+.mat-mdc-row {
+  background-color: var(--mat-sys-background);
+}
+
+// prevent table header rows from scrolling
+.mat-mdc-header-row {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 9 !important;
+}
+
+// remove the border around paginator items per page selection
+mat-paginator {
+  --mat-form-field-outlined-outline-color: transparent;
+  --mat-form-field-outlined-hover-outline-color: transparent;
+  --mat-form-field-outlined-focus-outline-color: transparent;
+  min-width: 200px !important;
+}
+
+.mat-form-field {
+  color: var(--mat-sys-primary);
+}
+
+// Ensure mat-select dropdown panels match the mat-select background color
+.mat-mdc-select-panel {
+  background-color: var(--mat-sys-outline-variant) !important;
+}
+
+// Ensure mat-option elements match the mat-select background color
+.mat-mdc-option {
+  --mat-option-label-text-color: var(--mat-sys-on-background);
+  --mat-option-hover-state-layer-color: var(--mat-sys-outline);
+  --mat-option-focus-state-layer-color: var(--mat-sys-outline);
+  --mat-option-selected-state-layer-color: var(--mat-sys-outline);
+}
+
+.mat-mdc-option:not(.mat-mdc-option-disabled) {
+  background-color: var(--mat-sys-background);
+}
+
+.mat-mdc-option:hover:not(.mat-mdc-option-disabled) {
+  background-color: var(--mat-sys-surface-variant);
+}
+
+// Global utility classes (previously from theme.globals() mixin)
+.selected {
+  background: var(--mat-sys-primary);
+  &:hover,
+  &:focus {
+    background: var(--mat-sys-primary) !important;
   }
 }
 
-.dark-theme {
-  .mat-mdc-table,
-  .mat-mdc-header-row,
-  .mat-mdc-row {
-    background-color: #373739;
+.disabled-text {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.background {
+  background-color: var(--mat-sys-background);
+}
+
+.highlight {
+  &:hover,
+  &:focus {
+    background: var(--mat-sys-surface-variant);
   }
+}
+
+.text {
+  color: var(--mat-sys-on-surface);
+}
+
+a {
+  color: var(--mat-sys-on-surface);
+}
+
+.mat-column-online,
+.mat-column-user-name {
+  background: var(--mat-sys-surface-variant) !important;
+}
+
+// Semantic colors - keep hardcoded (not theme-derived)
+.online {
+  color: #007400;
+}
+
+.offline {
+  color: #ca0000;
+}
+
+.mat-mdc-header-cell,
+.mat-mdc-form-field,
+.mat-mdc-floating-label,
+.mat-mdc-sort-header-content,
+.mat-mdc-paginator-page-size-label,
+.mat-mdc-paginator-range-label,
+.mat-expansion-panel-header-description {
+  color: var(--mat-sys-on-surface) !important;
+}
+
+.mat-expansion-panel,
+.mat-drawer-inner-container {
+  background-color: var(--mat-sys-background) !important;
 }

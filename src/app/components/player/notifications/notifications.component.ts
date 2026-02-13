@@ -23,8 +23,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   @Input() userGuid: string;
   @Input() userToken: string;
   @Input() userName: string;
-  @Input() topbarColor: string;
-
   public notification: NotificationDataStatus;
   public messageToSend: string;
   public userData: any;

@@ -75,7 +75,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <app-topbar
         [sidenav]="sidenav"
         [title]="data.view.name"
-        [topbarColor]="topbarColor"
         topbarView="player-player"
         [teams]="data.teams"
         [team]="data.team"
@@ -84,7 +83,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         (setTeam)="setPrimaryTeam($event)"
         (sidenavToggle)="sidenavToggleFn($event)"
         (editView)="editViewFn($event)"
-        [topbarTextColor]="topbarTextColor"
       ></app-topbar>
       <app-focused-app></app-focused-app>
       @if (user$ | async; as user) {
@@ -94,7 +92,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [userGuid]="user.profile.id"
           [userToken]="user.access_token"
           [userName]="user.profile.name"
-          [topbarColor]="topbarColor"
           class="notification-height"
           >
         </app-notifications>

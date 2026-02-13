@@ -49,6 +49,7 @@
 .player-icon {
   transform: scale(2);
   width: 60px;
+  color: var(--mat-sys-primary);
 }
 
 .player-icon-small {
@@ -57,4 +58,5 @@
   font-size: 35px;
   padding: 5px 16px 5px 5px;
   cursor: pointer;
+  color: var(--mat-sys-primary);
 }

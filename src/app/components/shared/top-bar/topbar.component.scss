@@ -45,6 +45,7 @@
   font-weight: bold;
 }
 
-.mat-mdc-button:not(:disabled) {
-  color: #fff;
+.mat-mdc-button:not(:disabled),
+.mat-mdc-icon-button:not(:disabled) {
+  color: var(--mat-sys-on-primary);
 }

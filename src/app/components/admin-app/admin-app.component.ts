@@ -25,8 +25,6 @@ import { SystemPermission } from '../../generated/player-api';
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
-  public topbarColor = '#4c7aa2';
-  public topbarTextColor = '#FFFFFF';
   public TopbarView = TopbarView;
   public queryParams: any;
   Section = Section;
@@ -120,9 +118,6 @@ export class AdminAppComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Set the topbar color from config file
-    this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
-    this.topbarTextColor = this.settingsService.settings.AppTopBarHexTextColor;
   }
 
   addParam(params: any): void {

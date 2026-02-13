@@ -31,19 +31,17 @@ import {
 } from '../../../generated/player-api';
 
 @Component({
-    selector: 'app-topbar',
-    templateUrl: './topbar.component.html',
-    styleUrls: ['./topbar.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'app-topbar',
+  templateUrl: './topbar.component.html',
+  styleUrls: ['./topbar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class TopbarComponent implements OnInit, OnDestroy {
   @Input() title?: string;
   @Input() sidenav?;
   @Input() teams?;
   @Input() team?;
-  @Input() topbarColor?;
-  @Input() topbarTextColor?;
   @Input() topbarView?: TopbarView;
   @Input() viewId: string;
   @Input() mini: boolean;
@@ -74,7 +72,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private dialogService: DialogService,
     private snackbar: MatSnackBar,
     private permissionsService: UserPermissionsService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.currentUser$ = this.loggedInUserService.loggedInUser$.pipe(

@@ -13,17 +13,11 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 })
 export class HomeAppComponent implements OnInit {
   public title: string;
-  public topbarColor = '#4c7aa2';
-  public topbarTextColor = '#FFFFFF';
   TopbarView = TopbarView;
 
   constructor(private settingsService: ComnSettingsService) {}
 
   ngOnInit() {
-    // Set the topbar color from config file
-    this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
-    this.topbarTextColor = this.settingsService.settings.AppTopBarHexTextColor;
-
     // Set the page title from configuration file
     this.title = this.settingsService.settings.AppTopBarText;
   }

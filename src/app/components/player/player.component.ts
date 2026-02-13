@@ -72,8 +72,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public viewId: string;
   public teamId: string;
   public opened: boolean;
-  public topbarColor = '#4c7aa2';
-  public topbarTextColor = '#ffffff';
   queryParams: any = {};
   unsubscribe$: Subject<null> = new Subject<null>();
   theme$: Observable<Theme>;
@@ -109,8 +107,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    // Set the topbar color from config file.
-    this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
     this.viewId = this.routerQuery.getParams('id');
   }
 

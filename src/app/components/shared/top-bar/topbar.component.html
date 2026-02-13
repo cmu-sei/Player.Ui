@@ -2,18 +2,18 @@
 Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<mat-toolbar class="toolbar" [style.backgroundColor]="topbarColor ? topbarColor : null"
-  [style.color]="topbarTextColor ? topbarTextColor : null">
+<mat-toolbar class="toolbar" [style.backgroundColor]="'var(--mat-sys-primary)'"
+  [style.color]="'var(--mat-sys-on-primary)'">
   <mat-toolbar-row>
     <span class="margin-auto">
       @if (sidenav && sidenav?.opened) {
-      <button aria-label="close sidebar" (click)="sidenavToggleFn()" color="primary" mat-icon-button
+      <button aria-label="close sidebar" (click)="sidenavToggleFn()" mat-icon-button
         matTooltip="Close Sidebar" aria-label="Close Sidebar">
         <mat-icon svgIcon="ic_chevron_left_white_24px"></mat-icon>
       </button>
       }
       @if (sidenav && !sidenav?.opened) {
-      <button aria-label="open sidebar" (click)="sidenavToggleFn()" color="primary" mat-icon-button
+      <button aria-label="open sidebar" (click)="sidenavToggleFn()" mat-icon-button
         matTooltip="Open Sidebar" aria-label="Open Sidebar">
         <mat-icon svgIcon="ic_chevron_right_white_24px"></mat-icon>
       </button>
