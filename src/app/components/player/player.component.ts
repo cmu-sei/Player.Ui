@@ -219,7 +219,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.openedSubject.next(false);
       } else {
         this.miniSubject.next(true);
-        this.resizeStyle = {};
+        this.setResizeStyle();
       }
     } else {
       this.miniSubject.next(false);
@@ -260,7 +260,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
         width: this.sidenavWidth != null ? `${this.sidenavWidth}px` : null,
       };
     } else {
-      this.resizeStyle = {};
+      this.resizeStyle = {
+        'min-width': null,
+        'max-width': null,
+        width: null
+      };
     }
   }
 

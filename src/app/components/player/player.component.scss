@@ -19,7 +19,8 @@
 }
 
 .appbarmenu-container-mini {
-  min-width: 50px;
+  width: 97px;
+  min-width: 97px;
   max-width: 20vw;
 }
 
@@ -73,7 +74,6 @@
 
 .player-title-mini {
   justify-content: center;
-  padding: 0 !important;
   overflow: visible !important;
 
   .d-flex {
@@ -82,7 +82,6 @@
 }
 
 ::ng-deep .player-title-mini > .mdc-list-item__content {
-  padding: 0 !important;
   overflow: visible !important;
 }
 

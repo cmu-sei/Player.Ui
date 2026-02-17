@@ -6,9 +6,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <div class="scrollable-div">
   <mat-list class="appitems-container">
     @for (app of applications$ | async; track trackByFn($index, app)) {
-      <mat-list-item
-        [ngClass]="mini ? 'list-item-mini' : 'list-item'"
-        >
+      <mat-list-item [ngClass]="mini ? 'list-item-mini' : 'list-item'">
         @if (app.loadInBackground) {
           <iframe
             aria-hidden="true"
@@ -20,14 +18,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <a
             mat-button
             [title]="app.name"
-            class="px-0 w-100 normal-text"
+            [ngClass]="
+              mini
+                ? 'px-0 w-100 normal-text justify-content-center'
+                : 'px-0 w-100 normal-text justify-content-start'
+            "
             [href]="app.themedUrl"
             (click)="openApplication(app, $event)"
-            >
+          >
             <div
               class="d-flex align-items-center"
               [ngClass]="mini ? 'justify-content-center' : null"
-              >
+            >
               <img class="lefticon" src="{{ app.icon }}" alt="{{ app.name }}" />
               @if (!mini) {
                 <div class="app-name px-2">
