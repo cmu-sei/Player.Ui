@@ -104,6 +104,7 @@ import { EditSubscriptionComponent } from './components/admin-app/app-admin-subs
 import { CreateApplicationDialogComponent } from './components/shared/create-application-dialog/create-application-dialog.component';
 import { ResizableModule } from 'angular-resizable-element';
 import { DynamicThemeService } from './services/dynamic-theme.service';
+import { FaviconService } from './services/favicon.service';
 import { initializeTheme } from './services/theme-initializer.factory';
 import { SystemRolesComponent } from './components/admin-app/admin-roles/roles/roles.component';
 import { AdminRolesComponent } from './components/admin-app/admin-roles/admin-roles.component';
@@ -244,6 +245,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         },
         { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
         DynamicThemeService,
+        FaviconService,
         {
             provide: APP_INITIALIZER,
             useFactory: initializeTheme,
