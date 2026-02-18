@@ -19,7 +19,7 @@
   },
   "AppTitle": "Player",
   "AppTopBarText": "Player",
-  "AppPrimaryThemeColor": "#00BB00",
+  "AppPrimaryThemeColor": "#BB0000",
   "UseLocalAuthStorage": false,
   "DebugLogging": false
 }
