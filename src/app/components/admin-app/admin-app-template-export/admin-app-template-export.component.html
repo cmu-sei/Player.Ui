@@ -12,32 +12,24 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-label>Archive Type</mat-label>
         <mat-select formControlName="archiveType">
           @for (archiveType of archiveTypes; track archiveType) {
-            <mat-option
-              [value]="archiveType"
-              >
+            <mat-option [value]="archiveType">
               {{ archiveType }}
             </mat-option>
           }
         </mat-select>
       </mat-form-field>
     }
-    <div>
-      <mat-form-field floatLabel="always" appearance="none">
-        <mat-label>Include Icons</mat-label>
-        <mat-slide-toggle
-          formControlName="includeIcons"
-          matTooltip="Include icon files in the exported archive"
-        ></mat-slide-toggle>
-        <textarea matInput hidden></textarea>
-      </mat-form-field>
-      <mat-form-field floatLabel="always" appearance="none">
-        <mat-label>Embed Icons</mat-label>
-        <mat-slide-toggle
-          formControlName="embedIcons"
-          matTooltip="Embed included Icons into exported JSON as data URIs"
-        ></mat-slide-toggle>
-        <textarea matInput hidden></textarea>
-      </mat-form-field>
+    <div class="d-flex gap-2">
+      <mat-slide-toggle
+        formControlName="includeIcons"
+        matTooltip="Include icon files in the exported archive"
+        >Include Icons</mat-slide-toggle
+      >
+      <mat-slide-toggle
+        formControlName="embedIcons"
+        matTooltip="Embed included Icons into exported JSON as data URIs"
+        >Embed Icons</mat-slide-toggle
+      >
     </div>
     <div class="d-flex justify-content-around">
       <button
@@ -45,11 +37,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         color="primary"
         mat-raised-button
         [disabled]="!form.valid || loading"
-        >
+      >
         {{
-        loading
-        ? 'Exporting....'
-        : 'Export ' + (ids.length == 0 ? 'All' : '(' + ids.length + ')')
+          loading
+            ? 'Exporting....'
+            : 'Export ' + (ids.length == 0 ? 'All' : '(' + ids.length + ')')
         }}
       </button>
       <button type="reset" color="primary" mat-raised-button (click)="cancel()">

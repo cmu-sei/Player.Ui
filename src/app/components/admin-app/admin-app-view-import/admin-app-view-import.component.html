@@ -7,14 +7,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 @if (!(finished$ | async)) {
   <form [formGroup]="form" (ngSubmit)="import()">
-    <div class="d-flex flex-column">
-      <div class="d-flex align-items-center gap-2 mb-3">
+    <div class="d-flex flex-column gap-2">
+      <div class="d-flex align-items-center gap-2">
         <button
           type="button"
           color="primary"
           mat-raised-button
           (click)="fileInput.click()"
-          >
+        >
           Choose File
         </button>
         <input
@@ -23,27 +23,27 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           #fileInput
           type="file"
           accept=".zip, .tar.gz, .tgz"
-          />
+        />
         <span class="file-name">{{ this.form.value.archive?.name }}</span>
       </div>
-      <strong>Applications</strong>
-      <mat-form-field floatLabel="always" appearance="none">
-        <mat-label>Match Templates By Name</mat-label>
+      <div class="d-flex align-items-center gap-2">
+        <strong>Applications</strong>
+      </div>
+      <div class="d-flex align-items-center gap-2">
         <mat-slide-toggle
           formControlName="matchApplicationTemplatesByName"
           matTooltip="If an Application Template cannot be found by Id, try to find one with a matching Name"
-        ></mat-slide-toggle>
-        <textarea matInput hidden></textarea>
-      </mat-form-field>
-      <strong>Roles</strong>
-      <mat-form-field floatLabel="always" appearance="none">
-        <mat-label>Match By Name</mat-label>
+        >Match Templates By Name</mat-slide-toggle>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <strong>Roles</strong>
+      </div>
+      <div class="d-flex align-items-center gap-2">
         <mat-slide-toggle
           formControlName="matchRolesByName"
           matTooltip="If a Role cannot be found by Id, try to find one with a matching Name"
-        ></mat-slide-toggle>
-        <textarea matInput hidden></textarea>
-      </mat-form-field>
+        >Match By Name</mat-slide-toggle>
+      </div>
     </div>
     <div class="d-flex justify-content-around">
       <button
@@ -51,7 +51,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         color="primary"
         mat-raised-button
         [disabled]="!form.valid || loading"
-        >
+      >
         {{ loading ? 'Importing...' : 'Import' }}
       </button>
       <button type="reset" color="primary" mat-raised-button (click)="cancel()">

@@ -49,11 +49,11 @@ import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-vie
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 
 @Component({
-    selector: 'app-player',
-    templateUrl: './player.component.html',
-    styleUrls: ['./player.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'app-player',
+  templateUrl: './player.component.html',
+  styleUrls: ['./player.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
@@ -91,7 +91,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private messageService: SystemMessageService,
     private authQuery: ComnAuthQuery,
-    private permissionsService: UserPermissionsService
+    private permissionsService: UserPermissionsService,
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
@@ -102,8 +102,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.data$
       .pipe(
         mergeMap((data) =>
-          this.permissionsService.loadTeamPermissions(null, data.team.id, true)
-        )
+          this.permissionsService.loadTeamPermissions(null, data.team.id, true),
+        ),
       )
       .subscribe();
 
@@ -115,7 +115,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       takeUntil(this.unsubscribe$),
       switchMap((p) => {
         return p.every((x) => x != null) ? of(true) : of(false);
-      })
+      }),
     );
   }
 
@@ -141,21 +141,21 @@ export class PlayerComponent implements OnInit, OnDestroy {
             teams: teams.filter((t) => t.isMember),
             team: teams.find((t) => t.isPrimary),
             title: this.settingsService.settings.AppTitle,
-          }))
-        )
+          })),
+        ),
       ),
       tap(({ teams, team }) => {
         if (teams.length === 0) {
           this.messageService.displayMessage(
             'Not a Member',
-            'You are not a member of any Teams in this View'
+            'You are not a member of any Teams in this View',
           );
         }
 
         this.teamId = team.id;
         this.restoreUIState();
       }),
-      takeUntil(this.unsubscribe$)
+      takeUntil(this.unsubscribe$),
     );
   }
 
@@ -176,7 +176,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
             return of(EMPTY);
           }
         }),
-        take(1)
+        take(1),
       )
       .subscribe();
   }
@@ -192,12 +192,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
             section: 'views',
             view: this.routerQuery.getParams('id'),
           },
-        })
+        }),
       );
       console.log('url', url);
       window.open(url, '_blank');
     } else {
-      const dialogRef = this.dialog.open(AdminViewEditComponent);
+      const dialogRef = this.dialog.open(AdminViewEditComponent, {
+        maxWidth: '100vw',
+        width: 'auto',
+      });
       this.data$.subscribe((data) => {
         dialogRef.componentInstance.resetStepper();
         dialogRef.componentInstance.updateApplicationTemplates();
@@ -231,7 +234,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.updateUIState(
       null,
       this.openedSubject.getValue(),
-      this.miniSubject.getValue()
+      this.miniSubject.getValue(),
     );
   }
 
@@ -263,7 +266,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.resizeStyle = {
         'min-width': null,
         'max-width': null,
-        width: null
+        width: null,
       };
     }
   }
@@ -281,7 +284,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
     if (this.teamId) {
       let existingState: TeamUIState = JSON.parse(
-        localStorage.getItem(this.teamId)
+        localStorage.getItem(this.teamId),
       );
 
       if (existingState) {
@@ -301,7 +304,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
 
     const teamState: TeamUIState = JSON.parse(
-      localStorage.getItem(this.teamId)
+      localStorage.getItem(this.teamId),
     );
 
     if (teamState) {

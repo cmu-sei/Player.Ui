@@ -21,11 +21,11 @@ import HttpHeaderUtils from '../../../utilities/http-header-utils';
 import { BehaviorSubject, finalize, map } from 'rxjs';
 
 @Component({
-    selector: 'app-admin-app-template-export',
-    templateUrl: './admin-app-template-export.component.html',
-    styleUrls: ['./admin-app-template-export.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'app-admin-app-template-export',
+  templateUrl: './admin-app-template-export.component.html',
+  styleUrls: ['./admin-app-template-export.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class AdminAppTemplateExportComponent {
   @Input() ids: string[];
@@ -39,10 +39,11 @@ export class AdminAppTemplateExportComponent {
   loading = false;
   hasErrors = new BehaviorSubject(false);
   hasErrors$ = this.hasErrors.asObservable();
+  isArchiveable = true;
 
   constructor(
     private applicationService: ApplicationService,
-    formBuilder: UntypedFormBuilder
+    formBuilder: UntypedFormBuilder,
   ) {
     this.form = formBuilder.group({
       archiveType: [this.archiveTypes[0]],
@@ -67,7 +68,7 @@ export class AdminAppTemplateExportComponent {
       this.ids,
       ArchiveType[this.form.value.archiveType],
       this.form.value.includeIcons,
-      this.includeIcons.value ? this.form.value.embedIcons : false
+      this.includeIcons.value ? this.form.value.embedIcons : false,
     );
   }
 
@@ -79,7 +80,7 @@ export class AdminAppTemplateExportComponent {
     ids: string[],
     archiveType: ArchiveType,
     includeIcons,
-    embedIcons
+    embedIcons,
   ) {
     this.loading = true;
     this.applicationService
@@ -88,7 +89,7 @@ export class AdminAppTemplateExportComponent {
         embedIcons,
         archiveType,
         ids,
-        'response'
+        'response',
       )
       .pipe(
         map((response) => {
@@ -98,7 +99,7 @@ export class AdminAppTemplateExportComponent {
             hasErrors: HttpHeaderUtils.hasArchiveErrors(response.headers),
           };
         }),
-        finalize(() => (this.loading = false))
+        finalize(() => (this.loading = false)),
       )
       .subscribe((result) => {
         FileDownloadUtils.downloadFile(result.blob, result.filename);

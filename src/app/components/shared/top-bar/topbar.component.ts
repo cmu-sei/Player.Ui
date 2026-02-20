@@ -35,7 +35,7 @@ import {
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false
+  standalone: false,
 })
 export class TopbarComponent implements OnInit, OnDestroy {
   @Input() title?: string;
@@ -58,7 +58,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     SystemPermission.ManageViews,
     null,
     null,
-    ViewPermission.ManageView
+    ViewPermission.ManageView,
   );
 
   @ViewChild('userPresenceDialog')
@@ -71,13 +71,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private dialogService: DialogService,
     private snackbar: MatSnackBar,
-    private permissionsService: UserPermissionsService
-  ) { }
+    private permissionsService: UserPermissionsService,
+  ) {}
 
   ngOnInit() {
     this.currentUser$ = this.loggedInUserService.loggedInUser$.pipe(
       filter((user) => user !== null),
-      takeUntil(this.unsubscribe$)
+      takeUntil(this.unsubscribe$),
     );
     this.theme$ = this.authQuery.userTheme$;
   }
@@ -117,7 +117,8 @@ export class TopbarComponent implements OnInit, OnDestroy {
   openUserPresence(): void {
     this.dialog.open(this.userPresenceDialog, {
       height: '75%',
-      width: '75%',
+      width: 'auto',
+      maxWidth: '100vw',
     });
   }
 
@@ -133,7 +134,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.dialogService
       .confirm(
         'Reset UI?',
-        `Are you sure that you want to reset your UI preferences for the ${this.team.name} Team?`
+        `Are you sure that you want to reset your UI preferences for the ${this.team.name} Team?`,
       )
       .subscribe((result) => {
         if (result['confirm']) {

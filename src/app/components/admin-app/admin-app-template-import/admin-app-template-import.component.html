@@ -14,7 +14,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           color="primary"
           mat-raised-button
           (click)="fileInput.click()"
-          >
+        >
           Choose File
         </button>
         <input
@@ -23,17 +23,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           #fileInput
           type="file"
           accept=".zip, .tar.gz, .tgz"
-          />
+        />
         <span class="file-name">{{ this.form.value.archive?.name }}</span>
       </div>
-      <mat-form-field floatLabel="always" appearance="none" fxLayout="row">
-        <mat-label>Overwrite Existing</mat-label>
+      <div class="d-flex align-items-center gap-2">
         <mat-slide-toggle
           formControlName="overwriteExisting"
           matTooltip="If an Application Template with a matching Id already exists, overwrite it. Otherwise, report as a failure."
-        ></mat-slide-toggle>
-        <textarea matInput hidden></textarea>
-      </mat-form-field>
+        >Overwrite Existing</mat-slide-toggle>
+      </div>
     </div>
     <div class="d-flex justify-content-around">
       <button
@@ -41,7 +39,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         color="primary"
         mat-raised-button
         [disabled]="!form.valid || loading"
-        >
+      >
         {{ loading ? 'Importing...' : 'Import' }}
       </button>
       <button type="reset" color="primary" mat-raised-button (click)="cancel()">
