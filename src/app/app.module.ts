@@ -3,7 +3,7 @@
 
 import { CdkTableModule } from '@angular/cdk/table';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { APP_INITIALIZER, ErrorHandler, NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -103,9 +103,6 @@ import { AppAdminSubscriptionSearchComponent } from './components/admin-app/app-
 import { EditSubscriptionComponent } from './components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from './components/shared/create-application-dialog/create-application-dialog.component';
 import { ResizableModule } from 'angular-resizable-element';
-import { DynamicThemeService } from './services/dynamic-theme.service';
-import { FaviconService } from './services/favicon.service';
-import { initializeTheme } from './services/theme-initializer.factory';
 import { SystemRolesComponent } from './components/admin-app/admin-roles/roles/roles.component';
 import { AdminRolesComponent } from './components/admin-app/admin-roles/admin-roles.component';
 import { NameDialogComponent } from './components/shared/name-dialog/name-dialog.component';
@@ -244,14 +241,6 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
             useClass: ErrorService,
         },
         { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
-        DynamicThemeService,
-        FaviconService,
-        {
-            provide: APP_INITIALIZER,
-            useFactory: initializeTheme,
-            deps: [ComnSettingsService, DynamicThemeService],
-            multi: true,
-        },
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule {}

@@ -84,6 +84,11 @@ body {
   background-color: var(--mat-sys-background);
 }
 
+// default all icons to the primary theme color
+mat-icon, .mat-icon {
+  --mat-icon-color: var(--mat-sys-primary);
+}
+
 // prevent table header rows from scrolling
 .mat-mdc-header-row {
   position: sticky;
