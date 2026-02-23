@@ -7,14 +7,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-toolbar-row>
     <span class="margin-auto">
       @if (sidenav && sidenav?.opened) {
-      <button aria-label="close sidebar" (click)="sidenavToggleFn()" mat-icon-button
-        matTooltip="Close Sidebar" aria-label="Close Sidebar">
+      <button aria-label="close sidebar" (click)="sidenavToggleFn()" mat-icon-button matTooltip="Close Sidebar"
+        aria-label="Close Sidebar">
         <mat-icon svgIcon="ic_chevron_left_white_24px"></mat-icon>
       </button>
       }
       @if (sidenav && !sidenav?.opened) {
-      <button aria-label="open sidebar" (click)="sidenavToggleFn()" mat-icon-button
-        matTooltip="Open Sidebar" aria-label="Open Sidebar">
+      <button aria-label="open sidebar" (click)="sidenavToggleFn()" mat-icon-button matTooltip="Open Sidebar"
+        aria-label="Open Sidebar">
         <mat-icon svgIcon="ic_chevron_right_white_24px"></mat-icon>
       </button>
       }
@@ -51,7 +51,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="team-text">
       <button mat-button [matMenuTriggerFor]="menu" matTooltip="Menu" aria-label="Menu">
         <span class="username-text">{{ currentUser.profile.name }}</span>
-        <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
+        <mat-icon class="team-text" svgIcon="ic_expand_more_white_24px"></mat-icon>
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false" class="user-dropdown-menu">
         @if (team && showEditView$ | async) {
