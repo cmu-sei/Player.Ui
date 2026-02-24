@@ -19,9 +19,10 @@ import { UserPermissionsService } from '../../../../services/permissions/user-pe
 import { PermissionsService } from '../../../../services/permissions/permissions.service';
 
 @Component({
-  selector: 'app-roles',
-  templateUrl: './roles.component.html',
-  styleUrls: ['./roles.component.scss'],
+    selector: 'app-roles',
+    templateUrl: './roles.component.html',
+    styleUrls: ['./roles.component.scss'],
+    standalone: false
 })
 export class SystemRolesComponent implements OnInit, OnDestroy {
   private roleService = inject(RolesService);

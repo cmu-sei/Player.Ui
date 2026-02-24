@@ -16,10 +16,12 @@ DM20-0181 -->
         [ngModel]="file.teamIds"
         formControlName="teams"
         class="team-select"
-      >
-        <mat-option *ngFor="let team of currentTeams" [value]="team.team.id">{{
-          team.name
-        }}</mat-option>
+        >
+        @for (team of currentTeams; track team) {
+          <mat-option [value]="team.team.id">{{
+            team.name
+          }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </div>
@@ -32,7 +34,7 @@ DM20-0181 -->
       mat-dialog-close
       type="button"
       (click)="cancel()"
-    >
+      >
       Do Not Add to any Teams
     </button>
   </div>

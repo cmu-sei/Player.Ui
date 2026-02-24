@@ -15,30 +15,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </div>
       <span class="header-text">Application Templates</span>
     </div>
-    <div class="d-flex align-items-center">
-      <mat-icon
-        style="transform: scale(0.85); margin-right: 5px"
-        svgIcon="ic_magnify_search"
-      ></mat-icon>
-      <mat-form-field style="width: 250px">
+    <div class="my-1">
+      <mat-form-field style="width: 250px" subscriptSizing="dynamic">
+        <mat-icon
+          matPrefix
+          style="transform: scale(0.85); margin-right: 5px"
+          svgIcon="ic_magnify_search"
+        ></mat-icon>
         <input
           matInput
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
-        <button
-          *ngIf="filterString !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+        @if (filterString !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+          >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
     </div>
     <div class="ms-auto">
@@ -107,6 +109,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-cell *matCellDef="let element; let i = index">
         <div class="w-100">
           <mat-expansion-panel
+            class="my-1"
             [expanded]="
               currentAppTemplate !== undefined &&
               element.id === currentAppTemplate.id
@@ -130,9 +133,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-header-row *matHeaderRowDef="appTemplateColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: appTemplateColumns"></mat-row>
   </mat-table>
-  <div *ngIf="appTemplateDataSource.filteredData.length === 0">
-    No Application Templates found
-  </div>
+  @if (appTemplateDataSource.filteredData.length === 0) {
+    <div>No Application Templates found</div>
+  }
   <mat-paginator
     #paginator
     [pageSize]="defaultPageSize"

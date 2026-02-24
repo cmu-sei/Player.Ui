@@ -3,462 +3,471 @@ Copyright 2023 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div
-  *ngIf="view !== undefined"
-  class="view-container mat-elevation-z8 scroll-container"
->
-  <div class="d-flex title">
-    <div class="d-flex w-10 align-items-center">
-      <button
-        [disabled]="
-          viewNameFormControl.invalid || descriptionFormControl.invalid
-        "
-        title="Return"
-        mat-icon-button
-        (click)="returnToViewSearch()"
+@if (view !== undefined) {
+  <div class="view-container mat-elevation-z8 scroll-container">
+    <div class="d-flex title">
+      <div class="d-flex w-10 align-items-center">
+        <button
+          [disabled]="
+            viewNameFormControl.invalid || descriptionFormControl.invalid
+          "
+          title="Return"
+          mat-icon-button
+          (click)="returnToViewSearch()"
+        >
+          <mat-icon svgIcon="ic_back_arrow"></mat-icon>
+        </button>
+      </div>
+      <div>
+        <h4 class="header-text ms-2">Edit View: {{ view.name }}</h4>
+      </div>
+    </div>
+    <mat-dialog-content>
+      <mat-vertical-stepper
+        [linear]="isLinear"
+        #stepper
+        (selectionChange)="onViewStepChange($event)"
       >
-        <mat-icon svgIcon="ic_back_arrow"></mat-icon>
-      </button>
-    </div>
-    <div>
-      <h4 class="header-text ms-2">Edit View: {{ view.name }}</h4>
-    </div>
-  </div>
-
-  <mat-dialog-content>
-    <mat-vertical-stepper
-      [linear]="isLinear"
-      #stepper
-      (selectionChange)="onViewStepChange($event)"
-    >
-      <ng-template matStepperIcon="edit">&#10004;</ng-template>
-      <ng-template matStepperIcon="done">&#10004;</ng-template>
-
-      <mat-step label="View Information">
-        <div class="view-info-container">
-          <div class="add-margin">
-            <div>
-              <mat-form-field class="w-75">
-                <mat-label>Name (required)</mat-label>
-                <input
-                  type="text"
-                  matInput
-                  [formControl]="viewNameFormControl"
-                  (change)="saveView()"
-                  [errorStateMatcher]="matcher"
-                />
-                <mat-error
-                  *ngIf="
+        <ng-template matStepperIcon="edit">&#10004;</ng-template>
+        <ng-template matStepperIcon="done">&#10004;</ng-template>
+        <mat-step label="View Information">
+          <div class="view-info-container">
+            <div class="add-margin">
+              <div>
+                <mat-form-field class="w-75">
+                  <mat-label>Name (required)</mat-label>
+                  <input
+                    type="text"
+                    matInput
+                    [formControl]="viewNameFormControl"
+                    (change)="saveView()"
+                    [errorStateMatcher]="matcher"
+                  />
+                  @if (
                     viewNameFormControl.hasError('minlength') &&
                     !viewNameFormControl.hasError('required')
-                  "
-                >
-                  Must contain 4 or more characters
-                </mat-error>
-                <mat-error *ngIf="viewNameFormControl.hasError('required')">
-                  Name is <strong>required</strong>
-                </mat-error>
-              </mat-form-field>
+                  ) {
+                    <mat-error> Must contain 4 or more characters </mat-error>
+                  }
+                  @if (viewNameFormControl.hasError('required')) {
+                    <mat-error> Name is <strong>required</strong> </mat-error>
+                  }
+                </mat-form-field>
+              </div>
             </div>
-          </div>
-
-          <div class="add-margin">
-            <div>
-              <mat-form-field class="w-75">
-                <mat-label>Description (required)</mat-label>
-                <textarea
-                  matInput
-                  [formControl]="descriptionFormControl"
-                  (change)="saveView()"
-                  [errorStateMatcher]="matcher"
-                ></textarea>
-                <mat-error *ngIf="descriptionFormControl.hasError('required')">
-                  Description is <strong>required</strong>
-                </mat-error>
-              </mat-form-field>
+            <div class="add-margin">
+              <div>
+                <mat-form-field class="w-75">
+                  <mat-label>Description (required)</mat-label>
+                  <textarea
+                    matInput
+                    [formControl]="descriptionFormControl"
+                    (change)="saveView()"
+                    [errorStateMatcher]="matcher"
+                  ></textarea>
+                  @if (descriptionFormControl.hasError('required')) {
+                    <mat-error>
+                      Description is <strong>required</strong>
+                    </mat-error>
+                  }
+                </mat-form-field>
+              </div>
             </div>
-          </div>
-
-          <div class="add-margin">
-            <div>
-              <mat-form-field>
-                <mat-select
-                  placeholder="Status"
-                  [(ngModel)]="view.status"
-                  name="viewStatus"
-                  (selectionChange)="saveViewStatus()"
-                >
-                  <mat-option
-                    *ngFor="let status of viewStates"
-                    [value]="status"
+            <div class="add-margin">
+              <div>
+                <mat-form-field>
+                  <mat-select
+                    placeholder="Status"
+                    [(ngModel)]="view.status"
+                    name="viewStatus"
+                    (selectionChange)="saveViewStatus()"
                   >
-                    {{ status }}
-                  </mat-option>
-                </mat-select>
-              </mat-form-field>
+                    @for (status of viewStates; track status) {
+                      <mat-option [value]="status">
+                        {{ status }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="add-margin">
+              <div>
+                <mat-checkbox
+                  color="primary"
+                  [(ngModel)]="view.isTemplate"
+                  (change)="saveViewStatus()"
+                  matTooltip="If this View should be considered a template to be used for creating other Views"
+                >
+                  Template
+                </mat-checkbox>
+              </div>
             </div>
           </div>
-
-          <div class="add-margin">
-            <div>
-              <mat-checkbox
-                color="primary"
-                [(ngModel)]="view.isTemplate"
-                (change)="saveViewStatus()"
-                matTooltip="If this View should be considered a template to be used for creating other Views"
-              >
-                Template
-              </mat-checkbox>
+          <div>
+            <div class="delete-button d-flex justify-content-end">
+              <button mat-stroked-button (click)="deleteView()">
+                Delete View
+              </button>
             </div>
           </div>
-        </div>
-
-        <div>
-          <div class="delete-button d-flex justify-content-end">
-            <button mat-stroked-button (click)="deleteView()">
-              Delete View
-            </button>
-          </div>
-        </div>
-      </mat-step>
-
-      <mat-step label="Applications">
-        <div class="top-button d-flex justify-content-end">
-          <button mat-stroked-button [matMenuTriggerFor]="viewAppsMenu">
-            Add New Application
-          </button>
-          <mat-menu #viewAppsMenu="matMenu">
-            <button mat-menu-item (click)="addViewApplication(BLANK_TEMPLATE)">
-              Blank Application
-            </button>
-            <button mat-menu-item [matMenuTriggerFor]="viewAppTemplates">
-              Templates
-            </button>
-          </mat-menu>
-          <mat-menu #viewAppTemplates="matMenu">
-            <button
-              mat-menu-item
-              *ngFor="let t of applicationTemplates"
-              (click)="addViewApplication(t)"
-            >
-              {{ t.name }}
-            </button>
-          </mat-menu>
-        </div>
-        <app-view-applications-select
-          #viewAppSelect
-          [view]="view"
-        ></app-view-applications-select>
-      </mat-step>
-
-      <mat-step label="Teams">
-        <mat-card
-          *ngIf="isLoadingTeams"
-          class="d-flex justify-content-center align-items-center"
-        >
-          <mat-progress-spinner
-            color="primary"
-            mode="indeterminate"
-          ></mat-progress-spinner>
-        </mat-card>
-        <mat-accordion *ngIf="!isLoadingTeams">
+        </mat-step>
+        <mat-step label="Applications">
           <div class="top-button d-flex justify-content-end">
-            <button mat-stroked-button (click)="addNewTeam()">
-              Add New Team
+            <button mat-stroked-button [matMenuTriggerFor]="viewAppsMenu">
+              Add New Application
             </button>
+            <mat-menu #viewAppsMenu="matMenu">
+              <button
+                mat-menu-item
+                (click)="addViewApplication(BLANK_TEMPLATE)"
+              >
+                Blank Application
+              </button>
+              <button mat-menu-item [matMenuTriggerFor]="viewAppTemplates">
+                Templates
+              </button>
+            </mat-menu>
+            <mat-menu #viewAppTemplates="matMenu">
+              @for (t of applicationTemplates; track t) {
+                <button mat-menu-item (click)="addViewApplication(t)">
+                  {{ t.name }}
+                </button>
+              }
+            </mat-menu>
           </div>
-          <mat-expansion-panel
-            *ngFor="let teamContainer of teams"
-            [expanded]="
-              currentTeam !== undefined &&
-              teamContainer.team.id === currentTeam.team.id
-            "
-            (opened)="currentTeam = currentTeam"
-          >
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                {{ teamContainer.name }}
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-
-            <div class="d-flex">
-              <div class="d-flex w-50 justify-content-center">
-                <div>
+          <app-view-applications-select
+            #viewAppSelect
+            [view]="view"
+          ></app-view-applications-select>
+        </mat-step>
+        <mat-step label="Teams">
+          @if (isLoadingTeams) {
+            <mat-card class="d-flex justify-content-center align-items-center">
+              <mat-progress-spinner
+                color="primary"
+                mode="indeterminate"
+              ></mat-progress-spinner>
+            </mat-card>
+          }
+          @if (!isLoadingTeams) {
+            <mat-accordion>
+              <div class="top-button d-flex justify-content-end">
+                <button mat-stroked-button (click)="addNewTeam()">
+                  Add New Team
+                </button>
+              </div>
+              @for (teamContainer of teams; track teamContainer) {
+                <mat-expansion-panel
+                  [expanded]="
+                    currentTeam !== undefined &&
+                    teamContainer.team.id === currentTeam.team.id
+                  "
+                  (opened)="currentTeam = currentTeam"
+                >
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ teamContainer.name }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <div class="d-flex">
+                    <div class="d-flex w-50 justify-content-center">
+                      <div>
+                        <div class="d-flex align-items-center">
+                          <button
+                            mat-icon-button
+                            ngxClipboard
+                            [cbContent]="teamContainer.team.id"
+                            title="Copy:  {{ teamContainer.team.id }}"
+                          >
+                            <mat-icon
+                              style="transform: scale(0.85)"
+                              svgIcon="ic_clipboard_copy"
+                            ></mat-icon>
+                          </button>
+                          <span style="font-size: xx-small">
+                            {{ teamContainer.team.id }}
+                          </span>
+                        </div>
+                        <mat-form-field>
+                          <input
+                            id="teamName{{ teamContainer.team.id }}"
+                            matInput
+                            [formControl]="teamNameFormControl"
+                            placeholder="Team Name"
+                            (change)="
+                              saveTeamName(
+                                $event.target.value,
+                                teamContainer.team.id
+                              )
+                            "
+                            value="{{ teamContainer.team.name }}"
+                            [errorStateMatcher]="matcher"
+                          />
+                          @if (
+                            teamNameFormControl.hasError('minlength') &&
+                            !teamNameFormControl.hasError('required')
+                          ) {
+                            <mat-error>
+                              Must contain 3 or more characters
+                            </mat-error>
+                          }
+                          @if (teamNameFormControl.hasError('required')) {
+                            <mat-error>
+                              Name is <strong>required</strong>
+                            </mat-error>
+                          }
+                        </mat-form-field>
+                        <app-roles-permissions-select
+                          [team]="teamContainer.team"
+                        ></app-roles-permissions-select>
+                        <div>
+                          <mat-checkbox
+                            color="primary"
+                            [checked]="
+                              view.defaultTeamId == teamContainer.team.id
+                            "
+                            (change)="
+                              setDefaultTeam(
+                                view.defaultTeamId != teamContainer.team.id
+                                  ? teamContainer.team.id
+                                  : null
+                              )
+                            "
+                            matTooltip="If this is the default Team of the View"
+                          >
+                            Default
+                          </mat-checkbox>
+                        </div>
+                        <div class="d-flex justify-content-center">
+                          <div class="d-flex flex-column align-items-center">
+                            <button
+                              mat-button
+                              (click)="openUsersDialog(teamContainer.team)"
+                            >
+                              <span
+                                class="d-inline-block"
+                                matBadge="{{ teamContainer.users.length }}"
+                                matBadgePosition="above after"
+                                matBadgeColor="accent"
+                              >
+                                <img
+                                  class="left-icon"
+                                  src="assets/img/SP_Icon_User.png"
+                                  alt="Users"
+                                />
+                              </span>
+                            </button>
+                            <span>Users</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="w-50">
+                      <app-team-applications-select
+                        [view]="view"
+                        [team]="teamContainer.team"
+                      ></app-team-applications-select>
+                    </div>
+                  </div>
                   <div>
+                    <div class="delete-button d-flex justify-content-end">
+                      <button
+                        mat-stroked-button
+                        (click)="deleteTeam(teamContainer.team)"
+                      >
+                        Delete Team
+                      </button>
+                    </div>
+                  </div>
+                </mat-expansion-panel>
+              }
+            </mat-accordion>
+          }
+        </mat-step>
+        <mat-step label="Files">
+          <mat-accordion>
+            <div>
+              <input
+                hidden
+                (change)="selectFile($event.target.files)"
+                #fileInput
+                type="file"
+              />
+              <div>
+                @if (staged.length === 0) {
+                  <div class="top-button d-flex justify-content-end">
+                    <button mat-stroked-button (click)="fileInput.click()">
+                      Add New File
+                    </button>
+                  </div>
+                }
+                @if (staged.length !== 0) {
+                  <div
+                    class="top-button d-flex justify-content-end align-items-center"
+                  >
+                    <mat-list>
+                      @for (playerFile of staged; track playerFile) {
+                        <mat-list-item>
+                          {{ playerFile.file.name }}
+                          <div>
+                            <button
+                              mat-icon-button
+                              (click)="removeFile(playerFile)"
+                            >
+                              <mat-icon
+                                style="transform: scale(0.85)"
+                                svgIcon="ic_clear_black_24px"
+                              ></mat-icon>
+                            </button>
+                          </div>
+                        </mat-list-item>
+                      }
+                    </mat-list>
+                    <div>
+                      <mat-form-field id="teamSelect">
+                        <mat-label>Select Teams</mat-label>
+                        <mat-select multiple [(ngModel)]="teamsForFile">
+                          @for (teamWrapper of teams; track teamWrapper) {
+                            <mat-option [value]="teamWrapper.team.id">{{
+                              teamWrapper.team.name
+                            }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                      <button
+                        mat-stroked-button
+                        (click)="uploadFile()"
+                        style="height: 35px"
+                      >
+                        Upload File
+                      </button>
+                      @if (uploading) {
+                        <mat-progress-bar
+                          mode="determinate"
+                          [value]="uploadProgess"
+                        ></mat-progress-bar>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+            @for (viewFile of viewFiles; track viewFile) {
+              <mat-expansion-panel
+                [expanded]="
+                  currentFile !== undefined && viewFile.id === currentFile.id
+                "
+                (opened)="currentFile = currentFile"
+              >
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <div class="d-flex align-items-center">
+                      <img
+                        height="25"
+                        src="assets/img/SP_Icon_Intel.png"
+                        alt="Application Templates"
+                      />{{ viewFile.name }}
+                    </div>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <div>
+                  <div class="d-flex justify-content-around">
+                    <mat-form-field id="teamSelect" style="width: 600px">
+                      <mat-label>Teams with Permission to View</mat-label>
+                      <mat-select
+                        multiple
+                        [ngModel]="viewFile.teamIds"
+                        (selectionChange)="
+                          teamsForFileUpdated($event, viewFile)
+                        "
+                      >
+                        @for (teamWrapper of teams; track teamWrapper) {
+                          <mat-option [value]="teamWrapper.team.id">{{
+                            teamWrapper.team.name
+                          }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                  <div class="d-flex justify-content-around">
                     <button
-                      mat-icon-button
-                      ngxClipboard
-                      [cbContent]="teamContainer.team.id"
-                      title="Copy:  {{ teamContainer.team.id }}"
+                      mat-stroked-button
+                      (click)="downloadFile(viewFile.id, viewFile.name)"
+                      title="Download"
                     >
+                      Download
+                      <mat-icon
+                        style="transform: scale(0.85)"
+                        svgIcon="ic_get_app"
+                      ></mat-icon>
+                    </button>
+                    <button
+                      mat-stroked-button
+                      (click)="deleteFile(viewFile.id, viewFile.name)"
+                      title="Delete"
+                    >
+                      Delete
+                      <mat-icon
+                        style="transform: scale(0.85)"
+                        svgIcon="ic_delete"
+                      ></mat-icon>
+                    </button>
+                    <button
+                      mat-stroked-button
+                      (click)="getDownloadLink(viewFile)"
+                      title="Copy Link"
+                    >
+                      Copy Link
                       <mat-icon
                         style="transform: scale(0.85)"
                         svgIcon="ic_clipboard_copy"
                       ></mat-icon>
                     </button>
-                    <span style="font-size: xx-small">
-                      {{ teamContainer.team.id }}
-                    </span>
-                  </div>
-                  <mat-form-field class="w-100">
-                    <input
-                      id="teamName{{ teamContainer.team.id }}"
-                      matInput
-                      [formControl]="teamNameFormControl"
-                      placeholder="Team Name"
-                      (change)="
-                        saveTeamName($event.target.value, teamContainer.team.id)
-                      "
-                      value="{{ teamContainer.team.name }}"
-                      [errorStateMatcher]="matcher"
-                    />
-                    <mat-error
-                      *ngIf="
-                        teamNameFormControl.hasError('minlength') &&
-                        !teamNameFormControl.hasError('required')
-                      "
-                    >
-                      Must contain 3 or more characters
-                    </mat-error>
-                    <mat-error *ngIf="teamNameFormControl.hasError('required')">
-                      Name is <strong>required</strong>
-                    </mat-error>
-                  </mat-form-field>
-                  <app-roles-permissions-select
-                    [team]="teamContainer.team"
-                  ></app-roles-permissions-select>
-                  <div>
-                    <mat-checkbox
-                      color="primary"
-                      [checked]="view.defaultTeamId == teamContainer.team.id"
-                      (change)="
-                        setDefaultTeam(
-                          view.defaultTeamId != teamContainer.team.id
-                            ? teamContainer.team.id
-                            : null
-                        )
-                      "
-                      matTooltip="If this is the default Team of the View"
-                    >
-                      Default
-                    </mat-checkbox>
-                  </div>
-                  <div class="d-flex justify-content-center">
                     <button
-                      mat-button
-                      (click)="openUsersDialog(teamContainer.team)"
+                      mat-stroked-button
+                      (click)="
+                        editFile(viewFile.id, viewFile.name, viewFile.teamIds)
+                      "
+                      title="Edit"
                     >
-                      <div
-                        matBadge="{{ teamContainer.users.length }}"
-                        matBadgePosition="after"
-                        matBadgeColor="accent"
-                      >
-                        <img
-                          class="left-icon"
-                          src="assets/img/SP_Icon_User.png"
-                          alt="Users"
-                        />
-                      </div>
-                      Users
+                      Edit Name
+                      <mat-icon
+                        style="transform: scale(0.85)"
+                        svgIcon="ic_edit"
+                      ></mat-icon>
                     </button>
-                  </div>
-                </div>
-              </div>
-              <div class="w-50">
-                <app-team-applications-select
-                  [view]="view"
-                  [team]="teamContainer.team"
-                ></app-team-applications-select>
-              </div>
-            </div>
-
-            <div>
-              <div class="delete-button d-flex justify-content-end">
-                <button
-                  mat-stroked-button
-                  (click)="deleteTeam(teamContainer.team)"
-                >
-                  Delete Team
-                </button>
-              </div>
-            </div>
-          </mat-expansion-panel>
-        </mat-accordion>
-      </mat-step>
-
-      <mat-step label="Files">
-        <mat-accordion>
-          <div>
-            <input
-              hidden
-              (change)="selectFile($event.target.files)"
-              #fileInput
-              type="file"
-            />
-            <div>
-              <div
-                class="top-button d-flex justify-content-end"
-                *ngIf="staged.length === 0"
-              >
-                <button mat-stroked-button (click)="fileInput.click()">
-                  Add New File
-                </button>
-              </div>
-              <div
-                class="top-button d-flex justify-content-end align-items-center"
-                *ngIf="staged.length !== 0"
-              >
-                <mat-list>
-                  <mat-list-item *ngFor="let playerFile of staged">
-                    {{ playerFile.file.name }}
-                    <div>
-                      <button mat-icon-button (click)="removeFile(playerFile)">
+                    @if (!appNames.includes(viewFile.name)) {
+                      <button
+                        mat-stroked-button
+                        (click)="createApplication(viewFile)"
+                        title="Add as Application"
+                      >
+                        Add as App
                         <mat-icon
                           style="transform: scale(0.85)"
-                          svgIcon="ic_clear_black_24px"
+                          svgIcon="ic_add"
                         ></mat-icon>
                       </button>
-                    </div>
-                  </mat-list-item>
-                </mat-list>
-
-                <div>
-                  <mat-form-field id="teamSelect">
-                    <mat-label>Select Teams</mat-label>
-                    <mat-select multiple [(ngModel)]="teamsForFile">
-                      <mat-option
-                        *ngFor="let teamWrapper of teams"
-                        [value]="teamWrapper.team.id"
-                        >{{ teamWrapper.team.name }}</mat-option
-                      >
-                    </mat-select>
-                  </mat-form-field>
-                  <button
-                    mat-stroked-button
-                    (click)="uploadFile()"
-                    style="height: 35px"
-                  >
-                    Upload File
-                  </button>
-                  <mat-progress-bar
-                    mode="determinate"
-                    [value]="uploadProgess"
-                    *ngIf="uploading"
-                  ></mat-progress-bar>
+                    }
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          <mat-expansion-panel
-            *ngFor="let viewFile of viewFiles"
-            [expanded]="
-              currentFile !== undefined && viewFile.id === currentFile.id
-            "
-            (opened)="currentFile = currentFile"
-          >
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                <div class="d-flex align-items-center">
-                  <img
-                    height="25"
-                    src="assets/img/SP_Icon_Intel.png"
-                    alt="Application Templates"
-                  />{{ viewFile.name }}
-                </div>
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-
-            <div>
-              <div class="d-flex justify-content-around">
-                <mat-form-field id="teamSelect" style="width: 600px">
-                  <mat-label>Teams with Permission to View</mat-label>
-                  <mat-select
-                    multiple
-                    [ngModel]="viewFile.teamIds"
-                    (selectionChange)="teamsForFileUpdated($event, viewFile)"
-                  >
-                    <mat-option
-                      *ngFor="let teamWrapper of teams"
-                      [value]="teamWrapper.team.id"
-                      >{{ teamWrapper.team.name }}</mat-option
-                    >
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              <div class="d-flex justify-content-around">
-                <button
-                  mat-stroked-button
-                  (click)="downloadFile(viewFile.id, viewFile.name)"
-                  title="Download"
-                >
-                  Download
-                  <mat-icon
-                    style="transform: scale(0.85)"
-                    svgIcon="ic_get_app"
-                  ></mat-icon>
-                </button>
-                <button
-                  mat-stroked-button
-                  (click)="deleteFile(viewFile.id, viewFile.name)"
-                  title="Delete"
-                >
-                  Delete
-                  <mat-icon
-                    style="transform: scale(0.85)"
-                    svgIcon="ic_delete"
-                  ></mat-icon>
-                </button>
-                <button
-                  mat-stroked-button
-                  (click)="getDownloadLink(viewFile)"
-                  title="Copy Link"
-                >
-                  Copy Link
-                  <mat-icon
-                    style="transform: scale(0.85)"
-                    svgIcon="ic_clipboard_copy"
-                  ></mat-icon>
-                </button>
-                <button
-                  mat-stroked-button
-                  (click)="
-                    editFile(viewFile.id, viewFile.name, viewFile.teamIds)
-                  "
-                  title="Edit"
-                >
-                  Edit Name
-                  <mat-icon
-                    style="transform: scale(0.85)"
-                    svgIcon="ic_edit"
-                  ></mat-icon>
-                </button>
-                <button
-                  *ngIf="!appNames.includes(viewFile.name)"
-                  mat-stroked-button
-                  (click)="createApplication(viewFile)"
-                  title="Add as Application"
-                >
-                  Add as App
-                  <mat-icon
-                    style="transform: scale(0.85)"
-                    svgIcon="ic_add"
-                  ></mat-icon>
-                </button>
-              </div>
-            </div>
-          </mat-expansion-panel>
-        </mat-accordion>
-      </mat-step>
-    </mat-vertical-stepper>
-  </mat-dialog-content>
-
-  <div class="bottom-button d-flex justify-content-center">
-    <button
-      [disabled]="viewNameFormControl.invalid || descriptionFormControl.invalid"
-      mat-stroked-button
-      (click)="returnToViewSearch()"
-    >
-      Done
-    </button>
+              </mat-expansion-panel>
+            }
+          </mat-accordion>
+        </mat-step>
+      </mat-vertical-stepper>
+    </mat-dialog-content>
+    <div class="bottom-button d-flex justify-content-center">
+      <button
+        [disabled]="
+          viewNameFormControl.invalid || descriptionFormControl.invalid
+        "
+        mat-stroked-button
+        (click)="returnToViewSearch()"
+      >
+        Done
+      </button>
+    </div>
   </div>
-</div>
+}

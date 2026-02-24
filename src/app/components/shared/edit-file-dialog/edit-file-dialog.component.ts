@@ -10,13 +10,14 @@ DM20-0181
 
 import { Component, Input, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { FileService } from '../../../generated/player-api';
 
 @Component({
-  selector: 'app-edit-file',
-  templateUrl: './edit-file-dialog.component.html',
-  styleUrls: ['./edit-file-dialog.component.scss'],
+    selector: 'app-edit-file',
+    templateUrl: './edit-file-dialog.component.html',
+    styleUrls: ['./edit-file-dialog.component.scss'],
+    standalone: false
 })
 export class EditFileDialogComponent implements OnInit {
   form: UntypedFormGroup;

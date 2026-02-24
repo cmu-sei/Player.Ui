@@ -22,9 +22,10 @@ import { TeamRolesService } from '../../../../services/roles/team-roles.service'
 import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
 
 @Component({
-  selector: 'app-team-roles',
-  templateUrl: './team-roles.component.html',
-  styleUrls: ['./team-roles.component.scss'],
+    selector: 'app-team-roles',
+    templateUrl: './team-roles.component.html',
+    styleUrls: ['./team-roles.component.scss'],
+    standalone: false
 })
 export class TeamRolesComponent implements OnInit, OnDestroy {
   private roleService = inject(TeamRolesService);

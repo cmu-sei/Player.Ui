@@ -5,15 +5,16 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 import { Component, Input, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
 import { ApplicationService, FileModel } from '../../../generated/player-api';
 import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 
 @Component({
-  selector: 'app-create-application-dialog',
-  templateUrl: './create-application-dialog.component.html',
-  styleUrls: ['./create-application-dialog.component.scss'],
+    selector: 'app-create-application-dialog',
+    templateUrl: './create-application-dialog.component.html',
+    styleUrls: ['./create-application-dialog.component.scss'],
+    standalone: false
 })
 export class CreateApplicationDialogComponent implements OnInit {
   @Input() applicationId: string;

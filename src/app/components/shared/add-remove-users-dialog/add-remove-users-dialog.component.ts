@@ -2,13 +2,10 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { MatLegacyDialogRef as MatDialogRef } from '@angular/material/legacy-dialog';
-import {
-  LegacyPageEvent as PageEvent,
-  MatLegacyPaginator as MatPaginator,
-} from '@angular/material/legacy-paginator';
+import { MatDialogRef } from '@angular/material/dialog';
+import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import {
   User,
   UserService,
@@ -29,7 +26,7 @@ export class TeamUser {
   constructor(
     public name: string,
     public user: User,
-    public teamMembership: TeamMembership
+    public teamMembership: TeamMembership,
   ) {}
 }
 
@@ -37,6 +34,7 @@ export class TeamUser {
   selector: 'app-add-remove-users-dialog',
   templateUrl: './add-remove-users-dialog.component.html',
   styleUrls: ['./add-remove-users-dialog.component.scss'],
+  standalone: false,
 })
 export class AddRemoveUsersDialogComponent implements OnInit {
   public title: string;
@@ -46,7 +44,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   public displayedTeamColumns: string[] = ['name', 'teamMembership', 'user'];
   public userDataSource = new MatTableDataSource<User>(new Array<User>());
   public teamUserDataSource = new MatTableDataSource<TeamUser>(
-    new Array<TeamUser>()
+    new Array<TeamUser>(),
   );
   public isLoading: boolean;
   public isBusy: boolean;
@@ -66,7 +64,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     public userService: UserService,
     public teamService: TeamService,
     public teamMembershipService: TeamMembershipService,
-    public roleService: TeamRolesService
+    public roleService: TeamRolesService,
   ) {
     this.dialogRef.disableClose = true;
     this.isLoading = false;
@@ -141,8 +139,8 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             membershipObservable.push(
               this.teamMembershipService.getTeamMemberships(
                 tu.id,
-                this.team.viewId
-              )
+                this.team.viewId,
+              ),
             );
           });
           // The rxjs forJoin allows for multiple observables to be called in parallel and then processing
@@ -171,7 +169,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
               this.userDataSource.sort = this.sort;
               this.userDataSource.paginator = this.paginator;
               this.isLoading = false;
-            }
+            },
           ); // forkJoin
         } else {
           // In this case, No users have been added to the team.  Therefore proceed accordingly.
@@ -209,7 +207,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       return;
     }
     const index = this.teamUserDataSource.data.findIndex(
-      (u) => u.user.id === user.id
+      (u) => u.user.id === user.id,
     );
     if (index === -1) {
       this.isBusy = true;
@@ -220,7 +218,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           .getTeamMemberships(user.id, this.team.viewId)
           .subscribe((tmbs) => {
             const teamMembership = tmbs.find(
-              (tmb) => tmb.teamId === this.team.id
+              (tmb) => tmb.teamId === this.team.id,
             );
             const tUser = new TeamUser(user.name, user, teamMembership);
             tUsers.push(tUser);
@@ -234,7 +232,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             this.userDataSource = new MatTableDataSource(allUsers);
             this.userDataSource.sort = this.sort;
             this.userDataSource.paginator = this.paginator;
-            this.applyFilter('');
+            this.applyFilter(this.filterString);
             this.searchBox.nativeElement.focus();
             this.isBusy = false;
           });
@@ -251,7 +249,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       return;
     }
     const index = this.teamUserDataSource.data.findIndex(
-      (u) => u.user.id === tuser.user.id
+      (u) => u.user.id === tuser.user.id,
     );
     if (index >= 0) {
       this.isBusy = true;
@@ -266,7 +264,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           this.userDataSource = new MatTableDataSource(allUsers);
           this.userDataSource.sort = this.sort;
           this.userDataSource.paginator = this.paginator;
-          this.applyFilter('');
+          this.applyFilter(this.filterString);
           this.searchBox.nativeElement.focus();
           this.isBusy = false;
         });
@@ -278,7 +276,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       'Update Team Membership: ' +
         teamUser.name +
         '   role: ' +
-        teamUser.teamMembership.roleId
+        teamUser.teamMembership.roleId,
     );
 
     this.teamMembershipService
@@ -327,13 +325,13 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             switchMap(() => {
               return this.teamMembershipService.getTeamMemberships(
                 this.team.viewId,
-                user
+                user,
               );
-            })
+            }),
           )
           .subscribe((memberships) => {
             const relevantMembership = memberships.find(
-              (m) => m.userId == user
+              (m) => m.userId == user,
             );
 
             // Get the user we just added and set the new userSource array
@@ -344,7 +342,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             // Add the user we just uploaded to the teamUser data source array
             const teamUsers = this.teamUserDataSource.data;
             teamUsers.push(
-              new TeamUser(addedUser.name, addedUser, relevantMembership)
+              new TeamUser(addedUser.name, addedUser, relevantMembership),
             );
 
             // Update the arrays with the new data

@@ -5,7 +5,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
@@ -15,9 +15,10 @@ import {
 import { DialogService } from '../../../services/dialog/dialog.service';
 
 @Component({
-  selector: 'app-admin-subscription-search',
-  templateUrl: './app-admin-subscription-search.component.html',
-  styleUrls: ['./app-admin-subscription-search.component.scss'],
+    selector: 'app-admin-subscription-search',
+    templateUrl: './app-admin-subscription-search.component.html',
+    styleUrls: ['./app-admin-subscription-search.component.scss'],
+    standalone: false
 })
 export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort, { static: true }) sort: MatSort;

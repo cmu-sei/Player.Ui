@@ -19,9 +19,10 @@ export enum ObjectType {
 }
 
 @Component({
-  selector: 'app-team-applications-select',
-  templateUrl: './team-applications-select.component.html',
-  styleUrls: ['./team-applications-select.component.scss'],
+    selector: 'app-team-applications-select',
+    templateUrl: './team-applications-select.component.html',
+    styleUrls: ['./team-applications-select.component.scss'],
+    standalone: false
 })
 export class TeamApplicationsSelectComponent implements OnInit {
   @Input() team: Team;

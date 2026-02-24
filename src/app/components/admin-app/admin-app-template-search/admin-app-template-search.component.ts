@@ -8,19 +8,13 @@ import {
   TemplateRef,
   ViewChild,
 } from '@angular/core';
-import {
-  MatLegacyPaginator as MatPaginator,
-  LegacyPageEvent as PageEvent,
-} from '@angular/material/legacy-paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 import { SelectionModel } from '@angular/cdk/collections';
-import {
-  MatLegacyDialog as MatDialog,
-  MatLegacyDialogRef as MatDialogRef,
-} from '@angular/material/legacy-dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { SafeHtml } from '@angular/platform-browser';
 
 export interface Action {
@@ -32,6 +26,7 @@ export interface Action {
   selector: 'app-admin-app-template-search',
   templateUrl: './admin-app-template-search.component.html',
   styleUrls: ['./admin-app-template-search.component.scss'],
+  standalone: false,
 })
 export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
   public appTemplateDataSource: MatTableDataSource<ApplicationTemplate>;
@@ -54,7 +49,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
 
   constructor(
     private applicationService: ApplicationService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {}
 
   /**
@@ -67,7 +62,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
 
     // Initial datasource
     this.appTemplateDataSource = new MatTableDataSource<ApplicationTemplate>(
-      new Array<ApplicationTemplate>()
+      new Array<ApplicationTemplate>(),
     );
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.appTemplateDataSource.sort = this.sort;
@@ -151,7 +146,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
     this.isAllSelected()
       ? this.selection.clear()
       : this.appTemplateDataSource.filteredData.forEach((row) =>
-          this.selection.select(row.id)
+          this.selection.select(row.id),
         );
   }
 

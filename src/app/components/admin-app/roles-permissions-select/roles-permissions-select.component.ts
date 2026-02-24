@@ -26,9 +26,10 @@ export enum ObjectType {
 }
 
 @Component({
-  selector: 'app-roles-permissions-select',
-  templateUrl: './roles-permissions-select.component.html',
-  styleUrls: ['./roles-permissions-select.component.scss'],
+    selector: 'app-roles-permissions-select',
+    templateUrl: './roles-permissions-select.component.html',
+    styleUrls: ['./roles-permissions-select.component.scss'],
+    standalone: false
 })
 export class RolesPermissionsSelectComponent implements OnInit {
   @Input() user: User;

@@ -5,72 +5,70 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <h2>Import {{ typeString | titlecase }}</h2>
 
-<form *ngIf="!(finished$ | async)" [formGroup]="form" (ngSubmit)="import()">
-  <div class="d-flex flex-column gap-2">
-    <div class="d-flex align-items-center gap-2">
+@if (!(finished$ | async)) {
+  <form [formGroup]="form" (ngSubmit)="import()">
+    <div class="d-flex flex-column gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <button
+          type="button"
+          color="primary"
+          mat-raised-button
+          (click)="fileInput.click()"
+        >
+          Choose File
+        </button>
+        <input
+          hidden
+          (change)="onFileSelected($event)"
+          #fileInput
+          type="file"
+          accept=".zip, .tar.gz, .tgz"
+        />
+        <span class="file-name">{{ this.form.value.archive?.name }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <mat-slide-toggle
+          formControlName="overwriteExisting"
+          matTooltip="If an Application Template with a matching Id already exists, overwrite it. Otherwise, report as a failure."
+        >Overwrite Existing</mat-slide-toggle>
+      </div>
+    </div>
+    <div class="d-flex justify-content-around">
       <button
-        type="button"
+        type="submit"
         color="primary"
         mat-raised-button
-        (click)="fileInput.click()"
+        [disabled]="!form.valid || loading"
       >
-        Choose File
+        {{ loading ? 'Importing...' : 'Import' }}
       </button>
-      <input
-        hidden
-        (change)="onFileSelected($event)"
-        #fileInput
-        type="file"
-        accept=".zip, .tar.gz, .tgz"
-      />
-      <span class="file-name">{{ this.form.value.archive?.name }}</span>
+      <button type="reset" color="primary" mat-raised-button (click)="cancel()">
+        Cancel
+      </button>
     </div>
+  </form>
+}
 
-    <mat-form-field floatLabel="always" appearance="none" fxLayout="row">
-      <mat-label>Overwrite Existing</mat-label>
-      <mat-slide-toggle
-        formControlName="overwriteExisting"
-        matTooltip="If an Application Template with a matching Id already exists, overwrite it. Otherwise, report as a failure."
-      ></mat-slide-toggle>
-      <textarea matInput hidden></textarea>
-    </mat-form-field>
+@if (result$ | async; as result) {
+  <div>
+    @if (result.failures.length > 0) {
+      <h3 class="text-danger">
+        Error: The following Application Templates already exist and were not
+        updated:
+      </h3>
+      <ul>
+        @for (appTemplate of result.failures; track appTemplate) {
+          <li>
+            {{ appTemplate }}
+          </li>
+        }
+      </ul>
+    }
+    @if (result.failures.length == 0) {
+      <h3 class="text-success">Import Successful</h3>
+    }
+    <div class="d-flex justify-content-around">
+      <button mat-raised-button color="primary" (click)="cancel()">OK</button>
+    </div>
   </div>
-
-  <div class="d-flex justify-content-around">
-    <button
-      type="submit"
-      color="primary"
-      mat-raised-button
-      [disabled]="!form.valid || loading"
-    >
-      {{ loading ? 'Importing...' : 'Import' }}
-    </button>
-
-    <button type="reset" color="primary" mat-raised-button (click)="cancel()">
-      Cancel
-    </button>
-  </div>
-</form>
-
-<div *ngIf="result$ | async as result">
-  <ng-container *ngIf="result.failures.length > 0">
-    <h3 class="text-danger">
-      Error: The following Application Templates already exist and were not
-      updated:
-    </h3>
-
-    <ul>
-      <li *ngFor="let appTemplate of result.failures">
-        {{ appTemplate }}
-      </li>
-    </ul>
-  </ng-container>
-
-  <ng-container *ngIf="result.failures.length == 0">
-    <h3 class="text-success">Import Successful</h3>
-  </ng-container>
-
-  <div class="d-flex justify-content-around">
-    <button mat-raised-button color="primary" (click)="cancel()">OK</button>
-  </div>
-</div>
+}

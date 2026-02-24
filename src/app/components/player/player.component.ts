@@ -12,7 +12,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import {
@@ -53,6 +53,7 @@ import { UserPermissionsService } from '../../services/permissions/user-permissi
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
@@ -71,8 +72,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public viewId: string;
   public teamId: string;
   public opened: boolean;
-  public topbarColor = '#4c7aa2';
-  public topbarTextColor = '#ffffff';
   queryParams: any = {};
   unsubscribe$: Subject<null> = new Subject<null>();
   theme$: Observable<Theme>;
@@ -92,7 +91,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private messageService: SystemMessageService,
     private authQuery: ComnAuthQuery,
-    private permissionsService: UserPermissionsService
+    private permissionsService: UserPermissionsService,
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
@@ -103,13 +102,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.data$
       .pipe(
         mergeMap((data) =>
-          this.permissionsService.loadTeamPermissions(null, data.team.id, true)
-        )
+          this.permissionsService.loadTeamPermissions(null, data.team.id, true),
+        ),
       )
       .subscribe();
 
-    // Set the topbar color from config file.
-    this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
     this.viewId = this.routerQuery.getParams('id');
   }
 
@@ -118,7 +115,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       takeUntil(this.unsubscribe$),
       switchMap((p) => {
         return p.every((x) => x != null) ? of(true) : of(false);
-      })
+      }),
     );
   }
 
@@ -144,21 +141,21 @@ export class PlayerComponent implements OnInit, OnDestroy {
             teams: teams.filter((t) => t.isMember),
             team: teams.find((t) => t.isPrimary),
             title: this.settingsService.settings.AppTitle,
-          }))
-        )
+          })),
+        ),
       ),
       tap(({ teams, team }) => {
         if (teams.length === 0) {
           this.messageService.displayMessage(
             'Not a Member',
-            'You are not a member of any Teams in this View'
+            'You are not a member of any Teams in this View',
           );
         }
 
         this.teamId = team.id;
         this.restoreUIState();
       }),
-      takeUntil(this.unsubscribe$)
+      takeUntil(this.unsubscribe$),
     );
   }
 
@@ -179,7 +176,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
             return of(EMPTY);
           }
         }),
-        take(1)
+        take(1),
       )
       .subscribe();
   }
@@ -195,12 +192,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
             section: 'views',
             view: this.routerQuery.getParams('id'),
           },
-        })
+        }),
       );
       console.log('url', url);
       window.open(url, '_blank');
     } else {
-      const dialogRef = this.dialog.open(AdminViewEditComponent);
+      const dialogRef = this.dialog.open(AdminViewEditComponent, {
+        maxWidth: '100vw',
+        width: 'auto',
+      });
       this.data$.subscribe((data) => {
         dialogRef.componentInstance.resetStepper();
         dialogRef.componentInstance.updateApplicationTemplates();
@@ -222,7 +222,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.openedSubject.next(false);
       } else {
         this.miniSubject.next(true);
-        this.resizeStyle = {};
+        this.setResizeStyle();
       }
     } else {
       this.miniSubject.next(false);
@@ -234,7 +234,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.updateUIState(
       null,
       this.openedSubject.getValue(),
-      this.miniSubject.getValue()
+      this.miniSubject.getValue(),
     );
   }
 
@@ -263,7 +263,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
         width: this.sidenavWidth != null ? `${this.sidenavWidth}px` : null,
       };
     } else {
-      this.resizeStyle = {};
+      this.resizeStyle = {
+        'min-width': null,
+        'max-width': null,
+        width: null,
+      };
     }
   }
 
@@ -280,7 +284,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
     if (this.teamId) {
       let existingState: TeamUIState = JSON.parse(
-        localStorage.getItem(this.teamId)
+        localStorage.getItem(this.teamId),
       );
 
       if (existingState) {
@@ -300,7 +304,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
 
     const teamState: TeamUIState = JSON.parse(
-      localStorage.getItem(this.teamId)
+      localStorage.getItem(this.teamId),
     );
 
     if (teamState) {

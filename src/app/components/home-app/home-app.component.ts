@@ -6,23 +6,18 @@ import { ComnSettingsService } from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 
 @Component({
-  selector: 'app-home-app',
-  templateUrl: './home-app.component.html',
-  styleUrls: ['./home-app.component.scss'],
+    selector: 'app-home-app',
+    templateUrl: './home-app.component.html',
+    styleUrls: ['./home-app.component.scss'],
+    standalone: false
 })
 export class HomeAppComponent implements OnInit {
   public title: string;
-  public topbarColor = '#4c7aa2';
-  public topbarTextColor = '#FFFFFF';
   TopbarView = TopbarView;
 
   constructor(private settingsService: ComnSettingsService) {}
 
   ngOnInit() {
-    // Set the topbar color from config file
-    this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
-    this.topbarTextColor = this.settingsService.settings.AppTopBarHexTextColor;
-
     // Set the page title from configuration file
     this.title = this.settingsService.settings.AppTopBarText;
   }

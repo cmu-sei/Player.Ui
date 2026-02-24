@@ -3,53 +3,52 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<mat-card
-  *ngIf="isLoading"
-  class="d-flex justify-content-center align-items-center"
->
-  <mat-progress-spinner
-    color="primary"
-    mode="indeterminate"
-  ></mat-progress-spinner>
-</mat-card>
+@if (isLoading) {
+  <mat-card
+    class="d-flex justify-content-center align-items-center"
+    >
+    <mat-progress-spinner
+      color="primary"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+  </mat-card>
+}
 
 <mat-accordion>
-  <mat-expansion-panel
-    *ngFor="let app of applications; let i = index"
-    [expanded]="currentApp !== undefined && app.id === currentApp.id"
-    (opened)="currentApp = app"
-  >
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        <div class="d-flex align-items-center">
-          <img
-            class="app-icon"
-            src="{{ getAppIcon(app) }}"
-            alt="{{ getAppName(app) }} Icon"
-          />
-          {{ getAppName(app) }}
-        </div>
-      </mat-panel-title>
-    </mat-expansion-panel-header>
-
-    <div>
-      <div class="d-flex justify-content-center">
-        <div class="d-flex flex-column app-form-section">
-          <mat-form-field>
-            <input
-              matInput
-              placeholder="Application Name"
-              (change)="saveApplicationName($event.target.value, app.id)"
-              value="{{ app.name }}"
-            />
-            <!-- <mat-error *ngIf="nameFormControl.hasError('minlength') && !nameFormControl.hasError('required')">
+  @for (app of applications; track app; let i = $index) {
+    <mat-expansion-panel
+      [expanded]="currentApp !== undefined && app.id === currentApp.id"
+      (opened)="currentApp = app"
+      >
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <div class="d-flex align-items-center">
+            <img
+              class="app-icon"
+              src="{{ getAppIcon(app) }}"
+              alt="{{ getAppName(app) }} Icon"
+              />
+            {{ getAppName(app) }}
+          </div>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div>
+        <div class="d-flex justify-content-center">
+          <div class="d-flex flex-column app-form-section">
+            <mat-form-field>
+              <input
+                matInput
+                placeholder="Application Name"
+                (change)="saveApplicationName($event.target.value, app.id)"
+                value="{{ app.name }}"
+                />
+              <!-- <mat-error *ngIf="nameFormControl.hasError('minlength') && !nameFormControl.hasError('required')">
               Must contain 3 or more characters
             </mat-error>
             <mat-error *ngIf="nameFormControl.hasError('required')">
               Name is <strong>required</strong>
             </mat-error> -->
           </mat-form-field>
-
           <mat-form-field>
             <input
               matInput
@@ -57,140 +56,133 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               (change)="saveApplicationUrl($event.target.value, app.id)"
               value="{{ app.url }}"
               [errorStateMatcher]="matcher"
-            />
+              />
             <!-- <mat-error *ngIf="urlFormControl.hasError('required')">
-              Url is <strong>required</strong>
-            </mat-error> -->
-          </mat-form-field>
-
-          <mat-form-field>
-            <input
-              matInput
-              placeholder="Icon Path"
-              (change)="saveApplicationIcon($event.target.value, app.id)"
-              value="{{ app.icon }}"
-              [errorStateMatcher]="matcher"
+            Url is <strong>required</strong>
+          </mat-error> -->
+        </mat-form-field>
+        <mat-form-field>
+          <input
+            matInput
+            placeholder="Icon Path"
+            (change)="saveApplicationIcon($event.target.value, app.id)"
+            value="{{ app.icon }}"
+            [errorStateMatcher]="matcher"
             />
-            <!-- <mat-error *ngIf="iconFormControl.hasError('required')">
-              Icon is <strong>required</strong>
-            </mat-error> -->
-          </mat-form-field>
-
-          <mat-form-field>
-            <mat-select
-              placeholder="Embeddable"
-              (selectionChange)="saveApplicationEmbeddable(app)"
-              [(value)]="selected"
-              [(ngModel)]="app.embeddable"
-            >
-              <mat-option [value]="null">Inherit from Template</mat-option>
-              <mat-option [value]="true">True</mat-option>
-              <mat-option [value]="false">False</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field>
-            <mat-select
-              placeholder="Load in Background"
-              (selectionChange)="saveApplicationLoadInBackground(app)"
-              [(value)]="selected"
-              [(ngModel)]="app.loadInBackground"
-            >
-              <mat-option [value]="null">Inherit from Template</mat-option>
-              <mat-option [value]="true">True</mat-option>
-              <mat-option [value]="false">False</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field>
-            <mat-select
-              placeholder="Application Template"
-              (selectionChange)="saveApplicationTemplateId(app)"
-              [(value)]="selected"
-              [(ngModel)]="app.applicationTemplateId"
-            >
-              <mat-option [value]="null">None</mat-option>
-              <mat-option
-                *ngFor="let template of applicationTemplates"
-                [value]="template.id"
+          <!-- <mat-error *ngIf="iconFormControl.hasError('required')">
+          Icon is <strong>required</strong>
+        </mat-error> -->
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select
+          placeholder="Embeddable"
+          (selectionChange)="saveApplicationEmbeddable(app)"
+          [(value)]="selected"
+          [(ngModel)]="app.embeddable"
+          >
+          <mat-option [value]="null">Inherit from Template</mat-option>
+          <mat-option [value]="true">True</mat-option>
+          <mat-option [value]="false">False</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select
+          placeholder="Load in Background"
+          (selectionChange)="saveApplicationLoadInBackground(app)"
+          [(value)]="selected"
+          [(ngModel)]="app.loadInBackground"
+          >
+          <mat-option [value]="null">Inherit from Template</mat-option>
+          <mat-option [value]="true">True</mat-option>
+          <mat-option [value]="false">False</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-select
+          placeholder="Application Template"
+          (selectionChange)="saveApplicationTemplateId(app)"
+          [(value)]="selected"
+          [(ngModel)]="app.applicationTemplateId"
+          >
+          <mat-option [value]="null">None</mat-option>
+          @for (template of applicationTemplates; track template) {
+            <mat-option
+              [value]="template.id"
               >
-                {{ template.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </div>
+              {{ template.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
     </div>
-
-    <div
-      *ngIf="
-        app.applicationTemplateId &&
-        getTemplate(app.applicationTemplateId) as template
-      "
-      class="d-flex"
+  </div>
+</div>
+@if (
+  app.applicationTemplateId &&
+  getTemplate(app.applicationTemplateId); as template
+  ) {
+  <div
+    class="d-flex"
     >
-      <div class="d-flex w-100 justify-content-center">
-        <div class="d-flex flex-column app-form-section">
-          <mat-form-field>
-            <input
-              matInput
-              [disabled]="true"
-              placeholder="Application Name"
-              value="{{ template.name }}"
+    <div class="d-flex w-100 justify-content-center">
+      <div class="d-flex flex-column app-form-section">
+        <mat-form-field>
+          <input
+            matInput
+            [disabled]="true"
+            placeholder="Application Name"
+            value="{{ template.name }}"
             />
-          </mat-form-field>
-
-          <mat-form-field>
-            <input
-              matInput
-              [disabled]="true"
-              placeholder="Application Url"
-              value="{{ template.url }}"
+        </mat-form-field>
+        <mat-form-field>
+          <input
+            matInput
+            [disabled]="true"
+            placeholder="Application Url"
+            value="{{ template.url }}"
             />
-          </mat-form-field>
-
-          <mat-form-field>
-            <input
-              matInput
-              [disabled]="true"
-              placeholder="Icon Path"
-              value="{{ template.icon }}"
+        </mat-form-field>
+        <mat-form-field>
+          <input
+            matInput
+            [disabled]="true"
+            placeholder="Icon Path"
+            value="{{ template.icon }}"
             />
-          </mat-form-field>
-
-          <mat-form-field>
-            <mat-select
-              [disabled]="true"
-              placeholder="Embeddable"
-              [(value)]="selected"
-              [(ngModel)]="template.embeddable"
+        </mat-form-field>
+        <mat-form-field>
+          <mat-select
+            [disabled]="true"
+            placeholder="Embeddable"
+            [(value)]="selected"
+            [(ngModel)]="template.embeddable"
             >
-              <mat-option [value]="null">Inherit from Template</mat-option>
-              <mat-option [value]="true">True</mat-option>
-              <mat-option [value]="false">False</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field>
-            <mat-select
-              [disabled]="true"
-              placeholder="Load in Background"
-              [(value)]="selected"
-              [(ngModel)]="template.loadInBackground"
+            <mat-option [value]="null">Inherit from Template</mat-option>
+            <mat-option [value]="true">True</mat-option>
+            <mat-option [value]="false">False</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-select
+            [disabled]="true"
+            placeholder="Load in Background"
+            [(value)]="selected"
+            [(ngModel)]="template.loadInBackground"
             >
-              <mat-option [value]="null">Inherit from Template</mat-option>
-              <mat-option [value]="true">True</mat-option>
-              <mat-option [value]="false">False</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
+            <mat-option [value]="null">Inherit from Template</mat-option>
+            <mat-option [value]="true">True</mat-option>
+            <mat-option [value]="false">False</mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
     </div>
-
-    <div class="bottom-button d-flex justify-content-end">
-      <button mat-stroked-button (click)="deleteViewApplication(app)">
-        Delete Application
-      </button>
-    </div>
-  </mat-expansion-panel>
+  </div>
+}
+<div class="bottom-button d-flex justify-content-end">
+  <button mat-stroked-button (click)="deleteViewApplication(app)">
+    Delete Application
+  </button>
+</div>
+</mat-expansion-panel>
+}
 </mat-accordion>

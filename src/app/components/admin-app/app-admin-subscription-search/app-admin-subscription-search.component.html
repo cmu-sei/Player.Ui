@@ -13,29 +13,31 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <!-- <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon> -->
     <h3 class="header-text ms-2">Subscriptions</h3>
     <div class="d-flex align-items-center ms-4">
-      <mat-icon
-        style="transform: scale(0.85); margin-right: 5px"
-        svgIcon="ic_magnify_search"
-      ></mat-icon>
-      <mat-form-field style="width: 320px">
+      <mat-form-field style="width: 320px" subscriptSizing="dynamic">
+        <mat-icon
+          matPrefix
+          style="transform: scale(0.85); margin-right: 5px"
+          svgIcon="ic_magnify_search"
+        ></mat-icon>
         <input
           matInput
           [(ngModel)]="filterStr"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
-        <button
-          *ngIf="filterStr !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+        @if (filterStr !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+          >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
       <div class="button-end">
         <button mat-stroked-button (click)="addNewSubscription()">
@@ -58,8 +60,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (click)="editSubscription(element)"
         >
           <mat-icon style="transform: scale(0.85)" svgIcon="ic_edit"></mat-icon>
-          {{ element.name }}
         </button>
+        {{ element.name }}
       </mat-cell>
     </ng-container>
 

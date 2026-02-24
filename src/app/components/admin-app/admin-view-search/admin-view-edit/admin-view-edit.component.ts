@@ -48,7 +48,7 @@ export class TeamUserApp {
   constructor(
     public name: string,
     public team: Team,
-    public users: Array<User>
+    public users: Array<User>,
   ) {}
 }
 
@@ -56,6 +56,7 @@ export class TeamUserApp {
   selector: 'app-admin-view-edit',
   templateUrl: './admin-view-edit.component.html',
   styleUrls: ['./admin-view-edit.component.scss'],
+  standalone: false,
 })
 export class AdminViewEditComponent implements OnInit {
   @Output() editComplete = new EventEmitter<string>();
@@ -110,7 +111,7 @@ export class AdminViewEditComponent implements OnInit {
     public zone: NgZone,
     public clipboard: Clipboard,
     public teamPermissionsService: TeamPermissionsService,
-    public teamRolesService: TeamRolesService
+    public teamRolesService: TeamRolesService,
   ) {}
 
   /**
@@ -259,7 +260,7 @@ export class AdminViewEditComponent implements OnInit {
     this.dialogService
       .confirm(
         'Delete View',
-        'Are you sure that you want to delete view ' + this.view.name + '?'
+        'Are you sure that you want to delete view ' + this.view.name + '?',
       )
       .subscribe((result) => {
         if (result['confirm']) {
@@ -335,7 +336,7 @@ export class AdminViewEditComponent implements OnInit {
     this.dialogService
       .confirm(
         'Delete View',
-        'Are you sure that you want to delete team ' + tm.name + '?'
+        'Are you sure that you want to delete team ' + tm.name + '?',
       )
       .subscribe((result) => {
         if (result['confirm']) {
@@ -372,7 +373,11 @@ export class AdminViewEditComponent implements OnInit {
   openUsersDialog(team: Team): void {
     if (team !== undefined) {
       this.dialogService
-        .addRemoveUsersToTeam('Add or Remove Users for team ' + team.name, team)
+        .addRemoveUsersToTeam(
+          'Add or Remove Users for team ' + team.name,
+          team,
+          { maxWidth: '100vw', width: 'auto' },
+        )
         .subscribe((result) => {
           this.teams.find((t) => t.team.id === team.id).users =
             result['teamUsers'];
@@ -452,7 +457,7 @@ export class AdminViewEditComponent implements OnInit {
         this.teamsForFile,
         this.staged.map((f) => f.file),
         'events',
-        true
+        true,
       )
       .subscribe((event) => {
         if (event.type === HttpEventType.UploadProgress) {
@@ -509,7 +514,7 @@ export class AdminViewEditComponent implements OnInit {
         },
         (err) => {
           console.log('Error getting files ' + err);
-        }
+        },
       );
   }
 
@@ -613,7 +618,7 @@ export class AdminViewEditComponent implements OnInit {
         },
         (err) => {
           console.log('Error creating application ' + err);
-        }
+        },
       );
   }
 
@@ -683,7 +688,7 @@ export class AdminViewEditComponent implements OnInit {
 export class UserErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
     control: UntypedFormControl | null,
-    form: FormGroupDirective | NgForm | null
+    form: FormGroupDirective | NgForm | null,
   ): boolean {
     const isSubmitted = form && form.submitted;
     return !!(control && control.invalid && (control.dirty || isSubmitted));

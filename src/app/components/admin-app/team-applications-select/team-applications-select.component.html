@@ -4,89 +4,92 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="top-button d-flex justify-content-end">
-  <button
-    *ngIf="viewApplications != null && viewApplications.length > 0"
-    mat-stroked-button
-    [matMenuTriggerFor]="teamAppsMenu"
-  >
-    Add Application
-  </button>
-  <mat-menu #teamAppsMenu="matMenu">
+  @if (viewApplications != null && viewApplications.length > 0) {
     <button
-      mat-menu-item
-      *ngFor="let a of viewApplications"
-      (click)="addViewAppToTeam(a)"
-    >
-      {{ getAppName(a) }}
+      mat-stroked-button
+      [matMenuTriggerFor]="teamAppsMenu"
+      >
+      Add Application
     </button>
+  }
+  <mat-menu #teamAppsMenu="matMenu">
+    @for (a of viewApplications; track a) {
+      <button
+        mat-menu-item
+        (click)="addViewAppToTeam(a)"
+        >
+        {{ getAppName(a) }}
+      </button>
+    }
   </mat-menu>
 </div>
 <mat-accordion>
-  <mat-expansion-panel
-    *ngFor="let app of applications; let i = index"
-    [expanded]="currentApp !== undefined && app.id === currentApp.id"
-    (opened)="currentApp = app"
-  >
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        <div class="d-flex align-items-center">
-          <img
-            class="app-icon"
-            src="{{ app.icon }}"
-            alt="{{ getAppName(app) }} Icon"
-          />
-          {{ getAppName(app) }}
-        </div>
-      </mat-panel-title>
-    </mat-expansion-panel-header>
-
-    <div>
-      <div class="d-flex flex-column">
-        <div class="wrap">
-          <b>{{ app.url }}</b>
-        </div>
-        <mat-divider></mat-divider>
-        Embeddable: <b>{{ app.embeddable }}</b>
-        <mat-divider></mat-divider>
-        Load In Background: <b>{{ app.loadInBackground }}</b>
-      </div>
-    </div>
-
-    <div class="bottom-button d-flex">
-      <div class="d-flex align-items-center">
-        Display order:&nbsp;&nbsp;<b>{{ app.displayOrder }}</b>
-        <button
-          *ngIf="{ disabled: app.displayOrder === 0 } as moveUp"
-          [disabled]="moveUp.disabled"
-          [ngClass]="moveUp.disabled ? 'disabled-button' : null"
-          mat-icon-button
-          title="Move Up"
-          (click)="moveAppUp(app.id)"
-        >
-          <mat-icon
-            svgIcon="ic_expand_more_black_24px"
-            style="transform: rotate(180deg)"
-          ></mat-icon>
-        </button>
-        <button
-          *ngIf="{
-            disabled: app.displayOrder >= applications.length - 1
-          } as moveDown"
-          [disabled]="moveDown.disabled"
-          [ngClass]="moveDown.disabled ? 'disabled-button' : null"
-          title="Move Down"
-          mat-icon-button
-          (click)="moveAppDown(app.id)"
-        >
-          <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>
-        </button>
-      </div>
-      <button
-        mat-stroked-button
-        (click)="removeApplicationInstanceFromTeam(app)"
+  @for (app of applications; track app; let i = $index) {
+    <mat-expansion-panel
+      [expanded]="currentApp !== undefined && app.id === currentApp.id"
+      (opened)="currentApp = app"
       >
-        Remove Application
-      </button>
-    </div>
-  </mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <div class="d-flex align-items-center">
+            <img
+              class="app-icon"
+              src="{{ app.icon }}"
+              alt="{{ getAppName(app) }} Icon"
+              />
+            {{ getAppName(app) }}
+          </div>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div>
+        <div class="d-flex flex-column">
+          <div class="wrap">
+            <b>{{ app.url }}</b>
+          </div>
+          <mat-divider></mat-divider>
+          Embeddable: <b>{{ app.embeddable }}</b>
+          <mat-divider></mat-divider>
+          Load In Background: <b>{{ app.loadInBackground }}</b>
+        </div>
+      </div>
+      <div class="bottom-button d-flex">
+        <div class="d-flex align-items-center">
+          Display order:&nbsp;&nbsp;<b>{{ app.displayOrder }}</b>
+          @if ({ disabled: app.displayOrder === 0 }; as moveUp) {
+            <button
+              [disabled]="moveUp.disabled"
+              [ngClass]="moveUp.disabled ? 'disabled-button' : null"
+              mat-icon-button
+              title="Move Up"
+              (click)="moveAppUp(app.id)"
+              >
+              <mat-icon
+                svgIcon="ic_expand_more_black_24px"
+                style="transform: rotate(180deg)"
+              ></mat-icon>
+            </button>
+          }
+          @if ({
+            disabled: app.displayOrder >= applications.length - 1
+            }; as moveDown) {
+            <button
+              [disabled]="moveDown.disabled"
+              [ngClass]="moveDown.disabled ? 'disabled-button' : null"
+              title="Move Down"
+              mat-icon-button
+              (click)="moveAppDown(app.id)"
+              >
+              <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>
+            </button>
+          }
+        </div>
+        <button
+          mat-stroked-button
+          (click)="removeApplicationInstanceFromTeam(app)"
+          >
+          Remove Application
+        </button>
+      </div>
+    </mat-expansion-panel>
+  }
 </mat-accordion>

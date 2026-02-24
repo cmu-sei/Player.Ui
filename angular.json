@@ -16,6 +16,12 @@
             "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
             "polyfills": "src/polyfills.ts",
+            "allowedCommonJsDependencies": [
+              "crypto-js/core.js",
+              "crypto-js/enc-base64.js",
+              "crypto-js/enc-utf8.js",
+              "crypto-js/sha256.js"
+            ],
             "assets": [
               "src/assets",
               {
@@ -26,12 +32,11 @@
             ],
             "styles": [
               "src/styles/styles.scss",
-              "./node_modules/bootstrap/scss/bootstrap-utilities.scss"
+              "./node_modules/bootstrap/dist/css/bootstrap-utilities.min.css"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
-                "src/styles",
-                "./node_modules/bootstrap/scss/bootstrap-utilities.scss"
+                "src/styles"
               ]
             },
             "scripts": []
@@ -78,10 +83,10 @@
           },
           "configurations": {
             "production": {
-              "browserTarget": "player-ui:build:production"
+              "buildTarget": "player-ui:build:production"
             },
             "development": {
-              "browserTarget": "player-ui:build:development"
+              "buildTarget": "player-ui:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -89,7 +94,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "player-ui:build"
+            "buildTarget": "player-ui:build"
           }
         },
         "test": {
@@ -133,10 +138,30 @@
   "schematics": {
     "@schematics/angular:component": {
       "prefix": "app",
-      "style": "scss"
+      "style": "scss",
+      "type": "component"
     },
     "@schematics/angular:directive": {
-      "prefix": "app"
+      "prefix": "app",
+      "type": "directive"
+    },
+    "@schematics/angular:service": {
+      "type": "service"
+    },
+    "@schematics/angular:guard": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:interceptor": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:module": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:pipe": {
+      "typeSeparator": "."
+    },
+    "@schematics/angular:resolver": {
+      "typeSeparator": "."
     }
   },
   "cli": {

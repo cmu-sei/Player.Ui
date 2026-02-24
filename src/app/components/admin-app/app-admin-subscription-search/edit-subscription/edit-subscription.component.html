@@ -26,18 +26,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       [checked]="!currentSub?.clientSecretSet"
       (change)="editSecretChanged($event)"
       >Edit</mat-checkbox
-    >
-  </div>
-  <mat-form-field>
-    <mat-label>Events</mat-label>
-    <mat-select multiple formControlName="eventTypes">
-      <mat-option *ngFor="let e of eventTypes" [value]="e">{{ e }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-  <div class="d-flex justify-content-around">
-    <button mat-flat-button color="primary" type="submit">Save</button>
-    <button mat-flat-button color="primary" type="button" (click)="onDelete()">
-      Delete
-    </button>
-  </div>
-</form>
+      >
+    </div>
+    <mat-form-field>
+      <mat-label>Events</mat-label>
+      <mat-select multiple formControlName="eventTypes">
+        @for (e of eventTypes; track e) {
+          <mat-option [value]="e">{{ e }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <div class="d-flex justify-content-around">
+      <button mat-flat-button color="primary" type="submit">Save</button>
+      <button mat-flat-button color="primary" type="button" (click)="onDelete()">
+        Delete
+      </button>
+    </div>
+  </form>

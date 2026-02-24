@@ -19,17 +19,21 @@
 }
 
 .appbarmenu-container-mini {
-  min-width: 50px;
+  width: 97px;
+  min-width: 97px;
   max-width: 20vw;
 }
 
 .player-icon {
   transform: scale(2);
   width: 60px;
+  color: var(--mat-sys-primary);
 }
 
 .player-icon-mini {
   transform: scale(2);
+  width: 48px;
+  color: var(--mat-sys-primary);
 }
 
 .crucible-logo {
@@ -68,12 +72,17 @@
   margin-right: 10px;
 }
 
-::ng-deep .player-title > .mat-list-item-content {
-  padding: 0 !important;
-}
-
 .player-title-mini {
   justify-content: center;
+  overflow: visible !important;
+
+  .d-flex {
+    justify-content: center;
+  }
+}
+
+::ng-deep .player-title-mini > .mdc-list-item__content {
+  overflow: visible !important;
 }
 
 .resize-handle-right {

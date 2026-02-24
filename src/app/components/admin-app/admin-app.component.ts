@@ -18,14 +18,13 @@ import { UserPermissionsService } from '../../services/permissions/user-permissi
 import { SystemPermission } from '../../generated/player-api';
 
 @Component({
-  selector: 'app-admin-app',
-  templateUrl: './admin-app.component.html',
-  styleUrls: ['./admin-app.component.scss'],
+    selector: 'app-admin-app',
+    templateUrl: './admin-app.component.html',
+    styleUrls: ['./admin-app.component.scss'],
+    standalone: false
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
-  public topbarColor = '#4c7aa2';
-  public topbarTextColor = '#FFFFFF';
   public TopbarView = TopbarView;
   public queryParams: any;
   Section = Section;
@@ -119,9 +118,6 @@ export class AdminAppComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Set the topbar color from config file
-    this.topbarColor = this.settingsService.settings.AppTopBarHexColor;
-    this.topbarTextColor = this.settingsService.settings.AppTopBarHexTextColor;
   }
 
   addParam(params: any): void {

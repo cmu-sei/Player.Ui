@@ -4,47 +4,54 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <!-- this component will work with a User or a Team
-    it allows a role and a list of permissions to be selected
-    to use this component, add one of the following lines to the html of your edit page
-    <app-roles-permissions-select [user]="userObject"></app-roles-permissions-select>
-    <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
+it allows a role and a list of permissions to be selected
+to use this component, add one of the following lines to the html of your edit page
+<app-roles-permissions-select [user]="userObject"></app-roles-permissions-select>
+<app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 -->
 
-<mat-form-field>
+<mat-form-field subscriptSizing="dynamic" class="my-1">
   <mat-select
     [value]="subject.roleId ?? ''"
     name="userRole"
     (selectionChange)="updateRole($event.value)"
     placeholder="Role"
-  >
-    <mat-option *ngIf="user" value="">None</mat-option>
-    <mat-option *ngFor="let role of roles$ | async" [value]="role.id">
-      {{ role.name }}
-    </mat-option>
+    >
+    @if (user) {
+      <mat-option value="">None</mat-option>
+    }
+    @for (role of roles$ | async; track role) {
+      <mat-option [value]="role.id">
+        {{ role.name }}
+      </mat-option>
+    }
   </mat-select>
 </mat-form-field>
 
-<div class="add-margin" *ngIf="showPermissions">
-  <div>
-    <mat-form-field>
-      <mat-select
-        placeholder="Permissions"
-        [(ngModel)]="selectedPermissions"
-        name="userPermissions"
-        multiple
-      >
-        <mat-option
-          *ngFor="let item of permissions$ | async"
-          [value]="item.id"
+@if (showPermissions) {
+  <div class="add-margin">
+    <div>
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-select
+          placeholder="Permissions"
+          [(ngModel)]="selectedPermissions"
+          name="userPermissions"
+          multiple
+          >
+          @for (item of permissions$ | async; track item) {
+            <mat-option
+              [value]="item.id"
           (onSelectionChange)="
             $event.isUserInput
               ? updatePermissions(item, $event.source.selected)
               : null
           "
-        >
-          {{ item.key ?? item.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+              >
+              {{ item.key ?? item.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
   </div>
-</div>
+}

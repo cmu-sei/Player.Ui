@@ -23,34 +23,38 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </a>
         <mat-divider></mat-divider>
       </mat-list-item>
-      <ng-container *ngFor="let sectionItem of sectionItems">
-        <ng-container *ngIf="permissions$ | async as permissions">
-          <mat-list-item *ngIf="permissions.includes(sectionItem.permission)">
-            <ng-container>
-              <button
-                mat-button
-                (click)="sectionChangedFn(sectionItem.section)"
-                class="px-0 w-100"
-              >
-                <div class="d-flex align-items-center">
-                  <mat-icon
-                    *ngIf="sectionItem.svgIcon"
-                    class="lefticon player-icon-small"
-                    svgIcon="{{ sectionItem.icon }}"
-                  ></mat-icon>
-                  <img
-                    *ngIf="!sectionItem.svgIcon"
-                    class="lefticon"
-                    src="{{ sectionItem.icon }}"
-                    alt="{{ sectionItem.name }}"
-                  />
-                  <div>{{ sectionItem.name }}</div>
-                </div>
-              </button>
-            </ng-container>
-          </mat-list-item>
-        </ng-container>
-      </ng-container>
+      @for (sectionItem of sectionItems; track sectionItem) {
+        @if (permissions$ | async; as permissions) {
+          @if (permissions.includes(sectionItem.permission)) {
+            <mat-list-item>
+              <ng-container>
+                <button
+                  mat-button
+                  (click)="sectionChangedFn(sectionItem.section)"
+                  class="px-0 w-100 justify-content-start normal-text"
+                >
+                  <div class="d-flex align-items-center">
+                    @if (sectionItem.svgIcon) {
+                      <mat-icon
+                        class="player-icon-small"
+                        svgIcon="{{ sectionItem.icon }}"
+                      ></mat-icon>
+                    }
+                    @if (!sectionItem.svgIcon) {
+                      <img
+                        class="lefticon"
+                        src="{{ sectionItem.icon }}"
+                        alt="{{ sectionItem.name }}"
+                      />
+                    }
+                    <div>{{ sectionItem.name }}</div>
+                  </div>
+                </button>
+              </ng-container>
+            </mat-list-item>
+          }
+        }
+      }
     </mat-list>
     <img
       class="crucible-logo"
@@ -65,33 +69,28 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <!-- MAIN CONTENT -->
   <mat-sidenav-content>
     <app-topbar
-      [topbarColor]="topbarColor"
-      [topbarTextColor]="topbarTextColor"
       [topbarView]="TopbarView.PLAYER_ADMIN"
       [title]="title"
     ></app-topbar>
 
-    <div [ngSwitch]="section$ | async" class="d-flex justify-content-center">
-      <app-admin-view-search
-        *ngSwitchCase="Section.ADMIN_VIEWS"
-      ></app-admin-view-search>
-
-      <app-admin-user-search
-        *ngSwitchCase="Section.ADMIN_USERS"
-      ></app-admin-user-search>
-
-      <app-admin-app-template-search
-        *ngSwitchCase="Section.ADMIN_APP_TEMP"
-      ></app-admin-app-template-search>
-
-      <app-admin-roles
-        class="w-100"
-        *ngSwitchCase="Section.ADMIN_ROLE_PERM"
-      ></app-admin-roles>
-
-      <app-admin-subscription-search
-        *ngSwitchCase="Section.ADMIN_SUBS"
-      ></app-admin-subscription-search>
+    <div class="d-flex justify-content-center">
+      @switch (section$ | async) {
+        @case (Section.ADMIN_VIEWS) {
+          <app-admin-view-search></app-admin-view-search>
+        }
+        @case (Section.ADMIN_USERS) {
+          <app-admin-user-search></app-admin-user-search>
+        }
+        @case (Section.ADMIN_APP_TEMP) {
+          <app-admin-app-template-search></app-admin-app-template-search>
+        }
+        @case (Section.ADMIN_ROLE_PERM) {
+          <app-admin-roles class="w-100"></app-admin-roles>
+        }
+        @case (Section.ADMIN_SUBS) {
+          <app-admin-subscription-search></app-admin-subscription-search>
+        }
+      }
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

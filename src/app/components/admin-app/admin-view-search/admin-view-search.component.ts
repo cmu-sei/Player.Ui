@@ -3,7 +3,7 @@
 
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
@@ -11,9 +11,9 @@ import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-
 import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
 import { map } from 'rxjs';
 import {
-  MatLegacyDialog as MatDialog,
-  MatLegacyDialogRef as MatDialogRef,
-} from '@angular/material/legacy-dialog';
+  MatDialog,
+  MatDialogRef,
+} from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 
 export interface Action {
@@ -22,9 +22,10 @@ export interface Action {
 }
 
 @Component({
-  selector: 'app-admin-view-search',
-  templateUrl: './admin-view-search.component.html',
-  styleUrls: ['./admin-view-search.component.scss'],
+    selector: 'app-admin-view-search',
+    templateUrl: './admin-view-search.component.html',
+    styleUrls: ['./admin-view-search.component.scss'],
+    standalone: false
 })
 export class AdminViewSearchComponent implements OnInit {
   @ViewChild(AdminViewEditComponent, { static: true })
@@ -226,6 +227,8 @@ export class AdminViewSearchComponent implements OnInit {
     this.dialogRef = this.dialog.open(templateRef, {
       disableClose: true,
       autoFocus: true,
+      minHeight: '250px',
+      width: '350px',
     });
   }
 

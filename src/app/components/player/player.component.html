@@ -3,11 +3,11 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<ng-container *ngIf="data$ | async as data; else loading">
+@if (data$ | async; as data) {
   <mat-sidenav-container
     class="appcontent-container"
     [autosize]="autosizeSidenav"
-  >
+    >
     <mat-sidenav
       #sidenav
       [ngClass]="
@@ -19,14 +19,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       (resizing)="resizingFn($event)"
       (resizeEnd)="resizeEnd($event)"
       [ngStyle]="resizeStyle"
-    >
+      >
       <div class="grid">
         <div>
           <mat-list>
             <mat-list-item
               class="d-flex"
               [ngClass]="(mini$ | async) ? 'player-title-mini' : 'player-title'"
-            >
+              >
               <a class="nolink" [routerLink]="['/']">
                 <div class="d-flex align-items-center">
                   <mat-icon
@@ -35,9 +35,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                     "
                     svgIcon="ic_crucible_player"
                   ></mat-icon>
-                  <h2 *ngIf="!(mini$ | async)">
-                    <b>{{ data.title }}</b>
-                  </h2>
+                  @if (!(mini$ | async)) {
+                    <h2>
+                      <b>{{ data.title }}</b>
+                    </h2>
+                  }
                 </div>
               </a>
             </mat-list-item>
@@ -48,30 +50,31 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             [teams]="data.teams"
             [mini]="mini$ | async"
           ></app-application-list>
-          <img
-            *ngIf="!(mini$ | async)"
-            alt="crucible logo"
-            class="crucible-logo"
+          @if (!(mini$ | async)) {
+            <img
+              alt="crucible logo"
+              class="crucible-logo"
             [src]="
               (theme$ | async) === 'light-theme'
                 ? 'assets/img/crucible-logo-light.png'
                 : 'assets/img/crucible-logo-dark.png'
             "
-          />
+              />
+          }
         </div>
-        <div
-          *ngIf="!(mini$ | async)"
-          class="resize-handle-right"
-          mwlResizeHandle
-          [resizeEdges]="{ right: true }"
-        ></div>
+        @if (!(mini$ | async)) {
+          <div
+            class="resize-handle-right"
+            mwlResizeHandle
+            [resizeEdges]="{ right: true }"
+          ></div>
+        }
       </div>
     </mat-sidenav>
     <mat-sidenav-content class="noscroll">
       <app-topbar
         [sidenav]="sidenav"
         [title]="data.view.name"
-        [topbarColor]="topbarColor"
         topbarView="player-player"
         [teams]="data.teams"
         [team]="data.team"
@@ -80,24 +83,24 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         (setTeam)="setPrimaryTeam($event)"
         (sidenavToggle)="sidenavToggleFn($event)"
         (editView)="editViewFn($event)"
-        [topbarTextColor]="topbarTextColor"
       ></app-topbar>
-
       <app-focused-app></app-focused-app>
-
-      <app-notifications
-        *ngIf="user$ | async as user; else loading"
-        [viewGuid]="data.view.id"
-        [teamGuid]="data.team.id"
-        [userGuid]="user.profile.id"
-        [userToken]="user.access_token"
-        [userName]="user.profile.name"
-        [topbarColor]="topbarColor"
-        class="notification-height"
-      >
-      </app-notifications>
+      @if (user$ | async; as user) {
+        <app-notifications
+          [viewGuid]="data.view.id"
+          [teamGuid]="data.team.id"
+          [userGuid]="user.profile.id"
+          [userToken]="user.access_token"
+          [userName]="user.profile.name"
+          class="notification-height"
+          >
+        </app-notifications>
+      } @else {
+        LOADING
+      }
     </mat-sidenav-content>
   </mat-sidenav-container>
-</ng-container>
+} @else {
+  LOADING
+}
 
-<ng-template #loading> LOADING </ng-template>

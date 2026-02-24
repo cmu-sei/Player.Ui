@@ -15,30 +15,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div class="d-flex align-items-center gap-1">
     <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon>
     <h3 class="header-text ms-2">Views</h3>
-    <div class="d-flex align-items-center ms-5">
-      <mat-icon
-        style="transform: scale(0.85); margin-right: 5px"
-        svgIcon="ic_magnify_search"
-      ></mat-icon>
-      <mat-form-field style="width: 320px">
+    <div class="ms-5">
+      <mat-form-field style="width: 320px" subscriptSizing="dynamic">
+        <mat-icon
+          matPrefix
+          style="transform: scale(0.85); margin-right: 5px"
+          svgIcon="ic_magnify_search"
+        ></mat-icon>
         <input
           matInput
           [(ngModel)]="filterString"
           (keyup)="applyFilter($event.target.value)"
           placeholder="Search"
         />
-        <button
-          *ngIf="filterString !== ''"
-          mat-icon-button
-          matSuffix
-          (click)="clearFilter()"
-          title="Clear Search"
-        >
-          <mat-icon
-            style="transform: scale(0.85)"
-            svgIcon="ic_cancel_circle"
-          ></mat-icon>
-        </button>
+        @if (filterString !== '') {
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="clearFilter()"
+            title="Clear Search"
+          >
+            <mat-icon
+              style="transform: scale(0.85)"
+              svgIcon="ic_cancel_circle"
+            ></mat-icon>
+          </button>
+        }
       </mat-form-field>
     </div>
     <div class="ms-auto">
@@ -69,13 +71,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
   </div>
 
-  <mat-card
-    *ngIf="isLoading"
-    class="d-flex justify-content-center align-items-center"
-  >
-    <mat-progress-spinner color="primary" mode="indeterminate">
-    </mat-progress-spinner>
-  </mat-card>
+  @if (isLoading) {
+    <mat-card class="d-flex justify-content-center align-items-center">
+      <mat-progress-spinner color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </mat-card>
+  }
 
   <mat-table #table [dataSource]="viewDataSource" matSort>
     <ng-container matColumnDef="select">
@@ -116,7 +117,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </button>
         <button
           mat-button
-          class="px-0"
+          class="px-0 normal-text"
           (click)="executeViewAction('edit', element.id)"
         >
           {{ element.name }}
@@ -149,7 +150,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     ></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
   </mat-table>
-  <div *ngIf="viewDataSource.filteredData.length === 0">No results found</div>
+  @if (viewDataSource.filteredData.length === 0) {
+    <div>No results found</div>
+  }
 </div>
 
 <ng-template #exportDialog>

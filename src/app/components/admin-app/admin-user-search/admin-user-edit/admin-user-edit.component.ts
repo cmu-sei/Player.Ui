@@ -25,9 +25,10 @@ import {
 } from '@angular/forms';
 
 @Component({
-  selector: 'app-admin-user-edit',
-  templateUrl: './admin-user-edit.component.html',
-  styleUrls: ['./admin-user-edit.component.scss'],
+    selector: 'app-admin-user-edit',
+    templateUrl: './admin-user-edit.component.html',
+    styleUrls: ['./admin-user-edit.component.scss'],
+    standalone: false
 })
 export class AdminUserEditComponent implements OnChanges {
   @Input() user: User;

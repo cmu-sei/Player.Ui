@@ -6,11 +6,7 @@
   min-width: 800px;
   margin-top: 40px;
   width: 800px;
-}
-
-.mat-table {
-  overflow: auto;
-  max-height: 700px;
+  align-content: center;
 }
 
 .button-end {
@@ -24,6 +20,7 @@
 .player-icon-small {
   transform: scale(1.5);
   margin-left: 20px;
+  color: var(--mat-sys-primary);
 }
 
 .mat-column-select {
@@ -40,4 +37,8 @@
 
 .mat-column-description {
   flex: 1 1 40%;
+}
+
+app-admin-app-view-export {
+  margin-left: 30px;
 }

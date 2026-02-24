@@ -1,58 +1,198 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-/* VENDER IMPORTS */
+/* IMPORTS - All @use statements must come first */
 @use '@angular/material' as mat;
-// TODO(v15): As of v15 mat.legacy-core no longer includes default typography styles.
-//  The following line adds:
-//    1. Default typography styles for all components
-//    2. Styles for typography hierarchy classes (e.g. .mat-headline-1)
-//  If you specify typography styles for the components you use elsewhere, you should delete this line.
-//  If you don't need the default component typographies but still want the hierarchy styles,
-//  you can delete this line and instead use:
-//    `@include mat.legacy-typography-hierarchy(mat.define-legacy-typography-config());`
-@include mat.legacy-core();
-/* END VENDER IMPORTS */
+@use '@mdi/font/scss/materialdesignicons' with ($mdi-font-path: '~@mdi/font/fonts'
+);
+@use './theme-colors' as theme;
+/* END IMPORTS */
 
-/* BOOTSTRAP IMPORTS */
-/* Required */
-@import '../../node_modules/bootstrap/scss/functions';
-@import '../../node_modules/bootstrap/scss/variables';
-@import '../../node_modules/bootstrap/scss/maps';
-@import '../../node_modules/bootstrap/scss/mixins';
-@import '../../node_modules/bootstrap/scss/root';
+/* VENDER INCLUDES */
+@include mat.elevation-classes();
+@include mat.app-background();
+/* END VENDER INCLUDES */
 
-/* Optional */
-@import '../../node_modules/bootstrap/scss/utilities';
-/* END BOOTSRAP IMPORTS */
-
-$mdi-font-path: '~@mdi/font/fonts';
-@import '@mdi/font/scss/materialdesignicons';
-
-/* LOCAL IMPORTS */
-@import 'theme';
-/* END LOCAL IMPORTS */
-
-@include mat.all-legacy-component-themes($light-theme);
-
-.light-theme {
-  @include globals($light-theme);
+html {
+  @include mat.theme((color: theme.$primary-palette,
+      typography: '"Open Sans", sans-serif',
+    ),
+    $overrides: ((background: #f1f1f2,
+        surface: var(--mat-sys-background),
+        surface-variant: var(--mat-sys-background),
+        surface-dim: var(--mat-sys-background),
+        surface-bright: var(--mat-sys-background),
+        surface-container-lowest: var(--mat-sys-background),
+        surface-container-low: var(--mat-sys-background),
+        surface-container: var(--mat-sys-background),
+        surface-container-high: var(--mat-sys-background),
+        surface-container-highest: var(--mat-sys-background),
+        surface-tint: var(--mat-sys-primary),
+        icon: var(--mat-sys-primary),
+      )));
+  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary)));
 }
 
-.dark-theme {
-  @include mat.all-legacy-component-colors($dark-theme);
-  @include globals($dark-theme);
+.darkMode {
+  @include mat.theme((color: (primary: theme.$primary-palette,
+        typography: '"Open Sans", sans-serif',
+        theme-type: dark,
+      ),
+    ),
+    $overrides: ((background: #313131,
+        surface: var(--mat-sys-background),
+        surface-variant: var(--mat-sys-background),
+        surface-dim: var(--mat-sys-background),
+        surface-bright: var(--mat-sys-background),
+        surface-container-lowest: var(--mat-sys-background),
+        surface-container-low: var(--mat-sys-background),
+        surface-container: var(--mat-sys-background),
+        surface-container-high: var(--mat-sys-background),
+        surface-container-highest: var(--mat-sys-background),
+        surface-tint: var(--mat-sys-primary),
+        icon: var(--mat-sys-primary),
+      )));
+  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary)));
 }
 
-/* The following overrides transparent select options after upgrading to Angular 7 */
-.mat-select-panel {
-  background: #fff;
+body {
+  font-family: "Open Sans", sans-serif;
 }
-.mat-select-panel:not([class*='mat-elevation-z']) {
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14),
-    0 1px 10px 0 rgba(0, 0, 0, 0.12);
+
+// Override the disabled icon color specifically for mat-icon-button
+.mat-mdc-icon-button[disabled] .mat-icon {
+  --mat-icon-color-disabled: var(--mat-sys-outline-variant);
 }
 
 .header-text {
   font-family: open_sansbold;
 }
+
+/* Fix user dropdown menu scrollbar */
+.user-dropdown-menu {
+  min-height: 150px !important;
+}
+
+.toggle {
+  padding-left: 12px;
+}
+
+/* Consistent Material table background colors */
+.mat-mdc-table,
+.mat-mdc-header-row,
+.mat-mdc-row {
+  background-color: var(--mat-sys-background);
+}
+
+// default all icons to the primary theme color
+mat-icon, .mat-icon {
+  --mat-icon-color: var(--mat-sys-primary);
+}
+
+// prevent table header rows from scrolling
+.mat-mdc-header-row {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  z-index: 9 !important;
+}
+
+// remove the border around paginator items per page selection
+mat-paginator {
+  --mat-form-field-outlined-outline-color: transparent;
+  --mat-form-field-outlined-hover-outline-color: transparent;
+  --mat-form-field-outlined-focus-outline-color: transparent;
+  min-width: 200px !important;
+}
+
+.mat-form-field {
+  color: var(--mat-sys-primary);
+}
+
+// Ensure mat-select and mat-menu dropdown panels use a consistent background color
+.mat-mdc-select-panel,
+.mat-mdc-menu-panel {
+  background-color: var(--mat-sys-outline-variant) !important;
+}
+
+// Ensure mat-option elements match the mat-select background color
+.mat-mdc-option {
+  --mat-option-label-text-color: var(--mat-sys-on-background);
+  --mat-option-hover-state-layer-color: var(--mat-sys-outline);
+  --mat-option-focus-state-layer-color: var(--mat-sys-outline);
+  --mat-option-selected-state-layer-color: var(--mat-sys-outline);
+}
+
+.mat-mdc-option:not(.mat-mdc-option-disabled) {
+  background-color: var(--mat-sys-background);
+}
+
+.mat-mdc-option:hover:not(.mat-mdc-option-disabled) {
+  background-color: var(--mat-sys-surface-variant);
+}
+
+// Global utility classes (previously from theme.globals() mixin)
+.selected {
+  background: var(--mat-sys-primary);
+  &:hover,
+  &:focus {
+    background: var(--mat-sys-primary) !important;
+  }
+}
+
+.disabled-text {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.background {
+  background-color: var(--mat-sys-background);
+}
+
+.highlight {
+  &:hover,
+  &:focus {
+    background: var(--mat-sys-surface-variant);
+  }
+}
+
+.text {
+  color: var(--mat-sys-on-surface);
+}
+
+a {
+  color: var(--mat-sys-on-surface);
+}
+
+.mat-column-online,
+.mat-column-user-name {
+  background: var(--mat-sys-surface-variant) !important;
+}
+
+// Semantic colors - keep hardcoded (not theme-derived)
+.online {
+  color: #007400;
+}
+
+.offline {
+  color: #ca0000;
+}
+
+.mat-mdc-header-cell,
+.mat-mdc-form-field,
+.mat-mdc-floating-label,
+.mat-mdc-sort-header-content,
+.mat-mdc-paginator-page-size-label,
+.mat-mdc-paginator-range-label,
+.mat-expansion-panel-header-description {
+  color: var(--mat-sys-on-surface) !important;
+}
+
+.mat-expansion-panel,
+.mat-drawer-inner-container {
+  background-color: var(--mat-sys-background) !important;
+}
+
+.normal-text {
+  color: var(--mat-sys-on-background) !important;
+}
+

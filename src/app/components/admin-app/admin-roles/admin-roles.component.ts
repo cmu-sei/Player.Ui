@@ -6,9 +6,10 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'app-admin-roles',
-  templateUrl: './admin-roles.component.html',
-  styleUrls: ['./admin-roles.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'app-admin-roles',
+    templateUrl: './admin-roles.component.html',
+    styleUrls: ['./admin-roles.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AdminRolesComponent {}

@@ -9,9 +9,10 @@ import {
 import { DialogService } from '../../../../services/dialog/dialog.service';
 
 @Component({
-  selector: 'app-admin-template-details',
-  templateUrl: './admin-template-details.component.html',
-  styleUrls: ['./admin-template-details.component.scss'],
+    selector: 'app-admin-template-details',
+    templateUrl: './admin-template-details.component.html',
+    styleUrls: ['./admin-template-details.component.scss'],
+    standalone: false
 })
 export class AdminTemplateDetailsComponent {
   @Input() appTemplate: ApplicationTemplate;

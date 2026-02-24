@@ -14,9 +14,10 @@ import { ImportViewsResult } from '../../../generated/player-api';
 import { ViewsService } from '../../../services/views/views.service';
 
 @Component({
-  selector: 'app-admin-app-view-import',
-  templateUrl: './admin-app-view-import.component.html',
-  styleUrls: ['./admin-app-view-import.component.scss'],
+    selector: 'app-admin-app-view-import',
+    templateUrl: './admin-app-view-import.component.html',
+    styleUrls: ['./admin-app-view-import.component.scss'],
+    standalone: false
 })
 export class AdminAppViewImportComponent {
   @Output() complete = new EventEmitter<boolean>();

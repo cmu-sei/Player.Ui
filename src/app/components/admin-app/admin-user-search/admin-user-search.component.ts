@@ -3,11 +3,11 @@
 
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import {
-  LegacyPageEvent as PageEvent,
-  MatLegacyPaginator as MatPaginator,
-} from '@angular/material/legacy-paginator';
+  PageEvent,
+  MatPaginator,
+} from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import { MatTableDataSource } from '@angular/material/table';
 import { User, UserService, RoleService } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
 
@@ -17,9 +17,10 @@ export interface Action {
 }
 
 @Component({
-  selector: 'app-admin-user-search',
-  templateUrl: './admin-user-search.component.html',
-  styleUrls: ['./admin-user-search.component.scss'],
+    selector: 'app-admin-user-search',
+    templateUrl: './admin-user-search.component.html',
+    styleUrls: ['./admin-user-search.component.scss'],
+    standalone: false
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public displayedColumns: string[] = ['name', 'roleName'];

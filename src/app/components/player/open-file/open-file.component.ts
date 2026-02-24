@@ -13,9 +13,10 @@ import { ActivatedRoute } from '@angular/router';
 import { FileService } from '../../../generated/player-api';
 
 @Component({
-  selector: 'app-open-file',
-  templateUrl: './open-file.component.html',
-  styleUrls: ['./open-file.component.scss'],
+    selector: 'app-open-file',
+    templateUrl: './open-file.component.html',
+    styleUrls: ['./open-file.component.scss'],
+    standalone: false
 })
 export class OpenFileComponent implements OnInit {
   constructor(

@@ -7,8 +7,9 @@ import { Component, OnInit } from '@angular/core';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 
 @Component({
-  templateUrl: './user-presence-page.component.html',
-  styleUrls: ['./user-presence-page.component.scss']
+    templateUrl: './user-presence-page.component.html',
+    styleUrls: ['./user-presence-page.component.scss'],
+    standalone: false
 })
 export class UserPresencePageComponent implements OnInit {
 
