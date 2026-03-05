@@ -17,6 +17,16 @@
     "useBlink": false,
     "useBeep": false
   },
+  "HeaderBarSettings" : {
+    "banner_background_color": "#d40000ff",
+    "classification_text": "SECRET",
+    "classification_text_color": "#ffffff",
+    "classification_text_fontsize": "32",
+    "message_text": "Testing",
+    "message_text_color": "#ffff00",
+    "message_text_fontsize": "18",
+    "enabled": true
+  },
   "AppTitle": "Player",
   "AppTopBarText": "Player",
   "AppTopBarHexColor": "#3B62A5",
