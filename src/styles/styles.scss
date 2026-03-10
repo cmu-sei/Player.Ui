@@ -14,6 +14,10 @@
 @include mat.app-background();
 /* END VENDER INCLUDES */
 
+.elevate {
+  @include mat.elevation(5);
+}
+
 html {
   @include mat.theme((color: theme.$primary-palette,
       typography: '"Open Sans", sans-serif',
@@ -60,7 +64,8 @@ body {
 }
 
 // default all icons to the primary theme color
-mat-icon, .mat-icon {
+mat-icon,
+.mat-icon {
   --mat-icon-color: var(--mat-sys-primary);
 }
 
@@ -109,6 +114,7 @@ mat-paginator {
 // Global utility classes (previously from theme.globals() mixin)
 .selected {
   background: var(--mat-sys-primary);
+
   &:hover,
   &:focus {
     background: var(--mat-sys-primary) !important;
@@ -124,6 +130,7 @@ mat-paginator {
 }
 
 .highlight {
+
   &:hover,
   &:focus {
     background: var(--mat-sys-surface-variant);
@@ -170,4 +177,3 @@ a {
 .normal-text {
   color: var(--mat-sys-on-background) !important;
 }
-

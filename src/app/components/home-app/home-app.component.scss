@@ -9,3 +9,15 @@
   top: 0;
   bottom: 0;
 }
+
+.content-container {
+  width: 80%;
+  margin-top: 50px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
