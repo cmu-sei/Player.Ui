@@ -80,4 +80,28 @@ describe('AdminAppComponent', () => {
     expect(screen.getByText('Roles')).toBeInTheDocument();
     expect(screen.getByText('Subscriptions')).toBeInTheDocument();
   });
+
+  it('should show Webhook Subscriptions nav when ViewWebhookSubscriptions permission present', async () => {
+    await renderAdmin({
+      permissions: [SystemPermission.ViewWebhookSubscriptions],
+    });
+    expect(screen.getByText('Subscriptions')).toBeInTheDocument();
+  });
+
+  it('should hide Webhook Subscriptions nav when ViewWebhookSubscriptions permission absent', async () => {
+    await renderAdmin({ permissions: [] });
+    expect(screen.queryByText('Subscriptions')).not.toBeInTheDocument();
+  });
+
+  it('should show Applications nav when ViewApplications permission present', async () => {
+    await renderAdmin({
+      permissions: [SystemPermission.ViewApplications],
+    });
+    expect(screen.getByText('Application Templates')).toBeInTheDocument();
+  });
+
+  it('should hide Applications nav when ViewApplications permission absent', async () => {
+    await renderAdmin({ permissions: [] });
+    expect(screen.queryByText('Application Templates')).not.toBeInTheDocument();
+  });
 });

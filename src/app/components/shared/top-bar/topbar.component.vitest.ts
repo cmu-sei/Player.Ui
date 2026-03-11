@@ -1,0 +1,250 @@
+// Copyright 2024 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+import { describe, it, expect, vi } from 'vitest';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { of, BehaviorSubject } from 'rxjs';
+import { TopbarComponent } from './topbar.component';
+import { renderComponent } from 'src/app/test-utils/render-component';
+import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
+import { TopbarView } from './topbar.models';
+import { ComnAuthService, ComnAuthQuery } from '@cmusei/crucible-common';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { DialogService } from '../../../services/dialog/dialog.service';
+
+const mockLogout = vi.fn();
+
+function createMockPermissionsService(
+  opts: {
+    canViewAdmin?: boolean;
+    canManageViews?: boolean;
+  } = {},
+) {
+  const { canViewAdmin = false, canManageViews = false } = opts;
+  return {
+    permissions$: of([]),
+    teamPermissions$: of([]),
+    loadPermissions: () => of([]),
+    canViewAdminstration: () => of(canViewAdmin),
+    can: () => of(canManageViews),
+    hasPermission: () => of(false),
+  };
+}
+
+async function renderTopbar(
+  overrides: {
+    title?: string;
+    topbarView?: TopbarView;
+    viewId?: string;
+    sidenav?: any;
+    teams?: any[];
+    team?: any;
+    mini?: boolean;
+    canViewAdmin?: boolean;
+    canManageViews?: boolean;
+  } = {},
+) {
+  const {
+    title = 'Player',
+    topbarView = TopbarView.PLAYER_HOME,
+    viewId = '',
+    sidenav = undefined,
+    teams = undefined,
+    team = undefined,
+    mini = false,
+    canViewAdmin = false,
+    canManageViews = false,
+  } = overrides;
+
+  mockLogout.mockClear();
+
+  return renderComponent(TopbarComponent, {
+    declarations: [TopbarComponent],
+    providers: [
+      {
+        provide: UserPermissionsService,
+        useValue: createMockPermissionsService({
+          canViewAdmin,
+          canManageViews,
+        }),
+      },
+      {
+        provide: LoggedInUserService,
+        useValue: {
+          loggedInUser$: of({ profile: { name: 'Test User' } }),
+          setLoggedInUser: () => {},
+        },
+      },
+      {
+        provide: ComnAuthService,
+        useValue: {
+          isAuthenticated$: of(true),
+          user$: of({}),
+          logout: mockLogout,
+          setUserTheme: vi.fn(),
+        },
+      },
+      {
+        provide: ComnAuthQuery,
+        useValue: {
+          userTheme$: of('light-theme'),
+          isLoggedIn$: of(true),
+        },
+      },
+      {
+        provide: MatDialog,
+        useValue: { open: vi.fn(), closeAll: vi.fn() },
+      },
+      {
+        provide: DialogService,
+        useValue: { confirm: () => of({ confirm: false }) },
+      },
+      {
+        provide: MatSnackBar,
+        useValue: { open: vi.fn() },
+      },
+    ],
+    componentProperties: {
+      title,
+      topbarView,
+      viewId,
+      sidenav,
+      teams,
+      team,
+      mini,
+    },
+  });
+}
+
+describe('TopbarComponent', () => {
+  it('should create', async () => {
+    const { fixture } = await renderTopbar();
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+
+  it('should display title from input', async () => {
+    await renderTopbar({ title: 'My Custom Title' });
+    expect(screen.getByText('My Custom Title')).toBeInTheDocument();
+  });
+
+  it('should show user menu button', async () => {
+    await renderTopbar();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+  });
+
+  it('should show Administration link when showAdministration$ emits true', async () => {
+    await renderTopbar({
+      canViewAdmin: true,
+      topbarView: TopbarView.PLAYER_HOME,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Administration')).toBeInTheDocument();
+  });
+
+  it('should hide Administration link when showAdministration$ emits false', async () => {
+    await renderTopbar({
+      canViewAdmin: false,
+      topbarView: TopbarView.PLAYER_HOME,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+  });
+
+  it('should show logout option', async () => {
+    await renderTopbar();
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Logout')).toBeInTheDocument();
+  });
+
+  it('should show dark theme toggle', async () => {
+    await renderTopbar();
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Dark Theme')).toBeInTheDocument();
+  });
+
+  it('should call logout when logout clicked', async () => {
+    await renderTopbar();
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    const logoutButton = screen.getByText('Logout');
+    await user.click(logoutButton);
+    expect(mockLogout).toHaveBeenCalled();
+  });
+
+  it('should emit sidenavToggle when toggle button clicked', async () => {
+    const sidenavToggleSpy = vi.fn();
+    const result = await renderTopbar({
+      sidenav: { opened: true },
+    });
+    result.fixture.componentInstance.sidenavToggle.subscribe(sidenavToggleSpy);
+    // OnPush requires marking for check after setting inputs
+    result.fixture.changeDetectorRef.markForCheck();
+    result.fixture.detectChanges();
+    const user = userEvent.setup();
+    const toggleButton = screen.getByLabelText('Close Sidebar');
+    await user.click(toggleButton);
+    expect(sidenavToggleSpy).toHaveBeenCalledWith(false);
+  });
+
+  it('should display player title in toolbar', async () => {
+    await renderTopbar({ title: 'Player' });
+    expect(screen.getByText('Player')).toBeInTheDocument();
+  });
+
+  it('should show Exit Administration when in admin view', async () => {
+    await renderTopbar({
+      canViewAdmin: true,
+      topbarView: TopbarView.PLAYER_ADMIN,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Exit Administration')).toBeInTheDocument();
+  });
+
+  it('should hide Exit Administration when not in admin view', async () => {
+    await renderTopbar({
+      canViewAdmin: true,
+      topbarView: TopbarView.PLAYER_HOME,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Exit Administration')).not.toBeInTheDocument();
+  });
+
+  it('should show Edit View when user has ManageViews permission and team is set', async () => {
+    await renderTopbar({
+      canManageViews: true,
+      team: { id: 'team-1', name: 'Team 1' },
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Edit View')).toBeInTheDocument();
+  });
+
+  it('should show Reset UI option in menu when in player view', async () => {
+    await renderTopbar({
+      topbarView: TopbarView.PLAYER_PLAYER,
+      team: { id: 'team-1', name: 'Team 1' },
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Reset UI')).toBeInTheDocument();
+  });
+});
