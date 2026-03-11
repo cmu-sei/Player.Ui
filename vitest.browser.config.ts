@@ -40,6 +40,7 @@ export default defineConfig({
       '@angular/platform-browser',
       '@angular/platform-browser/animations',
       '@angular/platform-browser-dynamic/testing',
+      '@angular/cdk/clipboard',
       '@angular/cdk/collections',
       '@angular/cdk/drag-drop',
       '@angular/cdk/scrolling',
