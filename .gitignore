@@ -313,3 +313,7 @@ openapitools.json
 
 # Local static server config (for testing production builds)
 serve.json
+
+# Claude Code
+CLAUDE.md
+.claude/
