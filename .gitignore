@@ -304,3 +304,7 @@ __pycache__/
 
 /dist
 /docker
+
+# Claude Code
+CLAUDE.md
+.claude/
