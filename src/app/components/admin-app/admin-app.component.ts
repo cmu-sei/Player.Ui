@@ -149,13 +149,6 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Navigate to home page
-   */
-  goToHome(): void {
-    this.router.navigate(['/']);
-  }
-
   ngOnDestroy() {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();

@@ -151,10 +151,6 @@ export class TopbarComponent implements OnInit, OnDestroy {
     });
   }
 
-  goToHome(): void {
-    window.location.href = '/';
-  }
-
   ngOnDestroy(): void {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
