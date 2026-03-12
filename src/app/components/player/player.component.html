@@ -22,28 +22,26 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >
       <div class="grid">
         <div>
-          <mat-list>
-            <mat-list-item
-              class="d-flex"
-              [ngClass]="(mini$ | async) ? 'player-title-mini' : 'player-title'"
-              >
+          @if (!(mini$ | async)) {
+            <mat-toolbar class="sidenav-header" title="Return to Home" [routerLink]="['/']">
               <a class="nolink" [routerLink]="['/']">
                 <div class="d-flex align-items-center">
-                  <mat-icon
-                    [ngClass]="
-                      (mini$ | async) ? 'player-icon-mini' : 'player-icon'
-                    "
-                    svgIcon="ic_crucible_player"
-                  ></mat-icon>
-                  @if (!(mini$ | async)) {
-                    <h2>
-                      <b>{{ data.title }}</b>
-                    </h2>
-                  }
+                  <mat-icon class="icon-35px player-icon-header" svgIcon="ic_crucible_player"></mat-icon>
+                  <h2 class="icon-text">{{ data.title }}</h2>
                 </div>
               </a>
-            </mat-list-item>
-          </mat-list>
+            </mat-toolbar>
+          } @else {
+            <mat-list>
+              <mat-list-item class="d-flex player-title-mini">
+                <a class="nolink" [routerLink]="['/']">
+                  <div class="d-flex align-items-center">
+                    <mat-icon class="player-icon-mini" svgIcon="ic_crucible_player"></mat-icon>
+                  </div>
+                </a>
+              </mat-list-item>
+            </mat-list>
+          }
           <mat-divider></mat-divider>
           <app-application-list
             [viewId]="data.view.id"

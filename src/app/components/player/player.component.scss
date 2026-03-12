@@ -36,6 +36,26 @@
   color: var(--mat-sys-primary);
 }
 
+.sidenav-header {
+  height: 40px;
+  border-bottom: 2px solid var(--mat-sys-surface-container);
+}
+
+.player-icon-header {
+  color: var(--mat-sys-primary);
+}
+
+.icon-35px {
+  width: 35px;
+  height: 35px;
+  font-size: 35px;
+}
+
+.icon-text {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
 .crucible-logo {
   position: absolute;
   bottom: 0;
