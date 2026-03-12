@@ -24,18 +24,10 @@ export interface Action {
     standalone: false
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
-  public displayedColumns: string[] = ['name', 'roleName', 'actions'];
-  public filterString: string;
+  public displayedColumns: string[] = ['id', 'name', 'role'];
+  public filterString = '';
 
-  public editUserText = 'Edit User';
-  public userToEdit: User;
   public userDataSource = new MatTableDataSource<User>(new Array<User>());
-
-  // MatPaginator Output
-  public defaultPageSize = 10;
-  public pageEvent: PageEvent;
-  public uploading = false;
-  public uploadProgress = 0;
   public isLoading: boolean;
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
@@ -51,16 +43,8 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * Initialization
    */
   ngOnInit() {
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.userDataSource.sort = this.sort;
-
-    this.pageEvent = new PageEvent();
-    this.pageEvent.pageIndex = 0;
-    this.pageEvent.pageSize = this.defaultPageSize;
     this.isLoading = false;
-
-    // Initial datasource
-    this.filterString = '';
     this.refreshUsers();
     this.rolesService.getRoles().subscribe();
   }
@@ -73,39 +57,18 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * permission list for display
-   */
-  permissionsString(permissions) {
-    let val = permissions.map((p) => p.key).join(', ');
-    if (val.length > 50) {
-      val = val.substring(0, 50) + ' ...';
-    }
-    return val;
-  }
-
-  /**
    * Called by UI to add a filter to the viewDataSource
    * @param filterValue
    */
   applyFilter(filterValue: string) {
-    this.filterString = filterValue;
-    this.pageEvent.pageIndex = 0;
-    filterValue = filterValue.toLowerCase(); // MatTableDataSource defaults to lowercase matches
-    this.userDataSource.filter = filterValue;
-  }
-
-  /**
-   * Clears the search string
-   */
-  clearFilter() {
-    this.applyFilter('');
+    this.filterString = filterValue.toLowerCase();
+    this.userDataSource.filter = this.filterString;
   }
 
   /**
    * Refreshes the users list and updates the mat table control
    */
   refreshUsers() {
-    this.userToEdit = undefined;
     this.isLoading = true;
     this.userService.getUsers().subscribe((users) => {
       this.userDataSource.data = users;

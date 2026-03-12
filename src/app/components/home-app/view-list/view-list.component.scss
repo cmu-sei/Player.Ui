@@ -2,17 +2,17 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 .view-list-container {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
   justify-content: center;
   max-height: 800px;
   min-width: 300px;
-  margin-top: 40px;
-  width: 80%;
 }
 
 .views-title {
   font-size: x-large;
+  text-align: left;
+  padding-left: 20px;
 }
 
 .no-results {
@@ -25,38 +25,20 @@
   font-size: x-small;
 }
 
-.description-text {
-  font-size: large;
-  text-align: left;
-}
-
-.team-text {
-  font-size: large;
-  text-align: center;
-}
-
-.shrink {
-  margin: 0;
-  padding: 0;
-}
-
-.view-table-header-bar {
-  width: 100%;
-}
-
-.sp-icon {
-  margin-left: 10px;
-}
-
-.link-text {
-  text-align: left;
-  font-size: large;
-}
 
 .player-icon {
   transform: scale(2);
-  width: 60px;
+  height: auto;
+  margin-right: 10px;
   color: var(--mat-sys-primary);
+}
+
+.icon-text-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-left: 20px;
+  height: 90px;
 }
 
 .mat-column-name {
@@ -74,6 +56,45 @@
 }
 
 .searchBox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   margin-right: 10px;
   margin-left: auto !important;
+  height: 60px !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  height: 38px !important;
+}
+
+.mat-mdc-table {
+  width: 100%;
+  overflow-y: auto;
+  max-height: calc(100vh - 300px);
+}
+
+.mat-mdc-cell,
+.mat-mdc-header-cell {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  vertical-align: middle;
+  border-color: var(--mat-sys-outline-variant);
+}
+
+a:link {
+  color: var(--mat-sys-on-background);
+}
+
+a:visited {
+  color: var(--mat-sys-on-background);
+}
+
+a:hover {
+  color: var(--mat-sys-outline);
+}
+
+a:active {
+  color: var(--mat-sys-on-background);
 }
