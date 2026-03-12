@@ -9,15 +9,13 @@
 }
 
 .toolbar {
-  max-height: 38px;
-  min-height: 38px;
+  max-height: 46px;
+  min-height: 46px;
 }
 
 .team-text {
-  font-size: large;
   text-align: right;
   margin-right: 10px;
-  font-weight: bold;
 }
 
 .copy-text {
@@ -25,10 +23,9 @@
 }
 
 .view-text {
-  font-size: large;
+  font-size: 110%;
   margin-left: 50px;
   margin-right: 40px;
-  font-weight: bold;
 }
 
 .big-button {
@@ -41,8 +38,7 @@
 }
 
 .username-text {
-  font-size: large;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .mat-mdc-button:not(:disabled),
@@ -52,4 +48,9 @@
 
 mat-icon, .mat-icon {
   --mat-icon-color: var(--mat-sys-on-primary);
+}
+
+.margin-auto button mat-icon,
+.margin-auto a mat-icon {
+  color: var(--mat-sys-primary);
 }

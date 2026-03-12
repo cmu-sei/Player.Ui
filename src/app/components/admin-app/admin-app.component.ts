@@ -42,18 +42,18 @@ export class AdminAppComponent implements OnInit, OnDestroy {
       permission: SystemPermission.ViewViews,
     },
     {
-      name: 'Users',
-      section: Section.ADMIN_USERS,
-      icon: 'assets/img/SP_Icon_User.png',
-      svgIcon: false,
-      permission: SystemPermission.ViewUsers,
-    },
-    {
       name: 'Application Templates',
       section: Section.ADMIN_APP_TEMP,
       icon: 'assets/img/SP_Icon_Intel.png',
       svgIcon: false,
       permission: SystemPermission.ViewApplications,
+    },
+    {
+      name: 'Users',
+      section: Section.ADMIN_USERS,
+      icon: 'assets/img/SP_Icon_User.png',
+      svgIcon: false,
+      permission: SystemPermission.ViewUsers,
     },
     {
       name: 'Roles',

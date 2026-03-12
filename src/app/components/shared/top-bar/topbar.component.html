@@ -6,18 +6,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   [style.color]="'var(--mat-sys-on-primary)'">
   <mat-toolbar-row>
     <span class="margin-auto">
-      @if (sidenav && sidenav?.opened) {
-      <button aria-label="close sidebar" (click)="sidenavToggleFn()" mat-icon-button matTooltip="Close Sidebar"
-        aria-label="Close Sidebar">
-        <mat-icon svgIcon="ic_chevron_left_white_24px"></mat-icon>
-      </button>
-      }
-      @if (sidenav && !sidenav?.opened) {
-      <button aria-label="open sidebar" (click)="sidenavToggleFn()" mat-icon-button matTooltip="Open Sidebar"
-        aria-label="Open Sidebar">
-        <mat-icon svgIcon="ic_chevron_right_white_24px"></mat-icon>
-      </button>
-      }
+      <a mat-icon-button style="outline: none; background-color: var(--mat-sys-on-primary);" [routerLink]="['/']">
+        <mat-icon svgIcon="ic_crucible_player"></mat-icon>
+      </a>
     </span>
     <span class="view-text">{{ title }}</span>
     @if (teams && team && teams.length > 0) {
@@ -50,8 +41,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     @if (currentUser$ | async; as currentUser) {
     <div class="team-text">
       <button mat-button [matMenuTriggerFor]="menu" matTooltip="Menu" aria-label="Menu">
-        <span class="username-text">{{ currentUser.profile.name }}</span>
-        <mat-icon class="team-text" svgIcon="ic_expand_more_white_24px"></mat-icon>
+        <strong>{{ currentUser.profile.name }}</strong>
+        <mat-icon aria-hidden="false" fontIcon="mdi-chevron-down"></mat-icon>
       </button>
       <mat-menu #menu="matMenu" [overlapTrigger]="false" class="user-dropdown-menu">
         @if (team && showEditView$ | async) {
