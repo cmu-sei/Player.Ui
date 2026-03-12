@@ -16,12 +16,16 @@
 .appbarmenu-container {
   min-width: 201px;
   max-width: 20vw;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .appbarmenu-container-mini {
-  width: 97px;
-  min-width: 97px;
-  max-width: 20vw;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .player-icon {
@@ -30,10 +34,11 @@
   color: var(--mat-sys-primary);
 }
 
-.player-icon-mini {
-  transform: scale(2);
-  width: 48px;
-  color: var(--mat-sys-primary);
+.mat-list-item-icon {
+  color: var(--mat-sys-primary) !important;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
 }
 
 .sidenav-header {
@@ -57,8 +62,40 @@
 }
 
 .crucible-logo {
+  height: 40px;
+  width: auto;
+}
+
+.crucible-logo-mini {
+  height: 40px;
+  width: 40px;
+}
+
+.bottom-div {
   position: absolute;
   bottom: 0;
+  width: 100%;
+  height: 80px;
+}
+
+.admin-and-collapse {
+  display: flex;
+  flex-direction: row;
+}
+
+.admin-section {
+  display: flex;
+  flex-direction: row;
+  flex: 6;
+  align-self: center;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.collapse-section {
+  display: flex;
+  flex: 1;
+  margin-right: 10px;
 }
 
 .pull-right {
@@ -94,15 +131,16 @@
 
 .player-title-mini {
   justify-content: center;
-  overflow: visible !important;
+  cursor: pointer;
 
-  .d-flex {
+  .home-link-mini {
+    display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
   }
-}
-
-::ng-deep .player-title-mini > .mdc-list-item__content {
-  overflow: visible !important;
 }
 
 .resize-handle-right {
@@ -117,4 +155,5 @@
   display: grid;
   grid-template-columns: 1fr 0px;
   height: 100%;
+  overflow-x: hidden;
 }

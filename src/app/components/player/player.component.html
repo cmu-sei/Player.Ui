@@ -33,11 +33,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             </mat-toolbar>
           } @else {
             <mat-list>
-              <mat-list-item class="d-flex player-title-mini">
-                <a class="nolink" [routerLink]="['/']">
-                  <div class="d-flex align-items-center">
-                    <mat-icon class="player-icon-mini" svgIcon="ic_crucible_player"></mat-icon>
-                  </div>
+              <mat-list-item class="player-title-mini">
+                <a [routerLink]="['/']" title="Return to Home" class="home-link-mini">
+                  <mat-icon class="mat-list-item-icon mdi-24px" svgIcon="ic_crucible_player"></mat-icon>
                 </a>
               </mat-list-item>
             </mat-list>
@@ -49,15 +47,41 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             [mini]="mini$ | async"
           ></app-application-list>
           @if (!(mini$ | async)) {
-            <img
-              alt="crucible logo"
-              class="crucible-logo"
-            [src]="
-              (theme$ | async) === 'light-theme'
-                ? 'assets/img/crucible-logo-light.png'
-                : 'assets/img/crucible-logo-dark.png'
-            "
+            <div class="bottom-div">
+              <div class="admin-and-collapse">
+                <div class="admin-section">
+                </div>
+                <div class="collapse-section">
+                  <button mat-icon-button title="Collapse to Icons Only" (click)="toggleMini()">
+                    <mat-icon aria-hidden="false" class="mdi-24px" fontIcon="mdi-chevron-double-left"></mat-icon>
+                  </button>
+                </div>
+              </div>
+              <img
+                alt="crucible logo"
+                class="crucible-logo"
+                [src]="
+                  (theme$ | async) === 'light-theme'
+                    ? 'assets/img/crucible-logo-light.png'
+                    : 'assets/img/crucible-logo-dark.png'
+                "
               />
+            </div>
+          } @else {
+            <div class="bottom-div">
+              <button mat-icon-button title="Expand Navigation Panel" (click)="toggleMini()">
+                <mat-icon aria-hidden="false" class="mdi-24px" fontIcon="mdi-chevron-double-right"></mat-icon>
+              </button>
+              <img
+                alt="crucible logo"
+                class="crucible-logo-mini"
+                [src]="
+                  (theme$ | async) === 'light-theme'
+                    ? 'assets/img/crucible-app-color-white.png'
+                    : 'assets/img/crucible-app-color.png'
+                "
+              />
+            </div>
           }
         </div>
         @if (!(mini$ | async)) {

@@ -238,6 +238,19 @@ export class PlayerComponent implements OnInit, OnDestroy {
     );
   }
 
+  toggleMini() {
+    // Always keep sidebar opened, just toggle between full and mini
+    this.openedSubject.next(true);
+    this.miniSubject.next(!this.miniSubject.getValue());
+    this.setResizeStyle();
+    this.autosizeSidenav = true;
+    this.updateUIState(
+      null,
+      true, // Always opened
+      this.miniSubject.getValue(),
+    );
+  }
+
   resizingFn(event) {
     if (!this.miniSubject.getValue()) {
       this.autosizeSidenav = false;
@@ -314,9 +327,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.miniSubject.next(teamState.mini);
       }
 
-      if (teamState.opened != null) {
-        this.openedSubject.next(teamState.opened);
-      }
+      // Always force sidebar to be opened (never fully closed)
+      this.openedSubject.next(true);
 
       this.setResizeStyle();
     }
