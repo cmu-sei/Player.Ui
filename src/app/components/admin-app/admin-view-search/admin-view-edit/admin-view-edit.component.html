@@ -290,89 +290,84 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </mat-step>
         <mat-step label="Files">
           <mat-accordion>
-            <div>
-              <input
-                hidden
-                (change)="selectFile($event.target.files)"
-                #fileInput
-                type="file"
-              />
-              <div>
-                @if (staged.length === 0) {
-                  <div class="top-button d-flex justify-content-end">
-                    <button mat-stroked-button (click)="fileInput.click()">
-                      Add New File
+            <input
+              hidden
+              (change)="selectFile($event.target.files)"
+              #fileInput
+              type="file"
+            />
+            <div class="top-button d-flex justify-content-end">
+              <button mat-stroked-button (click)="fileInput.click()">
+                Add New File
+              </button>
+            </div>
+            @if (staged.length !== 0) {
+              <mat-expansion-panel [expanded]="true">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <div class="d-flex align-items-center">
+                      <img
+                        height="25"
+                        src="assets/img/SP_Icon_Intel.png"
+                        alt="File"
+                      />{{ staged[0].file.name }}
+                    </div>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <div>
+                  <div class="d-flex flex-column align-items-center">
+                    <div class="d-flex align-items-center">
+                      <mat-checkbox
+                        color="primary"
+                        [(ngModel)]="selectAllTeamsForFile"
+                        (change)="toggleAllTeamsForFile($event.checked)"
+                        class="me-3"
+                      >
+                        Select All Teams
+                      </mat-checkbox>
+                      <mat-form-field id="teamSelect" style="width: 600px">
+                        <mat-label>Teams with Access</mat-label>
+                        <mat-select multiple [(ngModel)]="teamsForFile" (selectionChange)="onTeamsForFileChange()">
+                          @for (teamWrapper of teams; track teamWrapper.team.id) {
+                            <mat-option [value]="teamWrapper.team.id">{{
+                              teamWrapper.team.name
+                            }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                    @if (teamsForFile.length === 0) {
+                      <div class="team-warning">
+                        At least one team must be selected
+                      </div>
+                    }
+                  </div>
+                  @if (uploading) {
+                    <mat-progress-bar
+                      mode="determinate"
+                      [value]="uploadProgess"
+                      class="mb-3"
+                    ></mat-progress-bar>
+                  }
+                  <div class="delete-button d-flex justify-content-end">
+                    <button
+                      mat-stroked-button
+                      (click)="removeFile(staged[0])"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      mat-stroked-button
+                      (click)="uploadFile()"
+                      [disabled]="teamsForFile.length === 0"
+                      class="ms-2"
+                    >
+                      Upload File
                     </button>
                   </div>
-                }
-                @if (staged.length !== 0) {
-                  <div
-                    class="top-button d-flex justify-content-end align-items-start"
-                  >
-                    <div class="staged-files-list">
-                      @for (playerFile of staged; track playerFile.file.name) {
-                        <div class="staged-file-item">
-                          <button
-                            mat-icon-button
-                            (click)="removeFile(playerFile)"
-                            title="Remove file"
-                          >
-                            <mat-icon
-                              class="mdi-24px"
-                              fontIcon="mdi-delete"
-                              [ngStyle]="{'color': 'var(--mat-sys-primary)'}"
-                            ></mat-icon>
-                          </button>
-                          <span class="file-name">{{ playerFile.file.name }}</span>
-                        </div>
-                      }
-                    </div>
-                    <div class="d-flex flex-column">
-                      <div class="d-flex align-items-center">
-                        <mat-checkbox
-                          color="primary"
-                          [(ngModel)]="selectAllTeamsForFile"
-                          (change)="toggleAllTeamsForFile($event.checked)"
-                          class="me-3"
-                        >
-                          Select All Teams
-                        </mat-checkbox>
-                        <mat-form-field id="teamSelect">
-                          <mat-label>Select Teams</mat-label>
-                          <mat-select multiple [(ngModel)]="teamsForFile" (selectionChange)="onTeamsForFileChange()">
-                            @for (teamWrapper of teams; track teamWrapper.team.id) {
-                              <mat-option [value]="teamWrapper.team.id">{{
-                                teamWrapper.team.name
-                              }}</mat-option>
-                            }
-                          </mat-select>
-                        </mat-form-field>
-                        <button
-                          mat-stroked-button
-                          (click)="uploadFile()"
-                          class="ms-3"
-                          style="height: 35px"
-                          [disabled]="teamsForFile.length === 0"
-                        >
-                          Save Changes and Upload File
-                        </button>
-                      </div>
-                      @if (teamsForFile.length === 0) {
-                        <div class="team-warning">
-                          At least one team must be selected
-                        </div>
-                      }
-                      @if (uploading) {
-                        <mat-progress-bar
-                          mode="determinate"
-                          [value]="uploadProgess"
-                        ></mat-progress-bar>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
+                </div>
+              </mat-expansion-panel>
+            }
             @for (viewFile of viewFiles; track viewFile.id) {
               <mat-expansion-panel
                 [expanded]="
@@ -403,7 +398,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                         Select All Teams
                       </mat-checkbox>
                       <mat-form-field id="teamSelect" style="width: 600px">
-                        <mat-label>Teams with Permission to View</mat-label>
+                        <mat-label>Teams with Access</mat-label>
                         <mat-select
                           multiple
                           [ngModel]="viewFile.teamIds"

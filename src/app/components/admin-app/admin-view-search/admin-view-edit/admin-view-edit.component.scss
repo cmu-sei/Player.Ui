@@ -71,26 +71,6 @@
   margin-left: 20%;
 }
 
-.staged-files-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.staged-file-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-
-  .file-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
 .default-badge {
   display: inline-block;
   padding: 2px 8px;
