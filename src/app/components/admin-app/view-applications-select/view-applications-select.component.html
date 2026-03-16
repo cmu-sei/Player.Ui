@@ -15,7 +15,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 }
 
 <mat-accordion>
-  @for (app of applications; track app; let i = $index) {
+  @for (app of applications; track app.id; let i = $index) {
     <mat-expansion-panel
       [expanded]="currentApp !== undefined && app.id === currentApp.id"
       (opened)="currentApp = app"
@@ -36,46 +36,34 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <div class="d-flex justify-content-center">
           <div class="d-flex flex-column app-form-section">
             <mat-form-field>
+              <mat-label>Application Name</mat-label>
               <input
                 matInput
-                placeholder="Application Name"
                 (change)="saveApplicationName($event.target.value, app.id)"
                 value="{{ app.name }}"
                 />
-              <!-- <mat-error *ngIf="nameFormControl.hasError('minlength') && !nameFormControl.hasError('required')">
-              Must contain 3 or more characters
-            </mat-error>
-            <mat-error *ngIf="nameFormControl.hasError('required')">
-              Name is <strong>required</strong>
-            </mat-error> -->
           </mat-form-field>
           <mat-form-field>
+            <mat-label>Application URL</mat-label>
             <input
               matInput
-              placeholder="Application Url"
               (change)="saveApplicationUrl($event.target.value, app.id)"
               value="{{ app.url }}"
               [errorStateMatcher]="matcher"
               />
-            <!-- <mat-error *ngIf="urlFormControl.hasError('required')">
-            Url is <strong>required</strong>
-          </mat-error> -->
         </mat-form-field>
         <mat-form-field>
+          <mat-label>Icon Path</mat-label>
           <input
             matInput
-            placeholder="Icon Path"
             (change)="saveApplicationIcon($event.target.value, app.id)"
             value="{{ app.icon }}"
             [errorStateMatcher]="matcher"
             />
-          <!-- <mat-error *ngIf="iconFormControl.hasError('required')">
-          Icon is <strong>required</strong>
-        </mat-error> -->
       </mat-form-field>
       <mat-form-field>
+        <mat-label>Embeddable</mat-label>
         <mat-select
-          placeholder="Embeddable"
           (selectionChange)="saveApplicationEmbeddable(app)"
           [(value)]="selected"
           [(ngModel)]="app.embeddable"
@@ -86,8 +74,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </mat-select>
       </mat-form-field>
       <mat-form-field>
+        <mat-label>Load in Background</mat-label>
         <mat-select
-          placeholder="Load in Background"
           (selectionChange)="saveApplicationLoadInBackground(app)"
           [(value)]="selected"
           [(ngModel)]="app.loadInBackground"
@@ -98,14 +86,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </mat-select>
       </mat-form-field>
       <mat-form-field>
+        <mat-label>Application Template</mat-label>
         <mat-select
-          placeholder="Application Template"
           (selectionChange)="saveApplicationTemplateId(app)"
           [(value)]="selected"
           [(ngModel)]="app.applicationTemplateId"
           >
           <mat-option [value]="null">None</mat-option>
-          @for (template of applicationTemplates; track template) {
+          @for (template of applicationTemplates; track template.id) {
             <mat-option
               [value]="template.id"
               >
@@ -127,33 +115,33 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="d-flex w-100 justify-content-center">
       <div class="d-flex flex-column app-form-section">
         <mat-form-field>
+          <mat-label>Template Application Name</mat-label>
           <input
             matInput
             [disabled]="true"
-            placeholder="Application Name"
             value="{{ template.name }}"
             />
         </mat-form-field>
         <mat-form-field>
+          <mat-label>Template Application URL</mat-label>
           <input
             matInput
             [disabled]="true"
-            placeholder="Application Url"
             value="{{ template.url }}"
             />
         </mat-form-field>
         <mat-form-field>
+          <mat-label>Template Icon Path</mat-label>
           <input
             matInput
             [disabled]="true"
-            placeholder="Icon Path"
             value="{{ template.icon }}"
             />
         </mat-form-field>
         <mat-form-field>
+          <mat-label>Template Embeddable</mat-label>
           <mat-select
             [disabled]="true"
-            placeholder="Embeddable"
             [(value)]="selected"
             [(ngModel)]="template.embeddable"
             >
@@ -163,9 +151,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           </mat-select>
         </mat-form-field>
         <mat-form-field>
+          <mat-label>Template Load in Background</mat-label>
           <mat-select
             [disabled]="true"
-            placeholder="Load in Background"
             [(value)]="selected"
             [(ngModel)]="template.loadInBackground"
             >
