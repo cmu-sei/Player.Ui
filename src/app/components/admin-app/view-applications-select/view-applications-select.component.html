@@ -65,7 +65,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-label>Embeddable</mat-label>
         <mat-select
           (selectionChange)="saveApplicationEmbeddable(app)"
-          [(value)]="selected"
           [(ngModel)]="app.embeddable"
           >
           <mat-option [value]="null">Inherit from Template</mat-option>
@@ -77,7 +76,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-label>Load in Background</mat-label>
         <mat-select
           (selectionChange)="saveApplicationLoadInBackground(app)"
-          [(value)]="selected"
           [(ngModel)]="app.loadInBackground"
           >
           <mat-option [value]="null">Inherit from Template</mat-option>
@@ -89,7 +87,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-label>Application Template</mat-label>
         <mat-select
           (selectionChange)="saveApplicationTemplateId(app)"
-          [(value)]="selected"
           [(ngModel)]="app.applicationTemplateId"
           >
           <mat-option [value]="null">None</mat-option>
@@ -142,7 +139,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-label>Template Embeddable</mat-label>
           <mat-select
             [disabled]="true"
-            [(value)]="selected"
             [(ngModel)]="template.embeddable"
             >
             <mat-option [value]="null">Inherit from Template</mat-option>
@@ -154,7 +150,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-label>Template Load in Background</mat-label>
           <mat-select
             [disabled]="true"
-            [(value)]="selected"
             [(ngModel)]="template.loadInBackground"
             >
             <mat-option [value]="null">Inherit from Template</mat-option>
