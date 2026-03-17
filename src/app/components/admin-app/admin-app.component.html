@@ -2,7 +2,6 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<comn-header-bar></comn-header-bar>
 <!-- SIDEBAR -->
 <mat-sidenav-container class="appcontent-container background" autosize>
   <mat-sidenav
@@ -11,19 +10,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     mode="side"
     [opened]="true"
   >
+    <mat-toolbar class="sidenav-header">
+      <a class="nolink" [routerLink]="['/']" title="Exit Administration">
+        <div class="cssLayoutRowStartCenter">
+          <mat-icon class="icon-35px player-icon-header" svgIcon="ic_crucible_player"></mat-icon>
+          <h2 class="icon-text">Administration</h2>
+        </div>
+      </a>
+    </mat-toolbar>
     <mat-list class="appitems-container">
-      <mat-list-item class="appslist">
-        <a class="nolink" [routerLink]="['/']">
-          <div class="d-flex align-items-center">
-            <mat-icon
-              class="player-icon"
-              svgIcon="ic_crucible_player"
-            ></mat-icon>
-            <h2 class="icon-text">Administration</h2>
-          </div>
-        </a>
-        <mat-divider></mat-divider>
-      </mat-list-item>
       @for (sectionItem of sectionItems; track sectionItem) {
         @if (permissions$ | async; as permissions) {
           @if (permissions.includes(sectionItem.permission)) {

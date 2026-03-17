@@ -238,6 +238,19 @@ export class PlayerComponent implements OnInit, OnDestroy {
     );
   }
 
+  toggleMini() {
+    // Always keep sidebar opened, just toggle between full and mini
+    this.openedSubject.next(true);
+    this.miniSubject.next(!this.miniSubject.getValue());
+    this.setResizeStyle();
+    this.autosizeSidenav = true;
+    this.updateUIState(
+      null,
+      true, // Always opened
+      this.miniSubject.getValue(),
+    );
+  }
+
   resizingFn(event) {
     if (!this.miniSubject.getValue()) {
       this.autosizeSidenav = false;
@@ -258,7 +271,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   setResizeStyle() {
     if (!this.miniSubject.getValue()) {
       this.resizeStyle = {
-        'min-width': '201px',
+        'min-width': '250px',
         'max-width': '33vw',
         width: this.sidenavWidth != null ? `${this.sidenavWidth}px` : null,
       };
@@ -308,16 +321,19 @@ export class PlayerComponent implements OnInit, OnDestroy {
     );
 
     if (teamState) {
-      this.sidenavWidth = teamState.width;
+      this.sidenavWidth = teamState.width || 250;
 
       if (teamState.mini != null) {
         this.miniSubject.next(teamState.mini);
       }
 
-      if (teamState.opened != null) {
-        this.openedSubject.next(teamState.opened);
-      }
+      // Always force sidebar to be opened (never fully closed)
+      this.openedSubject.next(true);
 
+      this.setResizeStyle();
+    } else {
+      // Set default width when no saved state
+      this.sidenavWidth = 250;
       this.setResizeStyle();
     }
   }

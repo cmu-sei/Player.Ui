@@ -2,103 +2,64 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<div
-  [class.hidden]="userToEdit !== undefined"
-  class="user-list-container mat-elevation-z8"
->
-  <div class="d-flex align-items-center gap-4">
-    <div class="sp-icon">
-      <img height="35" src="assets/img/SP_Icon_User.png" alt="Users" />
-    </div>
-    <span class="header-text">Users</span>
-    <div class="my-1">
-      <mat-form-field style="width: 320px" subscriptSizing="dynamic">
-        <mat-icon
-          matPrefix
-          style="transform: scale(0.85)"
-          svgIcon="ic_magnify_search"
-        ></mat-icon>
-        <input
-          matInput
-          [(ngModel)]="filterString"
-          (keyup)="applyFilter($event.target.value)"
-          placeholder="Search"
-        />
-        @if (filterString !== '') {
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="clearFilter()"
-            title="Clear Search"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_cancel_circle"
-            ></mat-icon>
-          </button>
-        }
-      </mat-form-field>
-    </div>
+
+<div class="cssLayoutRowStartCenter">
+  <div class="sp-icon">
+    <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple"></mat-icon>
   </div>
+  <mat-form-field style="width: 300px">
+    <input matInput [(ngModel)]="filterString" (keyup)="applyFilter($event.target.value)" placeholder="Search" />
+    @if (filterString) {
+    <button mat-icon-button matSuffix (click)="applyFilter('')" title="Clear Search">
+      <mat-icon style="transform: scale(0.85)" fontIcon="mdi-close-circle-outline"></mat-icon>
+    </button>
+    }
+  </mat-form-field>
+  <div class="button-end">
+    <mat-paginator #paginator [pageIndex]="0" [pageSize]="20"
+      [pageSizeOptions]="[5, 10, 15, 20, 25, 50, 100, 200]"></mat-paginator>
+  </div>
+</div>
+
+<div class="table-container">
+  <table mat-table [dataSource]="userDataSource" matSort>
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        ID
+      </th>
+      <td mat-cell *matCellDef="let element">
+        <button mat-icon-button ngxClipboard [cbContent]="element.id" (click)="$event.stopPropagation()"
+          title="Copy:  {{ element.id }}">
+          <mat-icon class="mdi-24px" fontIcon="mdi-content-copy"></mat-icon>
+        </button>
+        {{ element.id }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+      <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="role">
+      <th mat-header-cell *matHeaderCellDef>Role</th>
+      <td mat-cell *matCellDef="let element">
+        <app-roles-permissions-select [user]="element"></app-roles-permissions-select>
+        <button mat-icon-button (click)="deleteUser(element); $event.stopPropagation()"
+          title="Delete User">
+          <mat-icon class="mdi-24px" fontIcon="mdi-trash-can-outline"></mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
 
   @if (isLoading) {
-    <mat-card class="d-flex content-center align-items-center">
+    <mat-card style="display: flex; justify-content: center; align-items: center">
       <mat-progress-spinner color="primary" mode="indeterminate">
       </mat-progress-spinner>
     </mat-card>
   }
-
-  <mat-accordion>
-    <mat-table #table [dataSource]="userDataSource" matSort>
-      <ng-container matColumnDef="name">
-        <mat-header-cell *matHeaderCellDef mat-sort-header
-          >User Name</mat-header-cell
-        >
-        <mat-cell *matCellDef="let element">
-          <button
-            mat-icon-button
-            ngxClipboard
-            [cbContent]="element.id"
-            title="Copy:  {{ element.id }}"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_clipboard_copy"
-            ></mat-icon>
-          </button>
-          @if (element.name !== null) {
-            <div>{{ element.name }}</div>
-          }
-          @if (element.name === null) {
-            <div>{{ element.id }}</div>
-          }
-        </mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="roleName">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>
-          Role
-        </mat-header-cell>
-        <mat-cell *matCellDef="let element; let i = index">
-          <app-roles-permissions-select
-            [user]="element"
-          ></app-roles-permissions-select>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-    </mat-table>
-  </mat-accordion>
-  @if (userDataSource.filteredData.length === 0) {
-    <div>No results found</div>
-  }
-  <mat-paginator
-    #paginator
-    [pageSize]="defaultPageSize"
-    [pageSizeOptions]="[10, 20, 30]"
-    [showFirstLastButtons]="true"
-    (page)="pageEvent = $event"
-  >
-  </mat-paginator>
 </div>

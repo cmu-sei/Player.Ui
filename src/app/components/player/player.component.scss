@@ -17,14 +17,18 @@
 }
 
 .appbarmenu-container {
-  min-width: 201px;
+  min-width: 250px;
   max-width: 20vw;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .appbarmenu-container-mini {
-  width: 97px;
-  min-width: 97px;
-  max-width: 20vw;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .player-icon {
@@ -33,15 +37,68 @@
   color: var(--mat-sys-primary);
 }
 
-.player-icon-mini {
-  transform: scale(2);
-  width: 48px;
+.mat-list-item-icon {
+  color: var(--mat-sys-primary) !important;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+
+.sidenav-header {
+  height: 40px;
+  border-bottom: 2px solid var(--mat-sys-surface-container);
+}
+
+.player-icon-header {
   color: var(--mat-sys-primary);
 }
 
+.icon-35px {
+  width: 35px;
+  height: 35px;
+  font-size: 35px;
+}
+
+.icon-text {
+  margin-left: 10px;
+  font-weight: bold;
+}
+
 .crucible-logo {
+  height: 40px;
+  width: auto;
+}
+
+.crucible-logo-mini {
+  height: 40px;
+  width: 40px;
+}
+
+.bottom-div {
   position: absolute;
   bottom: 0;
+  width: 100%;
+  height: 80px;
+}
+
+.admin-and-collapse {
+  display: flex;
+  flex-direction: row;
+}
+
+.admin-section {
+  display: flex;
+  flex-direction: row;
+  flex: 6;
+  align-self: center;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.collapse-section {
+  display: flex;
+  flex: 1;
+  margin-right: 10px;
 }
 
 .pull-right {
@@ -75,17 +132,22 @@
   margin-right: 10px;
 }
 
-.player-title-mini {
-  justify-content: center;
-  overflow: visible !important;
-
-  .d-flex {
-    justify-content: center;
-  }
+.mdc-list {
+  padding: 0 !important;
 }
 
-::ng-deep .player-title-mini > .mdc-list-item__content {
-  overflow: visible !important;
+.player-title-mini {
+  justify-content: center;
+  cursor: pointer;
+
+  .home-link-mini {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+  }
 }
 
 .resize-handle-right {
@@ -100,4 +162,5 @@
   display: grid;
   grid-template-columns: 1fr 0px;
   height: 100%;
+  overflow-x: hidden;
 }

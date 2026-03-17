@@ -1,9 +1,11 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-.scrollable-div {
-  height: calc(100vh - 107px);
+.list-container {
+  width: 100%;
+  height: calc(100% - 142px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .appslist {
@@ -26,8 +28,50 @@
 .lefticon {
   font-size: 75%;
   padding: 0.5em;
-  height: 35px;
+  height: 24px;
+  width: 24px;
   text-align: center;
+}
+
+.non-selected-item {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+  height: 44px !important;
+  width: 100%;
+
+  .mdc-list-item__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .mat-mdc-list-item-unscoped-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .app-link-mini {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+  }
+
+  .mat-list-item-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mat-mdc-list-item {
+    padding: 0px !important;
+    width: 48px;
+  }
 }
 
 .app-button-container {
@@ -39,4 +83,10 @@
 .app-name {
   text-wrap: pretty;
   text-align: left;
+}
+
+
+.mat-mdc-list-item,
+.mat-list-item-content {
+  padding: 0px !important;
 }
