@@ -70,3 +70,22 @@
 .view-info-container {
   margin-left: 20%;
 }
+
+.default-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.team-warning {
+  color: var(--mat-sys-error);
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
