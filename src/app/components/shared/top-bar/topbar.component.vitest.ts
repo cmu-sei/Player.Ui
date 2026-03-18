@@ -21,16 +21,21 @@ function createMockPermissionsService(
   opts: {
     canViewAdmin?: boolean;
     canManageViews?: boolean;
+    canCreateViews?: boolean;
   } = {},
 ) {
-  const { canViewAdmin = false, canManageViews = false } = opts;
+  const {
+    canViewAdmin = false,
+    canManageViews = false,
+    canCreateViews = false,
+  } = opts;
   return {
-    permissions$: of([]),
+    permissions$: of(canCreateViews ? ['CreateViews'] : []),
     teamPermissions$: of([]),
     loadPermissions: () => of([]),
     canViewAdminstration: () => of(canViewAdmin),
-    can: () => of(canManageViews),
-    hasPermission: () => of(false),
+    can: (_permission: string) => of(canManageViews),
+    hasPermission: (p: string) => of(canCreateViews && p === 'CreateViews'),
   };
 }
 
@@ -45,6 +50,7 @@ async function renderTopbar(
     mini?: boolean;
     canViewAdmin?: boolean;
     canManageViews?: boolean;
+    canCreateViews?: boolean;
   } = {},
 ) {
   const {
@@ -57,6 +63,7 @@ async function renderTopbar(
     mini = false,
     canViewAdmin = false,
     canManageViews = false,
+    canCreateViews = false,
   } = overrides;
 
   mockLogout.mockClear();
@@ -69,6 +76,7 @@ async function renderTopbar(
         useValue: createMockPermissionsService({
           canViewAdmin,
           canManageViews,
+          canCreateViews,
         }),
       },
       {
@@ -246,5 +254,75 @@ describe('TopbarComponent', () => {
     const menuButton = screen.getByText('Test User');
     await user.click(menuButton);
     expect(screen.getByText('Reset UI')).toBeInTheDocument();
+  });
+
+  it('should show Edit View when user has ManageView view-permission and team is set', async () => {
+    await renderTopbar({
+      canManageViews: true,
+      team: { id: 'team-1', name: 'Team 1' },
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Edit View')).toBeInTheDocument();
+  });
+
+  it('should hide Edit View when user lacks ManageViews/ManageView permission', async () => {
+    await renderTopbar({
+      canManageViews: false,
+      team: { id: 'team-1', name: 'Team 1' },
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
+  });
+
+  it('should hide Edit View when team is not set even if user has permission', async () => {
+    await renderTopbar({
+      canManageViews: true,
+      team: undefined,
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
+  });
+
+  it('should show Administration link when user has ViewViews system permission', async () => {
+    await renderTopbar({
+      canViewAdmin: true,
+      topbarView: TopbarView.PLAYER_HOME,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Administration')).toBeInTheDocument();
+  });
+
+  it('should hide Administration link when user lacks any View* permission', async () => {
+    await renderTopbar({
+      canViewAdmin: false,
+      topbarView: TopbarView.PLAYER_HOME,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+  });
+
+  it('should show Exit Administration and hide Administration when in admin view with permissions', async () => {
+    await renderTopbar({
+      canViewAdmin: true,
+      topbarView: TopbarView.PLAYER_ADMIN,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Exit Administration')).toBeInTheDocument();
+    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
   });
 });
