@@ -191,19 +191,14 @@ describe('TopbarComponent', () => {
     expect(mockLogout).toHaveBeenCalled();
   });
 
-  it('should emit sidenavToggle when toggle button clicked', async () => {
-    const sidenavToggleSpy = vi.fn();
-    const result = await renderTopbar({
-      sidenav: { opened: true },
-    });
-    result.fixture.componentInstance.sidenavToggle.subscribe(sidenavToggleSpy);
-    // OnPush requires marking for check after setting inputs
-    result.fixture.changeDetectorRef.markForCheck();
+  it('should not show sidebar toggle button (topbar has no toggle button)', async () => {
+    const result = await renderTopbar({ sidenav: { opened: true } });
     result.fixture.detectChanges();
-    const user = userEvent.setup();
-    const toggleButton = screen.getByLabelText('Close Sidebar');
-    await user.click(toggleButton);
-    expect(sidenavToggleSpy).toHaveBeenCalledWith(false);
+    expect(
+      result.fixture.nativeElement.querySelector(
+        'button[aria-label="Close Sidebar"]',
+      ),
+    ).toBeNull();
   });
 
   it('should display player title in toolbar', async () => {

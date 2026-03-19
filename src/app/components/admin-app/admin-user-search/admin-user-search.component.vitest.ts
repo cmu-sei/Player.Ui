@@ -58,7 +58,7 @@ describe('AdminUserSearchComponent', () => {
 
   it('should show User Name column header', async () => {
     await renderAdminUserSearch();
-    expect(screen.getByText('User Name')).toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
   });
 
   it('should show delete button for users', async () => {
