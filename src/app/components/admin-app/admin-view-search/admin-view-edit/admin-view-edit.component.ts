@@ -95,6 +95,7 @@ export class AdminViewEditComponent implements OnInit {
 
   public staged: PlayerFile[];
   public teamsForFile: string[];
+  public selectAllTeamsForFile: boolean;
   public uploadProgess: number;
   public uploading: boolean;
   public viewFiles: FileModel[];
@@ -491,6 +492,30 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
+   * Toggles selection of all teams for file upload
+   *
+   * @param checked: Whether all teams should be selected
+   */
+  toggleAllTeamsForFile(checked: boolean) {
+    if (checked) {
+      this.teamsForFile = this.teams.map(t => t.team.id);
+    } else {
+      this.teamsForFile = [];
+    }
+  }
+
+  /**
+   * Handles manual changes to team selection
+   * Unchecks "Select All" if not all teams are selected
+   */
+  onTeamsForFileChange() {
+    const allTeamIds = this.teams.map(t => t.team.id);
+    const allSelected = allTeamIds.length === this.teamsForFile.length &&
+                        allTeamIds.every(id => this.teamsForFile.includes(id));
+    this.selectAllTeamsForFile = allSelected;
+  }
+
+  /**
    * Returns a link to the download endpoint for a particular file
    */
   getDownloadLink(file: FileModel) {
@@ -649,11 +674,59 @@ export class AdminViewEditComponent implements OnInit {
    * @param file The file to update the teams for
    */
   teamsForFileUpdated(event: any, file: FileModel) {
-    file.teamIds = event.value;
+    const newTeamIds = event.value;
+
+    // Update local state to reflect selection
+    file.teamIds = newTeamIds || [];
+
+    // Only save to server if at least one team is selected
+    if (!newTeamIds || newTeamIds.length === 0) {
+      return;
+    }
+
     this.fileService
       .updateFile(file.id, file.name, file.teamIds, null)
       .pipe(take(1))
-      .subscribe();
+      .subscribe({
+        error: (err) => {
+          console.error('Error updating file teams:', err);
+        }
+      });
+  }
+
+  /**
+   * Checks if all teams are selected for a given file
+   * @param file The file to check
+   */
+  isAllTeamsSelected(file: FileModel): boolean {
+    if (!file.teamIds || !this.teams) {
+      return false;
+    }
+    const allTeamIds = this.teams.map(t => t.team.id);
+    return allTeamIds.length === file.teamIds.length &&
+           allTeamIds.every(id => file.teamIds.includes(id));
+  }
+
+  /**
+   * Toggles selection of all teams for a specific file
+   * @param checked Whether all teams should be selected
+   * @param file The file to update
+   */
+  toggleAllTeamsForViewFile(checked: boolean, file: FileModel) {
+    if (checked) {
+      file.teamIds = this.teams.map(t => t.team.id);
+      this.fileService
+        .updateFile(file.id, file.name, file.teamIds, null)
+        .pipe(take(1))
+        .subscribe({
+          error: (err) => {
+            console.error('Error updating file teams:', err);
+          }
+        });
+    } else {
+      // Allow clearing teams in UI, but don't save until at least one team is selected
+      file.teamIds = [];
+    }
   }
 
   /**

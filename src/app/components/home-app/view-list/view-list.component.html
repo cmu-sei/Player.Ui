@@ -4,24 +4,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="view-list-container mat-elevation-z8">
-  <div class="mat-table d-flex align-items-center gap-4">
-    <div class="sp-icon text">
-      <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
-    </div>
+  <div class="icon-text-container">
+    <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
     <span class="views-title text">My Views</span>
     @if (canCreate$ | async) {
       <button mat-icon-button matTooltip="Add New View" (click)="create()">
         <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle"> </mat-icon>
       </button>
     }
-    <div class="searchBox my-1">
-      <mat-form-field style="width: 320px" subscriptSizing="dynamic">
-        <mat-icon
-          matPrefix
-          class="text"
-          style="transform: scale(0.85); margin-right: 5px"
-          svgIcon="ic_magnify_search"
-        ></mat-icon>
+    <div class="searchBox">
+      <mat-form-field style="width: 320px">
         <input
           matInput
           [(ngModel)]="filterString"
@@ -37,7 +29,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           >
             <mat-icon
               style="transform: scale(0.85)"
-              svgIcon="ic_cancel_circle"
+              fontIcon="mdi-close-circle-outline"
             ></mat-icon>
           </button>
         }
@@ -67,21 +59,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         Name
       </mat-header-cell>
       <mat-cell *matCellDef="let element">
-        <div class="link-text">
-          <a
-            [routerLink]="['/view', element.id]"
-            [queryParams]="{ teamId: asdf }"
-            >{{ element.name }}</a
-          >
-        </div>
+        <a
+          [routerLink]="['/view', element.id]"
+          >{{ element.name }}</a
+        >
       </mat-cell>
     </ng-container>
 
-    <!-- Name Column -->
+    <!-- Description Column -->
     <ng-container matColumnDef="description">
       <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
       <mat-cell *matCellDef="let element">
-        <div class="description-text">{{ element.description }}</div>
+        {{ element.description }}
       </mat-cell>
     </ng-container>
 

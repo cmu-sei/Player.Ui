@@ -6,6 +6,7 @@
 @use '@mdi/font/scss/materialdesignicons' with ($mdi-font-path: '~@mdi/font/fonts'
 );
 @use './theme-colors' as theme;
+@use './dark-theme-colors' as dark-theme;
 /* END IMPORTS */
 
 /* VENDER INCLUDES */
@@ -13,46 +14,24 @@
 @include mat.app-background();
 /* END VENDER INCLUDES */
 
+.elevate {
+  @include mat.elevation(5);
+}
+
 html {
   @include mat.theme((color: theme.$primary-palette,
       typography: '"Open Sans", sans-serif',
-    ),
-    $overrides: ((background: #f1f1f2,
-        surface: var(--mat-sys-background),
-        surface-variant: var(--mat-sys-background),
-        surface-dim: var(--mat-sys-background),
-        surface-bright: var(--mat-sys-background),
-        surface-container-lowest: var(--mat-sys-background),
-        surface-container-low: var(--mat-sys-background),
-        surface-container: var(--mat-sys-background),
-        surface-container-high: var(--mat-sys-background),
-        surface-container-highest: var(--mat-sys-background),
-        surface-tint: var(--mat-sys-primary),
-        icon: var(--mat-sys-primary),
-      )));
-  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary)));
+    ));
+  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary),
+    ));
 }
 
 .darkMode {
-  @include mat.theme((color: (primary: theme.$primary-palette,
+  @include mat.theme((color: (primary: dark-theme.$dark-primary-palette,
         typography: '"Open Sans", sans-serif',
         theme-type: dark,
       ),
-    ),
-    $overrides: ((background: #313131,
-        surface: var(--mat-sys-background),
-        surface-variant: var(--mat-sys-background),
-        surface-dim: var(--mat-sys-background),
-        surface-bright: var(--mat-sys-background),
-        surface-container-lowest: var(--mat-sys-background),
-        surface-container-low: var(--mat-sys-background),
-        surface-container: var(--mat-sys-background),
-        surface-container-high: var(--mat-sys-background),
-        surface-container-highest: var(--mat-sys-background),
-        surface-tint: var(--mat-sys-primary),
-        icon: var(--mat-sys-primary),
-      )));
-  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary)));
+    ));
 }
 
 body {
@@ -85,7 +64,8 @@ body {
 }
 
 // default all icons to the primary theme color
-mat-icon, .mat-icon {
+mat-icon,
+.mat-icon {
   --mat-icon-color: var(--mat-sys-primary);
 }
 
@@ -134,6 +114,7 @@ mat-paginator {
 // Global utility classes (previously from theme.globals() mixin)
 .selected {
   background: var(--mat-sys-primary);
+
   &:hover,
   &:focus {
     background: var(--mat-sys-primary) !important;
@@ -149,6 +130,7 @@ mat-paginator {
 }
 
 .highlight {
+
   &:hover,
   &:focus {
     background: var(--mat-sys-surface-variant);
@@ -195,4 +177,3 @@ a {
 .normal-text {
   color: var(--mat-sys-on-background) !important;
 }
-

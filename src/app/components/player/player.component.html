@@ -22,28 +22,24 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >
       <div class="grid">
         <div>
-          <mat-list>
-            <mat-list-item
-              class="d-flex"
-              [ngClass]="(mini$ | async) ? 'player-title-mini' : 'player-title'"
-              >
+          @if (!(mini$ | async)) {
+            <mat-toolbar class="sidenav-header" title="Return to Home" [routerLink]="['/']">
               <a class="nolink" [routerLink]="['/']">
                 <div class="d-flex align-items-center">
-                  <mat-icon
-                    [ngClass]="
-                      (mini$ | async) ? 'player-icon-mini' : 'player-icon'
-                    "
-                    svgIcon="ic_crucible_player"
-                  ></mat-icon>
-                  @if (!(mini$ | async)) {
-                    <h2>
-                      <b>{{ data.title }}</b>
-                    </h2>
-                  }
+                  <mat-icon class="icon-35px player-icon-header" svgIcon="ic_crucible_player"></mat-icon>
+                  <h2 class="icon-text">{{ data.title }}</h2>
                 </div>
               </a>
-            </mat-list-item>
-          </mat-list>
+            </mat-toolbar>
+          } @else {
+            <mat-list>
+              <mat-list-item class="player-title-mini">
+                <a [routerLink]="['/']" title="Return to Home" class="home-link-mini">
+                  <mat-icon class="mat-list-item-icon mdi-24px" svgIcon="ic_crucible_player"></mat-icon>
+                </a>
+              </mat-list-item>
+            </mat-list>
+          }
           <mat-divider></mat-divider>
           <app-application-list
             [viewId]="data.view.id"
@@ -51,15 +47,41 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             [mini]="mini$ | async"
           ></app-application-list>
           @if (!(mini$ | async)) {
-            <img
-              alt="crucible logo"
-              class="crucible-logo"
-            [src]="
-              (theme$ | async) === 'light-theme'
-                ? 'assets/img/crucible-logo-light.png'
-                : 'assets/img/crucible-logo-dark.png'
-            "
+            <div class="bottom-div">
+              <div class="admin-and-collapse">
+                <div class="admin-section">
+                </div>
+                <div class="collapse-section">
+                  <button mat-icon-button title="Collapse to Icons Only" (click)="toggleMini()">
+                    <mat-icon aria-hidden="false" class="mdi-24px" fontIcon="mdi-chevron-double-left"></mat-icon>
+                  </button>
+                </div>
+              </div>
+              <img
+                alt="crucible logo"
+                class="crucible-logo"
+                [src]="
+                  (theme$ | async) === 'light-theme'
+                    ? 'assets/img/crucible-logo-light.png'
+                    : 'assets/img/crucible-logo-dark.png'
+                "
               />
+            </div>
+          } @else {
+            <div class="bottom-div">
+              <button mat-icon-button title="Expand Navigation Panel" (click)="toggleMini()">
+                <mat-icon aria-hidden="false" class="mdi-24px" fontIcon="mdi-chevron-double-right"></mat-icon>
+              </button>
+              <img
+                alt="crucible logo"
+                class="crucible-logo-mini"
+                [src]="
+                  (theme$ | async) === 'light-theme'
+                    ? 'assets/img/crucible-app-color-white.png'
+                    : 'assets/img/crucible-app-color.png'
+                "
+              />
+            </div>
           }
         </div>
         @if (!(mini$ | async)) {

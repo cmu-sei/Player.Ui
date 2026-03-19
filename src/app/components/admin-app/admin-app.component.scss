@@ -24,7 +24,8 @@
 }
 
 .appbarmenu-container {
-  min-width: 50px;
+  width: 250px;
+  border-right: solid var(--mat-sys-surface-container);
 }
 
 .lefticon {
@@ -43,7 +44,7 @@
 
 .icon-text {
   margin-left: 10px;
-  font-family: open_sansbold;
+  font-weight: bold;
 }
 
 .player-icon {
@@ -59,4 +60,26 @@
   padding: 5px 16px 5px 5px;
   cursor: pointer;
   color: var(--mat-sys-primary);
+}
+
+.sidenav-header {
+  height: 40px;
+  border-bottom: 2px solid var(--mat-sys-surface-container);
+}
+
+.player-icon-header {
+  color: var(--mat-sys-primary);
+}
+
+.icon-35px {
+  width: 35px;
+  height: 35px;
+  font-size: 35px;
+}
+
+.cssLayoutRowStartCenter {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
 }
