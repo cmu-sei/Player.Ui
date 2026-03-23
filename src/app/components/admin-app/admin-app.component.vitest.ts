@@ -104,4 +104,34 @@ describe('AdminAppComponent', () => {
     await renderAdmin({ permissions: [] });
     expect(screen.queryByText('Application Templates')).not.toBeInTheDocument();
   });
+
+  it('should hide Users nav when only ViewApplications permission present', async () => {
+    await renderAdmin({ permissions: [SystemPermission.ViewApplications] });
+    expect(screen.queryByText('Users')).not.toBeInTheDocument();
+  });
+
+  it('should hide Roles nav when only ViewApplications permission present', async () => {
+    await renderAdmin({ permissions: [SystemPermission.ViewApplications] });
+    expect(screen.queryByText('Roles')).not.toBeInTheDocument();
+  });
+
+  it('should hide Views nav when only ViewUsers permission present', async () => {
+    await renderAdmin({ permissions: [SystemPermission.ViewUsers] });
+    expect(screen.queryByText('Views')).not.toBeInTheDocument();
+  });
+
+  it('should hide Subscriptions nav when only ViewUsers permission present', async () => {
+    await renderAdmin({ permissions: [SystemPermission.ViewUsers] });
+    expect(screen.queryByText('Subscriptions')).not.toBeInTheDocument();
+  });
+
+  it('should hide Views nav when only ViewRoles permission present', async () => {
+    await renderAdmin({ permissions: [SystemPermission.ViewRoles] });
+    expect(screen.queryByText('Views')).not.toBeInTheDocument();
+  });
+
+  it('should hide Users nav when only ViewRoles permission present', async () => {
+    await renderAdmin({ permissions: [SystemPermission.ViewRoles] });
+    expect(screen.queryByText('Users')).not.toBeInTheDocument();
+  });
 });
