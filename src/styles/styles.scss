@@ -36,6 +36,8 @@ html {
 
 body {
   font-family: "Open Sans", sans-serif;
+  overflow: hidden;
+  margin: 0;
 }
 
 // Override the disabled icon color specifically for mat-icon-button
