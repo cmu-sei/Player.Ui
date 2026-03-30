@@ -1,15 +1,22 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+:host {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  height: 100vh;
+}
+
 @font-face {
   font-family: 'open_sansregular';
   /*
    Note about src: url() and BaseHref:
    When using BaseHref SCSS and angular pre-processors do not like relative paths
    We can escape the angular pre-processors by adding `^` to the start of the URL
-  
+
   */
-  src: url('^assets/fonts/opensans-regular.woff2') format('woff2'),
+  src:
+    url('^assets/fonts/opensans-regular.woff2') format('woff2'),
     url('^assets/fonts/opensans-regular.woff') format('woff');
   font-weight: normal;
   font-style: normal;
@@ -17,7 +24,8 @@
 
 @font-face {
   font-family: 'open_sansbold';
-  src: url('^assets/fonts/opensans-bold.woff2') format('woff2'),
+  src:
+    url('^assets/fonts/opensans-bold.woff2') format('woff2'),
     url('^assets/fonts/opensans-bold.woff') format('woff');
   font-weight: normal;
   font-style: normal;
@@ -25,7 +33,8 @@
 
 @font-face {
   font-family: 'open_sansitalic';
-  src: url('^assets/fonts/opensans-italic.woff2') format('woff2'),
+  src:
+    url('^assets/fonts/opensans-italic.woff2') format('woff2'),
     url('^assets/fonts/opensans-italic.woff') format('woff');
   font-weight: normal;
   font-style: normal;
