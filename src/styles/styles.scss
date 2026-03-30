@@ -3,9 +3,7 @@
 
 /* IMPORTS - All @use statements must come first */
 @use '@angular/material' as mat;
-@use '@mdi/font/scss/materialdesignicons' with (
-  $mdi-font-path: '~@mdi/font/fonts'
-);
+@use '@mdi/font/scss/materialdesignicons';
 @use './theme-colors' as theme;
 @use './dark-theme-colors' as dark-theme;
 /* END IMPORTS */
