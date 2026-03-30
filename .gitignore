@@ -304,3 +304,4 @@ __pycache__/
 
 /dist
 /docker
+tsconfig.local-npm.json
