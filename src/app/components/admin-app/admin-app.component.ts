@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ElementRef, AfterViewInit, Renderer2 } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import {
@@ -25,6 +25,7 @@ import { SystemPermission } from '../../generated/player-api';
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
+
   public TopbarView = TopbarView;
   public queryParams: any;
   Section = Section;
@@ -96,7 +97,7 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     private routerQuery: RouterQuery,
     private authQuery: ComnAuthQuery,
     public loggedInUserService: LoggedInUserService,
-    public permissionsService: UserPermissionsService
+    public permissionsService: UserPermissionsService,
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }

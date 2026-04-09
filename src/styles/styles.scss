@@ -3,8 +3,7 @@
 
 /* IMPORTS - All @use statements must come first */
 @use '@angular/material' as mat;
-@use '@mdi/font/scss/materialdesignicons' with ($mdi-font-path: '~@mdi/font/fonts'
-);
+@use '@mdi/font/scss/materialdesignicons';
 @use './theme-colors' as theme;
 @use './dark-theme-colors' as dark-theme;
 /* END IMPORTS */
@@ -19,23 +18,35 @@
 }
 
 html {
-  @include mat.theme((color: theme.$primary-palette,
+  @include mat.theme(
+    (
+      color: theme.$primary-palette,
       typography: '"Open Sans", sans-serif',
-    ));
-  @include mat.icon-button-overrides((icon-color: var(--mat-sys-primary),
-    ));
+    )
+  );
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-primary),
+    )
+  );
 }
 
 .darkMode {
-  @include mat.theme((color: (primary: dark-theme.$dark-primary-palette,
+  @include mat.theme(
+    (
+      color: (
+        primary: dark-theme.$dark-primary-palette,
         typography: '"Open Sans", sans-serif',
         theme-type: dark,
       ),
-    ));
+    )
+  );
 }
 
 body {
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  overflow: auto;
+  margin: 0;
 }
 
 // Override the disabled icon color specifically for mat-icon-button
@@ -130,7 +141,6 @@ mat-paginator {
 }
 
 .highlight {
-
   &:hover,
   &:focus {
     background: var(--mat-sys-surface-variant);
