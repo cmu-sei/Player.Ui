@@ -13,7 +13,7 @@ WORKDIR /ng-app
 
 COPY . .
 
-RUN npx ng build --resources-output-path=assets/fonts --configuration production
+RUN npx ng build --configuration production
 
 ### Stage 2: Setup ###
 
