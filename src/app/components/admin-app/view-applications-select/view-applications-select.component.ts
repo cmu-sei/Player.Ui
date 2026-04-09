@@ -141,10 +141,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
    * @param application The changed application object
    */
   saveApplicationEmbeddable(application: Application): void {
-    this.applicationService.getApplication(application.id).subscribe((app) => {
-      app.embeddable = application.embeddable;
-      this.saveApplication(app);
-    });
+    this.saveApplication(application);
   }
 
   /**
@@ -152,17 +149,11 @@ export class ViewApplicationsSelectComponent implements OnInit {
    * @param application The changed application object
    */
   saveApplicationLoadInBackground(application: Application): void {
-    this.applicationService.getApplication(application.id).subscribe((app) => {
-      app.loadInBackground = application.loadInBackground;
-      this.saveApplication(app);
-    });
+    this.saveApplication(application);
   }
 
   saveApplicationTemplateId(application: Application): void {
-    this.applicationService.getApplication(application.id).subscribe((app) => {
-      app.applicationTemplateId = application.applicationTemplateId;
-      this.saveApplication(app);
-    });
+    this.saveApplication(application);
   }
 
   /**
@@ -170,12 +161,8 @@ export class ViewApplicationsSelectComponent implements OnInit {
    */
   saveApplication(app: Application) {
     this.applicationService.updateApplication(app.id, app).subscribe(() => {
-      this.applicationService
-        .getViewApplications(this.view.id)
-        .subscribe((appInsts) => {
-          this.applications = appInsts;
-        });
-      console.log('Application name updated');
+      // Don't update local array - ngModel binding keeps it in sync
+      console.log('Application updated');
     });
   }
 
@@ -204,7 +191,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
   getAppName(app: Application) {
     if (app.name != null) {
       return app.name;
-    } else if (app.applicationTemplateId != null) {
+    } else if (app.applicationTemplateId != null && this.applicationTemplates?.length > 0) {
       const template = this.applicationTemplates.find(
         (x) => x.id === app.applicationTemplateId
       );
@@ -212,17 +199,17 @@ export class ViewApplicationsSelectComponent implements OnInit {
       if (template != null) {
         return template.name;
       } else {
-        return null;
+        return 'Application';
       }
     } else {
-      return null;
+      return 'Application';
     }
   }
 
   getAppIcon(app: Application) {
     if (app.icon != null) {
       return app.icon;
-    } else if (app.applicationTemplateId != null) {
+    } else if (app.applicationTemplateId != null && this.applicationTemplates?.length > 0) {
       const template = this.applicationTemplates.find(
         (x) => x.id === app.applicationTemplateId
       );
@@ -230,10 +217,10 @@ export class ViewApplicationsSelectComponent implements OnInit {
       if (template != null) {
         return template.icon;
       } else {
-        return null;
+        return 'assets/img/SP_Icon_Dashboard.png';
       }
     } else {
-      return null;
+      return 'assets/img/SP_Icon_Dashboard.png';
     }
   }
 
