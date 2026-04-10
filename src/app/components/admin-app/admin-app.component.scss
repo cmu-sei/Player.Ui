@@ -1,6 +1,5 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
-
 .appitems-container .mat-list-item {
   height: auto;
 }
@@ -15,12 +14,15 @@
   cursor: pointer;
 }
 
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .appcontent-container {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .appbarmenu-container {
