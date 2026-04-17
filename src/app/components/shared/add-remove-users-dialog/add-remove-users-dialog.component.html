@@ -40,13 +40,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-form-field>
     </div>
 
-    @if (isLoading) {
-      <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
-        <mat-progress-spinner color="primary" mode="indeterminate">
-        </mat-progress-spinner>
-      </mat-card>
-    }
-
     <mat-table
       class="mat-table-all-users"
       #table
@@ -81,6 +74,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-header-row *matHeaderRowDef="displayedUserColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedUserColumns"></mat-row>
     </mat-table>
+
+    @if (isLoading) {
+      <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
+        <mat-progress-spinner color="primary" mode="indeterminate">
+        </mat-progress-spinner>
+      </mat-card>
+    }
 
     @if (userDataSource.filteredData.length === 0) {
       <div>No results found</div>
@@ -117,13 +117,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           type="file"
         />
       </div>
-
-      @if (isLoading) {
-        <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
-          <mat-progress-spinner color="primary" mode="indeterminate">
-          </mat-progress-spinner>
-        </mat-card>
-      }
 
       <mat-table
         class="mat-table-team-users"
@@ -182,6 +175,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         ></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedTeamColumns"></mat-row>
       </mat-table>
+
+      @if (isLoading) {
+        <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
+          <mat-progress-spinner color="primary" mode="indeterminate">
+          </mat-progress-spinner>
+        </mat-card>
+      }
     </div>
   </div>
 </div>
