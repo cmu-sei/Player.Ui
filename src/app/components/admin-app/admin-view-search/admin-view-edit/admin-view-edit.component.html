@@ -142,14 +142,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           ></app-view-applications-select>
         </mat-step>
         <mat-step label="Teams">
-          @if (isLoadingTeams) {
-            <mat-card class="d-flex justify-content-center align-items-center">
-              <mat-progress-spinner
-                color="primary"
-                mode="indeterminate"
-              ></mat-progress-spinner>
-            </mat-card>
-          }
           @if (!isLoadingTeams) {
             <mat-accordion>
               <div class="top-button d-flex justify-content-end">
@@ -286,6 +278,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 </mat-expansion-panel>
               }
             </mat-accordion>
+          }
+          @if (isLoadingTeams) {
+            <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
+              <mat-progress-spinner
+                color="primary"
+                mode="indeterminate"
+              ></mat-progress-spinner>
+            </mat-card>
           }
         </mat-step>
         <mat-step label="Files">

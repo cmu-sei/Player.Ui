@@ -3,17 +3,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-@if (isLoading) {
-  <mat-card
-    class="d-flex justify-content-center align-items-center"
-    >
-    <mat-progress-spinner
-      color="primary"
-      mode="indeterminate"
-    ></mat-progress-spinner>
-  </mat-card>
-}
-
 <mat-accordion>
   @for (app of applications; track app.id; let i = $index) {
     <mat-expansion-panel
@@ -169,3 +158,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 </mat-expansion-panel>
 }
 </mat-accordion>
+
+@if (isLoading) {
+  <mat-card appearance="outlined"
+    class="d-flex justify-content-center align-items-center"
+    >
+    <mat-progress-spinner
+      color="primary"
+      mode="indeterminate"
+    ></mat-progress-spinner>
+  </mat-card>
+}
