@@ -11,8 +11,15 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 const mockClose = vi.fn();
 
+interface ConfirmDialogData {
+  title?: string;
+  message?: string;
+  removeArtifacts?: boolean;
+  confirm?: boolean;
+}
+
 async function renderConfirmDialog(
-  overrides: { title?: string; message?: string; data?: any } = {}
+  overrides: { title?: string; message?: string; data?: ConfirmDialogData } = {}
 ) {
   const {
     title = 'Confirm Action',

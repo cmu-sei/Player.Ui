@@ -4,7 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { of, BehaviorSubject } from 'rxjs';
+import { of } from 'rxjs';
 import { TopbarComponent } from './topbar.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
@@ -12,8 +12,10 @@ import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-
 import { TopbarView } from './topbar.models';
 import { ComnAuthService, ComnAuthQuery } from '@cmusei/crucible-common';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSidenav } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DialogService } from '../../../services/dialog/dialog.service';
+import { Team } from '../../../generated/player-api';
 
 const mockLogout = vi.fn();
 
@@ -34,7 +36,7 @@ function createMockPermissionsService(
     teamPermissions$: of([]),
     loadPermissions: () => of([]),
     canViewAdminstration: () => of(canViewAdmin),
-    can: (_permission: string) => of(canManageViews),
+    can: () => of(canManageViews),
     hasPermission: (p: string) => of(canCreateViews && p === 'CreateViews'),
   };
 }
@@ -44,9 +46,9 @@ async function renderTopbar(
     title?: string;
     topbarView?: TopbarView;
     viewId?: string;
-    sidenav?: any;
-    teams?: any[];
-    team?: any;
+    sidenav?: MatSidenav;
+    teams?: Team[];
+    team?: Team;
     mini?: boolean;
     canViewAdmin?: boolean;
     canManageViews?: boolean;

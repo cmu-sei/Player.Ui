@@ -1,7 +1,7 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Provider } from '@angular/core';
+import { EnvironmentProviders, Provider, ProviderToken } from '@angular/core';
 import { of } from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
@@ -54,12 +54,17 @@ import {
   ComnAuthQuery,
 } from '@cmusei/crucible-common';
 
-function getProvideToken(provider: any): any {
-  if (typeof provider === 'function') return provider;
-  return provider?.provide;
+type AnyProvider = Provider | EnvironmentProviders;
+
+function getProvideToken(provider: AnyProvider): ProviderToken<unknown> | null {
+  if (typeof provider === 'function') return provider as ProviderToken<unknown>;
+  const withProvide = provider as { provide?: ProviderToken<unknown> };
+  return withProvide.provide ?? null;
 }
 
-export function getDefaultProviders(overrides?: Provider[]): Provider[] {
+export function getDefaultProviders(
+  overrides?: readonly AnyProvider[]
+): AnyProvider[] {
   const defaults: Provider[] = [
     // App Services
     { provide: AppService, useValue: {} },

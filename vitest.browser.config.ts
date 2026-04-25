@@ -1,13 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import angular from '@analogjs/vite-plugin-angular';
-import { playwright } from '@vitest/browser-playwright';
 import { preview } from '@vitest/browser-preview';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-const useManualBrowser = process.env['VITEST_BROWSER_MANUAL'] === '1';
 
 export default defineConfig({
   plugins: [angular({ tsconfig: 'tsconfig.vitest.json' })],
@@ -112,18 +109,13 @@ export default defineConfig({
     },
     browser: {
       enabled: true,
-      ...(useManualBrowser
-        ? {
-            provider: preview(),
-            instances: [{ browser: 'preview' }],
-          }
-        : {
-            provider: playwright({
-              launch: { args: ['--no-sandbox'] },
-            }),
-            headless: true,
-            instances: [{ browser: 'chromium' }],
-          }),
+      provider: preview(),
+      instances: [
+        { browser: 'preview', name: 'desktop-hd', viewport: { width: 1920, height: 1080 } },
+        { browser: 'preview', name: 'laptop', viewport: { width: 1280, height: 800 } },
+        { browser: 'preview', name: 'macbook', viewport: { width: 1440, height: 900 } },
+        { browser: 'preview', name: 'mobile', viewport: { width: 375, height: 667 } },
+      ],
       api: {
         host: '0.0.0.0',
         port: 63320,
