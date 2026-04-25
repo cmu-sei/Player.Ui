@@ -18,7 +18,7 @@ import { getDefaultProviders } from 'src/app/test-utils/vitest-default-providers
 function createService(
   overrides: {
     myPermissions?: string[];
-    myTeamPermissions?: any[];
+    myTeamPermissions?: TeamPermissionsClaim[];
   } = {},
 ) {
   const { myPermissions = [], myTeamPermissions = [] } = overrides;
@@ -108,8 +108,8 @@ describe('UserPermissionsService', () => {
   });
 
   it('should have loadTeamPermissions method', async () => {
-    const mockTeamPerms = [
-      { teamId: 'team-1', permissionValues: ['ManageTeam'] },
+    const mockTeamPerms: TeamPermissionsClaim[] = [
+      { teamId: 'team-1', permissionValues: [TeamPermission.ManageTeam] },
     ];
     const service = createService({ myTeamPermissions: mockTeamPerms });
 

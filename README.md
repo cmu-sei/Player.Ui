@@ -36,10 +36,8 @@ In a production environment, `settings.env.json` should contain only the setting
 Player UI uses **Vitest** with `@testing-library/angular`. Test files use the `.vitest.ts` extension.
 
 ```bash
-npm test                    # Run all tests (jsdom, fast)
-npm run test:watch          # Watch mode
-npm run test:coverage       # With coverage report
-npm run test:browser        # Run in headless Chromium via Playwright
+npm test           # Run all tests (jsdom, headless, no GUI)
+npm run test:ui    # Run in a real Chromium browser with the Vitest UI
 ```
 
 ### Permission Tests

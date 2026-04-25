@@ -2,7 +2,6 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect } from 'vitest';
-import { screen } from '@testing-library/angular';
 import { HomeAppComponent } from './home-app.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { ComnSettingsService } from '@cmusei/crucible-common';

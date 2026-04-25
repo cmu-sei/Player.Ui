@@ -6,7 +6,7 @@ import { screen } from '@testing-library/angular';
 import { of, Subject } from 'rxjs';
 import { AdminViewSearchComponent } from './admin-view-search.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { ViewService } from '../../../generated/player-api';
+import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { MatTableModule } from '@angular/material/table';
@@ -15,25 +15,25 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 
-const mockViews = [
+const mockViews: View[] = [
   {
     id: 'view-1',
     name: 'Training View',
     description: 'A training exercise',
-    status: 'Active',
+    status: ViewStatus.Active,
   },
   {
     id: 'view-2',
     name: 'Test View',
     description: 'A test exercise',
-    status: 'Inactive',
+    status: ViewStatus.Inactive,
   },
 ];
 
 async function renderAdminViewSearch() {
   // Use a Subject so getViews() does not emit synchronously during ngOnInit
   // (the component calls refreshViews() before initializing viewDataSource).
-  const viewsSubject = new Subject<any[]>();
+  const viewsSubject = new Subject<View[]>();
 
   const result = await renderComponent(AdminViewSearchComponent, {
     declarations: [AdminViewSearchComponent],

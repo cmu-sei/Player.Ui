@@ -24,17 +24,5 @@ export default defineConfig({
     setupFiles: ['src/test-setup.vitest.ts'],
     include: ['src/app/**/*.vitest.ts'],
     reporters: ['default'],
-    coverage: {
-      provider: 'v8',
-      reportsDirectory: 'coverage/vitest',
-      reporter: ['text-summary', 'lcov'],
-      include: ['src/app/**/*.ts'],
-      exclude: [
-        'src/app/generated/**',
-        'src/**/*.vitest.ts',
-        'src/**/*.cy.ts',
-        'src/**/*.spec.ts',
-      ],
-    },
   },
 });

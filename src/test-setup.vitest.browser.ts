@@ -1,4 +1,11 @@
-if (!(globalThis as any)['__vitest_zone_patch__']) {
+declare global {
+  // eslint-disable-next-line no-var
+  var __vitest_zone_patch__: boolean | undefined;
+  // eslint-disable-next-line no-var
+  var __vitest_angular_testbed_init__: boolean | undefined;
+}
+
+if (!globalThis.__vitest_zone_patch__) {
   await import('@analogjs/vitest-angular/setup-zone');
 }
 
@@ -19,8 +26,8 @@ import {
   platformBrowserDynamicTesting,
 } from '@angular/platform-browser-dynamic/testing';
 
-if (!(globalThis as any)['__vitest_angular_testbed_init__']) {
-  (globalThis as any)['__vitest_angular_testbed_init__'] = true;
+if (!globalThis.__vitest_angular_testbed_init__) {
+  globalThis.__vitest_angular_testbed_init__ = true;
   getTestBed().initTestEnvironment(
     BrowserDynamicTestingModule,
     platformBrowserDynamicTesting(),
@@ -33,7 +40,9 @@ if (!(globalThis as any)['__vitest_angular_testbed_init__']) {
 beforeEach(() => {
   try {
     getTestBed().resetTestingModule();
-  } catch (e) {}
+  } catch {
+    // ignore: already reset
+  }
 
   document
     .querySelectorAll('.cdk-overlay-container')
