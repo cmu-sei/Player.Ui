@@ -9,14 +9,10 @@ if (!globalThis.__vitest_zone_patch__) {
   await import('@analogjs/vitest-angular/setup-zone');
 }
 
-import '@angular/material/prebuilt-themes/azure-blue.css';
-
-import '@mdi/font/css/materialdesignicons.css';
-import 'font-awesome/css/font-awesome.css';
-
-import 'bootstrap/scss/bootstrap-utilities.scss';
-
+// Load the same global styles the production app loads (see angular.json "styles").
+// styles.scss pulls in @angular/material theming and @mdi/font via @use.
 import './styles/styles.scss';
+import 'bootstrap/dist/css/bootstrap-utilities.min.css';
 
 import '@testing-library/jest-dom/vitest';
 
