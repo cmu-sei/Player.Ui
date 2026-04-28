@@ -16,7 +16,7 @@ export default defineConfig({
     entries: [],
   },
   ssr: {
-    noExternal: ['@material/material-color-utilities'],
+    noExternal: ['@material/material-color-utilities', '@cmusei/crucible-common'],
   },
   test: {
     globals: true,
