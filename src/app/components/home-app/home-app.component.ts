@@ -15,10 +15,11 @@ export class HomeAppComponent implements OnInit {
   public title: string;
   TopbarView = TopbarView;
 
-  constructor(private settingsService: ComnSettingsService) {}
+  constructor(private settingsService: ComnSettingsService,) {}
 
   ngOnInit() {
     // Set the page title from configuration file
     this.title = this.settingsService.settings.AppTopBarText;
   }
+
 }

@@ -301,9 +301,11 @@ __pycache__/
 *.xsd.cs
 
 */assets/config/settings.env.json*
+*/assets/config/settings.shared.json*
 
 /dist
 /docker
+tsconfig.local-npm.json
 
 # Claude Code
 CLAUDE.md

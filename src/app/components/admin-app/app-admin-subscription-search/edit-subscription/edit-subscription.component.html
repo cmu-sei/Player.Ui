@@ -2,6 +2,7 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
+<div style="overflow: hidden;">
 <h3>{{ currentSub == null ? 'Add Subscription' : 'Edit Subscription' }}</h3>
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="d-flex flex-column">
   <mat-form-field>
@@ -43,3 +44,4 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
     </div>
   </form>
+</div>

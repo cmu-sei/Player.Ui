@@ -9,13 +9,14 @@
       "projectType": "application",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist",
+            "outputPath": {
+              "base": "dist"
+            },
             "index": "src/index.html",
-            "main": "src/main.ts",
             "tsConfig": "src/tsconfig.app.json",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": ["src/polyfills.ts"],
             "allowedCommonJsDependencies": [
               "crypto-js/core.js",
               "crypto-js/enc-base64.js",
@@ -26,7 +27,7 @@
               "src/assets",
               {
                 "glob": "auth-callback-silent.html",
-                "input": "node_modules/@cmusei/crucible-common/src/lib/comn-auth/assets/",
+                "input": "../../libraries/Crucible.Common.Ui/projects/@crucible-common/src/lib/comn-auth/assets/",
                 "output": "/"
               }
             ],
@@ -35,11 +36,11 @@
               "./node_modules/bootstrap/dist/css/bootstrap-utilities.min.css"
             ],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "src/styles"
-              ]
+              "includePaths": ["src/styles"]
             },
-            "scripts": []
+            "scripts": [],
+            "preserveSymlinks": true,
+            "browser": "src/main.ts"
           },
           "configurations": {
             "production": {
@@ -65,13 +66,17 @@
               ]
             },
             "development": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
               "extractLicenses": false,
-              "sourceMap": true,
-              "namedChunks": true,
-              "preserveSymlinks": true
+              "sourceMap": {
+                "scripts": true,
+                "styles": true,
+                "vendor": true
+              },
+              "namedChunks": true
+            },
+            "localNPM": {
+              "tsConfig": "tsconfig.local-npm.json"
             }
           },
           "defaultConfiguration": "production"
@@ -87,6 +92,9 @@
             },
             "development": {
               "buildTarget": "player-ui:build:development"
+            },
+            "localNPM": {
+              "buildTarget": "player-ui:build:development,localNPM"
             }
           },
           "defaultConfiguration": "development"

@@ -11,6 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
     <div class="d-flex align-items-center">
       <mat-form-field class="w-100 my-1" subscriptSizing="dynamic">
+        <mat-label>Search</mat-label>
         <mat-icon
           matPrefix
           style="transform: scale(0.85); margin-right: 5px; margin-left: 10px"
@@ -38,13 +39,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         }
       </mat-form-field>
     </div>
-
-    @if (isLoading) {
-      <mat-card class="d-flex justify-content-center align-items-center">
-        <mat-progress-spinner color="primary" mode="indeterminate">
-        </mat-progress-spinner>
-      </mat-card>
-    }
 
     <mat-table
       class="mat-table-all-users"
@@ -80,6 +74,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-header-row *matHeaderRowDef="displayedUserColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: displayedUserColumns"></mat-row>
     </mat-table>
+
+    @if (isLoading) {
+      <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
+        <mat-progress-spinner color="primary" mode="indeterminate">
+        </mat-progress-spinner>
+      </mat-card>
+    }
 
     @if (userDataSource.filteredData.length === 0) {
       <div>No results found</div>
@@ -117,13 +118,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         />
       </div>
 
-      @if (isLoading) {
-        <mat-card class="d-flex justify-content-center align-items-center">
-          <mat-progress-spinner color="primary" mode="indeterminate">
-          </mat-progress-spinner>
-        </mat-card>
-      }
-
       <mat-table
         class="mat-table-team-users"
         #table
@@ -147,6 +141,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
           <mat-cell *matCellDef="let element">
             <mat-form-field subscriptSizing="dynamic" class="my-1">
+              <mat-label>Role</mat-label>
               <mat-select
                 placeholder="Role"
                 name="teamMembershipRole"
@@ -180,6 +175,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         ></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedTeamColumns"></mat-row>
       </mat-table>
+
+      @if (isLoading) {
+        <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
+          <mat-progress-spinner color="primary" mode="indeterminate">
+          </mat-progress-spinner>
+        </mat-card>
+      }
     </div>
   </div>
 </div>

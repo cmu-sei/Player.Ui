@@ -48,6 +48,7 @@ import {
   ComnAuthModule,
   ComnSettingsModule,
   ComnSettingsService,
+  ComnHeaderBarModule,
 } from '@cmusei/crucible-common';
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
@@ -220,6 +221,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         AkitaNgRouterStoreModule,
         ComnSettingsModule.forRoot(),
         ComnAuthModule.forRoot(),
+        ComnHeaderBarModule,
         TableVirtualScrollModule,
         ResizableModule], providers: [
         AppService,

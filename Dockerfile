@@ -13,7 +13,7 @@ WORKDIR /ng-app
 
 COPY . .
 
-RUN npx ng build --resources-output-path=assets/fonts --configuration production
+RUN npx ng build --configuration production
 
 ### Stage 2: Setup ###
 
@@ -23,7 +23,7 @@ USER root
 RUN rm -rf /usr/share/nginx/html/*
 COPY default.conf /etc/nginx/conf.d/default.conf
 COPY nginx-basehref.sh /docker-entrypoint.d/90-basehref.sh
-COPY --from=builder /ng-app/dist /usr/share/nginx/html
+COPY --from=builder /ng-app/dist/browser /usr/share/nginx/html
 RUN chown -R nginx:nginx /usr/share/nginx/html
 USER nginx
 

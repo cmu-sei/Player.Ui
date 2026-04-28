@@ -37,13 +37,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
   </div>
 
-  @if (isLoading) {
-    <mat-card class="d-flex justify-content-center align-items-center">
-      <mat-progress-spinner color="primary" mode="indeterminate">
-      </mat-progress-spinner>
-    </mat-card>
-  }
-
   <mat-table
     #table
     [dataSource]="dataSource"
@@ -79,5 +72,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   </mat-table>
   @if (dataSource.filteredData.length === 0) {
     <div class="text no-results">No results found</div>
+  }
+
+  @if (isLoading) {
+    <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
+      <mat-progress-spinner color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </mat-card>
   }
 </div>
