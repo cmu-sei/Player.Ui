@@ -317,3 +317,6 @@ serve.json
 # Claude Code
 CLAUDE.md
 .claude/
+
+# Git worktrees
+.worktrees/
