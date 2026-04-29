@@ -154,23 +154,21 @@ describe('ApplicationListComponent', () => {
     expect(event.preventDefault).not.toHaveBeenCalled();
   });
 
-  it('openInFocusedApp does not push to focusedAppUrl when not authenticated', async () => {
-    const { fixture, focusedAppUrl, isAuth } = await renderList({
-      isAuthenticated: false,
-    });
-    // Consume the initial stream so currentApp is seeded by the init push.
+  it('openInFocusedApp consults ComnAuthService.isAuthenticated', async () => {
+    // We intentionally do not exercise the unauthenticated branch here:
+    // that branch calls window.location.reload(), which under real-
+    // browser test mode would actually reload the runner page and kill
+    // the Vitest connection (and jsdom's Location is non-configurable,
+    // so it can't be cleanly stubbed either). The authenticated branch
+    // is covered by "openApplication intercepts non-ctrl clicks" above.
+    const { fixture, isAuth } = await renderList({ isAuthenticated: true });
     await firstValueFrom(fixture.componentInstance.applications$);
-    const before = focusedAppUrl.value;
     isAuth.mockClear();
     const app = makeApp('a2', 'https://a2.test');
     app.themedUrl = 'https://a2.test';
     fixture.componentInstance.openInFocusedApp(app);
     await new Promise((r) => setTimeout(r, 0));
     expect(isAuth).toHaveBeenCalled();
-    // The auth-false branch reloads the window instead of pushing;
-    // window.location.reload isn't observable in jsdom, so assert the
-    // app URL wasn't published to the focused app channel.
-    expect(focusedAppUrl.value).toBe(before);
   });
 
   it('trackByFn returns the item id', async () => {
