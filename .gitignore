@@ -310,3 +310,6 @@ tsconfig.local-npm.json
 # Claude Code
 CLAUDE.md
 .claude/
+
+# Git worktrees
+.worktrees/
