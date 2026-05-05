@@ -35,11 +35,6 @@ export class XApiService {
     };
 
     return this.http.post(url, null, { params }).pipe(
-      tap(() =>
-        console.log(
-          `xAPI: Application switched to ${applicationName} in view ${viewId}`
-        )
-      ),
       catchError((error) => {
         console.error('xAPI tracking error:', error);
         return of(null); // Fail silently - xAPI errors shouldn't break UI
