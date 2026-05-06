@@ -21,6 +21,20 @@ export class XApiService {
   }
 
   /**
+   * Logs xAPI viewed statement when user enters a view
+   */
+  viewViewed(viewId: string): Observable<any> {
+    const url = `${this.baseUrl}/api/xapi/viewed/view/${viewId}`;
+
+    return this.http.post(url, null).pipe(
+      catchError((error) => {
+        console.error('xAPI tracking error:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
    * Logs xAPI experienced statement when user switches to an application
    */
   applicationSwitched(
