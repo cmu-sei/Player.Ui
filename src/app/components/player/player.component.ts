@@ -47,7 +47,6 @@ import { SystemMessageService } from '../../services/system-message/system-messa
 import { ViewsService } from '../../services/views/views.service';
 import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
-import { XApiService } from '../../services/xapi/xapi.service';
 
 @Component({
   selector: 'app-player',
@@ -93,7 +92,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private messageService: SystemMessageService,
     private authQuery: ComnAuthQuery,
     private permissionsService: UserPermissionsService,
-    private xApiService: XApiService,
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
@@ -110,11 +108,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       .subscribe();
 
     this.viewId = this.routerQuery.getParams('id');
-
-    // Emit xAPI view viewed statement when entering view
-    if (this.viewId) {
-      this.xApiService.viewViewed(this.viewId).subscribe();
-    }
   }
 
   checkParam(params: string[]): Observable<boolean> {
