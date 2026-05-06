@@ -47,6 +47,7 @@ import { SystemMessageService } from '../../services/system-message/system-messa
 import { ViewsService } from '../../services/views/views.service';
 import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
+import { XApiService } from '../../services/xapi/xapi.service';
 
 @Component({
   selector: 'app-player',
@@ -92,6 +93,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private messageService: SystemMessageService,
     private authQuery: ComnAuthQuery,
     private permissionsService: UserPermissionsService,
+    private xApiService: XApiService,
   ) {
     this.theme$ = this.authQuery.userTheme$;
   }
@@ -169,6 +171,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
       .pipe(
         switchMap(([newTeamId, data, user]) => {
           if (newTeamId !== data.team.id) {
+            // Log xAPI statement before reloading
+            this.xApiService.teamSwitched(data.view.id, newTeamId).subscribe();
+
             return this.viewsService
               .setPrimaryTeamId(user.profile.sub, newTeamId)
               .pipe(tap(() => window.location.reload()));

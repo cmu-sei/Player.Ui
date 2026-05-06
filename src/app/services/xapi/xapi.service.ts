@@ -43,6 +43,20 @@ export class XApiService {
   }
 
   /**
+   * Logs xAPI switched statement when user switches their active team
+   */
+  teamSwitched(viewId: string, teamId: string): Observable<any> {
+    const url = `${this.baseUrl}/api/xapi/switched/view/${viewId}/team/${teamId}`;
+
+    return this.http.post(url, null).pipe(
+      catchError((error) => {
+        console.error('xAPI tracking error:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
    * Logs xAPI terminated statement when user closes/leaves a view
    */
   viewTerminated(viewId: string, durationSeconds: number): Observable<any> {
