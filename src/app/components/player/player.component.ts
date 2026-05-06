@@ -97,7 +97,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.data$ = this.loadData().pipe();
+    this.data$ = this.loadData().pipe(shareReplay(1));
 
     this.data$
       .pipe(
