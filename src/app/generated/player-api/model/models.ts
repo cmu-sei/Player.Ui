@@ -1,8 +1,3 @@
-/*
-Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
- Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
-*/
-
 export * from './application';
 export * from './applicationInstance';
 export * from './applicationTemplate';
@@ -35,11 +30,8 @@ export * from './fileModel';
 export * from './healthStatus';
 export * from './importApplicationTemplatesResult';
 export * from './importViewFailure';
+export * from './importViewFailureType';
 export * from './importViewsResult';
-export * from './inlineObject';
-export * from './inlineObject1';
-export * from './inlineObject2';
-export * from './inlineObject3';
 export * from './notification';
 export * from './notificationPriority';
 export * from './notificationType';

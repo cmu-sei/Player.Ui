@@ -2,31 +2,21 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { ComnSettingsService } from '@cmusei/crucible-common';
+import { catchError } from 'rxjs/operators';
+import { XApiService as GeneratedXApiService } from '../../generated/player-api';
 
 @Injectable({
   providedIn: 'root',
 })
 export class XApiService {
-  private baseUrl: string;
-
-  constructor(
-    private http: HttpClient,
-    private settingsService: ComnSettingsService
-  ) {
-    this.baseUrl = this.settingsService.settings.ApiUrl;
-  }
+  constructor(private generatedXApiService: GeneratedXApiService) {}
 
   /**
    * Logs xAPI viewed statement when user enters a view
    */
   viewViewed(viewId: string): Observable<any> {
-    const url = `${this.baseUrl}/api/xapi/viewed/view/${viewId}`;
-
-    return this.http.post(url, null).pipe(
+    return this.generatedXApiService.viewViewed(viewId).pipe(
       catchError((error) => {
         console.error('xAPI tracking error:', error);
         return of(null);
@@ -42,13 +32,7 @@ export class XApiService {
     applicationName: string,
     applicationUrl: string
   ): Observable<any> {
-    const url = `${this.baseUrl}/api/xapi/experienced/view/${viewId}/application`;
-    const params = {
-      applicationName: applicationName,
-      applicationUrl: applicationUrl,
-    };
-
-    return this.http.post(url, null, { params }).pipe(
+    return this.generatedXApiService.applicationSwitched(viewId, applicationName, applicationUrl).pipe(
       catchError((error) => {
         console.error('xAPI tracking error:', error);
         return of(null); // Fail silently - xAPI errors shouldn't break UI
@@ -60,9 +44,7 @@ export class XApiService {
    * Logs xAPI switched statement when user switches their active team
    */
   teamSwitched(viewId: string, teamId: string): Observable<any> {
-    const url = `${this.baseUrl}/api/xapi/switched/view/${viewId}/team/${teamId}`;
-
-    return this.http.post(url, null).pipe(
+    return this.generatedXApiService.teamSwitched(viewId, teamId).pipe(
       catchError((error) => {
         console.error('xAPI tracking error:', error);
         return of(null);
@@ -74,21 +56,14 @@ export class XApiService {
    * Logs xAPI terminated statement when user closes/leaves a view
    */
   viewTerminated(viewId: string, durationSeconds: number): Observable<any> {
-    const url = `${this.baseUrl}/api/xapi/terminated/view/${viewId}`;
-    const params = { durationSeconds: durationSeconds };
-
-    // Use sendBeacon for reliability on page unload
-    if (navigator.sendBeacon) {
-      const data = new URLSearchParams(params as any);
-      navigator.sendBeacon(`${url}?${data.toString()}`);
-      return of(null);
-    } else {
-      return this.http.post(url, null, { params }).pipe(
-        catchError((error) => {
-          console.error('xAPI tracking error:', error);
-          return of(null);
-        })
-      );
-    }
+    // Note: sendBeacon approach removed - using generated client for consistency
+    // If sendBeacon is needed for reliability on page unload, consider implementing
+    // at the component level before calling this service
+    return this.generatedXApiService.viewTerminated(viewId, durationSeconds).pipe(
+      catchError((error) => {
+        console.error('xAPI tracking error:', error);
+        return of(null);
+      })
+    );
   }
 }

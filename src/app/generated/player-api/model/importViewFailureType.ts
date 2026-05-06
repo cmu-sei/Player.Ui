@@ -9,10 +9,9 @@
  */
 
 
-export const TeamPermission = {
-    ViewTeam: 'ViewTeam',
-    EditTeam: 'EditTeam',
-    ManageTeam: 'ManageTeam'
+export const ImportViewFailureType = {
+    ViewExists: 'ViewExists',
+    Other: 'Other'
 } as const;
-export type TeamPermission = typeof TeamPermission[keyof typeof TeamPermission];
+export type ImportViewFailureType = typeof ImportViewFailureType[keyof typeof ImportViewFailureType];
 
