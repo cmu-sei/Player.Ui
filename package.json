@@ -16,6 +16,7 @@
     "docker:stack:api": "docker stack deploy -c ./docker/docker-compose.yml -c ./docker/compose/api.yml player_stack",
     "docker:stack:identity": "docker stack deploy -c ./docker/docker-compose.yml -c ./docker/compose/identity.yml identity_stack",
     "docker:destroy": "docker stack rm player_stack identity_stack",
+    "swagger:gen": "curl --insecure http://localhost:4300/swagger/v1/swagger.json --output swagger.json && node_modules/@openapitools/openapi-generator-cli/bin/openapi-generator generate -i ./swagger.json -g typescript-angular -o src/app/generated/player-api --additional-properties ngVersion=12.1 --additional-properties useRxJS6=true --additional-properties modelPropertyNaming=original --type-mappings=DateTime=Date --skip-validate-spec",
     "swagger:gen-docker": "cross-env-shell docker run --rm -v $INIT_CWD:/local openapitools/openapi-generator-cli:v7.15.0 generate -i http://host.docker.internal:4300/swagger/v1/swagger.json -g typescript-angular -o /local/src/app/generated/player-api --additional-properties ngVersion=12.1 --additional-properties useRxJS6=true --additional-properties modelPropertyNaming=original --type-mappings=DateTime=Date --skip-validate-spec"
   },
   "scriptComments": {
