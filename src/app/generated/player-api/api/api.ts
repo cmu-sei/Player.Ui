@@ -29,4 +29,6 @@ export * from './viewMembership.service';
 import { ViewMembershipService } from './viewMembership.service';
 export * from './webhook.service';
 import { WebhookService } from './webhook.service';
-export const APIS = [ApplicationService, FileService, HealthService, PermissionService, RoleService, TeamService, TeamMembershipService, TeamPermissionService, TeamRoleService, UserService, ViewService, ViewMembershipService, WebhookService];
+export * from './xApi.service';
+import { XApiService } from './xApi.service';
+export const APIS = [ApplicationService, FileService, HealthService, PermissionService, RoleService, TeamService, TeamMembershipService, TeamPermissionService, TeamRoleService, UserService, ViewService, ViewMembershipService, WebhookService, XApiService];

@@ -113,7 +113,7 @@ export class AdminViewSearchComponent implements OnInit {
         this.viewService.getView(viewGuid).subscribe((view) => {
           let msg = '';
           let title = '';
-          let activation = ViewStatus.Inactive;
+          let activation: ViewStatus = ViewStatus.Inactive;
           if (
             view.status === undefined ||
             view.status === ViewStatus.Inactive

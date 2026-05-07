@@ -18,6 +18,7 @@ import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
+import { XApiService } from '../../../services/xapi/xapi.service';
 
 @Component({
     selector: 'app-application-list',
@@ -42,7 +43,8 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     private focusedAppService: FocusedAppService,
     private authService: ComnAuthService,
     private sanitizer: DomSanitizer,
-    private authQuery: ComnAuthQuery
+    private authQuery: ComnAuthQuery,
+    private xapiService: XApiService
   ) {}
 
   ngOnInit() {
@@ -100,6 +102,9 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
         window.location.reload();
       } else {
         this.focusedAppService.focusedAppUrl.next(app.themedUrl);
+        this.xapiService
+          .applicationSwitched(this.viewId, app.name, app.url)
+          .subscribe();
       }
     });
   }

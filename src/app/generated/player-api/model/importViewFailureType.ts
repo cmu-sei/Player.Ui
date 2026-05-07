@@ -14,13 +14,9 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  */
 
 
-export interface CreateApplicationCommand { 
-    name?: string | null;
-    url?: string | null;
-    icon?: string | null;
-    embeddable?: boolean | null;
-    loadInBackground?: boolean | null;
-    viewId: string;
-    applicationTemplateId?: string | null;
-}
+export const ImportViewFailureType = {
+    ViewExists: 'ViewExists',
+    Other: 'Other'
+} as const;
+export type ImportViewFailureType = typeof ImportViewFailureType[keyof typeof ImportViewFailureType];
 
