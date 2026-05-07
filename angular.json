@@ -27,7 +27,7 @@
               "src/assets",
               {
                 "glob": "auth-callback-silent.html",
-                "input": "../../libraries/Crucible.Common.Ui/projects/@crucible-common/src/lib/comn-auth/assets/",
+                "input": "node_modules/@cmusei/crucible-common/src/lib/comn-auth/assets/",
                 "output": "/"
               }
             ],
