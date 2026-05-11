@@ -101,9 +101,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
     this.data$
       .pipe(
-        mergeMap((data) =>
-          this.permissionsService.loadTeamPermissions(null, data.team.id, true),
-        ),
+        mergeMap((data) => {
+          if (!data.team) {
+            return EMPTY;
+          }
+          return this.permissionsService.loadTeamPermissions(null, data.team.id, true);
+        }),
       )
       .subscribe();
 
@@ -135,13 +138,36 @@ export class PlayerComponent implements OnInit, OnDestroy {
             : new Observable<any>(),
         ]).pipe(
           // this pipe allows us to return all previous observable values.
-          map(([view, teams]) => ({
-            state,
-            view,
-            teams: teams.filter((t) => t.isMember),
-            team: teams.find((t) => t.isPrimary),
-            title: this.settingsService.settings.AppTitle,
-          })),
+          switchMap(([view, teams]) => {
+            const memberTeams = teams.filter((t) => t.isMember);
+            const primaryTeam = teams.find((t) => t.isPrimary);
+
+            if (memberTeams.length === 0) {
+              this.messageService.displayMessage(
+                'Not a Member',
+                'You are not a member of any Teams in this View',
+              );
+              this.router.navigate(['/']);
+              return EMPTY;
+            }
+
+            if (!primaryTeam) {
+              this.messageService.displayMessage(
+                'No Primary Team',
+                'You do not have a primary team set for this View',
+              );
+              this.router.navigate(['/']);
+              return EMPTY;
+            }
+
+            return of({
+              state,
+              view,
+              teams: memberTeams,
+              team: primaryTeam,
+              title: this.settingsService.settings.AppTitle,
+            });
+          }),
           catchError((error) => {
             // If the view doesn't exist (404) or another error occurs, redirect to home
             this.messageService.displayMessage(
@@ -153,14 +179,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
           }),
         ),
       ),
-      tap(({ teams, team }) => {
-        if (teams.length === 0) {
-          this.messageService.displayMessage(
-            'Not a Member',
-            'You are not a member of any Teams in this View',
-          );
-        }
-
+      tap(({ team }) => {
         this.teamId = team.id;
         this.restoreUIState();
       }),

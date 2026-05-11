@@ -5,6 +5,10 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+
+  ::ng-deep .mat-expansion-panel-header {
+    height: 45px;
+  }
 }
 
 .notification-badge {
