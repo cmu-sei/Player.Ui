@@ -191,6 +191,16 @@ export class AdminViewSearchComponent implements OnInit {
   }
 
   onEditComplete($event) {
+    // Clear the view query parameter if it exists
+    const viewParam = this.route.snapshot.queryParamMap.get('view');
+    if (viewParam) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { view: null },
+        queryParamsHandling: 'merge'
+      });
+    }
+
     this.refreshViews();
 
     // if (this.loggedInUserService.isSuperUser$.getValue()) {

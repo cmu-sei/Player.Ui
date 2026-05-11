@@ -142,6 +142,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
             team: teams.find((t) => t.isPrimary),
             title: this.settingsService.settings.AppTitle,
           })),
+          catchError((error) => {
+            // If the view doesn't exist (404) or another error occurs, redirect to home
+            this.messageService.displayMessage(
+              'View Not Found',
+              'The view you are trying to access no longer exists or you do not have permission to access it.',
+            );
+            this.router.navigate(['/']);
+            return EMPTY;
+          }),
         ),
       ),
       tap(({ teams, team }) => {
@@ -209,8 +218,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
           dialogRef.componentInstance.setView(data.view);
         }
       });
-      dialogRef.componentInstance.editComplete.subscribe(() => {
+      dialogRef.componentInstance.editComplete.subscribe((viewId) => {
         dialogRef.close();
+        // If viewId is null, the view was deleted - navigate to home page
+        if (viewId === null) {
+          this.router.navigate(['/']);
+        }
       });
     }
   }
