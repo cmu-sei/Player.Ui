@@ -10,7 +10,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-form-field style="width: 300px">
     <input matInput [(ngModel)]="filterString" (keyup)="applyFilter($event.target.value)" placeholder="Search" />
     @if (filterString) {
-    <button mat-icon-button matSuffix (click)="applyFilter('')" title="Clear Search">
+    <button mat-icon-button matSuffix color="primary" (click)="applyFilter('')" title="Clear Search">
       <mat-icon style="transform: scale(0.85)" fontIcon="mdi-close-circle-outline"></mat-icon>
     </button>
     }
