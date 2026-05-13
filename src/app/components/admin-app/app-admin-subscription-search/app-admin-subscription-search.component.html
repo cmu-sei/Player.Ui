@@ -14,11 +14,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <h3 class="header-text ms-2">Subscriptions</h3>
     <div class="d-flex align-items-center ms-4">
       <mat-form-field style="width: 320px" subscriptSizing="dynamic">
-        <mat-icon
-          matPrefix
-          style="transform: scale(0.85); margin-right: 5px"
-          svgIcon="ic_magnify_search"
-        ></mat-icon>
         <input
           matInput
           [(ngModel)]="filterStr"
@@ -29,6 +24,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <button
             mat-icon-button
             matSuffix
+            color="primary"
             (click)="clearFilter()"
             title="Clear Search"
           >
