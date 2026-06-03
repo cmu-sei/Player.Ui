@@ -4,9 +4,10 @@
 .list-container {
   display: inline-block;
   flex-direction: column;
-  min-width: 800px;
+  min-width: 1200px;
   margin-top: 40px;
-  width: 600px;
+  width: 90%;
+  max-width: 1600px;
 }
 
 .button-end {
