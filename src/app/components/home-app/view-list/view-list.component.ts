@@ -9,6 +9,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ViewData } from '../../../models/view-data';
@@ -32,9 +33,10 @@ export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
   private userPermissionsService = inject(UserPermissionsService);
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   public dataSource = new MatTableDataSource<View>([]);
-  public displayedColumns: string[] = ['name', 'description'];
+  public displayedColumns: string[] = ['name', 'description', 'dateCreated'];
 
   public filterString: string;
   public isLoading: boolean;
@@ -70,6 +72,7 @@ export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
   }
 
   /**
