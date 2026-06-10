@@ -40,6 +40,12 @@
   margin: 0;
 }
 
+// Buttons inside the toolbar inherit the toolbar text color; force the
+// primary theme color so they match the stroked buttons in the tables.
+.mat-toolbar-row button {
+  color: var(--mat-sys-primary);
+}
+
 #userImport {
   justify-content: space-between;
 }

@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div class="d-flex">
+<mat-dialog-content class="d-flex">
   <div class="user-list-container mat-elevation-z8">
     <mat-toolbar class="background">
       <mat-toolbar-row>
@@ -225,10 +225,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-paginator>
     </div>
   </div>
-</div>
+</mat-dialog-content>
 
-<div class="d-flex justify-content-center">
-  <mat-dialog-actions>
-    <button mat-stroked-button (click)="done()">Done</button>
-  </mat-dialog-actions>
-</div>
+<mat-dialog-actions class="justify-content-center">
+  <button mat-stroked-button (click)="done()">Done</button>
+</mat-dialog-actions>
