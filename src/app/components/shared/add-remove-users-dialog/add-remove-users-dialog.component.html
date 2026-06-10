@@ -65,7 +65,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     @if (userDataSource.filteredData.length === 0) {
     <div>No results found</div>
     }
-    <mat-paginator #paginator [pageSize]="defaultPageSize" [showFirstLastButtons]="true" (page)="pageEvent = $event">
+    <mat-paginator #paginator [pageSize]="defaultPageSize" [hidePageSize]="true" [showFirstLastButtons]="true" (page)="pageEvent = $event">
     </mat-paginator>
   </div>
 
@@ -159,7 +159,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       @if (teamUserDataSource.filteredData.length === 0) {
       <div>No results found</div>
       }
-      <mat-paginator #teamPaginator [pageSize]="defaultPageSize" [showFirstLastButtons]="true">
+      <mat-paginator #teamPaginator [pageSize]="defaultPageSize" [hidePageSize]="true" [showFirstLastButtons]="true">
       </mat-paginator>
     </div>
   </div>
