@@ -25,12 +25,21 @@
   min-height: 600px;
 }
 
-.sp-icon {
-  margin-left: 10px;
-  margin-right: 20px;
+.mat-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mat-toolbar-row mat-icon {
+  color: var(--mat-sys-primary);
+}
+
+.mat-toolbar-row p {
+  font-size: 16px;
+  margin: 0;
 }
 
 #userImport {
-  display: flex;
   justify-content: space-between;
 }

@@ -50,13 +50,15 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   public isBusy: boolean;
 
   public filterString: string;
+  public teamFilterString: string;
   public defaultPageSize = 7;
   public pageEvent: PageEvent;
 
   public roles: Array<Role>;
 
   @ViewChild('searchBox') searchBox: ElementRef<HTMLInputElement>;
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  @ViewChild('paginator', { static: true }) paginator: MatPaginator;
+  @ViewChild('teamPaginator', { static: true }) teamPaginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   constructor(
@@ -70,6 +72,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     this.isLoading = false;
     this.isBusy = false;
     this.filterString = '';
+    this.teamFilterString = '';
   }
 
   /**
@@ -78,6 +81,13 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   ngOnInit() {
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.userDataSource.sort = this.sort;
+
+    // The team users list is a separate data source with its own paginator
+    // and search. Match by user name/id since TeamUser nests the user object.
+    this.teamUserDataSource.paginator = this.teamPaginator;
+    this.teamUserDataSource.filterPredicate = (data: TeamUser, filter: string) =>
+      (data.user.name ?? '').toLowerCase().includes(filter) ||
+      (data.user.id ?? '').toLowerCase().includes(filter);
 
     this.pageEvent = new PageEvent();
     this.pageEvent.pageIndex = 0;
@@ -111,6 +121,25 @@ export class AddRemoveUsersDialogComponent implements OnInit {
    */
   clearFilter() {
     this.applyFilter('');
+  }
+
+  /**
+   * Filters the team users list
+   * @param filterValue
+   */
+  applyTeamFilter(filterValue: string) {
+    this.teamFilterString = filterValue;
+    this.teamUserDataSource.filter = filterValue.trim().toLowerCase();
+    if (this.teamUserDataSource.paginator) {
+      this.teamUserDataSource.paginator.firstPage();
+    }
+  }
+
+  /**
+   * Clears the team users search string
+   */
+  clearTeamFilter() {
+    this.applyTeamFilter('');
   }
 
   /**
@@ -258,7 +287,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
         .subscribe(() => {
           const tUsers = this.teamUserDataSource.data.slice(0);
           tUsers.splice(index, 1);
-          this.teamUserDataSource = new MatTableDataSource(tUsers);
+          this.teamUserDataSource.data = tUsers;
           const allUsers = this.userDataSource.data.slice(0);
           allUsers.push(tuser.user);
           this.userDataSource = new MatTableDataSource(allUsers);
@@ -347,7 +376,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
             // Update the arrays with the new data
             this.userDataSource = new MatTableDataSource(lhsNew);
-            this.teamUserDataSource = new MatTableDataSource(teamUsers);
+            this.userDataSource.sort = this.sort;
+            this.userDataSource.paginator = this.paginator;
+            this.teamUserDataSource.data = teamUsers;
           });
       }
     };
