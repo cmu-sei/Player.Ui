@@ -66,8 +66,17 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-header-cell *matHeaderCellDef>&nbsp;</mat-header-cell>
         <mat-cell *matCellDef="let element">
           <div>
-            <button mat-stroked-button (click)="addUserToTeam(element)">
-              Add User
+            <button
+              mat-icon-button
+              [matTooltip]="
+                'Add ' + (element.name ?? element.id) + ' to team'
+              "
+              (click)="addUserToTeam(element)"
+            >
+              <mat-icon
+                class="mdi-24px self-center"
+                fontIcon="mdi-plus-circle-outline"
+              ></mat-icon>
             </button>
           </div>
         </mat-cell>
@@ -194,8 +203,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-header-cell *matHeaderCellDef>&nbsp;</mat-header-cell>
           <mat-cell *matCellDef="let element">
             <div>
-              <button mat-stroked-button (click)="removeUserFromTeam(element)">
-                Remove
+              <button
+                mat-icon-button
+                [matTooltip]="
+                  'Remove ' +
+                  (element.user.name ?? element.user.id) +
+                  ' from team'
+                "
+                (click)="removeUserFromTeam(element)"
+              >
+                <mat-icon
+                  class="mdi-24px self-center"
+                  fontIcon="mdi-minus-circle-outline"
+                ></mat-icon>
               </button>
             </div>
           </mat-cell>

@@ -49,3 +49,27 @@
 #userImport {
   justify-content: space-between;
 }
+
+// Narrow the icon-button action columns and let the User Name columns absorb
+// the freed width.
+.mat-table-all-users {
+  .mat-column-name {
+    flex: 1 1 auto;
+  }
+
+  .mat-column-id {
+    flex: 0 0 56px;
+    justify-content: center;
+  }
+}
+
+.mat-table-team-users {
+  .mat-column-name {
+    flex: 1 1 auto;
+  }
+
+  .mat-column-user {
+    flex: 0 0 56px;
+    justify-content: center;
+  }
+}
