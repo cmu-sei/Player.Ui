@@ -90,11 +90,15 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   ngOnInit() {
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.userDataSource.sort = this.sort;
+    this.userDataSource.paginator = this.paginator;
 
     // The team users list is a separate data source with its own paginator
     // and search. Match by user name/id since TeamUser nests the user object.
     this.teamUserDataSource.paginator = this.teamPaginator;
-    this.teamUserDataSource.filterPredicate = (data: TeamUser, filter: string) =>
+    this.teamUserDataSource.filterPredicate = (
+      data: TeamUser,
+      filter: string,
+    ) =>
       (data.user.name ?? '').toLowerCase().includes(filter) ||
       (data.user.id ?? '').toLowerCase().includes(filter);
 
@@ -176,9 +180,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           const newAllUsers = allUsers.filter(
             (u) => !tUsers.some((tu) => tu.id === u.id),
           );
-          this.userDataSource = new MatTableDataSource(newAllUsers);
-          this.userDataSource.sort = this.sort;
-          this.userDataSource.paginator = this.paginator;
+          this.userDataSource.data = newAllUsers;
           this.isLoading = false;
           return;
         }
@@ -220,9 +222,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
                 const index = newAllUsers.findIndex((u) => u.id === tu.user.id);
                 newAllUsers.splice(index, 1);
               });
-              this.userDataSource = new MatTableDataSource(newAllUsers);
-              this.userDataSource.sort = this.sort;
-              this.userDataSource.paginator = this.paginator;
+              this.userDataSource.data = newAllUsers;
               this.isLoading = false;
             },
           ); // forkJoin
@@ -235,9 +235,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             const index = newAllUsers.findIndex((u) => u.id === tu.user.id);
             newAllUsers.splice(index, 1);
           });
-          this.userDataSource = new MatTableDataSource(newAllUsers);
-          this.userDataSource.sort = this.sort;
-          this.userDataSource.paginator = this.paginator;
+          this.userDataSource.data = newAllUsers;
           this.isLoading = false;
         }
       }); // getTeamUsers
@@ -316,10 +314,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     if (i >= 0) {
       allUsers.splice(i, 1);
     }
-    this.userDataSource = new MatTableDataSource(allUsers);
-    this.userDataSource.sort = this.sort;
-    this.userDataSource.paginator = this.paginator;
-    this.applyFilter(this.filterString);
+    this.userDataSource.data = allUsers;
     this.searchBox.nativeElement.focus();
     this.isBusy = false;
   }
@@ -346,10 +341,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             this.teamUserDataSource.data = tUsers;
             const allUsers = this.userDataSource.data.slice(0);
             allUsers.push(tuser.user);
-            this.userDataSource = new MatTableDataSource(allUsers);
-            this.userDataSource.sort = this.sort;
-            this.userDataSource.paginator = this.paginator;
-            this.applyFilter(this.filterString);
+            this.userDataSource.data = allUsers;
             this.searchBox.nativeElement.focus();
             this.isBusy = false;
           },
@@ -439,9 +431,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             );
 
             // Update the arrays with the new data
-            this.userDataSource = new MatTableDataSource(lhsNew);
-            this.userDataSource.sort = this.sort;
-            this.userDataSource.paginator = this.paginator;
+            this.userDataSource.data = lhsNew;
             this.teamUserDataSource.data = teamUsers;
           });
       }
