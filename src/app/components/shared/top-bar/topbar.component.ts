@@ -15,9 +15,10 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
-import { Observable, Subject } from 'rxjs';
-import { filter, takeUntil } from 'rxjs/operators';
+import { combineLatest, Observable, Subject } from 'rxjs';
+import { filter, map, takeUntil } from 'rxjs/operators';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
+import { ManageTeamsComponent } from '../../player/manage-teams/manage-teams.component';
 import { UserPresenceComponent } from '../../player/user-presence-page/user-presence/user-presence.component';
 import { TopbarView } from './topbar.models';
 import { Router } from '@angular/router';
@@ -61,6 +62,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
     ViewPermission.ManageView,
   );
 
+  // Show "Manage Teams" to users who can manage at least one Team but do not have
+  // full Edit View access (those users use "Edit View" instead).
+  showManageTeams$ = combineLatest([
+    this.permissionsService.canManageAnyTeam$,
+    this.showEditView$,
+  ]).pipe(map(([canManageTeam, canEditView]) => canManageTeam && !canEditView));
+
   @ViewChild('userPresenceDialog')
   userPresenceDialog: TemplateRef<UserPresenceComponent>;
 
@@ -96,6 +104,14 @@ export class TopbarComponent implements OnInit, OnDestroy {
   editFn(event) {
     event.preventDefault();
     this.editView.emit(event);
+  }
+
+  openManageTeams() {
+    this.dialog.open(ManageTeamsComponent, {
+      data: { viewId: this.viewId },
+      maxWidth: '100vw',
+      width: 'auto',
+    });
   }
 
   editFnNewTab(event) {

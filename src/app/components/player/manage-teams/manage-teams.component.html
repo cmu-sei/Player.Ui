@@ -1,0 +1,64 @@
+<!--
+Copyright 2025 Carnegie Mellon University. All Rights Reserved.
+Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+-->
+
+<h4 mat-dialog-title>Manage Teams: {{ view()?.name }}</h4>
+
+<mat-dialog-content class="manage-teams-content">
+  @if (teamsResource.isLoading() && !teamsResource.hasValue()) {
+    <mat-card
+      appearance="outlined"
+      class="d-flex justify-content-center align-items-center"
+    >
+      <mat-progress-spinner
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+    </mat-card>
+  } @else if (teamsResource.error()) {
+    <mat-card appearance="outlined" class="empty-state">
+      Unable to load teams. Please try again.
+    </mat-card>
+  } @else if (teams().length === 0) {
+    <mat-card appearance="outlined" class="empty-state">
+      You do not have permission to manage any Teams in this View.
+    </mat-card>
+  } @else {
+    <mat-accordion>
+      @for (teamContainer of teams(); track teamContainer.team.id) {
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>{{ teamContainer.team.name }}</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="d-flex flex-column align-items-center">
+            <button
+              mat-button
+              (click)="openUsersDialog(teamContainer.team)"
+              title="Add or remove users for this team"
+            >
+              <span
+                class="d-inline-block"
+                [matBadge]="teamContainer.userCount"
+                [matBadgeHidden]="teamContainer.userCount === null"
+                matBadgePosition="above after"
+                matBadgeColor="accent"
+              >
+                <img
+                  class="left-icon"
+                  src="assets/img/SP_Icon_User.png"
+                  alt="Users"
+                />
+              </span>
+            </button>
+            <span>Users</span>
+          </div>
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions class="justify-content-center">
+  <button mat-stroked-button mat-dialog-close>Done</button>
+</mat-dialog-actions>

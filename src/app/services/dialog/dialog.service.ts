@@ -96,13 +96,15 @@ export class DialogService {
   public addRemoveUsersToTeam(
     title: string,
     team: Team,
-    configData?: any
+    configData?: any,
+    canManageRoles = true
   ): Observable<boolean> {
     const dialogRef = this.dialog.open(
       AddRemoveUsersDialogComponent,
       configData || {}
     );
     dialogRef.componentInstance.title = title;
+    dialogRef.componentInstance.canManageRoles = canManageRoles;
     dialogRef.componentInstance.loadTeam(team);
     return dialogRef.afterClosed();
   }
