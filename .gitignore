@@ -126,6 +126,9 @@ _TeamCity*
 *.coverage
 *.coveragexml
 
+# Vitest / v8 coverage output
+/coverage
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

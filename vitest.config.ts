@@ -24,5 +24,13 @@ export default defineConfig({
     setupFiles: ['src/test-setup.vitest.ts'],
     include: ['src/app/**/*.vitest.ts'],
     reporters: ['default'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['**/generated/**'],
+      // Keep the checked-in TEST-COVERAGE-REPORT.md (and other manual files)
+      // in coverage/ — without this, v8 wipes the dir before every run.
+      clean: false,
+    }
   },
 });
