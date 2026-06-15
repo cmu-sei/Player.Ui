@@ -4,12 +4,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
@@ -39,12 +38,11 @@ interface ManageableTeam {
   styleUrls: ['./manage-teams.component.scss'],
   imports: [
     CommonModule,
-    MatBadgeModule,
     MatButtonModule,
     MatCardModule,
     MatDialogModule,
-    MatExpansionModule,
     MatIconModule,
+    MatListModule,
     MatProgressSpinnerModule,
   ],
 })
@@ -118,7 +116,7 @@ export class ManageTeamsComponent {
       .addRemoveUsersToTeam(
         'Add or Remove Users for team ' + team.name,
         team,
-        { maxWidth: '100vw', width: 'auto' },
+        { maxWidth: '100vw', width: 'auto', restoreFocus: false },
         false,
       )
       // Member counts came from getTeamUsers at load; refresh them after the

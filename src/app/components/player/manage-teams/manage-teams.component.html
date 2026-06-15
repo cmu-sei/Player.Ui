@@ -25,37 +25,27 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       You do not have permission to manage any Teams in this View.
     </mat-card>
   } @else {
-    <mat-accordion>
+    <mat-action-list>
       @for (teamContainer of teams(); track teamContainer.team.id) {
-        <mat-expansion-panel>
-          <mat-expansion-panel-header>
-            <mat-panel-title>{{ teamContainer.team.name }}</mat-panel-title>
-          </mat-expansion-panel-header>
-          <div class="d-flex flex-column align-items-center">
-            <button
-              mat-button
-              (click)="openUsersDialog(teamContainer.team)"
-              title="Add or remove users for this team"
-            >
-              <span
-                class="d-inline-block"
-                [matBadge]="teamContainer.userCount"
-                [matBadgeHidden]="teamContainer.userCount === null"
-                matBadgePosition="above after"
-                matBadgeColor="accent"
-              >
-                <img
-                  class="left-icon"
-                  src="assets/img/SP_Icon_User.png"
-                  alt="Users"
-                />
-              </span>
-            </button>
-            <span>Users</span>
-          </div>
-        </mat-expansion-panel>
+        <button
+          mat-list-item
+          (click)="openUsersDialog(teamContainer.team)"
+          [attr.title]="'Add or remove users for ' + teamContainer.team.name"
+        >
+          <span matListItemTitle>{{ teamContainer.team.name }}</span>
+          @if (teamContainer.userCount !== null) {
+            <span matListItemMeta class="d-flex align-items-center gap-1">
+              <img
+                class="left-icon"
+                src="assets/img/SP_Icon_User.png"
+                alt="Users"
+              />
+              {{ teamContainer.userCount }}
+            </span>
+          }
+        </button>
       }
-    </mat-accordion>
+    </mat-action-list>
   }
 </mat-dialog-content>
 

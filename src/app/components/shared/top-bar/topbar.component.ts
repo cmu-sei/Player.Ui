@@ -111,6 +111,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
       data: { viewId: this.viewId },
       maxWidth: '100vw',
       width: 'auto',
+      autoFocus: 'dialog',
     });
   }
 
