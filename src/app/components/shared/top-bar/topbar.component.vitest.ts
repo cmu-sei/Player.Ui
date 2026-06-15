@@ -53,6 +53,7 @@ async function renderTopbar(
     canViewAdmin?: boolean;
     canManageViews?: boolean;
     canCreateViews?: boolean;
+    confirmResult?: boolean;
   } = {},
 ) {
   const {
@@ -70,7 +71,13 @@ async function renderTopbar(
 
   mockLogout.mockClear();
 
-  return renderComponent(TopbarComponent, {
+  const setUserTheme = vi.fn();
+  const dialogOpen = vi.fn();
+  const dialogCloseAll = vi.fn();
+  const snackbarOpen = vi.fn();
+  const confirm = vi.fn(() => of({ confirm: overrides.confirmResult ?? false }));
+
+  const rendered = await renderComponent(TopbarComponent, {
     declarations: [TopbarComponent],
     providers: [
       {
@@ -94,7 +101,7 @@ async function renderTopbar(
           isAuthenticated$: of(true),
           user$: of({}),
           logout: mockLogout,
-          setUserTheme: vi.fn(),
+          setUserTheme,
         },
       },
       {
@@ -106,15 +113,15 @@ async function renderTopbar(
       },
       {
         provide: MatDialog,
-        useValue: { open: vi.fn(), closeAll: vi.fn() },
+        useValue: { open: dialogOpen, closeAll: dialogCloseAll },
       },
       {
         provide: DialogService,
-        useValue: { confirm: () => of({ confirm: false }) },
+        useValue: { confirm },
       },
       {
         provide: MatSnackBar,
-        useValue: { open: vi.fn() },
+        useValue: { open: snackbarOpen },
       },
     ],
     componentProperties: {
@@ -127,6 +134,15 @@ async function renderTopbar(
       mini,
     },
   });
+
+  return {
+    ...rendered,
+    setUserTheme,
+    dialogOpen,
+    dialogCloseAll,
+    snackbarOpen,
+    confirm,
+  };
 }
 
 describe('TopbarComponent', () => {
@@ -321,5 +337,136 @@ describe('TopbarComponent', () => {
     await user.click(menuButton);
     expect(screen.getByText('Exit Administration')).toBeInTheDocument();
     expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+  });
+
+  describe('setTeamFn()', () => {
+    it('emits setTeam when an id is provided', async () => {
+      const { fixture } = await renderTopbar();
+      const spy = vi.fn();
+      fixture.componentInstance.setTeam.subscribe(spy);
+      fixture.componentInstance.setTeamFn('team-9');
+      expect(spy).toHaveBeenCalledWith('team-9');
+    });
+
+    it('does not emit when id is empty', async () => {
+      const { fixture } = await renderTopbar();
+      const spy = vi.fn();
+      fixture.componentInstance.setTeam.subscribe(spy);
+      fixture.componentInstance.setTeamFn('');
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('themeFn()', () => {
+    it('sets the dark theme when toggled on', async () => {
+      const { fixture, setUserTheme } = await renderTopbar();
+      fixture.componentInstance.themeFn({ checked: true });
+      expect(setUserTheme).toHaveBeenCalledWith('dark-theme');
+    });
+
+    it('sets the light theme when toggled off', async () => {
+      const { fixture, setUserTheme } = await renderTopbar();
+      fixture.componentInstance.themeFn({ checked: false });
+      expect(setUserTheme).toHaveBeenCalledWith('light-theme');
+    });
+  });
+
+  describe('editFn / editFnNewTab', () => {
+    it('editFn prevents default and emits the event', async () => {
+      const { fixture } = await renderTopbar();
+      const spy = vi.fn();
+      fixture.componentInstance.editView.subscribe(spy);
+      const preventDefault = vi.fn();
+      fixture.componentInstance.editFn({ preventDefault });
+      expect(preventDefault).toHaveBeenCalled();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('editFnNewTab emits the event flagged for a new browser tab', async () => {
+      const { fixture } = await renderTopbar();
+      const spy = vi.fn();
+      fixture.componentInstance.editView.subscribe(spy);
+      fixture.componentInstance.editFnNewTab({ foo: 1 });
+      expect(spy).toHaveBeenCalledWith({ foo: 1, isNewBrowserTab: true });
+    });
+  });
+
+  it('sidenavToggleFn emits the negation of the current sidenav opened state', async () => {
+    const { fixture } = await renderTopbar({
+      sidenav: { opened: true } as never,
+    });
+    const spy = vi.fn();
+    fixture.componentInstance.sidenavToggle.subscribe(spy);
+    fixture.componentInstance.sidenavToggleFn();
+    expect(spy).toHaveBeenCalledWith(false);
+  });
+
+  describe('user presence dialog', () => {
+    it('openUserPresence opens the presence dialog', async () => {
+      const { fixture, dialogOpen } = await renderTopbar();
+      fixture.componentInstance.openUserPresence();
+      expect(dialogOpen).toHaveBeenCalled();
+    });
+
+    it('closeUserPresence closes all dialogs', async () => {
+      const { fixture, dialogCloseAll } = await renderTopbar();
+      fixture.componentInstance.closeUserPresence();
+      expect(dialogCloseAll).toHaveBeenCalled();
+    });
+  });
+
+  it('getEditViewUrl builds the admin views URL for the current view id', async () => {
+    const { fixture } = await renderTopbar({ viewId: 'view-42' });
+    expect(fixture.componentInstance.getEditViewUrl()).toContain(
+      '/admin?section=views&view=view-42',
+    );
+  });
+
+  describe('resetUI()', () => {
+    it('clears the team UI state when confirmed', async () => {
+      const { fixture, confirm } = await renderTopbar({
+        team: { id: 'team-7', name: 'Team 7' },
+        confirmResult: true,
+      });
+      // resetUI() also calls window.location.reload(); jsdom logs a
+      // "Not implemented: navigation" warning but does not throw, so we just
+      // assert the localStorage key for the team was removed.
+      const removeItem = vi.spyOn(Storage.prototype, 'removeItem');
+      fixture.componentInstance.resetUI();
+      expect(confirm).toHaveBeenCalled();
+      expect(removeItem).toHaveBeenCalledWith('team-7');
+      removeItem.mockRestore();
+    });
+
+    it('does nothing when the reset is cancelled', async () => {
+      const { fixture } = await renderTopbar({
+        team: { id: 'team-7', name: 'Team 7' },
+        confirmResult: false,
+      });
+      localStorage.setItem('team-7', '{"width":300}');
+      fixture.componentInstance.resetUI();
+      expect(localStorage.getItem('team-7')).toBe('{"width":300}');
+      localStorage.removeItem('team-7');
+    });
+  });
+
+  it('openSnackBar opens a top snackbar with the message', async () => {
+    const { fixture, snackbarOpen } = await renderTopbar();
+    fixture.componentInstance.openSnackBar('Saved');
+    expect(snackbarOpen).toHaveBeenCalledWith(
+      'Saved',
+      '',
+      expect.objectContaining({ verticalPosition: 'top' }),
+    );
+  });
+
+  it('ngOnDestroy completes the unsubscribe subject', async () => {
+    const { fixture } = await renderTopbar();
+    const complete = vi.spyOn(
+      fixture.componentInstance.unsubscribe$,
+      'complete',
+    );
+    fixture.componentInstance.ngOnDestroy();
+    expect(complete).toHaveBeenCalled();
   });
 });

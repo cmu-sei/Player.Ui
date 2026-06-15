@@ -49,7 +49,14 @@ async function renderSearch(
   const deleteRole = vi.fn(() => of(undefined));
 
   const createPermissionDialog = vi.fn(() =>
-    of({ permission: { key: newPermissionKey, name: newPermissionKey, description: 'd' } }),
+    of({
+      permission: {
+        id: 'p1',
+        key: newPermissionKey,
+        name: newPermissionKey,
+        description: 'd',
+      },
+    }),
   );
   const createRoleDialog = vi.fn(() => of({ name: newRoleName }));
   const confirmDialog = vi.fn(() => of(confirmValue));
@@ -83,9 +90,11 @@ async function renderSearch(
     ...rendered,
     getPermissions,
     createPermission,
+    updatePermission,
     deletePermission,
     getRoles,
     createRole,
+    updateRole,
     deleteRole,
     createPermissionDialog,
     createRoleDialog,
@@ -193,5 +202,92 @@ describe('AdminRolePermissionSearchComponent', () => {
       roles[0],
       permissions,
     );
+  });
+
+  it('clearRoleFilter resets the role filter', async () => {
+    const { fixture } = await renderSearch();
+    const c = fixture.componentInstance;
+    c.applyRoleFilter('admin');
+    c.clearRoleFilter();
+    expect(c.filterRoleString).toBe('');
+    expect(c.roleDataSource.filter).toBe('');
+  });
+
+  describe('editPermission()', () => {
+    it('updates the permission when the dialog returns a name', async () => {
+      const { fixture, updatePermission } = await renderSearch({
+        newPermissionKey: 'Renamed',
+      });
+      fixture.componentInstance.editPermission(permissions[0]);
+      expect(updatePermission).toHaveBeenCalledWith(
+        'p1',
+        expect.objectContaining({ name: 'Renamed' }),
+      );
+    });
+
+    it('is a no-op when the dialog returns an empty name', async () => {
+      const { fixture, updatePermission } = await renderSearch({
+        newPermissionKey: '',
+      });
+      fixture.componentInstance.editPermission(permissions[0]);
+      expect(updatePermission).not.toHaveBeenCalled();
+    });
+  });
+
+  it('executePermissionAction("edit") routes to editPermission', async () => {
+    const { fixture, updatePermission } = await renderSearch({
+      newPermissionKey: 'Edited',
+    });
+    fixture.componentInstance.executePermissionAction('edit', permissions[0]);
+    expect(updatePermission).toHaveBeenCalledWith(
+      'p1',
+      expect.objectContaining({ name: 'Edited' }),
+    );
+  });
+
+  it('executePermissionAction with an unknown action alerts', async () => {
+    const { fixture } = await renderSearch();
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    fixture.componentInstance.executePermissionAction('bogus', permissions[0]);
+    expect(alertSpy).toHaveBeenCalledWith('Unknown Action');
+    alertSpy.mockRestore();
+  });
+
+  describe('editRole()', () => {
+    it('updates the role when the dialog returns a name', async () => {
+      const { fixture, updateRole } = await renderSearch({
+        newRoleName: 'Renamed Role',
+      });
+      fixture.componentInstance.editRole(roles[0]);
+      expect(updateRole).toHaveBeenCalledWith('r1', { name: 'Renamed Role' });
+    });
+
+    it('is a no-op when the dialog returns an empty name', async () => {
+      const { fixture, updateRole } = await renderSearch({ newRoleName: '' });
+      fixture.componentInstance.editRole(roles[0]);
+      expect(updateRole).not.toHaveBeenCalled();
+    });
+  });
+
+  it('executeRoleAction("edit") routes to editRole', async () => {
+    const { fixture, updateRole } = await renderSearch({
+      newRoleName: 'Edited Role',
+    });
+    fixture.componentInstance.executeRoleAction('edit', roles[0]);
+    expect(updateRole).toHaveBeenCalledWith('r1', { name: 'Edited Role' });
+  });
+
+  it('does not delete a role when confirm returns false', async () => {
+    const { fixture, deleteRole } = await renderSearch({ confirmValue: false });
+    fixture.componentInstance.executeRoleAction('delete', roles[0]);
+    expect(deleteRole).not.toHaveBeenCalled();
+  });
+
+  it('executeRoleAction with an unknown action alerts', async () => {
+    const { fixture } = await renderSearch();
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    fixture.componentInstance.executeRoleAction('bogus', roles[0]);
+    expect(alertSpy).toHaveBeenCalledWith('Unknown Action');
+    alertSpy.mockRestore();
   });
 });
