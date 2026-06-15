@@ -50,6 +50,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           Edit View
         </a>
         }
+        @if (team && (showManageTeams$ | async)) {
+        <button mat-menu-item (click)="openManageTeams()">
+          Manage Teams
+        </button>
+        }
         @if ((showAdministration$ | async) && topbarView === 'player-admin') {
         <a [routerLink]="['/']" mat-menu-item>
           Exit Administration

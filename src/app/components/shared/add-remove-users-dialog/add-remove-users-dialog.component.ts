@@ -40,8 +40,17 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   public title: string;
   public team: Team;
 
+  // When false, the dialog runs in a restricted mode for users who only have
+  // ManageTeam (not ManageView): the per-user Role column is hidden and team
+  // memberships are not fetched, since those endpoints require ManageView.
+  public canManageRoles = true;
+
   public displayedUserColumns: string[] = ['name', 'id'];
-  public displayedTeamColumns: string[] = ['name', 'teamMembership', 'user'];
+  public get displayedTeamColumns(): string[] {
+    return this.canManageRoles
+      ? ['name', 'teamMembership', 'user']
+      : ['name', 'user'];
+  }
   public userDataSource = new MatTableDataSource<User>(new Array<User>());
   public teamUserDataSource = new MatTableDataSource<TeamUser>(
     new Array<TeamUser>(),
@@ -81,11 +90,15 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   ngOnInit() {
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.userDataSource.sort = this.sort;
+    this.userDataSource.paginator = this.paginator;
 
     // The team users list is a separate data source with its own paginator
     // and search. Match by user name/id since TeamUser nests the user object.
     this.teamUserDataSource.paginator = this.teamPaginator;
-    this.teamUserDataSource.filterPredicate = (data: TeamUser, filter: string) =>
+    this.teamUserDataSource.filterPredicate = (
+      data: TeamUser,
+      filter: string,
+    ) =>
       (data.user.name ?? '').toLowerCase().includes(filter) ||
       (data.user.id ?? '').toLowerCase().includes(filter);
 
@@ -157,6 +170,21 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           return this.compare(a.name, b.name, true);
         });
 
+        // Restricted mode (ManageTeam only): role management requires reading and
+        // editing team memberships, which need ManageView. Build the team-user
+        // list directly from getTeamUsers with no membership and skip those calls.
+        if (!this.canManageRoles) {
+          this.teamUserDataSource.data = tUsers.map(
+            (us) => new TeamUser(us.name, us, null),
+          );
+          const newAllUsers = allUsers.filter(
+            (u) => !tUsers.some((tu) => tu.id === u.id),
+          );
+          this.userDataSource.data = newAllUsers;
+          this.isLoading = false;
+          return;
+        }
+
         if (tUsers.length > 0) {
           const newTeamUsers = new Array<TeamUser>();
           // The following gets kind of crazy.  Because observables are non-blocking, an array
@@ -194,9 +222,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
                 const index = newAllUsers.findIndex((u) => u.id === tu.user.id);
                 newAllUsers.splice(index, 1);
               });
-              this.userDataSource = new MatTableDataSource(newAllUsers);
-              this.userDataSource.sort = this.sort;
-              this.userDataSource.paginator = this.paginator;
+              this.userDataSource.data = newAllUsers;
               this.isLoading = false;
             },
           ); // forkJoin
@@ -209,9 +235,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             const index = newAllUsers.findIndex((u) => u.id === tu.user.id);
             newAllUsers.splice(index, 1);
           });
-          this.userDataSource = new MatTableDataSource(newAllUsers);
-          this.userDataSource.sort = this.sort;
-          this.userDataSource.paginator = this.paginator;
+          this.userDataSource.data = newAllUsers;
           this.isLoading = false;
         }
       }); // getTeamUsers
@@ -240,33 +264,59 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     );
     if (index === -1) {
       this.isBusy = true;
-      this.userService.addUserToTeam(this.team.id, user.id).subscribe(() => {
-        const tUsers = this.teamUserDataSource.data.slice(0);
+      this.userService.addUserToTeam(this.team.id, user.id).subscribe({
+        next: () => {
+          // In restricted mode we cannot read team memberships, so add the user
+          // with a null membership rather than fetching one.
+          if (!this.canManageRoles) {
+            this.addTeamUserToTable(new TeamUser(user.name, user, null));
+            return;
+          }
 
-        this.teamMembershipService
-          .getTeamMemberships(user.id, this.team.viewId)
-          .subscribe((tmbs) => {
-            const teamMembership = tmbs.find(
-              (tmb) => tmb.teamId === this.team.id,
-            );
-            const tUser = new TeamUser(user.name, user, teamMembership);
-            tUsers.push(tUser);
-            tUsers.sort((a, b) => {
-              return this.compare(a.user.name, b.user.name, true);
+          this.teamMembershipService
+            .getTeamMemberships(user.id, this.team.viewId)
+            .subscribe({
+              next: (tmbs) => {
+                const teamMembership = tmbs.find(
+                  (tmb) => tmb.teamId === this.team.id,
+                );
+                this.addTeamUserToTable(
+                  new TeamUser(user.name, user, teamMembership),
+                );
+              },
+              error: (err) => {
+                console.error('Error fetching team membership: ', err);
+                this.isBusy = false;
+              },
             });
-            this.teamUserDataSource.data = tUsers;
-            const allUsers = this.userDataSource.data.slice(0);
-            const i = allUsers.findIndex((u) => u.id === user.id);
-            allUsers.splice(i, 1);
-            this.userDataSource = new MatTableDataSource(allUsers);
-            this.userDataSource.sort = this.sort;
-            this.userDataSource.paginator = this.paginator;
-            this.applyFilter(this.filterString);
-            this.searchBox.nativeElement.focus();
-            this.isBusy = false;
-          });
+        },
+        error: (err) => {
+          console.error('Error adding user to team: ', err);
+          this.isBusy = false;
+        },
       });
     }
+  }
+
+  /**
+   * Adds a TeamUser to the team-users table and removes them from the all-users table.
+   * @param tUser The newly added team user
+   */
+  private addTeamUserToTable(tUser: TeamUser): void {
+    const tUsers = this.teamUserDataSource.data.slice(0);
+    tUsers.push(tUser);
+    tUsers.sort((a, b) => {
+      return this.compare(a.user.name, b.user.name, true);
+    });
+    this.teamUserDataSource.data = tUsers;
+    const allUsers = this.userDataSource.data.slice(0);
+    const i = allUsers.findIndex((u) => u.id === tUser.user.id);
+    if (i >= 0) {
+      allUsers.splice(i, 1);
+    }
+    this.userDataSource.data = allUsers;
+    this.searchBox.nativeElement.focus();
+    this.isBusy = false;
   }
 
   /**
@@ -284,23 +334,29 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       this.isBusy = true;
       this.userService
         .removeUserFromTeam(this.team.id, tuser.user.id)
-        .subscribe(() => {
-          const tUsers = this.teamUserDataSource.data.slice(0);
-          tUsers.splice(index, 1);
-          this.teamUserDataSource.data = tUsers;
-          const allUsers = this.userDataSource.data.slice(0);
-          allUsers.push(tuser.user);
-          this.userDataSource = new MatTableDataSource(allUsers);
-          this.userDataSource.sort = this.sort;
-          this.userDataSource.paginator = this.paginator;
-          this.applyFilter(this.filterString);
-          this.searchBox.nativeElement.focus();
-          this.isBusy = false;
+        .subscribe({
+          next: () => {
+            const tUsers = this.teamUserDataSource.data.slice(0);
+            tUsers.splice(index, 1);
+            this.teamUserDataSource.data = tUsers;
+            const allUsers = this.userDataSource.data.slice(0);
+            allUsers.push(tuser.user);
+            this.userDataSource.data = allUsers;
+            this.searchBox.nativeElement.focus();
+            this.isBusy = false;
+          },
+          error: (err) => {
+            console.error('Error removing user from team: ', err);
+            this.isBusy = false;
+          },
         });
     }
   }
 
   updateMembership(teamUser: TeamUser): void {
+    if (!this.canManageRoles || !teamUser.teamMembership) {
+      return;
+    }
     console.log(
       'Update Team Membership: ' +
         teamUser.name +
@@ -375,9 +431,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
             );
 
             // Update the arrays with the new data
-            this.userDataSource = new MatTableDataSource(lhsNew);
-            this.userDataSource.sort = this.sort;
-            this.userDataSource.paginator = this.paginator;
+            this.userDataSource.data = lhsNew;
             this.teamUserDataSource.data = teamUsers;
           });
       }

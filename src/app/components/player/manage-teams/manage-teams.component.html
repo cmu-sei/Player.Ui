@@ -1,0 +1,54 @@
+<!--
+Copyright 2025 Carnegie Mellon University. All Rights Reserved.
+Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+-->
+
+<h4 mat-dialog-title>Manage Teams: {{ view()?.name }}</h4>
+
+<mat-dialog-content class="manage-teams-content">
+  @if (teamsResource.isLoading() && !teamsResource.hasValue()) {
+    <mat-card
+      appearance="outlined"
+      class="d-flex justify-content-center align-items-center"
+    >
+      <mat-progress-spinner
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+    </mat-card>
+  } @else if (teamsResource.error()) {
+    <mat-card appearance="outlined" class="empty-state">
+      Unable to load teams. Please try again.
+    </mat-card>
+  } @else if (teams().length === 0) {
+    <mat-card appearance="outlined" class="empty-state">
+      You do not have permission to manage any Teams in this View.
+    </mat-card>
+  } @else {
+    <mat-action-list>
+      @for (teamContainer of teams(); track teamContainer.team.id) {
+        <button
+          mat-list-item
+          (click)="openUsersDialog(teamContainer.team)"
+          [attr.title]="'Add or remove users for ' + teamContainer.team.name"
+        >
+          <span matListItemTitle>{{ teamContainer.team.name }}</span>
+          @if (teamContainer.userCount !== null) {
+            <span matListItemMeta class="d-flex align-items-center gap-1">
+              <img
+                class="left-icon"
+                src="assets/img/SP_Icon_User.png"
+                alt="Users"
+              />
+              {{ teamContainer.userCount }}
+            </span>
+          }
+        </button>
+      }
+    </mat-action-list>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions class="justify-content-center">
+  <button mat-stroked-button mat-dialog-close>Done</button>
+</mat-dialog-actions>
