@@ -139,7 +139,8 @@ describe('ApplicationListComponent', () => {
     app.themedUrl = 'https://a2.test/app';
     fixture.componentInstance.openApplication(app, event);
     expect(event.preventDefault).toHaveBeenCalled();
-    await new Promise((r) => setTimeout(r, 0));
+    // Flush the isAuthenticated() promise that openInFocusedApp awaits.
+    await fixture.whenStable();
     expect(focusedAppUrl.value).toBe('https://a2.test/app');
   });
 
@@ -167,7 +168,8 @@ describe('ApplicationListComponent', () => {
     const app = makeApp('a2', 'https://a2.test');
     app.themedUrl = 'https://a2.test';
     fixture.componentInstance.openInFocusedApp(app);
-    await new Promise((r) => setTimeout(r, 0));
+    // Flush the isAuthenticated() promise that openInFocusedApp awaits.
+    await fixture.whenStable();
     expect(isAuth).toHaveBeenCalled();
   });
 

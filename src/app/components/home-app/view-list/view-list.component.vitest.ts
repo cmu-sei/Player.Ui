@@ -1,8 +1,8 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect } from 'vitest';
-import { of } from 'rxjs';
+import { describe, it, expect, vi } from 'vitest';
+import { of, BehaviorSubject } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { ViewListComponent } from './view-list.component';
@@ -10,7 +10,7 @@ import { renderComponent } from 'src/app/test-utils/render-component';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { ViewsService } from '../../../services/views/views.service';
 import { DialogService } from '../../../services/dialog/dialog.service';
-import { SystemPermission } from '../../../generated/player-api';
+import { SystemPermission, View } from '../../../generated/player-api';
 
 function createMockPermissionsService(hasCreateViews: boolean) {
   return {
@@ -25,19 +25,25 @@ function createMockPermissionsService(hasCreateViews: boolean) {
   };
 }
 
-const mockViewsService = {
-  views$: of([]),
-  loadMyViews: () => of([]),
-  createView: () => of({}),
-};
+async function renderViewList(
+  hasCreateViews = false,
+  overrides: {
+    views?: View[];
+    nameResult?: { wasCancelled: boolean; nameValue?: string };
+  } = {},
+) {
+  const {
+    views = [],
+    nameResult = { wasCancelled: true, nameValue: '' },
+  } = overrides;
 
-const mockDialogService = {
-  confirm: () => of(true),
-  name: () => of({ wasCancelled: true, nameValue: '' }),
-};
+  const stubs = {
+    loadMyViews: vi.fn(() => of([])),
+    createView: vi.fn(() => of({ id: 'created' })),
+    name: vi.fn(() => of(nameResult)),
+  };
 
-async function renderViewList(hasCreateViews = false) {
-  return renderComponent(ViewListComponent, {
+  const rendered = await renderComponent(ViewListComponent, {
     declarations: [ViewListComponent],
     imports: [MatTableModule, MatSortModule],
     providers: [
@@ -45,10 +51,22 @@ async function renderViewList(hasCreateViews = false) {
         provide: UserPermissionsService,
         useValue: createMockPermissionsService(hasCreateViews),
       },
-      { provide: ViewsService, useValue: mockViewsService },
-      { provide: DialogService, useValue: mockDialogService },
+      {
+        provide: ViewsService,
+        useValue: {
+          views$: new BehaviorSubject<View[]>(views).asObservable(),
+          loadMyViews: stubs.loadMyViews,
+          createView: stubs.createView,
+        },
+      },
+      {
+        provide: DialogService,
+        useValue: { confirm: () => of(true), name: stubs.name },
+      },
     ],
   });
+
+  return { ...rendered, stubs };
 }
 
 describe('ViewListComponent', () => {
@@ -69,5 +87,69 @@ describe('ViewListComponent', () => {
     expect(
       container.querySelector('button[mattooltip="Add New View"]'),
     ).toBeNull();
+  });
+
+  it('shows only Active views from the views$ stream', async () => {
+    const { fixture } = await renderViewList(false, {
+      views: [
+        { id: 'v1', name: 'Active One', status: 'Active' },
+        { id: 'v2', name: 'Inactive', status: 'Inactive' },
+        { id: 'v3', name: 'Active Two', status: 'Active' },
+      ] as View[],
+    });
+    expect(fixture.componentInstance.dataSource.data.map((v) => v.id)).toEqual([
+      'v1',
+      'v3',
+    ]);
+  });
+
+  it('ngOnInit loads my views and clears the loading flag', async () => {
+    const { fixture, stubs } = await renderViewList();
+    expect(stubs.loadMyViews).toHaveBeenCalled();
+    expect(fixture.componentInstance.isLoading).toBe(false);
+    expect(fixture.componentInstance.filterString).toBe('');
+  });
+
+  it('applyFilter trims, lowercases, and sets the datasource filter', async () => {
+    const { fixture } = await renderViewList();
+    const c = fixture.componentInstance;
+    c.applyFilter('  Training  ');
+    expect(c.filterString).toBe('  Training  ');
+    expect(c.dataSource.filter).toBe('training');
+  });
+
+  it('clearFilter resets the datasource filter', async () => {
+    const { fixture } = await renderViewList();
+    const c = fixture.componentInstance;
+    c.applyFilter('Training');
+    c.clearFilter();
+    expect(c.dataSource.filter).toBe('');
+  });
+
+  describe('create()', () => {
+    it('creates a view when the dialog returns a name', async () => {
+      const { fixture, stubs } = await renderViewList(true, {
+        nameResult: { wasCancelled: false, nameValue: 'My New View' },
+      });
+      fixture.componentInstance.create();
+      expect(stubs.createView).toHaveBeenCalledWith({
+        name: 'My New View',
+        description: 'Add description',
+      });
+    });
+
+    it('does nothing when the dialog is cancelled', async () => {
+      const { fixture, stubs } = await renderViewList(true, {
+        nameResult: { wasCancelled: true },
+      });
+      fixture.componentInstance.create();
+      expect(stubs.createView).not.toHaveBeenCalled();
+    });
+  });
+
+  it('ngOnDestroy completes the unsubscribe subject', async () => {
+    const { fixture } = await renderViewList();
+    const c = fixture.componentInstance;
+    expect(() => c.ngOnDestroy()).not.toThrow();
   });
 });

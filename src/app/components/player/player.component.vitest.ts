@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { BehaviorSubject, EMPTY, of } from 'rxjs';
+import { EMPTY, firstValueFrom, NEVER, of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
@@ -23,15 +23,28 @@ import { renderComponent } from '../../test-utils/render-component';
 async function renderPlayer(
   overrides: {
     teamId?: string;
+    routerState?: unknown;
+    selectQueryParams?: unknown;
+    teams?: unknown[];
+    view?: unknown;
+    user?: unknown;
   } = {},
 ) {
   const { teamId = 'team-a' } = overrides;
 
   const displayMessage = vi.fn();
+  const setPrimaryTeamId = vi.fn(() => of({}));
+  const getView = vi.fn(() => of(overrides.view ?? { id: 'view-1' }));
+  const getMyViewTeams = vi.fn(() => of(overrides.teams ?? []));
+  const loadTeamPermissions = vi.fn(() => of([]));
+  const user = overrides.user ?? { profile: { sub: 'u1' } };
+
+  // EMPTY by default so loadData()'s subscription stays inert; tests that
+  // exercise loadData/checkParam pass an explicit state/query observable.
   const routerQuery = {
     getParams: () => 'view-1',
-    selectQueryParams: () => EMPTY,
-    select: () => EMPTY, // don't trigger loadData during these tests
+    selectQueryParams: () => overrides.selectQueryParams ?? EMPTY,
+    select: () => overrides.routerState ?? EMPTY,
   };
 
   const dialog = { open: vi.fn() };
@@ -42,10 +55,10 @@ async function renderPlayer(
     providers: [
       { provide: Router, useValue: { serializeUrl: vi.fn(() => 'url'), createUrlTree: vi.fn() } },
       { provide: RouterQuery, useValue: routerQuery },
-      { provide: ViewsService, useValue: { setPrimaryTeamId: vi.fn(() => of({})) } },
-      { provide: ViewService, useValue: { getView: vi.fn(() => of({})) } },
-      { provide: LoggedInUserService, useValue: { loggedInUser$: of({ profile: { sub: 'u1' } }) } },
-      { provide: TeamService, useValue: { getMyViewTeams: vi.fn(() => of([])) } },
+      { provide: ViewsService, useValue: { setPrimaryTeamId } },
+      { provide: ViewService, useValue: { getView } },
+      { provide: LoggedInUserService, useValue: { loggedInUser$: of(user) } },
+      { provide: TeamService, useValue: { getMyViewTeams } },
       {
         provide: ComnSettingsService,
         useValue: { settings: { AppTitle: 'Player' } },
@@ -55,7 +68,7 @@ async function renderPlayer(
       { provide: ComnAuthQuery, useValue: { userTheme$: of('light-theme') } },
       {
         provide: UserPermissionsService,
-        useValue: { loadTeamPermissions: () => of([]) },
+        useValue: { loadTeamPermissions },
       },
     ],
   });
@@ -65,7 +78,15 @@ async function renderPlayer(
     opened: true,
     mode: 'side',
   } as never;
-  return { ...rendered, displayMessage, dialog };
+  return {
+    ...rendered,
+    displayMessage,
+    dialog,
+    setPrimaryTeamId,
+    getView,
+    getMyViewTeams,
+    loadTeamPermissions,
+  };
 }
 
 describe('PlayerComponent', () => {
@@ -183,5 +204,161 @@ describe('PlayerComponent', () => {
     const complete = vi.spyOn(fixture.componentInstance.unsubscribe$, 'complete');
     fixture.componentInstance.ngOnDestroy();
     expect(complete).toHaveBeenCalled();
+  });
+
+  describe('loadData()', () => {
+    const routerState = of({
+      state: { params: { id: 'view-1' } },
+    });
+
+    it('combines view + teams and derives primary team, members, and title', async () => {
+      const teams = [
+        { id: 'team-a', isMember: true, isPrimary: true },
+        { id: 'team-b', isMember: true, isPrimary: false },
+        { id: 'team-c', isMember: false, isPrimary: false },
+      ];
+      const { fixture, getView, getMyViewTeams } = await renderPlayer({
+        routerState,
+        teams,
+        view: { id: 'view-1', name: 'Demo' },
+      });
+      const data = await firstValueFrom(fixture.componentInstance.loadData());
+      expect(getView).toHaveBeenCalledWith('view-1');
+      expect(getMyViewTeams).toHaveBeenCalledWith('view-1');
+      expect(data.team.id).toBe('team-a');
+      expect(data.teams.map((t: { id: string }) => t.id)).toEqual([
+        'team-a',
+        'team-b',
+      ]);
+      expect(data.title).toBe('Player');
+      expect(fixture.componentInstance.teamId).toBe('team-a');
+    });
+
+    it('shows a "Not a Member" message when the user is on no teams', async () => {
+      const { fixture, displayMessage } = await renderPlayer({
+        routerState,
+        teams: [{ id: 'team-x', isMember: false, isPrimary: true }],
+      });
+      await firstValueFrom(fixture.componentInstance.loadData());
+      expect(displayMessage).toHaveBeenCalledWith(
+        'Not a Member',
+        expect.stringContaining('not a member'),
+      );
+    });
+  });
+
+  describe('checkParam()', () => {
+    it('emits true when every requested query param is present', async () => {
+      const { fixture } = await renderPlayer({
+        selectQueryParams: of(['a', 'b']),
+      });
+      expect(
+        await firstValueFrom(fixture.componentInstance.checkParam(['x', 'y'])),
+      ).toBe(true);
+    });
+
+    it('emits false when any requested query param is missing', async () => {
+      const { fixture } = await renderPlayer({
+        selectQueryParams: of(['a', null]),
+      });
+      expect(
+        await firstValueFrom(fixture.componentInstance.checkParam(['x', 'y'])),
+      ).toBe(false);
+    });
+  });
+
+  describe('setPrimaryTeam()', () => {
+    it('sets the new primary team when it differs from the current one', async () => {
+      // setPrimaryTeamId returns NEVER so the success tap (window.location.reload,
+      // non-configurable in jsdom) never fires — we only assert the API call.
+      const { fixture, setPrimaryTeamId } = await renderPlayer({
+        user: { profile: { sub: 'user-9' } },
+      });
+      setPrimaryTeamId.mockReturnValueOnce(NEVER);
+      const c = fixture.componentInstance;
+      c.data$ = of({ team: { id: 'team-a' } });
+      c.setPrimaryTeam('team-b');
+      expect(setPrimaryTeamId).toHaveBeenCalledWith('user-9', 'team-b');
+    });
+
+    it('does nothing when the chosen team is already primary', async () => {
+      const { fixture, setPrimaryTeamId } = await renderPlayer();
+      const c = fixture.componentInstance;
+      c.data$ = of({ team: { id: 'team-a' } });
+      c.setPrimaryTeam('team-a');
+      expect(setPrimaryTeamId).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('editViewFn()', () => {
+    it('opens the edit-view dialog and seeds it from data$ for in-app editing', async () => {
+      const { fixture, dialog } = await renderPlayer();
+      const c = fixture.componentInstance;
+      const componentInstance = {
+        resetStepper: vi.fn(),
+        updateApplicationTemplates: vi.fn(),
+        updateView: vi.fn(),
+        setView: vi.fn(),
+        editComplete: of('done'),
+      };
+      const close = vi.fn();
+      dialog.open.mockReturnValue({ componentInstance, close });
+      c.data$ = of({ view: { id: 'view-1', name: 'Demo' } });
+      c.editViewFn({ isNewBrowserTab: false });
+      expect(dialog.open).toHaveBeenCalled();
+      expect(componentInstance.resetStepper).toHaveBeenCalled();
+      expect(componentInstance.setView).toHaveBeenCalledWith({
+        id: 'view-1',
+        name: 'Demo',
+      });
+      expect(close).toHaveBeenCalled(); // editComplete fired
+    });
+
+    it('opens a new browser tab when isNewBrowserTab is true', async () => {
+      const { fixture, dialog } = await renderPlayer();
+      const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+      fixture.componentInstance.editViewFn({ isNewBrowserTab: true });
+      expect(open).toHaveBeenCalledWith('url', '_blank');
+      expect(dialog.open).not.toHaveBeenCalled();
+      open.mockRestore();
+    });
+  });
+
+  describe('resize handlers', () => {
+    it('resizingFn switches to push mode and records the new width when not mini', async () => {
+      const { fixture } = await renderPlayer();
+      const c = fixture.componentInstance;
+      c.resizingFn({ rectangle: { width: 480 } });
+      expect(c.autosizeSidenav).toBe(false);
+      expect(c.sidenav.mode).toBe('push');
+      expect(c.sidenavWidth).toBe(480);
+    });
+
+    it('resizingFn is a no-op when mini', async () => {
+      const { fixture } = await renderPlayer();
+      const c = fixture.componentInstance;
+      c.miniSubject.next(true);
+      c.resizingFn({ rectangle: { width: 480 } });
+      expect(c.sidenavWidth).toBeUndefined();
+    });
+
+    it('resizeEnd restores the sidenav mode and persists the width', async () => {
+      const { fixture } = await renderPlayer({ teamId: 'team-42' });
+      const c = fixture.componentInstance;
+      c.sidenavWidth = 360;
+      c.resizeEnd({});
+      expect(c.sidenav.mode).toBe('side');
+      const persisted = JSON.parse(localStorage.getItem('team-42'));
+      expect(persisted.width).toBe(360);
+    });
+  });
+
+  it('setSidenavMode applies the configured mode to the sidenav', async () => {
+    const { fixture } = await renderPlayer();
+    const c = fixture.componentInstance;
+    c.sidenav = { mode: 'push' } as never;
+    c.sidenavMode = 'over';
+    c.setSidenavMode();
+    expect(c.sidenav.mode).toBe('over');
   });
 });

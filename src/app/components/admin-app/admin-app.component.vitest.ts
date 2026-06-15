@@ -1,19 +1,22 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
-import { AdminAppComponent } from './admin-app.component';
+import { Router } from '@angular/router';
+import { AdminAppComponent, Section } from './admin-app.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 import { SystemPermission } from '../../generated/player-api';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 
-async function renderAdmin(overrides: { permissions?: string[] } = {}) {
-  const { permissions = [] } = overrides;
+async function renderAdmin(
+  overrides: { permissions?: string[]; section?: string | null } = {},
+) {
+  const { permissions = [], section = null } = overrides;
 
-  return renderComponent(AdminAppComponent, {
+  const rendered = await renderComponent(AdminAppComponent, {
     declarations: [AdminAppComponent],
     providers: [
       {
@@ -27,12 +30,21 @@ async function renderAdmin(overrides: { permissions?: string[] } = {}) {
       {
         provide: RouterQuery,
         useValue: {
-          selectQueryParams: () => of(null),
+          selectQueryParams: () => of(section),
           select: () => of(null),
         },
       },
     ],
   });
+
+  // Spy on the real Router provided by renderComponent's provideRouter([])
+  // so addParam()/sectionChangedFn() don't actually navigate.
+  const router = rendered.fixture.debugElement.injector.get(Router);
+  const navigate = vi
+    .spyOn(router, 'navigate')
+    .mockResolvedValue(true);
+
+  return { ...rendered, navigate };
 }
 
 describe('AdminAppComponent', () => {
@@ -133,5 +145,90 @@ describe('AdminAppComponent', () => {
   it('should hide Users nav when only ViewRoles permission present', async () => {
     await renderAdmin({ permissions: [SystemPermission.ViewRoles] });
     expect(screen.queryByText('Users')).not.toBeInTheDocument();
+  });
+
+  describe('addParam()', () => {
+    it('merges params and navigates with queryParamsHandling merge', async () => {
+      const { fixture, navigate } = await renderAdmin();
+      navigate.mockClear();
+      fixture.componentInstance.addParam({ foo: 'bar' });
+      expect(fixture.componentInstance.queryParams).toEqual({ foo: 'bar' });
+      expect(navigate).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: { foo: 'bar' },
+          queryParamsHandling: 'merge',
+        }),
+      );
+    });
+
+    it('accumulates params across calls', async () => {
+      const { fixture } = await renderAdmin();
+      fixture.componentInstance.addParam({ a: '1' });
+      fixture.componentInstance.addParam({ b: '2' });
+      expect(fixture.componentInstance.queryParams).toEqual({ a: '1', b: '2' });
+    });
+  });
+
+  describe('sectionChangedFn()', () => {
+    const cases: Array<[Section, string]> = [
+      [Section.ADMIN_VIEWS, 'Views'],
+      [Section.ADMIN_USERS, 'Users'],
+      [Section.ADMIN_APP_TEMP, 'Application Templates'],
+      [Section.ADMIN_ROLE_PERM, 'Roles / Permissions'],
+      [Section.ADMIN_SUBS, 'Subscriptions'],
+    ];
+
+    for (const [section, title] of cases) {
+      it(`sets the title to "${title}" and adds the section param`, async () => {
+        const { fixture, navigate } = await renderAdmin();
+        navigate.mockClear();
+        fixture.componentInstance.sectionChangedFn(section);
+        expect(fixture.componentInstance.title).toBe(title);
+        expect(navigate).toHaveBeenCalledWith(
+          [],
+          expect.objectContaining({ queryParams: { section } }),
+        );
+      });
+    }
+  });
+
+  it('ngOnInit applies the section from the query param', async () => {
+    const { fixture } = await renderAdmin({ section: Section.ADMIN_USERS });
+    // ngOnInit subscribes to selectQueryParams('section') and routes it
+    // through sectionChangedFn, which sets the title.
+    expect(fixture.componentInstance.title).toBe('Users');
+  });
+
+  it('section$ emits the query-param section when it is a valid Section', async () => {
+    const { fixture } = await renderAdmin({
+      section: Section.ADMIN_ROLE_PERM,
+      permissions: [SystemPermission.ViewViews],
+    });
+    const emitted = await new Promise<Section | undefined>((resolve) =>
+      fixture.componentInstance.section$.subscribe(resolve),
+    );
+    expect(emitted).toBe(Section.ADMIN_ROLE_PERM);
+  });
+
+  it('section$ falls back to the first permitted section when no query param', async () => {
+    const { fixture } = await renderAdmin({
+      section: null,
+      permissions: [SystemPermission.ViewUsers],
+    });
+    const emitted = await new Promise<Section | undefined>((resolve) =>
+      fixture.componentInstance.section$.subscribe(resolve),
+    );
+    expect(emitted).toBe(Section.ADMIN_USERS);
+  });
+
+  it('ngOnDestroy completes the unsubscribe subject', async () => {
+    const { fixture } = await renderAdmin();
+    const complete = vi.spyOn(
+      fixture.componentInstance.unsubscribe$,
+      'complete',
+    );
+    fixture.componentInstance.ngOnDestroy();
+    expect(complete).toHaveBeenCalled();
   });
 });

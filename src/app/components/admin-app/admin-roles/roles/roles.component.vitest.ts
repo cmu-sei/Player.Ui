@@ -1,7 +1,7 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
 import { of, BehaviorSubject } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
@@ -42,23 +42,32 @@ function createMockUserPermissionsService(hasManageRoles: boolean) {
   };
 }
 
-const mockPermissionsDataService = {
-  permissions$: new BehaviorSubject(mockPermissions).asObservable(),
-  load: () => of(mockPermissions),
-};
+async function renderRoles(
+  hasManageRoles = false,
+  overrides: {
+    nameResult?: { wasCancelled: boolean; nameValue?: string };
+    confirmResult?: { confirm: boolean };
+  } = {},
+) {
+  const {
+    nameResult = { wasCancelled: true, nameValue: '' },
+    confirmResult = { confirm: false },
+  } = overrides;
 
-const mockRolesService = {
-  roles$: new BehaviorSubject(mockRoles).asObservable(),
-  getRoles: () => of(mockRoles),
-};
+  const stubs = {
+    getRoles: vi.fn(() => of(mockRoles)),
+    editRole: vi.fn(() => of(mockRoles[0])),
+    createRole: vi.fn(() => of(mockRoles[0])),
+    deleteRole: vi.fn(() => of(undefined)),
+    addPermission: vi.fn(() => of(undefined)),
+    removePermission: vi.fn(() => of(undefined)),
+    load: vi.fn(() => of(mockPermissions)),
+    createPermission: vi.fn(() => of(mockPermissions[0])),
+    name: vi.fn(() => of(nameResult)),
+    confirm: vi.fn(() => of(confirmResult)),
+  };
 
-const mockDialogService = {
-  confirm: () => of({ confirm: false }),
-  name: () => of({ wasCancelled: true, nameValue: '' }),
-};
-
-async function renderRoles(hasManageRoles = false) {
-  return renderComponent(SystemRolesComponent, {
+  const rendered = await renderComponent(SystemRolesComponent, {
     declarations: [SystemRolesComponent],
     imports: [MatTableModule, MatCheckboxModule],
     providers: [
@@ -66,11 +75,34 @@ async function renderRoles(hasManageRoles = false) {
         provide: UserPermissionsService,
         useValue: createMockUserPermissionsService(hasManageRoles),
       },
-      { provide: PermissionsService, useValue: mockPermissionsDataService },
-      { provide: RolesService, useValue: mockRolesService },
-      { provide: DialogService, useValue: mockDialogService },
+      {
+        provide: PermissionsService,
+        useValue: {
+          permissions$: new BehaviorSubject(mockPermissions).asObservable(),
+          load: stubs.load,
+          createPermission: stubs.createPermission,
+        },
+      },
+      {
+        provide: RolesService,
+        useValue: {
+          roles$: new BehaviorSubject(mockRoles).asObservable(),
+          getRoles: stubs.getRoles,
+          editRole: stubs.editRole,
+          createRole: stubs.createRole,
+          deleteRole: stubs.deleteRole,
+          addPermission: stubs.addPermission,
+          removePermission: stubs.removePermission,
+        },
+      },
+      {
+        provide: DialogService,
+        useValue: { confirm: stubs.confirm, name: stubs.name },
+      },
     ],
   });
+
+  return { ...rendered, stubs };
 }
 
 function getAddButton(container: Element): HTMLButtonElement {
@@ -120,5 +152,125 @@ describe('SystemRolesComponent', () => {
     await renderRoles(false);
     expect(screen.queryByTitle('Rename Role')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Delete Role')).not.toBeInTheDocument();
+  });
+
+  describe('hasPermission()', () => {
+    it('reads allPermissions for the synthetic "All" row', async () => {
+      const { fixture } = await renderRoles();
+      const role = { allPermissions: true, permissions: [] } as never;
+      expect(
+        fixture.componentInstance.hasPermission({ name: 'All' } as never, role),
+      ).toBe(true);
+    });
+
+    it('checks the role permission list for a normal permission', async () => {
+      const { fixture } = await renderRoles();
+      const role = { permissions: [{ id: 'perm-1' }] } as never;
+      expect(
+        fixture.componentInstance.hasPermission(
+          { id: 'perm-1', name: 'ViewViews' } as never,
+          role,
+        ),
+      ).toBe(true);
+      expect(
+        fixture.componentInstance.hasPermission(
+          { id: 'perm-x', name: 'Other' } as never,
+          role,
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe('setPermission()', () => {
+    it('edits the role when toggling the "All" permission', async () => {
+      const { fixture, stubs } = await renderRoles();
+      const role = { id: 'role-1', allPermissions: false } as never;
+      fixture.componentInstance.setPermission(
+        { name: 'All' } as never,
+        role,
+        { checked: true } as never,
+      );
+      expect(role.allPermissions).toBe(true);
+      expect(stubs.editRole).toHaveBeenCalledWith(role);
+    });
+
+    it('adds a permission when checked and not already present', async () => {
+      const { fixture, stubs } = await renderRoles();
+      const role = { id: 'role-1', permissions: [] } as never;
+      const perm = { id: 'perm-2', name: 'ManageUsers' } as never;
+      fixture.componentInstance.setPermission(perm, role, {
+        checked: true,
+      } as never);
+      expect(stubs.addPermission).toHaveBeenCalledWith('role-1', perm);
+    });
+
+    it('removes a permission when unchecked', async () => {
+      const { fixture, stubs } = await renderRoles();
+      const role = { id: 'role-1', permissions: [{ id: 'perm-2' }] } as never;
+      const perm = { id: 'perm-2', name: 'ManageUsers' } as never;
+      fixture.componentInstance.setPermission(perm, role, {
+        checked: false,
+      } as never);
+      expect(stubs.removePermission).toHaveBeenCalledWith('role-1', 'perm-2');
+    });
+  });
+
+  describe('addRole()', () => {
+    it('creates a role when the dialog returns a name', async () => {
+      const { fixture, stubs } = await renderRoles(true, {
+        nameResult: { wasCancelled: false, nameValue: 'New Role' },
+      });
+      fixture.componentInstance.addRole();
+      expect(stubs.createRole).toHaveBeenCalledWith({ name: 'New Role' });
+    });
+
+    it('does nothing when the dialog is cancelled', async () => {
+      const { fixture, stubs } = await renderRoles(true, {
+        nameResult: { wasCancelled: true },
+      });
+      fixture.componentInstance.addRole();
+      expect(stubs.createRole).not.toHaveBeenCalled();
+    });
+  });
+
+  it('addPermission() creates a permission from the dialog result', async () => {
+    const { fixture, stubs } = await renderRoles(true, {
+      nameResult: { wasCancelled: false, nameValue: 'New Perm' },
+    });
+    fixture.componentInstance.addPermission();
+    expect(stubs.createPermission).toHaveBeenCalledWith({ name: 'New Perm' });
+  });
+
+  it('renameRole() edits the role with the new name', async () => {
+    const { fixture, stubs } = await renderRoles(true, {
+      nameResult: { wasCancelled: false, nameValue: 'Renamed' },
+    });
+    const role = { id: 'role-1', name: 'Old' } as never;
+    fixture.componentInstance.renameRole(role);
+    expect(role.name).toBe('Renamed');
+    expect(stubs.editRole).toHaveBeenCalledWith(role);
+  });
+
+  describe('deleteRole()', () => {
+    it('deletes when confirmed', async () => {
+      const { fixture, stubs } = await renderRoles(true, {
+        confirmResult: { confirm: true },
+      });
+      fixture.componentInstance.deleteRole({ id: 'role-1', name: 'X' } as never);
+      expect(stubs.deleteRole).toHaveBeenCalledWith('role-1');
+    });
+
+    it('is a no-op when cancelled', async () => {
+      const { fixture, stubs } = await renderRoles(true, {
+        confirmResult: { confirm: false },
+      });
+      fixture.componentInstance.deleteRole({ id: 'role-1', name: 'X' } as never);
+      expect(stubs.deleteRole).not.toHaveBeenCalled();
+    });
+  });
+
+  it('trackById returns the item id', async () => {
+    const { fixture } = await renderRoles();
+    expect(fixture.componentInstance.trackById(0, { id: 'abc' })).toBe('abc');
   });
 });
