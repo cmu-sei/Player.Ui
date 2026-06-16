@@ -34,11 +34,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           </button>
         }
       </mat-form-field>
-      <mat-paginator
-        [pageSizeOptions]="[10, 25, 50, 100]"
-        showFirstLastButtons
-        aria-label="Select page of views">
-      </mat-paginator>
     </div>
   </div>
 
@@ -96,4 +91,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-progress-spinner>
     </mat-card>
   }
+
+  <mat-paginator
+    [pageSizeOptions]="[10, 25, 50, 100]"
+    showFirstLastButtons
+    aria-label="Select page of views">
+  </mat-paginator>
 </div>

@@ -1,11 +1,18 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .view-list-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  max-height: 800px;
+  flex: 1;
+  min-height: 0;
   min-width: 300px;
 }
 
@@ -74,8 +81,9 @@
 
 .mat-mdc-table {
   width: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 300px);
 }
 
 .mat-mdc-cell,
