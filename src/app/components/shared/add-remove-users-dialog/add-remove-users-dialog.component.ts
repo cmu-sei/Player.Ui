@@ -62,7 +62,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
   public filterString: string;
   public teamFilterString: string;
-  public defaultPageSize = 6;
+  public defaultPageSize = 5;
   public pageEvent: PageEvent;
 
   public roles: Array<Role>;

@@ -1,11 +1,22 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+@use '@angular/material' as mat;
+
+:host {
+  // Compact the two Search fields and the Role dropdown to a 40px height.
+  @include mat.form-field-density(-4);
+
+  // Density -4 also sets `filled-label-display: none`, which drops the
+  // "Search" label from the empty inputs. Restore it.
+  --mat-form-field-filled-label-display: block;
+}
+
 .user-list-container {
   display: inline-block;
   flex-direction: column;
-  min-width: 300px;
-  width: 300px;
+  min-width: 310px;
+  width: 310px;
 }
 
 .team-list-container {
@@ -19,6 +30,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  height: 58px;
 }
 
 .mat-toolbar-row mat-icon {
@@ -70,11 +82,12 @@
   // length, and constrained height to leave 2px margin top/bottom inside
   // the 52px row.
   .mat-column-teamMembership {
-    flex: 0 0 140px;
+    flex: 0 0 160px;
 
     mat-form-field {
-      width: 140px;
-      height: 48px;
+      width: 160px;
+      min-width: 150px;
+      height: 40px;
       margin: 0;
     }
   }
