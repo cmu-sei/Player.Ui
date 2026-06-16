@@ -316,3 +316,10 @@ CLAUDE.md
 
 # Git worktrees
 .worktrees/
+
+# OpenAPI generator output files
+swagger.json
+openapitools.json
+
+# Local static server config (for testing production builds)
+serve.json

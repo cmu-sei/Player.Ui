@@ -23,6 +23,7 @@
   "AppTopBarHexTextColor": "#FFFFFF",
   "UseLocalAuthStorage": false,
   "DebugLogging": false,
+  "XApiEnabled": false,
   "HeaderBarSettings": {
     "banner_background_color": "#007a33ff",
     "classification_text": "UNCLASSIFIED",

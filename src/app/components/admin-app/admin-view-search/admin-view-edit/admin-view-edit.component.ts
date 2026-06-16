@@ -270,7 +270,7 @@ export class AdminViewEditComponent implements OnInit {
             .pipe(take(1))
             .subscribe(() => {
               console.log('successfully deleted view');
-              this.returnToViewSearch();
+              this.editComplete.emit(null);
             });
         }
       });

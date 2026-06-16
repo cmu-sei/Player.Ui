@@ -113,7 +113,7 @@ export class AdminViewSearchComponent implements OnInit {
         this.viewService.getView(viewGuid).subscribe((view) => {
           let msg = '';
           let title = '';
-          let activation = ViewStatus.Inactive;
+          let activation: ViewStatus = ViewStatus.Inactive;
           if (
             view.status === undefined ||
             view.status === ViewStatus.Inactive
@@ -191,6 +191,16 @@ export class AdminViewSearchComponent implements OnInit {
   }
 
   onEditComplete($event) {
+    // Clear the view query parameter if it exists
+    const viewParam = this.route.snapshot.queryParamMap.get('view');
+    if (viewParam) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { view: null },
+        queryParamsHandling: 'merge'
+      });
+    }
+
     this.refreshViews();
 
     // if (this.loggedInUserService.isSuperUser$.getValue()) {

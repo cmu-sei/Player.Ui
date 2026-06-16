@@ -25,12 +25,51 @@
   min-height: 600px;
 }
 
-.sp-icon {
-  margin-left: 10px;
-  margin-right: 20px;
+.mat-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mat-toolbar-row mat-icon {
+  color: var(--mat-sys-primary);
+}
+
+.mat-toolbar-row p {
+  font-size: 16px;
+  margin: 0;
+}
+
+// Buttons inside the toolbar inherit the toolbar text color; force the
+// primary theme color so they match the stroked buttons in the tables.
+.mat-toolbar-row button {
+  color: var(--mat-sys-primary);
 }
 
 #userImport {
-  display: flex;
   justify-content: space-between;
+}
+
+// Narrow the icon-button action columns and let the User Name columns absorb
+// the freed width.
+.mat-table-all-users {
+  .mat-column-name {
+    flex: 1 1 auto;
+  }
+
+  .mat-column-id {
+    flex: 0 0 56px;
+    justify-content: center;
+  }
+}
+
+.mat-table-team-users {
+  .mat-column-name {
+    flex: 1 1 auto;
+  }
+
+  .mat-column-user {
+    flex: 0 0 56px;
+    justify-content: center;
+  }
 }

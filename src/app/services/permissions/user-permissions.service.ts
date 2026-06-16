@@ -57,6 +57,32 @@ export class UserPermissionsService {
       .pipe(tap((x) => this.teamPermissionsSubject.next(x)));
   }
 
+  // Team ids the user can manage (claim includes the ManageTeam permission). A
+  // ManageTeam grant requires team membership, so these claims reliably enumerate
+  // the teams a non-ManageView user is allowed to manage.
+  public manageableTeamIds$ = this.teamPermissions$.pipe(
+    map((claims) => this.getManageableTeamIds(claims))
+  );
+
+  // Pure helper: team ids from the given claims that include the ManageTeam
+  // permission. Shared with consumers that read freshly-loaded claims directly
+  // (e.g. the Manage Teams dialog) so the filter logic is not duplicated.
+  public getManageableTeamIds(claims: TeamPermissionsClaim[]): string[] {
+    return claims
+      .filter((claim) =>
+        this.toTeamPermissions(claim.permissionValues ?? []).includes(
+          TeamPermission.ManageTeam
+        )
+      )
+      .map((claim) => claim.teamId)
+      .filter((teamId): teamId is string => teamId != null);
+  }
+
+  // True when the user can manage at least one team.
+  public canManageAnyTeam$ = this.manageableTeamIds$.pipe(
+    map((ids) => ids.length > 0)
+  );
+
   can(
     permission: SystemPermission,
     teamId?: string,
