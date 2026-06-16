@@ -32,6 +32,13 @@ export class NameDialogComponent {
       name: [data.nameValue, [Validators.required]],
     });
 
+    if (data.showDescription) {
+      this.form.addControl(
+        'description',
+        this.formBuilder.control(data.descriptionValue ?? '')
+      );
+    }
+
     if (data.validators) {
       this.validators = data.validators;
       const validators = (data.validators as Array<NameValidatorModel>).map(
@@ -52,6 +59,9 @@ export class NameDialogComponent {
       ? (this.data.removeArtifacts = this.removeArtifacts)
       : (this.data.removeArtifacts = false);
     this.data.nameValue = this.form?.get('name').value;
+    if (this.data.showDescription) {
+      this.data.descriptionValue = this.form?.get('description')?.value;
+    }
     this.data.wasCancelled = false;
     this.dialogRef.close(this.data);
   }
