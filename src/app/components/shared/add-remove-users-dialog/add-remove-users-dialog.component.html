@@ -36,7 +36,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <div>{{ element.id }}</div>
           }
           @if (element.id === currentUserId) {
-          <mat-chip class="ms-2" highlighted color="primary">You</mat-chip>
+          <mat-chip-set class="ms-2">
+            <mat-chip highlighted color="primary">You</mat-chip>
+          </mat-chip-set>
           }
         </mat-cell>
       </ng-container>
@@ -116,7 +118,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <div>{{ element.user.id }}</div>
             }
             @if (element.user.id === currentUserId) {
-            <mat-chip class="ms-2" highlighted color="primary">You</mat-chip>
+            <mat-chip-set class="ms-2">
+              <mat-chip highlighted color="primary">You</mat-chip>
+            </mat-chip-set>
             }
           </mat-cell>
         </ng-container>
