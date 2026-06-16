@@ -145,6 +145,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   @if (viewDataSource.filteredData.length === 0) {
     <div>No results found</div>
   }
+  <mat-paginator
+    #paginator
+    [pageSize]="defaultPageSize"
+    [pageSizeOptions]="[10, 20, 30]"
+    [showFirstLastButtons]="true"
+  >
+  </mat-paginator>
 
   @if (isLoading) {
     <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
