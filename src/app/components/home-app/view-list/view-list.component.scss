@@ -42,7 +42,7 @@
 }
 
 .mat-column-name {
-  flex: 0 0 30%;
+  flex: 0 0 40%;
 }
 
 .mat-column-teamName {
@@ -54,7 +54,8 @@
 }
 
 .mat-column-dateCreated {
-  flex: 0 0 180px;
+  flex: 0 0 150px;
+  white-space: nowrap;
 }
 
 .searchBox {
