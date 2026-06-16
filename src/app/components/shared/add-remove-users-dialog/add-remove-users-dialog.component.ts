@@ -29,7 +29,7 @@ export class TeamUser {
     public name: string,
     public user: User,
     public teamMembership: TeamMembership,
-  ) {}
+  ) { }
 }
 
 @Component({
@@ -62,7 +62,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
   public filterString: string;
   public teamFilterString: string;
-  public defaultPageSize = 7;
+  public defaultPageSize = 5;
   public pageEvent: PageEvent;
 
   public roles: Array<Role>;
@@ -404,9 +404,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     }
     console.log(
       'Update Team Membership: ' +
-        teamUser.name +
-        '   role: ' +
-        teamUser.teamMembership.roleId,
+      teamUser.name +
+      '   role: ' +
+      teamUser.teamMembership.roleId,
     );
 
     this.teamMembershipService
