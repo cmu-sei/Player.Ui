@@ -1,0 +1,30 @@
+// Copyright 2025 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+@use '@angular/material' as mat;
+
+:host {
+  // Material M3 sets dialog-with-actions content padding to `20px 24px 0` (zero
+  // bottom), expecting the actions bar to supply the bottom gap. With the content
+  // area scrolling (max-height: 65vh), the last team panel sits flush against the
+  // actions bar and looks cut off. Restore a bottom value via the design token.
+  @include mat.dialog-overrides(
+    (
+      with-actions-content-padding: 20px 24px 20px,
+    )
+  );
+}
+
+.manage-teams-content {
+  min-width: 400px;
+}
+
+.empty-state {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.left-icon {
+  height: 30px;
+  width: 30px;
+}
