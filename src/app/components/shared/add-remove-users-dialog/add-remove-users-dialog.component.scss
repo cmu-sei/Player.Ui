@@ -82,11 +82,11 @@
   // length, and constrained height to leave 2px margin top/bottom inside
   // the 52px row.
   .mat-column-teamMembership {
-    flex: 0 0 160px;
+    flex: 0 0 165px;
 
     mat-form-field {
-      width: 160px;
-      min-width: 150px;
+      width: 165px;
+      min-width: 155px;
       height: 40px;
       margin: 0;
     }

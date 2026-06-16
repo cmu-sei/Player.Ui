@@ -130,7 +130,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
           <mat-cell *matCellDef="let element">
             <mat-form-field subscriptSizing="dynamic" class="my-1">
-              <mat-label>Role</mat-label>
               <mat-select placeholder="Role" name="teamMembershipRole" [(ngModel)]="element.teamMembership.roleId"
                 (selectionChange)="updateMembership(element)" [(value)]="element.teamMembership.roleId">
                 @for (role of roles; track role) {
