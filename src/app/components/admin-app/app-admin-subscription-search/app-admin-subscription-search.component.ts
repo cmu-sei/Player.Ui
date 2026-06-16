@@ -74,6 +74,22 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
     });
   }
 
+  deleteSubscription(subscription: WebhookSubscription) {
+    this.dialogService
+      .confirm(
+        'Confirm Delete',
+        'Are you sure you want to delete ' + subscription.name + '?'
+      )
+      .subscribe((result) => {
+        if (result['confirm']) {
+          this.webhookService
+            .deleteWebhookSubscription(subscription.id)
+            .pipe(takeUntil(this.unsubscribe$))
+            .subscribe(() => this.refreshSubs());
+        }
+      });
+  }
+
   applyFilter(filterStr: string) {
     filterStr = filterStr.trim().toLowerCase();
     this.filterStr = filterStr;
