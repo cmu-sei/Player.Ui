@@ -11,6 +11,7 @@ api/role.service.ts
 api/team.service.ts
 api/teamMembership.service.ts
 api/teamPermission.service.ts
+api/teamPermissionScope.service.ts
 api/teamRole.service.ts
 api/user.service.ts
 api/view.service.ts

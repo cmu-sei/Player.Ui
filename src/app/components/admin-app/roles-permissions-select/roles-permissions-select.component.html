@@ -54,4 +54,33 @@ to use this component, add one of the following lines to the html of your edit p
       </mat-form-field>
     </div>
   </div>
+
+  @if (scopeTargetTeams.length > 0) {
+    <div class="add-margin">
+      <div>
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-select
+            placeholder="Apply this team's permissions to"
+            [(ngModel)]="selectedScopedTeams"
+            name="scopedTeams"
+            multiple
+            matTooltip="Members of this team gain this team's permissions over the selected teams without joining them"
+            >
+            @for (targetTeam of scopeTargetTeams; track targetTeam.id) {
+              <mat-option
+                [value]="targetTeam.id"
+                (onSelectionChange)="
+                  $event.isUserInput
+                    ? updateScopedTeam(targetTeam, $event.source.selected)
+                    : null
+                "
+                >
+                {{ targetTeam.name }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+  }
 }

@@ -18,8 +18,6 @@ import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
 import { ProblemDetails } from '../model/problemDetails';
-// @ts-ignore
-import { ViewMembership } from '../model/viewMembership';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -31,25 +29,29 @@ import { BaseService } from '../api.base.service';
 @Injectable({
   providedIn: 'root'
 })
-export class ViewMembershipService extends BaseService {
+export class TeamPermissionScopeService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
     }
 
     /**
-     * Gets a specific View Membership by id.
-     * Returns the View Membership with the id specified.
-     * @param id 
+     * Adds a Team Permission Scope.
+     * Scopes the specified Team\&#39;s permissions onto the specified target Team in the same View.
+     * @param teamId 
+     * @param targetTeamId 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getViewMembership(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<ViewMembership>;
-    public getViewMembership(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<ViewMembership>>;
-    public getViewMembership(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<ViewMembership>>;
-    public getViewMembership(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
-        if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling getViewMembership.');
+    public addTeamPermissionScope(teamId: string, targetTeamId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any>;
+    public addTeamPermissionScope(teamId: string, targetTeamId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<any>>;
+    public addTeamPermissionScope(teamId: string, targetTeamId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<any>>;
+    public addTeamPermissionScope(teamId: string, targetTeamId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (teamId === null || teamId === undefined) {
+            throw new Error('Required parameter teamId was null or undefined when calling addTeamPermissionScope.');
+        }
+        if (targetTeamId === null || targetTeamId === undefined) {
+            throw new Error('Required parameter targetTeamId was null or undefined when calling addTeamPermissionScope.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -78,9 +80,9 @@ export class ViewMembershipService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/view-memberships/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        let localVarPath = `/api/teams/${this.configuration.encodeParam({name: "teamId", value: teamId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/scopes/${this.configuration.encodeParam({name: "targetTeamId", value: targetTeamId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<ViewMembership>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<any>('post', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -93,18 +95,22 @@ export class ViewMembershipService extends BaseService {
     }
 
     /**
-     * Gets all View Memberships for a User.
-     * Returns all View Memberships for the specified User.
-     * @param userId 
+     * Removes a Team Permission Scope.
+     * Removes the permission scope of the specified Team from the specified target Team.
+     * @param teamId 
+     * @param targetTeamId 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getViewMemberships(userId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<Array<ViewMembership>>;
-    public getViewMemberships(userId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<Array<ViewMembership>>>;
-    public getViewMemberships(userId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<Array<ViewMembership>>>;
-    public getViewMemberships(userId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
-        if (userId === null || userId === undefined) {
-            throw new Error('Required parameter userId was null or undefined when calling getViewMemberships.');
+    public removeTeamPermissionScope(teamId: string, targetTeamId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any>;
+    public removeTeamPermissionScope(teamId: string, targetTeamId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<any>>;
+    public removeTeamPermissionScope(teamId: string, targetTeamId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<any>>;
+    public removeTeamPermissionScope(teamId: string, targetTeamId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (teamId === null || teamId === undefined) {
+            throw new Error('Required parameter teamId was null or undefined when calling removeTeamPermissionScope.');
+        }
+        if (targetTeamId === null || targetTeamId === undefined) {
+            throw new Error('Required parameter targetTeamId was null or undefined when calling removeTeamPermissionScope.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -133,9 +139,9 @@ export class ViewMembershipService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/users/${this.configuration.encodeParam({name: "userId", value: userId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/view-memberships`;
+        let localVarPath = `/api/teams/${this.configuration.encodeParam({name: "teamId", value: teamId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/scopes/${this.configuration.encodeParam({name: "targetTeamId", value: targetTeamId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<ViewMembership>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,

@@ -86,6 +86,11 @@ export class AdminViewEditComponent implements OnInit {
   public view: View;
   public teams: Array<TeamUserApp>;
   public currentTeam: TeamUserApp;
+
+  /** Flat list of the Teams in this View, used for cross-team permission scoping. */
+  get allTeams(): Team[] {
+    return (this.teams ?? []).map((t) => t.team);
+  }
   public isLoadingTeams: boolean;
   public applicationTemplates: Array<ApplicationTemplate>;
   public BLANK_TEMPLATE = <ApplicationTemplate>{

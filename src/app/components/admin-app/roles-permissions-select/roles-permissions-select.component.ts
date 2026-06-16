@@ -17,6 +17,7 @@ import {
 } from '../../../generated/player-api';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { TeamPermissionsService } from '../../../services/permissions/team-permissions.service';
+import { TeamPermissionScopesService } from '../../../services/permissions/team-permission-scopes.service';
 import { RolesService } from '../../../services/roles/roles.service';
 
 export enum ObjectType {
@@ -34,10 +35,13 @@ export enum ObjectType {
 export class RolesPermissionsSelectComponent implements OnInit {
   @Input() user: User;
   @Input() team: Team;
+  // Other Teams in the View, used to scope this Team's permissions onto them.
+  @Input() allTeams: Team[] = [];
 
   public permissions$: any;
   public roles$: any;
   public selectedPermissions: string[] = [];
+  public selectedScopedTeams: string[] = [];
   public selectedRole = '';
   public subjectType = ObjectType.Unknown;
   public subject: any;
@@ -48,8 +52,16 @@ export class RolesPermissionsSelectComponent implements OnInit {
     private userService: UserService,
     private teamService: TeamService,
     private teamRolesService: TeamRolesService,
-    private teamPermissionsService: TeamPermissionsService
+    private teamPermissionsService: TeamPermissionsService,
+    private teamPermissionScopesService: TeamPermissionScopesService
   ) {}
+
+  /**
+   * The other Teams in the View that this Team's permissions can be scoped onto.
+   */
+  get scopeTargetTeams(): Team[] {
+    return (this.allTeams ?? []).filter((t) => t.id !== this.team?.id);
+  }
 
   /**
    * Initialization
@@ -75,6 +87,8 @@ export class RolesPermissionsSelectComponent implements OnInit {
           this.selectedPermissions.push(permission.id);
         });
       }
+
+      this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
     } else if (this.user) {
       this.subjectType = ObjectType.User;
       this.subject = this.user;
@@ -112,6 +126,36 @@ export class RolesPermissionsSelectComponent implements OnInit {
 
       default:
         break;
+    }
+  }
+
+  /**
+   * Scopes (or unscopes) this Team's permissions onto another Team in the View.
+   * @param targetTeam The team to scope this team's permissions onto
+   * @param checked Whether the scope should be added or removed
+   */
+  updateScopedTeam(targetTeam: Team, checked: boolean) {
+    if (this.subjectType !== ObjectType.Team) {
+      return;
+    }
+
+    if (checked) {
+      this.teamPermissionScopesService
+        .addScope(this.team.id, targetTeam.id)
+        .subscribe();
+      if (!this.team.scopedTeamIds) {
+        this.team.scopedTeamIds = [];
+      }
+      if (!this.team.scopedTeamIds.includes(targetTeam.id)) {
+        this.team.scopedTeamIds.push(targetTeam.id);
+      }
+    } else {
+      this.teamPermissionScopesService
+        .removeScope(this.team.id, targetTeam.id)
+        .subscribe();
+      this.team.scopedTeamIds = (this.team.scopedTeamIds ?? []).filter(
+        (id) => id !== targetTeam.id
+      );
     }
   }
 

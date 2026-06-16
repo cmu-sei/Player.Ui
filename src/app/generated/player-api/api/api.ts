@@ -1,8 +1,3 @@
-/*
-Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
- Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
-*/
-
 export * from './application.service';
 import { ApplicationService } from './application.service';
 export * from './file.service';
@@ -19,6 +14,8 @@ export * from './teamMembership.service';
 import { TeamMembershipService } from './teamMembership.service';
 export * from './teamPermission.service';
 import { TeamPermissionService } from './teamPermission.service';
+export * from './teamPermissionScope.service';
+import { TeamPermissionScopeService } from './teamPermissionScope.service';
 export * from './teamRole.service';
 import { TeamRoleService } from './teamRole.service';
 export * from './user.service';
@@ -31,4 +28,4 @@ export * from './webhook.service';
 import { WebhookService } from './webhook.service';
 export * from './xApi.service';
 import { XApiService } from './xApi.service';
-export const APIS = [ApplicationService, FileService, HealthService, PermissionService, RoleService, TeamService, TeamMembershipService, TeamPermissionService, TeamRoleService, UserService, ViewService, ViewMembershipService, WebhookService, XApiService];
+export const APIS = [ApplicationService, FileService, HealthService, PermissionService, RoleService, TeamService, TeamMembershipService, TeamPermissionService, TeamPermissionScopeService, TeamRoleService, UserService, ViewService, ViewMembershipService, WebhookService, XApiService];
