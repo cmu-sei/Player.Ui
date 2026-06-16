@@ -78,9 +78,13 @@ export class ManageTeamsComponent {
               this.permissionsService.getManageableTeamIds(claims);
             return this.teamService.getMyViewTeams(this.viewId).pipe(
               switchMap((teams) => {
+                // No isMember filter: getMyViewTeams now also returns teams scoped to the
+                // user (member of a granting team). manageableIds (from the user's
+                // ManageTeam claims) already restricts this to teams they can manage,
+                // whether reached via membership or a scope.
                 const manageable = teams.filter(
                   (t): t is Team & { id: string } =>
-                    !!t.id && t.isMember && manageableIds.includes(t.id),
+                    !!t.id && manageableIds.includes(t.id),
                 );
                 if (manageable.length === 0) {
                   return of([] as ManageableTeam[]);

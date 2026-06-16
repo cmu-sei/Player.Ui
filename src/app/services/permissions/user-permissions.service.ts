@@ -57,9 +57,9 @@ export class UserPermissionsService {
       .pipe(tap((x) => this.teamPermissionsSubject.next(x)));
   }
 
-  // Team ids the user can manage (claim includes the ManageTeam permission). A
-  // ManageTeam grant requires team membership, so these claims reliably enumerate
-  // the teams a non-ManageView user is allowed to manage.
+  // Team ids the user can manage (claim includes the ManageTeam permission). The
+  // claims enumerate every team the user can manage in the view — whether reached
+  // via direct membership or a cross-team permission scope.
   public manageableTeamIds$ = this.teamPermissions$.pipe(
     map((claims) => this.getManageableTeamIds(claims))
   );
