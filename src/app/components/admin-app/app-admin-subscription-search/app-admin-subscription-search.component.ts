@@ -24,7 +24,12 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
-  public displayedColumns: string[] = ['name', 'lastError', 'eventTypes'];
+  public displayedColumns: string[] = [
+    'actions',
+    'name',
+    'eventTypes',
+    'lastError',
+  ];
   public editing = false;
   public filterStr = '';
   public unsubscribe$: Subject<null> = new Subject<null>();
