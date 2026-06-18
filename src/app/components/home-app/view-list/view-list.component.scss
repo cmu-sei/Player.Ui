@@ -1,11 +1,18 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .view-list-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  max-height: 800px;
+  flex: 1;
+  min-height: 0;
   min-width: 300px;
 }
 
@@ -42,8 +49,7 @@
 }
 
 .mat-column-name {
-  flex: 0 0 30%;
-  padding: 1%;
+  flex: 0 0 40%;
 }
 
 .mat-column-teamName {
@@ -52,7 +58,11 @@
 
 .mat-column-description {
   flex: 1 1 auto;
-  padding: 1%;
+}
+
+.mat-column-dateCreated {
+  flex: 0 0 150px;
+  white-space: nowrap;
 }
 
 .searchBox {
@@ -71,8 +81,9 @@
 
 .mat-mdc-table {
   width: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 300px);
 }
 
 .mat-mdc-cell,
@@ -97,4 +108,16 @@ a:hover {
 
 a:active {
   color: var(--mat-sys-on-background);
+}
+
+.template-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 4px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
 }

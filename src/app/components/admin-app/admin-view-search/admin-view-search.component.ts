@@ -2,6 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -31,6 +32,9 @@ export class AdminViewSearchComponent implements OnInit {
   @ViewChild(AdminViewEditComponent, { static: true })
   adminViewEditComponent: AdminViewEditComponent;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+
+  public defaultPageSize = 10;
 
   public viewActions: Action[] = [
     { Value: 'edit', Text: 'Edit View' },
@@ -70,6 +74,7 @@ export class AdminViewSearchComponent implements OnInit {
     this.viewDataSource = new MatTableDataSource<View>(new Array<View>());
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.viewDataSource.sort = this.sort;
+    this.viewDataSource.paginator = this.paginator;
     this.showEditScreen = false;
     this.filterString = '';
 

@@ -20,7 +20,7 @@ to use this component, add one of the following lines to the html of your edit p
     @if (user) {
       <mat-option value="">None</mat-option>
     }
-    @for (role of roles$ | async; track role) {
+    @for (role of roles$ | async; track role.id) {
       <mat-option [value]="role.id">
         {{ role.name }}
       </mat-option>
@@ -38,7 +38,7 @@ to use this component, add one of the following lines to the html of your edit p
           name="userPermissions"
           multiple
           >
-          @for (item of permissions$ | async; track item) {
+          @for (item of permissions$ | async; track item.id) {
             <mat-option
               [value]="item.id"
           (onSelectionChange)="

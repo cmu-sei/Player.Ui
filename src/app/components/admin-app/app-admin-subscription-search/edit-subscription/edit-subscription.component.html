@@ -2,34 +2,35 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<div style="overflow: hidden;">
-<h3>{{ currentSub == null ? 'Add Subscription' : 'Edit Subscription' }}</h3>
-<form [formGroup]="form" (ngSubmit)="onSubmit()" class="d-flex flex-column">
-  <mat-form-field>
-    <mat-label>Name</mat-label>
-    <input type="text" matNativeControl formControlName="name" />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Callback URL</mat-label>
-    <input type="text" matNativeControl formControlName="callbackUri" />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Client ID</mat-label>
-    <input type="text" matNativeControl formControlName="clientId" />
-  </mat-form-field>
-  <div>
-    <mat-form-field matTooltip="Only viewable on creation">
-      <mat-label>Client Secret</mat-label>
-      <input type="text" matNativeControl formControlName="clientSecret" />
+<h2 mat-dialog-title>{{ currentSub == null ? 'Add Subscription' : 'Edit Subscription' }}</h2>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="d-flex flex-column">
+    <mat-form-field class="full-width">
+      <mat-label>Name</mat-label>
+      <input type="text" matNativeControl formControlName="name" />
     </mat-form-field>
-    <mat-checkbox
-      matTooltip="Client Secret is only updated if checked"
-      [checked]="!currentSub?.clientSecretSet"
-      (change)="editSecretChanged($event)"
-      >Edit</mat-checkbox
-      >
+    <mat-form-field class="full-width">
+      <mat-label>Callback URL</mat-label>
+      <input type="text" matNativeControl formControlName="callbackUri" />
+    </mat-form-field>
+    <mat-form-field class="full-width">
+      <mat-label>Client ID</mat-label>
+      <input type="text" matNativeControl formControlName="clientId" />
+    </mat-form-field>
+    <div class="d-flex align-items-baseline">
+      <mat-form-field matTooltip="Only viewable on creation" class="full-width">
+        <mat-label>Client Secret</mat-label>
+        <input type="text" matNativeControl formControlName="clientSecret" />
+      </mat-form-field>
+      <mat-checkbox
+        class="ms-2"
+        matTooltip="Client Secret is only updated if checked"
+        [checked]="!currentSub?.clientSecretSet"
+        (change)="editSecretChanged($event)"
+        >Edit</mat-checkbox
+        >
     </div>
-    <mat-form-field>
+    <mat-form-field class="full-width">
       <mat-label>Events</mat-label>
       <mat-select multiple formControlName="eventTypes">
         @for (e of eventTypes; track e) {
@@ -37,11 +38,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         }
       </mat-select>
     </mat-form-field>
-    <div class="d-flex justify-content-around">
-      <button mat-flat-button color="primary" type="submit">Save</button>
-      <button mat-flat-button color="primary" type="button" (click)="onDelete()">
-        Delete
-      </button>
-    </div>
-  </form>
-</div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-stroked-button type="submit">Save</button>
+  </mat-dialog-actions>
+</form>

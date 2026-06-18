@@ -126,7 +126,9 @@ export class DialogService {
   public editSubscription(
     subscription?: WebhookSubscription
   ): Observable<boolean> {
-    const dialogRef = this.dialog.open(EditSubscriptionComponent);
+    const dialogRef = this.dialog.open(EditSubscriptionComponent, {
+      width: '500px',
+    });
     dialogRef.componentInstance.currentSub = subscription;
     return dialogRef.afterClosed();
   }

@@ -45,7 +45,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Add a new View"
         (click)="addNewView()"
       >
-        <mat-icon fontIcon="mdi-plus" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px"></mat-icon>
       </button>
       <button
         mat-icon-button
@@ -90,7 +90,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
-        View Name
+        Name
       </mat-header-cell>
       <mat-cell *matCellDef="let element">
         <button
@@ -145,6 +145,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   @if (viewDataSource.filteredData.length === 0) {
     <div>No results found</div>
   }
+  <mat-paginator
+    #paginator
+    [pageSize]="defaultPageSize"
+    [pageSizeOptions]="[10, 20, 30]"
+    [showFirstLastButtons]="true"
+  >
+  </mat-paginator>
 
   @if (isLoading) {
     <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
