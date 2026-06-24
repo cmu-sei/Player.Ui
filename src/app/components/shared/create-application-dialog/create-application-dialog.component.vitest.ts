@@ -62,11 +62,21 @@ async function renderDialog() {
 }
 
 describe('CreateApplicationDialogComponent', () => {
+  /**
+   * Verifies: the component instantiates with the provided inputs and providers.
+   * Interacts with: ApplicationService stub and MatDialogRef via renderDialog.
+   * Data: default render inputs (applicationId, file, viewName, currentTeams).
+   */
   it('creates the component', async () => {
     const { fixture } = await renderDialog();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: ngOnInit pre-selects the teams form control from the file's teamIds.
+   * Interacts with: component reactive form built on init.
+   * Data: file fixture with teamIds ['team-a','team-b'].
+   */
   it('seeds the teams form control from file.teamIds on init', async () => {
     const { fixture } = await renderDialog();
     expect(fixture.componentInstance.form.value.teams).toEqual([
@@ -75,6 +85,12 @@ describe('CreateApplicationDialogComponent', () => {
     ]);
   });
 
+  /**
+   * Verifies: submit() issues one createApplicationInstance per selected team
+   *   (with teamId/applicationId/displayOrder) then closes with the team list.
+   * Interacts with: ApplicationService.createApplicationInstance and MatDialogRef.close.
+   * Data: two selected teams seeded from file.teamIds; applicationId 'app-1'.
+   */
   it('submit() creates an app instance for each selected team and closes', async () => {
     const { fixture, createApplicationInstance, close } = await renderDialog();
     fixture.componentInstance.submit();
@@ -87,6 +103,11 @@ describe('CreateApplicationDialogComponent', () => {
     expect(close).toHaveBeenCalledWith({ teams: ['team-a', 'team-b'] });
   });
 
+  /**
+   * Verifies: cancel() closes with an empty teams array and creates nothing.
+   * Interacts with: MatDialogRef.close; asserts createApplicationInstance unused.
+   * Data: default render inputs.
+   */
   it('cancel() closes the dialog with an empty teams array', async () => {
     const { fixture, close, createApplicationInstance } = await renderDialog();
     fixture.componentInstance.cancel();

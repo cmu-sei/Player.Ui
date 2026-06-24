@@ -28,16 +28,31 @@ async function renderImport(
 }
 
 describe('AdminAppViewImportComponent', () => {
+  /**
+   * Verifies: the component instantiates without error.
+   * Interacts with: ViewsService.import stub.
+   * Data: default render (no failures result).
+   */
   it('creates the component', async () => {
     const { fixture } = await renderImport();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: the Import button is disabled until a file is chosen.
+   * Interacts with: rendered DOM via screen.getByRole.
+   * Data: default render (no archive set).
+   */
   it('disables Import until an archive is chosen', async () => {
     await renderImport();
     expect(screen.getByRole('button', { name: /^Import$/ })).toBeDisabled();
   });
 
+  /**
+   * Verifies: patching an archive into the form enables the Import button.
+   * Interacts with: component.form patchValue; rendered DOM.
+   * Data: a zip Blob set as the archive control.
+   */
   it('enables Import once an archive is set', async () => {
     const { fixture } = await renderImport();
     fixture.componentInstance.form.patchValue({
@@ -49,6 +64,11 @@ describe('AdminAppViewImportComponent', () => {
     ).not.toBeDisabled();
   });
 
+  /**
+   * Verifies: clicking Cancel emits complete(false) without importing.
+   * Interacts with: component.complete output; userEvent click.
+   * Data: default render.
+   */
   it('emits complete=false when cancel is clicked', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderImport();
@@ -58,6 +78,12 @@ describe('AdminAppViewImportComponent', () => {
     expect(spy).toHaveBeenCalledWith(false);
   });
 
+  /**
+   * Verifies: submitting forwards the two match-by-name flags and the archive
+   *   (in that order) to the service.
+   * Interacts with: ViewsService.import spy; userEvent click.
+   * Data: archive Blob with matchApplicationTemplatesByName and matchRolesByName true.
+   */
   it('calls ViewsService.import with the form values', async () => {
     const user = userEvent.setup();
     const { fixture, importFn } = await renderImport();
@@ -72,6 +98,11 @@ describe('AdminAppViewImportComponent', () => {
     expect(importFn).toHaveBeenCalledWith(true, true, archive);
   });
 
+  /**
+   * Verifies: a result with no failures renders the success message.
+   * Interacts with: ViewsService.import stub; rendered DOM.
+   * Data: result with empty failures array.
+   */
   it('shows "Import Successful" on a clean result', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderImport({ result: { failures: [] } });
@@ -83,6 +114,12 @@ describe('AdminAppViewImportComponent', () => {
     expect(await screen.findByText(/Import Successful/)).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: a result with failures renders the error heading plus each
+   *   failure's name and reason.
+   * Interacts with: ViewsService.import stub; rendered DOM.
+   * Data: result with two failures (name + reason each).
+   */
   it('lists each failure when the result reports errors', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderImport({
@@ -107,6 +144,14 @@ describe('AdminAppViewImportComponent', () => {
     expect(screen.getByText(/invalid/)).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: onFileSelected pulls the chosen File off the input event and
+   *   stores it as the form's archive.
+   * Interacts with: component.onFileSelected with a synthetic change event.
+   * Data: a File built from event.target.files[0].
+   * Why: the Event is hand-built (cast through unknown) since jsdom file inputs
+   *      cannot be populated programmatically.
+   */
   it('onFileSelected captures the file from the input event', async () => {
     const { fixture } = await renderImport();
     const file = new File(['x'], 'views.zip');

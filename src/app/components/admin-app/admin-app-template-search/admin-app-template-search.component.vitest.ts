@@ -66,11 +66,23 @@ async function renderSearch(
 }
 
 describe('AdminAppTemplateSearchComponent', () => {
+  /**
+   * Verifies: the component instantiates without error.
+   * Interacts with: ApplicationService get/create stubs.
+   * Data: default sample templates.
+   */
   it('creates the component', async () => {
     const { fixture } = await renderSearch();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: init calls getApplicationTemplates and loads them into the table
+   *   data source.
+   * Interacts with: ApplicationService.getApplicationTemplates spy;
+   *   component.appTemplateDataSource.
+   * Data: default sample (two templates).
+   */
   it('loads templates on init and populates the data source', async () => {
     const { fixture, getApplicationTemplates } = await renderSearch();
     expect(getApplicationTemplates).toHaveBeenCalled();
@@ -79,6 +91,11 @@ describe('AdminAppTemplateSearchComponent', () => {
     );
   });
 
+  /**
+   * Verifies: an empty template list renders the empty-state message.
+   * Interacts with: ApplicationService.getApplicationTemplates stub; rendered DOM.
+   * Data: templates override = [] (empty).
+   */
   it('shows "No Application Templates found" when the list is empty', async () => {
     await renderSearch({ templates: [] });
     expect(
@@ -86,6 +103,12 @@ describe('AdminAppTemplateSearchComponent', () => {
     ).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: applyFilter sets both the data source filter and the bound
+   *   filterString.
+   * Interacts with: component.applyFilter; appTemplateDataSource.filter.
+   * Data: filter term 'alpha'.
+   */
   it('filters the data source when applyFilter is called', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyFilter('alpha');
@@ -95,6 +118,12 @@ describe('AdminAppTemplateSearchComponent', () => {
     expect(fixture.componentInstance.filterString).toBe('alpha');
   });
 
+  /**
+   * Verifies: clearFilter blanks both filterString and the data source filter
+   *   after a prior filter.
+   * Interacts with: component.applyFilter then clearFilter.
+   * Data: initial filter 'beta', then cleared.
+   */
   it('clearFilter resets the filter to empty', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyFilter('beta');
@@ -103,6 +132,11 @@ describe('AdminAppTemplateSearchComponent', () => {
     expect(fixture.componentInstance.appTemplateDataSource.filter).toBe('');
   });
 
+  /**
+   * Verifies: isAllSelected returns true once every row id is in the selection.
+   * Interacts with: component.selection model; isAllSelected.
+   * Data: both sample template ids selected.
+   */
   it('isAllSelected is true when every filtered row is selected', async () => {
     const { fixture } = await renderSearch();
     const c = fixture.componentInstance;
@@ -110,6 +144,12 @@ describe('AdminAppTemplateSearchComponent', () => {
     expect(c.isAllSelected()).toBe(true);
   });
 
+  /**
+   * Verifies: toggleAllRows selects every row when none are selected and clears
+   *   the selection when invoked again.
+   * Interacts with: component.toggleAllRows; selection model.
+   * Data: default sample (two rows).
+   */
   it('toggleAllRows selects all when none are selected, then clears on second call', async () => {
     const { fixture } = await renderSearch();
     const c = fixture.componentInstance;
@@ -119,6 +159,14 @@ describe('AdminAppTemplateSearchComponent', () => {
     expect(c.selection.selected).toHaveLength(0);
   });
 
+  /**
+   * Verifies: addAppTemplate posts a default-named template and refreshes the
+   *   list afterward.
+   * Interacts with: ApplicationService.createApplicationTemplate +
+   *   getApplicationTemplates spies.
+   * Data: default sample; created template named 'New Template'.
+   * Why: asserts getApplicationTemplates called >=2 times (initial load + reload).
+   */
   it('addAppTemplate creates a new template and reloads the data source', async () => {
     const { fixture, createApplicationTemplate, getApplicationTemplates } =
       await renderSearch();
@@ -132,6 +180,11 @@ describe('AdminAppTemplateSearchComponent', () => {
     );
   });
 
+  /**
+   * Verifies: refresh(true) clears the currently-selected template detail.
+   * Interacts with: component.refresh; currentAppTemplate field.
+   * Data: currentAppTemplate preset to the first sample, then refresh(true).
+   */
   it('refresh(true) clears the currentAppTemplate', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.currentAppTemplate = sample[0];

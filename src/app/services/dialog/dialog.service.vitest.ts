@@ -43,6 +43,11 @@ function setup(closedWith: unknown = true) {
 describe('DialogService', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
+  /**
+   * Verifies: confirm() opens ConfirmDialogComponent with the given data, assigns title/message onto the instance, and resolves to the afterClosed value
+   * Interacts with: MatDialog.open stub returning the fake dialogRef; service.confirm
+   * Data: title/message strings plus a { foo: 1 } config data object; dialog closed with true
+   */
   it('confirm() opens ConfirmDialogComponent, sets title/message, returns afterClosed', async () => {
     const { service, open, componentInstance } = setup(true);
     const result = await firstValueFrom(
@@ -56,12 +61,22 @@ describe('DialogService', () => {
     expect(result).toBe(true);
   });
 
+  /**
+   * Verifies: omitting the data argument passes { data: {} } to MatDialog.open
+   * Interacts with: MatDialog.open stub; service.confirm
+   * Data: title/message only, no config data
+   */
   it('confirm() defaults data to an empty object when none is provided', () => {
     const { service, open } = setup();
     service.confirm('T', 'M');
     expect(open).toHaveBeenCalledWith(ConfirmDialogComponent, { data: {} });
   });
 
+  /**
+   * Verifies: name() opens NameDialogComponent with the data and assigns title/message onto the instance
+   * Interacts with: MatDialog.open stub; service.name
+   * Data: title/message strings plus a { nameValue: 'x' } config data object
+   */
   it('name() opens NameDialogComponent and sets title/message', () => {
     const { service, open, componentInstance } = setup();
     service.name('Rename', 'Enter a name', { nameValue: 'x' });
@@ -72,6 +87,11 @@ describe('DialogService', () => {
     expect(componentInstance.message).toBe('Enter a name');
   });
 
+  /**
+   * Verifies: createPermission() forwards the caller's configData to open() (not wrapped in { data }) and assigns title/permission
+   * Interacts with: MatDialog.open stub; service.createPermission
+   * Data: a permission object and an explicit configData ({ width: '500px' }) passed straight through
+   */
   it('createPermission() opens the dialog with configData and sets title/permission', () => {
     const { service, open, componentInstance } = setup();
     const permission = { key: 'p1' };
@@ -85,12 +105,22 @@ describe('DialogService', () => {
     expect(componentInstance.permission).toBe(permission);
   });
 
+  /**
+   * Verifies: omitting configData passes {} (not { data: {} }) to open()
+   * Interacts with: MatDialog.open stub; service.createPermission
+   * Data: title and permission only, no configData
+   */
   it('createPermission() defaults configData to an empty object', () => {
     const { service, open } = setup();
     service.createPermission('T', { key: 'p' });
     expect(open).toHaveBeenCalledWith(CreatePermissionDialogComponent, {});
   });
 
+  /**
+   * Verifies: createRole() forwards configData to open() and assigns title/name onto the instance
+   * Interacts with: MatDialog.open stub; service.createRole
+   * Data: title 'New Role', name 'Admin', configData { width: '400px' }
+   */
   it('createRole() opens the dialog and sets title/name', () => {
     const { service, open, componentInstance } = setup();
     service.createRole('New Role', 'Admin', { width: '400px' });
@@ -101,6 +131,11 @@ describe('DialogService', () => {
     expect(componentInstance.name).toBe('Admin');
   });
 
+  /**
+   * Verifies: selectRolePermissions() opens with default {} config and assigns title, role, and permissions onto the instance
+   * Interacts with: MatDialog.open stub; service.selectRolePermissions
+   * Data: a role object and a two-element permissions array, no configData
+   */
   it('selectRolePermissions() sets title/role/permissions', () => {
     const { service, open, componentInstance } = setup();
     const role = { id: 'r1' };
@@ -115,6 +150,12 @@ describe('DialogService', () => {
     expect(componentInstance.permissions).toBe(permissions);
   });
 
+  /**
+   * Verifies: addRemoveUsersToTeam() sets the title and invokes the instance's loadTeam(team) method rather than setting a plain input
+   * Interacts with: MatDialog.open stub; the fake instance's loadTeam vi.fn; service.addRemoveUsersToTeam
+   * Data: a Team fixture { id: 't1', name: 'Red' } and configData { width: '600px' }
+   * Why: the fake componentInstance is pre-seeded with a loadTeam spy so the method call can be asserted without a real component
+   */
   it('addRemoveUsersToTeam() sets the title and calls loadTeam with the team', () => {
     const { service, open, componentInstance } = setup();
     const team: Team = { id: 't1', name: 'Red' };
@@ -126,6 +167,11 @@ describe('DialogService', () => {
     expect(componentInstance.loadTeam).toHaveBeenCalledWith(team);
   });
 
+  /**
+   * Verifies: editFile() opens with no config object and forwards fileId, viewId, oldName, and oldTeams onto the instance
+   * Interacts with: MatDialog.open stub; service.editFile
+   * Data: fileId/viewId/oldName strings and an oldTeams array ['t1','t2']
+   */
   it('editFile() opens EditFileDialogComponent and forwards all inputs', () => {
     const { service, open, componentInstance } = setup();
     service.editFile('f1', 'v1', 'old.txt', ['t1', 't2']);
@@ -136,6 +182,11 @@ describe('DialogService', () => {
     expect(componentInstance.oldTeams).toEqual(['t1', 't2']);
   });
 
+  /**
+   * Verifies: editSubscription() opens with { width: '500px' } and assigns the passed subscription to currentSub
+   * Interacts with: MatDialog.open stub; service.editSubscription
+   * Data: an existing subscription fixture { id: 's1', name: 'hook' }
+   */
   it('editSubscription() opens EditSubscriptionComponent with the subscription', () => {
     const { service, open, componentInstance } = setup();
     const subscription = { id: 's1', name: 'hook' };
@@ -146,12 +197,22 @@ describe('DialogService', () => {
     expect(componentInstance.currentSub).toBe(subscription);
   });
 
+  /**
+   * Verifies: calling editSubscription() with no argument leaves currentSub undefined (the create-new path)
+   * Interacts with: MatDialog.open stub; service.editSubscription
+   * Data: no subscription argument
+   */
   it('editSubscription() passes undefined when creating a new subscription', () => {
     const { service, componentInstance } = setup();
     service.editSubscription();
     expect(componentInstance.currentSub).toBeUndefined();
   });
 
+  /**
+   * Verifies: createApplication() opens with no config and forwards applicationId, file, viewName, and currentTeams onto the instance
+   * Interacts with: MatDialog.open stub; service.createApplication
+   * Data: an applicationId string, a FileModel fixture, a view name, and a currentTeams array
+   */
   it('createApplication() opens the dialog and forwards all inputs', () => {
     const { service, open, componentInstance } = setup();
     const file = { id: 'f1', name: 'icon.png' } as FileModel;
@@ -164,6 +225,11 @@ describe('DialogService', () => {
     expect(componentInstance.currentTeams).toBe(currentTeams);
   });
 
+  /**
+   * Verifies: the observable a dialog method returns reflects whatever afterClosed emits (here, false)
+   * Interacts with: the fake dialogRef.afterClosed stub; service.confirm
+   * Data: setup configured to close the dialog with false
+   */
   it('propagates the value the dialog closes with', async () => {
     const { service } = setup(false);
     expect(await firstValueFrom(service.confirm('T', 'M'))).toBe(false);

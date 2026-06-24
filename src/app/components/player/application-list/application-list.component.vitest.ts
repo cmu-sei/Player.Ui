@@ -84,16 +84,31 @@ async function renderList(
 }
 
 describe('ApplicationListComponent', () => {
+  /**
+   * Verifies: ApplicationListComponent instantiates successfully.
+   * Interacts with: renderList harness with Applications/FocusedApp/Auth/Sanitizer stubs.
+   * Data: default renderList() (one embeddable app, light theme, two teams).
+   */
   it('creates the component', async () => {
     const { fixture } = await renderList();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: applications are fetched for the team flagged isPrimary, not just the first team.
+   * Interacts with: ApplicationsService.getApplicationsByTeam spy.
+   * Data: default teams array where 'team-a' is the primary team.
+   */
   it('requests applications for the primary team', async () => {
     const { getApplicationsByTeam } = await renderList();
     expect(getApplicationsByTeam).toHaveBeenCalledWith('team-a');
   });
 
+  /**
+   * Verifies: each app's themedUrl substitutes the current theme into the {theme} placeholder and safeUrl is sanitized.
+   * Interacts with: applications$ stream, ComnAuthQuery.userTheme$, DomSanitizer stub.
+   * Data: renderList override with a {theme}-placeholder URL and dark-theme.
+   */
   it('applies theme query string and safe URL to each app', async () => {
     const { fixture } = await renderList({
       apps: [makeApp('a1', 'https://a.test/app?other=1&{theme}')],
@@ -108,6 +123,11 @@ describe('ApplicationListComponent', () => {
     );
   });
 
+  /**
+   * Verifies: insertThemeToUrl replaces a {theme} placeholder with a ?theme= query when the URL has no existing query.
+   * Interacts with: component.insertThemeToUrl seam (pure method).
+   * Data: URL 'https://a.test/app{theme}' with dark-theme.
+   */
   it('insertThemeToUrl appends ?theme when no existing query and {theme} placeholder present', async () => {
     const { fixture } = await renderList();
     const url = fixture.componentInstance.insertThemeToUrl(
@@ -117,6 +137,11 @@ describe('ApplicationListComponent', () => {
     expect(url).toBe('https://a.test/app?theme=dark-theme');
   });
 
+  /**
+   * Verifies: insertThemeToUrl returns the URL unchanged when no {theme} placeholder is present.
+   * Interacts with: component.insertThemeToUrl seam (pure method).
+   * Data: URL 'https://a.test' with light-theme.
+   */
   it('insertThemeToUrl leaves URLs without placeholder untouched', async () => {
     const { fixture } = await renderList();
     expect(
@@ -127,6 +152,13 @@ describe('ApplicationListComponent', () => {
     ).toBe('https://a.test');
   });
 
+  /**
+   * Verifies: a plain click on an embeddable app is prevented and pushed into the focused-app URL stream.
+   * Interacts with: openApplication, MouseEvent.preventDefault spy, FocusedAppService.focusedAppUrl subject.
+   * Data: default renderList(); a synthetic non-ctrl MouseEvent and an app with a themedUrl.
+   * Why: awaits fixture.whenStable() to flush the isAuthenticated() promise that openInFocusedApp awaits
+   *       before the focusedAppUrl is updated.
+   */
   it('openApplication intercepts non-ctrl clicks on embeddable apps', async () => {
     const { fixture, focusedAppUrl } = await renderList();
     // Let the stream run so currentApp gets seeded.
@@ -144,6 +176,11 @@ describe('ApplicationListComponent', () => {
     expect(focusedAppUrl.value).toBe('https://a2.test/app');
   });
 
+  /**
+   * Verifies: a ctrl-click is not intercepted, allowing the browser's default open-in-new-tab behavior.
+   * Interacts with: openApplication, MouseEvent.preventDefault spy.
+   * Data: default renderList(); a synthetic ctrlKey:true MouseEvent.
+   */
   it('openApplication respects ctrl-click (does not intercept)', async () => {
     const { fixture } = await renderList();
     const event = {
@@ -155,6 +192,13 @@ describe('ApplicationListComponent', () => {
     expect(event.preventDefault).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: openInFocusedApp checks ComnAuthService.isAuthenticated before opening the app.
+   * Interacts with: openInFocusedApp, ComnAuthService.isAuthenticated spy.
+   * Data: renderList({ isAuthenticated: true }); only the authenticated branch is exercised.
+   * Why: the unauthenticated branch calls window.location.reload(), which would reload the runner
+   *       page in browser mode and jsdom's Location is non-configurable, so it is deliberately skipped.
+   */
   it('openInFocusedApp consults ComnAuthService.isAuthenticated', async () => {
     // We intentionally do not exercise the unauthenticated branch here:
     // that branch calls window.location.reload(), which under real-
@@ -173,6 +217,11 @@ describe('ApplicationListComponent', () => {
     expect(isAuth).toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: trackByFn returns the item's id for ngFor identity tracking.
+   * Interacts with: component.trackByFn seam (pure method).
+   * Data: an inline { id: 'foo' } item.
+   */
   it('trackByFn returns the item id', async () => {
     const { fixture } = await renderList();
     expect(
@@ -180,6 +229,11 @@ describe('ApplicationListComponent', () => {
     ).toBe('foo');
   });
 
+  /**
+   * Verifies: ngOnChanges re-fetches applications when the teams input changes.
+   * Interacts with: ngOnChanges, ApplicationsService.getApplicationsByTeam spy (cleared first).
+   * Data: a synthetic SimpleChanges entry for the teams input.
+   */
   it('ngOnChanges refreshes apps when teams input changes', async () => {
     const { fixture, getApplicationsByTeam } = await renderList();
     getApplicationsByTeam.mockClear();

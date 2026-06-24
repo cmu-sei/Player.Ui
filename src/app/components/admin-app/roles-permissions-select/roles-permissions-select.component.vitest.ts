@@ -67,6 +67,11 @@ async function renderSelect(
 }
 
 describe('RolesPermissionsSelectComponent', () => {
+  /**
+   * Verifies: the roles/permissions select component instantiates successfully.
+   * Interacts with: renderComponent with stubbed User/Team services, TeamPermissionsService, RolesService, TeamRolesService.
+   * Data: a user fixture (id 'u1') with no team.
+   */
   it('creates the component', async () => {
     const { fixture } = await renderSelect({
       user: { id: 'u1', name: 'Alice' },
@@ -80,6 +85,11 @@ describe('RolesPermissionsSelectComponent', () => {
   // dereference the unset subject — that's a real bug in the component
   // but is out of scope for this coverage task.
 
+  /**
+   * Verifies: passing a team puts the component in Team mode, shows permissions, and seeds selection from team.permissions/roleId.
+   * Interacts with: ngOnInit reading the team input.
+   * Data: team with roleId 'r1' and permission p1.
+   */
   it('sets Team mode and seeds selectedPermissions from team.permissions', async () => {
     const team = {
       id: 't1',
@@ -94,6 +104,11 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(fixture.componentInstance.selectedRole).toBe('r1');
   });
 
+  /**
+   * Verifies: passing a user puts the component in User mode, hides the permissions UI, and seeds the role from roleId.
+   * Interacts with: ngOnInit reading the user input.
+   * Data: user with roleId 'r2'.
+   */
   it('sets User mode without permissions', async () => {
     const { fixture } = await renderSelect({
       user: { id: 'u1', name: 'Alice', roleId: 'r2' },
@@ -103,6 +118,11 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(fixture.componentInstance.selectedRole).toBe('r2');
   });
 
+  /**
+   * Verifies: checking a permission in Team mode calls addToTeam and not removeFromTeam.
+   * Interacts with: stubbed TeamPermissionsService.addToTeam / removeFromTeam.
+   * Data: team with p1; adding p2 (checked=true).
+   */
   it('updatePermissions(Team, checked=true) calls addToTeam', async () => {
     const team = {
       id: 't1',
@@ -115,6 +135,11 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(removeFromTeam).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: unchecking a permission in Team mode calls removeFromTeam and not addToTeam.
+   * Interacts with: stubbed TeamPermissionsService.addToTeam / removeFromTeam.
+   * Data: team with p1; removing p1 (checked=false).
+   */
   it('updatePermissions(Team, checked=false) calls removeFromTeam', async () => {
     const team = {
       id: 't1',
@@ -127,6 +152,11 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(addToTeam).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: updateRole in User mode writes the new roleId onto the subject and persists via UserService.updateUser.
+   * Interacts with: stubbed UserService.updateUser.
+   * Data: user with roleId null; updateRole('new-role').
+   */
   it('updateRole(User) updates the user via UserService', async () => {
     const { fixture, updateUser } = await renderSelect({
       user: { id: 'u1', name: 'Alice', roleId: null },
@@ -136,6 +166,11 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(updateUser).toHaveBeenCalledWith('u1', fixture.componentInstance.subject);
   });
 
+  /**
+   * Verifies: updateRole with an empty string nulls the subject's roleId and still persists.
+   * Interacts with: stubbed UserService.updateUser.
+   * Data: user with roleId 'r2'; updateRole('').
+   */
   it('updateRole("") clears the roleId to null', async () => {
     const { fixture, updateUser } = await renderSelect({
       user: { id: 'u1', name: 'Alice', roleId: 'r2' },
@@ -145,6 +180,11 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(updateUser).toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: updateRole in Team mode persists the subject via TeamService.updateTeam.
+   * Interacts with: stubbed TeamService.updateTeam.
+   * Data: team with roleId null; updateRole('team-role').
+   */
   it('updateRole(Team) updates the team via TeamService', async () => {
     const team = {
       id: 't1',

@@ -53,33 +53,63 @@ async function renderAdminUserSearch(
 }
 
 describe('AdminUserSearchComponent', () => {
+  /**
+   * Verifies: the user-search component instantiates successfully.
+   * Interacts with: renderComponent with stubbed UserService, RolesService, DialogService.
+   * Data: default mockUsers and a non-confirming dialog.
+   */
   it('should create', async () => {
     const { fixture } = await renderAdminUserSearch();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: the search input is rendered.
+   * Interacts with: the rendered DOM (queried by placeholder).
+   * Data: default overrides.
+   */
   it('should show search input', async () => {
     await renderAdminUserSearch();
     expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: each loaded user renders as a table row.
+   * Interacts with: the rendered DOM driven by the getUsers stub.
+   * Data: mockUsers (Alice Smith, Bob Jones).
+   */
   it('should display users table', async () => {
     await renderAdminUserSearch();
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
     expect(screen.getByText('Bob Jones')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the "Name" column header is rendered.
+   * Interacts with: the rendered DOM (queried via Testing Library screen).
+   * Data: default overrides.
+   */
   it('should show User Name column header', async () => {
     await renderAdminUserSearch();
     expect(screen.getByText('Name')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: a per-row Delete User control is rendered for users.
+   * Interacts with: the rendered DOM (queried by title).
+   * Data: mockUsers.
+   */
   it('should show delete button for users', async () => {
     await renderAdminUserSearch();
     const deleteButtons = screen.getAllByTitle('Delete User');
     expect(deleteButtons.length).toBeGreaterThan(0);
   });
 
+  /**
+   * Verifies: ngOnInit fetches users and roles, fills the datasource, and clears isLoading.
+   * Interacts with: stubbed UserService.getUsers and RolesService.getRoles.
+   * Data: mockUsers.
+   */
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     expect(stubs.getUsers).toHaveBeenCalled();
@@ -88,6 +118,12 @@ describe('AdminUserSearchComponent', () => {
     expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
   });
 
+  /**
+   * Verifies: applyFilter lowercases the value (without trimming) and applies it to the datasource filter.
+   * Interacts with: component.applyFilter and the MatTableDataSource filter.
+   * Data: padded mixed-case input '  ALICE  '.
+   * Why: asserts surrounding whitespace is preserved (only case is changed), distinct from the view-search trim behavior.
+   */
   it('applyFilter lowercases the value and sets the datasource filter', async () => {
     const { fixture } = await renderAdminUserSearch();
     const c = fixture.componentInstance;
@@ -96,6 +132,11 @@ describe('AdminUserSearchComponent', () => {
     expect(c.userDataSource.filter).toBe('  alice  ');
   });
 
+  /**
+   * Verifies: refreshUsers re-fetches users into the datasource and clears isLoading.
+   * Interacts with: stubbed UserService.getUsers (re-stubbed for this call).
+   * Data: getUsers returns a fresh single-user list ('New') on the next call.
+   */
   it('refreshUsers reloads the user list into the datasource', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     const c = fixture.componentInstance;
@@ -108,6 +149,11 @@ describe('AdminUserSearchComponent', () => {
   });
 
   describe('deleteUser()', () => {
+    /**
+     * Verifies: a confirmed prompt deletes the user by id and triggers a refresh.
+     * Interacts with: stubbed DialogService.confirm, UserService.deleteUser and getUsers.
+     * Data: confirmResult=true; deleting mockUsers[0] (Alice Smith).
+     */
     it('deletes and refreshes when the user confirms', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
@@ -124,6 +170,11 @@ describe('AdminUserSearchComponent', () => {
       expect(stubs.getUsers).toHaveBeenCalled();
     });
 
+    /**
+     * Verifies: the confirm message uses the user id when the user has no name.
+     * Interacts with: stubbed DialogService.confirm (message argument inspected).
+     * Data: a nameless user { id: 'user-3' }; confirmResult=true.
+     */
     it('falls back to the user id in the prompt when name is missing', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
@@ -136,6 +187,11 @@ describe('AdminUserSearchComponent', () => {
       );
     });
 
+    /**
+     * Verifies: a declined prompt leaves deleteUser untouched.
+     * Interacts with: stubbed DialogService.confirm and UserService.deleteUser.
+     * Data: confirmResult=false.
+     */
     it('does nothing when the user cancels', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: false,

@@ -63,11 +63,22 @@ async function renderDetails(
 }
 
 describe('AdminTemplateDetailsComponent', () => {
+  /**
+   * Verifies: the component instantiates without error.
+   * Interacts with: ApplicationService + DialogService stubs.
+   * Data: default template input.
+   */
   it('creates the component', async () => {
     const { fixture } = await renderDetails();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: editAppTemplate calls the update API with the template id and the
+   *   current template object.
+   * Interacts with: ApplicationService.updateApplicationTemplate spy.
+   * Data: default template (id 't1').
+   */
   it('editAppTemplate calls updateApplicationTemplate with id and template', async () => {
     const { fixture, updateApplicationTemplate } = await renderDetails();
     fixture.componentInstance.editAppTemplate();
@@ -77,6 +88,14 @@ describe('AdminTemplateDetailsComponent', () => {
     );
   });
 
+  /**
+   * Verifies: editAppTemplate replaces the local appTemplate with the server
+   *   response (e.g. a renamed template).
+   * Interacts with: ApplicationService.updateApplicationTemplate stub returning updated.
+   * Data: response template renamed to 'Renamed'.
+   * Why: renders its own component inline (not renderDetails) so the update stub
+   *      can return a distinct response object.
+   */
   it('editAppTemplate updates appTemplate from response', async () => {
     const updated: ApplicationTemplate = { ...template, name: 'Renamed' };
     const updateApplicationTemplate = vi.fn(() => of(updated));
@@ -99,6 +118,13 @@ describe('AdminTemplateDetailsComponent', () => {
     expect(fixture.componentInstance.appTemplate.name).toBe('Renamed');
   });
 
+  /**
+   * Verifies: confirming the delete dialog deletes the template and emits
+   *   refresh(true).
+   * Interacts with: DialogService.confirm + ApplicationService.deleteApplicationTemplate;
+   *   component.refresh output.
+   * Data: confirm = true; template id 't1'.
+   */
   it('deleteApplicationTemplate emits refresh(true) when user confirms', async () => {
     const { fixture, deleteApplicationTemplate } = await renderDetails({
       confirm: true,
@@ -110,6 +136,12 @@ describe('AdminTemplateDetailsComponent', () => {
     expect(spy).toHaveBeenCalledWith(true);
   });
 
+  /**
+   * Verifies: cancelling the delete dialog neither deletes nor emits refresh.
+   * Interacts with: DialogService.confirm + ApplicationService.deleteApplicationTemplate;
+   *   component.refresh output.
+   * Data: confirm = false.
+   */
   it('deleteApplicationTemplate does nothing when user cancels', async () => {
     const { fixture, deleteApplicationTemplate } = await renderDetails({
       confirm: false,
@@ -121,6 +153,11 @@ describe('AdminTemplateDetailsComponent', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: the template detail view exposes a Delete button.
+   * Interacts with: rendered DOM via screen.findByRole.
+   * Data: default template input.
+   */
   it('renders a Delete Application Template button', async () => {
     await renderDetails();
     expect(
@@ -128,6 +165,12 @@ describe('AdminTemplateDetailsComponent', () => {
     ).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: clicking Delete opens the confirm dialog with a title and a body
+   *   referencing the template name.
+   * Interacts with: DialogService.confirm spy; userEvent click.
+   * Data: confirm = false; template named 'Alpha'.
+   */
   it('clicking the delete button triggers the confirmation dialog', async () => {
     const user = userEvent.setup();
     const { confirmDialog } = await renderDetails({ confirm: false });

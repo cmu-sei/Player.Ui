@@ -35,11 +35,21 @@ async function renderEdit(overrides: { user?: User; roles?: Role[] } = {}) {
 }
 
 describe('AdminUserEditComponent', () => {
+  /**
+   * Verifies: the user-edit component instantiates successfully.
+   * Interacts with: renderComponent with a stubbed UserService.
+   * Data: default user 'Alice' and the two-role roles fixture.
+   */
   it('creates the component', async () => {
     const { fixture } = await renderEdit();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: ngOnChanges snapshots the current user into originalUser and resets selectedPermissions to empty.
+   * Interacts with: component.ngOnChanges (lifecycle, no service call).
+   * Data: user mutated to name 'Alice2' before invoking the hook.
+   */
   it('ngOnChanges captures the current user as originalUser', async () => {
     const { fixture } = await renderEdit();
     fixture.componentInstance.user = { ...user, name: 'Alice2' };
@@ -50,6 +60,11 @@ describe('AdminUserEditComponent', () => {
     expect(fixture.componentInstance.selectedPermissions).toEqual([]);
   });
 
+  /**
+   * Verifies: returnToUserSearch emits true on the editComplete output.
+   * Interacts with: the component's editComplete EventEmitter (subscribed spy).
+   * Data: default user.
+   */
   it('returnToUserSearch emits editComplete=true', async () => {
     const { fixture } = await renderEdit();
     const spy = vi.fn();
@@ -58,6 +73,11 @@ describe('AdminUserEditComponent', () => {
     expect(spy).toHaveBeenCalledWith(true);
   });
 
+  /**
+   * Verifies: save() pushes the changed name through UserService.updateUser.
+   * Interacts with: nameFormControl and stubbed UserService.updateUser.
+   * Data: name form control set to 'Renamed' (differs from the original).
+   */
   it('save() updates the user name and calls UserService.updateUser when name changed', async () => {
     const { fixture, updateUser } = await renderEdit();
     fixture.componentInstance.nameFormControl.setValue('Renamed');
@@ -68,6 +88,11 @@ describe('AdminUserEditComponent', () => {
     );
   });
 
+  /**
+   * Verifies: save() skips the update call when the name matches the existing value.
+   * Interacts with: nameFormControl and stubbed UserService.updateUser.
+   * Data: name form control set back to the original user.name.
+   */
   it('save() is a no-op when the name is unchanged', async () => {
     const { fixture, updateUser } = await renderEdit();
     fixture.componentInstance.nameFormControl.setValue(user.name);
@@ -75,6 +100,11 @@ describe('AdminUserEditComponent', () => {
     expect(updateUser).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: updateRole resolves roleName from the matching roles entry and persists via updateUser.
+   * Interacts with: the roles input lookup and stubbed UserService.updateUser.
+   * Data: user override with roleId 'r2' (resolves to role name 'User').
+   */
   it('updateRole resolves the role name from the selected roleId', async () => {
     const { fixture, updateUser } = await renderEdit({
       user: { ...user, roleId: 'r2' },
@@ -84,6 +114,11 @@ describe('AdminUserEditComponent', () => {
     expect(updateUser).toHaveBeenCalledWith('u1', fixture.componentInstance.user);
   });
 
+  /**
+   * Verifies: updateRole nulls both roleId and roleName when the selected roleId is falsy, still persisting.
+   * Interacts with: stubbed UserService.updateUser.
+   * Data: user override with roleId '' and a stale roleName 'Admin'.
+   */
   it('updateRole clears role name when roleId is falsy', async () => {
     const { fixture, updateUser } = await renderEdit({
       user: { ...user, roleId: '', roleName: 'Admin' },

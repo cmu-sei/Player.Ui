@@ -69,11 +69,21 @@ async function renderBrowse(
 }
 
 describe('FileBrowseComponent', () => {
+  /**
+   * Verifies: FileBrowseComponent instantiates successfully.
+   * Interacts with: renderBrowse harness with FileService/TeamService/ActivatedRoute stubs.
+   * Data: default renderBrowse() (three files across two teams).
+   */
   it('creates the component', async () => {
     const { fixture } = await renderBrowse();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: init fetches files and teams using the view id from the route, populating files and a teams map.
+   * Interacts with: FileService.getViewFiles, TeamService.getMyViewTeams, ActivatedRoute.snapshot.paramMap.
+   * Data: route id 'v1'; default files/teams; asserts teams map has 2 entries.
+   */
   it('loads files and teams on init using the route id', async () => {
     const { fixture, getViewFiles, getMyViewTeams } = await renderBrowse();
     expect(getViewFiles).toHaveBeenCalledWith('v1');
@@ -82,6 +92,11 @@ describe('FileBrowseComponent', () => {
     expect(fixture.componentInstance.teams.size).toBe(2);
   });
 
+  /**
+   * Verifies: filtered() returns only files whose teamIds include the selected team.
+   * Interacts with: component.selectTeam then filtered() seam.
+   * Data: default files; selectTeam('team-a') expects f1 and f3.
+   */
   it('filtered() returns files belonging to the current team', async () => {
     const { fixture } = await renderBrowse();
     fixture.componentInstance.selectTeam('team-a');
@@ -91,17 +106,33 @@ describe('FileBrowseComponent', () => {
     ]);
   });
 
+  /**
+   * Verifies: filtered() returns an empty array when no team has been selected.
+   * Interacts with: component.filtered() seam without a prior selectTeam.
+   * Data: default renderBrowse().
+   */
   it('filtered() returns empty when currentTeam is unset', async () => {
     const { fixture } = await renderBrowse();
     expect(fixture.componentInstance.filtered()).toEqual([]);
   });
 
+  /**
+   * Verifies: selectTeam stores the chosen team id in currentTeam.
+   * Interacts with: component.selectTeam seam.
+   * Data: selectTeam('team-b').
+   */
   it('selectTeam updates currentTeam', async () => {
     const { fixture } = await renderBrowse();
     fixture.componentInstance.selectTeam('team-b');
     expect(fixture.componentInstance.currentTeam).toBe('team-b');
   });
 
+  /**
+   * Verifies: downloadFile fetches the blob, creates an object URL, and clicks a generated anchor for a non-image file.
+   * Interacts with: FileService.download, URL.createObjectURL spy, document.createElement anchor stub.
+   * Data: file id 'f1' / 'doc.txt'.
+   * Why: stubs the anchor's click to avoid jsdom "Not implemented: navigation" when a real download is triggered.
+   */
   it('downloadFile triggers a browser download for a non-image file', async () => {
     const { fixture, download } = await renderBrowse();
     const createUrl = vi
@@ -133,6 +164,12 @@ describe('FileBrowseComponent', () => {
     createUrl.mockRestore();
   });
 
+  /**
+   * Verifies: downloadFile omits the anchor download attribute for image files (opens inline instead of forcing a save).
+   * Interacts with: FileService.download, anchor download setter spy via createElement stub.
+   * Data: file id 'f2' / 'image.png'.
+   * Why: instruments the anchor's download setter so it can assert the attribute is never assigned.
+   */
   it('downloadFile does not set download attribute for image files', async () => {
     const { fixture } = await renderBrowse();
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://x');
