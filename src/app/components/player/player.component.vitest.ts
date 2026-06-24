@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { EMPTY, firstValueFrom, NEVER, of } from 'rxjs';
+import { EMPTY, firstValueFrom, NEVER, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
@@ -33,6 +33,7 @@ async function renderPlayer(
   const { teamId = 'team-a' } = overrides;
 
   const displayMessage = vi.fn();
+  const navigate = vi.fn();
   const setPrimaryTeamId = vi.fn(() => of({}));
   const getView = vi.fn(() => of(overrides.view ?? { id: 'view-1' }));
   const getMyViewTeams = vi.fn(() => of(overrides.teams ?? []));
@@ -53,7 +54,14 @@ async function renderPlayer(
     declarations: [PlayerComponent],
     schemas: [NO_ERRORS_SCHEMA],
     providers: [
-      { provide: Router, useValue: { serializeUrl: vi.fn(() => 'url'), createUrlTree: vi.fn() } },
+      {
+        provide: Router,
+        useValue: {
+          serializeUrl: vi.fn(() => 'url'),
+          createUrlTree: vi.fn(),
+          navigate,
+        },
+      },
       { provide: RouterQuery, useValue: routerQuery },
       { provide: ViewsService, useValue: { setPrimaryTeamId } },
       { provide: ViewService, useValue: { getView } },
@@ -81,6 +89,7 @@ async function renderPlayer(
   return {
     ...rendered,
     displayMessage,
+    navigate,
     dialog,
     setPrimaryTeamId,
     getView,
@@ -234,16 +243,48 @@ describe('PlayerComponent', () => {
       expect(fixture.componentInstance.teamId).toBe('team-a');
     });
 
-    it('shows a "Not a Member" message when the user is on no teams', async () => {
-      const { fixture, displayMessage } = await renderPlayer({
+    it('shows a "Not a Member" message and redirects home when the user is on no teams', async () => {
+      const { fixture, displayMessage, navigate } = await renderPlayer({
         routerState,
         teams: [{ id: 'team-x', isMember: false, isPrimary: true }],
       });
-      await firstValueFrom(fixture.componentInstance.loadData());
+      // This branch returns EMPTY (no emission) after messaging + redirecting,
+      // so subscribe and assert the side effects rather than awaiting a value.
+      fixture.componentInstance.loadData().subscribe();
       expect(displayMessage).toHaveBeenCalledWith(
         'Not a Member',
-        expect.stringContaining('not a member'),
+        expect.stringContaining('not a member of any Teams'),
       );
+      expect(navigate).toHaveBeenCalledWith(['/']);
+    });
+
+    it('shows a "No Primary Team" message and redirects home when no primary team is set', async () => {
+      const { fixture, displayMessage, navigate } = await renderPlayer({
+        routerState,
+        teams: [{ id: 'team-a', isMember: true, isPrimary: false }],
+      });
+      fixture.componentInstance.loadData().subscribe();
+      expect(displayMessage).toHaveBeenCalledWith(
+        'No Primary Team',
+        expect.stringContaining('primary team'),
+      );
+      expect(navigate).toHaveBeenCalledWith(['/']);
+    });
+
+    it('shows a "View Not Found" message and redirects home when loading the view errors', async () => {
+      const { fixture, displayMessage, navigate, getView } = await renderPlayer({
+        routerState,
+        teams: [{ id: 'team-a', isMember: true, isPrimary: true }],
+      });
+      getView.mockReturnValueOnce(
+        throwError(() => new Error('404 not found')),
+      );
+      fixture.componentInstance.loadData().subscribe();
+      expect(displayMessage).toHaveBeenCalledWith(
+        'View Not Found',
+        expect.stringContaining('no longer exists'),
+      );
+      expect(navigate).toHaveBeenCalledWith(['/']);
     });
   });
 

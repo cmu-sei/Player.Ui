@@ -129,6 +129,9 @@ _TeamCity*
 # Vitest / v8 coverage output
 /coverage
 
+# Vitest browser-mode screenshot artifacts
+**/__screenshots__/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

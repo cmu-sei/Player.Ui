@@ -221,7 +221,9 @@ describe('AdminViewEditComponent', () => {
     fixture.componentInstance.editComplete.subscribe(spy);
     fixture.componentInstance.deleteView();
     expect(stubs.deleteView).toHaveBeenCalledWith('v1');
-    expect(spy).toHaveBeenCalledWith('v1');
+    // After a delete editComplete emits null (rather than the view id) so the
+    // parent search returns to the list without re-selecting the deleted view.
+    expect(spy).toHaveBeenCalledWith(null);
   });
 
   it('deleteView is a no-op when cancelled', async () => {
