@@ -24,7 +24,12 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
-  public displayedColumns: string[] = ['name', 'lastError', 'eventTypes'];
+  public displayedColumns: string[] = [
+    'actions',
+    'name',
+    'eventTypes',
+    'lastError',
+  ];
   public editing = false;
   public filterStr = '';
   public unsubscribe$: Subject<null> = new Subject<null>();
@@ -72,6 +77,22 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
         this.refreshSubs();
       }
     });
+  }
+
+  deleteSubscription(subscription: WebhookSubscription) {
+    this.dialogService
+      .confirm(
+        'Confirm Delete',
+        'Are you sure you want to delete ' + subscription.name + '?'
+      )
+      .subscribe((result) => {
+        if (result['confirm']) {
+          this.webhookService
+            .deleteWebhookSubscription(subscription.id)
+            .pipe(takeUntil(this.unsubscribe$))
+            .subscribe(() => this.refreshSubs());
+        }
+      });
   }
 
   applyFilter(filterStr: string) {

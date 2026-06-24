@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -16,10 +16,12 @@ import {
   TeamRole,
   TeamPermissionModel,
 } from '../../../generated/player-api';
-import { Role, RoleService, Permission } from '../../../generated/player-api';
+import { Role } from '../../../generated/player-api';
 import { forkJoin, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
+import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -27,7 +29,7 @@ export class TeamUser {
     public name: string,
     public user: User,
     public teamMembership: TeamMembership,
-  ) {}
+  ) { }
 }
 
 @Component({
@@ -60,10 +62,14 @@ export class AddRemoveUsersDialogComponent implements OnInit {
 
   public filterString: string;
   public teamFilterString: string;
-  public defaultPageSize = 7;
+  public defaultPageSize = 5;
   public pageEvent: PageEvent;
 
   public roles: Array<Role>;
+
+  // Id of the logged-in user, used to flag their own row and to confirm
+  // before they remove themselves from the team.
+  public currentUserId: string;
 
   @ViewChild('searchBox') searchBox: ElementRef<HTMLInputElement>;
   @ViewChild('paginator', { static: true }) paginator: MatPaginator;
@@ -76,6 +82,8 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     public teamService: TeamService,
     public teamMembershipService: TeamMembershipService,
     public roleService: TeamRolesService,
+    private dialog: MatDialog,
+    private loggedInUserService: LoggedInUserService,
   ) {
     this.dialogRef.disableClose = true;
     this.isLoading = false;
@@ -88,6 +96,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
    * Initializes the components
    */
   ngOnInit() {
+    this.currentUserId = this.loggedInUserService.loggedInUser$.value?.profile
+      ?.sub as string;
+
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.userDataSource.sort = this.sort;
     this.userDataSource.paginator = this.paginator;
@@ -320,8 +331,10 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   }
 
   /**
-   * Removes a user from the current team
-   * @param user The user to remove from team
+   * Removes a user from the current team. When the user is removing their own
+   * account, a confirmation dialog is shown first since this may revoke their
+   * own access to the team.
+   * @param tuser The team user to remove from team
    */
   removeUserFromTeam(tuser: TeamUser): void {
     if (this.isBusy) {
@@ -330,27 +343,59 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     const index = this.teamUserDataSource.data.findIndex(
       (u) => u.user.id === tuser.user.id,
     );
-    if (index >= 0) {
-      this.isBusy = true;
-      this.userService
-        .removeUserFromTeam(this.team.id, tuser.user.id)
-        .subscribe({
-          next: () => {
-            const tUsers = this.teamUserDataSource.data.slice(0);
-            tUsers.splice(index, 1);
-            this.teamUserDataSource.data = tUsers;
-            const allUsers = this.userDataSource.data.slice(0);
-            allUsers.push(tuser.user);
-            this.userDataSource.data = allUsers;
-            this.searchBox.nativeElement.focus();
-            this.isBusy = false;
-          },
-          error: (err) => {
-            console.error('Error removing user from team: ', err);
-            this.isBusy = false;
-          },
-        });
+    if (index < 0) {
+      return;
     }
+
+    if (tuser.user.id === this.currentUserId) {
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: {} });
+      dialogRef.componentInstance.title = 'Remove yourself from team?';
+      dialogRef.componentInstance.message =
+        'You are about to remove your own account from this team. ' +
+        'You may lose access to this team. Are you sure?';
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result && result.confirm) {
+          this.performRemoveUserFromTeam(tuser);
+        }
+      });
+    } else {
+      this.performRemoveUserFromTeam(tuser);
+    }
+  }
+
+  /**
+   * Performs the actual removal of a user from the team and updates the local
+   * data sources. The team-user index is recomputed here because the list may
+   * have changed while a confirmation dialog was open.
+   * @param tuser The team user to remove from team
+   */
+  private performRemoveUserFromTeam(tuser: TeamUser): void {
+    if (this.isBusy) {
+      return;
+    }
+    const index = this.teamUserDataSource.data.findIndex(
+      (u) => u.user.id === tuser.user.id,
+    );
+    if (index < 0) {
+      return;
+    }
+    this.isBusy = true;
+    this.userService.removeUserFromTeam(this.team.id, tuser.user.id).subscribe({
+      next: () => {
+        const tUsers = this.teamUserDataSource.data.slice(0);
+        tUsers.splice(index, 1);
+        this.teamUserDataSource.data = tUsers;
+        const allUsers = this.userDataSource.data.slice(0);
+        allUsers.push(tuser.user);
+        this.userDataSource.data = allUsers;
+        this.searchBox.nativeElement.focus();
+        this.isBusy = false;
+      },
+      error: (err) => {
+        console.error('Error removing user from team: ', err);
+        this.isBusy = false;
+      },
+    });
   }
 
   updateMembership(teamUser: TeamUser): void {
@@ -359,9 +404,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     }
     console.log(
       'Update Team Membership: ' +
-        teamUser.name +
-        '   role: ' +
-        teamUser.teamMembership.roleId,
+      teamUser.name +
+      '   role: ' +
+      teamUser.teamMembership.roleId,
     );
 
     this.teamMembershipService

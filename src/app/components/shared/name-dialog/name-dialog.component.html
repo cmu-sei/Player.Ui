@@ -26,6 +26,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-error>
     }
   </mat-form-field>
+
+  @if (data.showDescription) {
+    <mat-form-field class="form-full-width">
+      <mat-label>Description</mat-label>
+      <textarea
+        formControlName="description"
+        matInput
+        placeholder="Description"
+        autocomplete="off"
+        rows="3"
+      ></textarea>
+    </mat-form-field>
+  }
 </form>
 
 <mat-dialog-actions fxLayout="row" fxLayoutAlign="space-around center">

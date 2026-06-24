@@ -45,7 +45,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Add a new Application Template"
         (click)="addAppTemplate()"
       >
-        <mat-icon fontIcon="mdi-plus" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px"></mat-icon>
       </button>
       <button
         mat-icon-button
@@ -89,7 +89,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>
-        Template Name
+        Name
       </mat-header-cell>
       <mat-cell *matCellDef="let element">
         <img

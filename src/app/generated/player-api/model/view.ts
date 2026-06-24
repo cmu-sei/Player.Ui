@@ -15,13 +15,14 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 import { ViewStatus } from './viewStatus';
 
 
-export interface View { 
+export interface View {
     id?: string;
     name?: string | null;
     description?: string | null;
     status?: ViewStatus;
     parentViewId?: string | null;
     isTemplate?: boolean;
+    dateCreated?: Date;
     defaultTeamId?: string | null;
 }
 export namespace View {

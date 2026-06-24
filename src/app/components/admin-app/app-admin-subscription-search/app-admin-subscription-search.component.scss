@@ -8,4 +8,28 @@
 
 .subscriptions-container {
   margin-top: 40px;
+  min-width: 1200px;
+  width: 90%;
+  max-width: 1600px;
+}
+
+// Actions column holds the edit and delete icon buttons
+.mat-column-actions {
+  flex: 0 0 96px;
+}
+
+.mat-column-name {
+  flex: 1 1 25%;
+}
+
+.mat-column-eventTypes {
+  flex: 1 1 25%;
+}
+
+// Last error can be a long stack trace — let it fill remaining space and wrap
+.mat-column-lastError {
+  flex: 1 1 50%;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }

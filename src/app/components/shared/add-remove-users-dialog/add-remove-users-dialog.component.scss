@@ -1,34 +1,36 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-.users-container {
-  width: 800px;
-  min-height: 900px;
-  max-height: 900px;
+@use '@angular/material' as mat;
+
+:host {
+  // Compact the two Search fields and the Role dropdown to a 40px height.
+  @include mat.form-field-density(-4);
+
+  // Density -4 also sets `filled-label-display: none`, which drops the
+  // "Search" label from the empty inputs. Restore it.
+  --mat-form-field-filled-label-display: block;
 }
 
 .user-list-container {
   display: inline-block;
   flex-direction: column;
-  min-width: 300px;
-  margin-top: 10px;
-  width: 300px;
-  min-height: 600px;
+  min-width: 310px;
+  width: 310px;
 }
 
 .team-list-container {
   display: inline-block;
   flex-direction: column;
   min-width: 500px;
-  margin-top: 10px;
   width: 500px;
-  min-height: 600px;
 }
 
 .mat-toolbar-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  height: 58px;
 }
 
 .mat-toolbar-row mat-icon {
@@ -64,8 +66,30 @@
 }
 
 .mat-table-team-users {
+
+  // The Role column uses a mat-form-field which makes rows taller than the
+  // default 52px. Force the row height to match the All Users table.
+  .mat-mdc-row {
+    height: 52px;
+    min-height: 52px;
+  }
+
   .mat-column-name {
     flex: 1 1 auto;
+  }
+
+  // Constant width for the Role dropdown so it doesn't shift with user-name
+  // length, and constrained height to leave 2px margin top/bottom inside
+  // the 52px row.
+  .mat-column-teamMembership {
+    flex: 0 0 165px;
+
+    mat-form-field {
+      width: 165px;
+      min-width: 155px;
+      height: 40px;
+      margin: 0;
+    }
   }
 
   .mat-column-user {
