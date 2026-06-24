@@ -3,13 +3,13 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import {
   User,
   UserService,
@@ -34,9 +34,19 @@ const aliceMembership: TeamMembership = {
 };
 
 async function renderDialog(
-  overrides: { users?: User[]; teamUsers?: User[] } = {},
+  overrides: {
+    users?: User[];
+    teamUsers?: User[];
+    removeError?: boolean;
+    confirmSelfRemoval?: boolean;
+  } = {},
 ) {
-  const { users = [alice, bob], teamUsers = [alice] } = overrides;
+  const {
+    users = [alice, bob],
+    teamUsers = [alice],
+    removeError = false,
+    confirmSelfRemoval = true,
+  } = overrides;
 
   const close = vi.fn();
   const dialogRef = { close, disableClose: false } as unknown as MatDialogRef<
@@ -46,10 +56,19 @@ async function renderDialog(
   const getUsers = vi.fn(() => of(users));
   const getTeamUsers = vi.fn(() => of(teamUsers));
   const addUserToTeam = vi.fn(() => of(undefined));
-  const removeUserFromTeam = vi.fn(() => of(undefined));
+  const removeUserFromTeam = vi.fn(() =>
+    removeError ? throwError(() => new Error('fail')) : of(undefined),
+  );
   const getTeamMemberships = vi.fn(() => of([aliceMembership]));
   const updateTeamMembership = vi.fn(() => of(undefined));
   const getRoles = vi.fn(() => of([]));
+
+  // ConfirmDialogComponent opened for the self-removal flow.
+  const confirmComponentInstance = { title: '', message: '' };
+  const dialogOpen = vi.fn(() => ({
+    componentInstance: confirmComponentInstance,
+    afterClosed: () => of({ confirm: confirmSelfRemoval }),
+  }));
 
   const rendered = await renderComponent(
     AddRemoveUsersDialogComponent,
@@ -75,6 +94,7 @@ async function renderDialog(
           useValue: { getTeamMemberships, updateTeamMembership },
         },
         { provide: TeamRolesService, useValue: { getRoles } },
+        { provide: MatDialog, useValue: { open: dialogOpen } },
       ],
     },
   );
@@ -83,6 +103,7 @@ async function renderDialog(
     ...rendered,
     close,
     dialogRef,
+    dialogOpen,
     getUsers,
     getTeamUsers,
     addUserToTeam,
@@ -193,6 +214,22 @@ describe('AddRemoveUsersDialogComponent', () => {
     expect(removeUserFromTeam).not.toHaveBeenCalled();
   });
 
+  it('applyTeamFilter trims/lowercases and resets the paginator', async () => {
+    const { fixture } = await renderDialog();
+    const c = fixture.componentInstance;
+    c.applyTeamFilter('  ALICE  ');
+    expect(c.teamFilterString).toBe('  ALICE  ');
+    expect(c.teamUserDataSource.filter).toBe('alice');
+  });
+
+  it('clearTeamFilter resets the team-users filter', async () => {
+    const { fixture } = await renderDialog();
+    const c = fixture.componentInstance;
+    c.applyTeamFilter('alice');
+    c.clearTeamFilter();
+    expect(c.teamUserDataSource.filter).toBe('');
+  });
+
   describe('loadTeam()', () => {
     it('splits users into team members and the available pool', async () => {
       const { fixture, getTeamUsers } = await renderDialog({
@@ -219,6 +256,23 @@ describe('AddRemoveUsersDialogComponent', () => {
       c.loadTeam(team);
       expect(c.teamUserDataSource.data).toEqual([]);
       expect(c.userDataSource.data.map((u) => u.id)).toEqual(['u1', 'u2']);
+      expect(c.isLoading).toBe(false);
+    });
+
+    it('builds the team list without memberships in restricted mode', async () => {
+      const { fixture, getTeamMemberships } = await renderDialog({
+        users: [alice, bob],
+        teamUsers: [alice],
+      });
+      const c = fixture.componentInstance;
+      c.canManageRoles = false; // restricted (ManageTeam) mode
+      c.loadTeam(team);
+      // Members are built directly from getTeamUsers with null memberships and
+      // the membership service is never queried.
+      expect(c.teamUserDataSource.data.map((tu) => tu.user.id)).toEqual(['u1']);
+      expect(c.teamUserDataSource.data[0].teamMembership).toBeNull();
+      expect(c.userDataSource.data.map((u) => u.id)).toEqual(['u2']);
+      expect(getTeamMemberships).not.toHaveBeenCalled();
       expect(c.isLoading).toBe(false);
     });
   });
@@ -249,6 +303,22 @@ describe('AddRemoveUsersDialogComponent', () => {
       c.addUserToTeam(bob);
       expect(addUserToTeam).not.toHaveBeenCalled();
     });
+
+    it('adds with a null membership in restricted mode (no membership fetch)', async () => {
+      const { fixture, addUserToTeam, getTeamMemberships } =
+        await renderDialog();
+      const c = fixture.componentInstance;
+      c.canManageRoles = false; // restricted (ManageTeam) mode
+      c.team = team;
+      stubSearchBox(c);
+      c.teamUserDataSource.data = [];
+      c.userDataSource.data = [bob];
+      c.addUserToTeam(bob);
+      expect(addUserToTeam).toHaveBeenCalledWith('t1', 'u2');
+      expect(getTeamMemberships).not.toHaveBeenCalled();
+      expect(c.teamUserDataSource.data[0].teamMembership).toBeNull();
+      expect(c.isBusy).toBe(false);
+    });
   });
 
   describe('removeUserFromTeam()', () => {
@@ -274,6 +344,73 @@ describe('AddRemoveUsersDialogComponent', () => {
       c.teamUserDataSource.data = [new TeamUser('Alice', alice, aliceMembership)];
       c.removeUserFromTeam(new TeamUser('Alice', alice, aliceMembership));
       expect(removeUserFromTeam).not.toHaveBeenCalled();
+    });
+
+    it('clears the busy flag and keeps the user when the API errors', async () => {
+      const { fixture, removeUserFromTeam } = await renderDialog({
+        removeError: true,
+      });
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const c = fixture.componentInstance;
+      c.team = team;
+      const tUser = new TeamUser('Alice', alice, aliceMembership);
+      c.teamUserDataSource.data = [tUser];
+      c.userDataSource.data = [];
+      c.removeUserFromTeam(tUser);
+      expect(removeUserFromTeam).toHaveBeenCalledWith('t1', 'u1');
+      // The error path leaves the team list untouched and resets isBusy.
+      expect(c.teamUserDataSource.data).toEqual([tUser]);
+      expect(c.isBusy).toBe(false);
+      errSpy.mockRestore();
+    });
+
+    describe('removing your own account', () => {
+      it('confirms first, then removes when the user accepts', async () => {
+        const { fixture, removeUserFromTeam, dialogOpen } = await renderDialog({
+          confirmSelfRemoval: true,
+        });
+        const c = fixture.componentInstance;
+        c.team = team;
+        c.currentUserId = 'u1'; // Alice is the logged-in user
+        stubSearchBox(c);
+        const tUser = new TeamUser('Alice', alice, aliceMembership);
+        c.teamUserDataSource.data = [tUser];
+        c.userDataSource.data = [];
+        c.removeUserFromTeam(tUser);
+        expect(dialogOpen).toHaveBeenCalled();
+        expect(removeUserFromTeam).toHaveBeenCalledWith('t1', 'u1');
+      });
+
+      it('does not remove when the confirmation is declined', async () => {
+        const { fixture, removeUserFromTeam, dialogOpen } = await renderDialog({
+          confirmSelfRemoval: false,
+        });
+        const c = fixture.componentInstance;
+        c.team = team;
+        c.currentUserId = 'u1';
+        const tUser = new TeamUser('Alice', alice, aliceMembership);
+        c.teamUserDataSource.data = [tUser];
+        c.removeUserFromTeam(tUser);
+        expect(dialogOpen).toHaveBeenCalled();
+        expect(removeUserFromTeam).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('updateMembership() guards', () => {
+    it('is a no-op when canManageRoles is false', async () => {
+      const { fixture, updateTeamMembership } = await renderDialog();
+      const c = fixture.componentInstance;
+      c.canManageRoles = false;
+      c.updateMembership(new TeamUser('Alice', alice, aliceMembership));
+      expect(updateTeamMembership).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op when the team user has no membership', async () => {
+      const { fixture, updateTeamMembership } = await renderDialog();
+      const c = fixture.componentInstance;
+      c.updateMembership(new TeamUser('Alice', alice, null));
+      expect(updateTeamMembership).not.toHaveBeenCalled();
     });
   });
 

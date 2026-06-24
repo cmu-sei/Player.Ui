@@ -90,4 +90,40 @@ describe('NameDialogComponent', () => {
     expect(close).toHaveBeenCalledWith(data);
     expect(data.wasCancelled).toBe(true);
   });
+
+  describe('description field (data.showDescription)', () => {
+    it('adds a description control seeded from data.descriptionValue', async () => {
+      const { fixture } = await renderDialog({
+        data: {
+          nameValue: 'A',
+          showDescription: true,
+          descriptionValue: 'Initial desc',
+        },
+      });
+      expect(fixture.componentInstance.form.get('description')?.value).toBe(
+        'Initial desc',
+      );
+    });
+
+    it('defaults the description control to empty when no value is given', async () => {
+      const { fixture } = await renderDialog({
+        data: { nameValue: 'A', showDescription: true },
+      });
+      expect(fixture.componentInstance.form.get('description')?.value).toBe('');
+    });
+
+    it('onClick() writes the edited description back into data', async () => {
+      const { fixture, data } = await renderDialog({
+        data: { nameValue: 'A', showDescription: true, descriptionValue: '' },
+      });
+      fixture.componentInstance.form.get('description').setValue('Updated');
+      fixture.componentInstance.onClick();
+      expect(data.descriptionValue).toBe('Updated');
+    });
+
+    it('does not add a description control when showDescription is absent', async () => {
+      const { fixture } = await renderDialog({ data: { nameValue: 'A' } });
+      expect(fixture.componentInstance.form.get('description')).toBeNull();
+    });
+  });
 });
