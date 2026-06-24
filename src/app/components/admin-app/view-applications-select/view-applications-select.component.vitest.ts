@@ -14,7 +14,10 @@ import {
 } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
-import { ViewApplicationsSelectComponent } from './view-applications-select.component';
+import {
+  AppErrorStateMatcher,
+  ViewApplicationsSelectComponent,
+} from './view-applications-select.component';
 import { renderComponent } from '../../../test-utils/render-component';
 
 const view: View = { id: 'v1', name: 'Demo' };
@@ -205,5 +208,68 @@ describe('ViewApplicationsSelectComponent', () => {
     expect(fixture.componentInstance.getAppIcon({ id: 'x' })).toBe(
       'assets/img/SP_Icon_Dashboard.png',
     );
+  });
+
+  it('saveApplicationLoadInBackground persists the application', async () => {
+    const { fixture, updateApplication } = await renderSelect();
+    fixture.componentInstance.saveApplicationLoadInBackground({
+      ...appA,
+      loadInBackground: true,
+    });
+    expect(updateApplication).toHaveBeenCalledWith(
+      'a1',
+      expect.objectContaining({ loadInBackground: true }),
+    );
+  });
+
+  it('saveApplicationTemplateId persists the application', async () => {
+    const { fixture, updateApplication } = await renderSelect();
+    fixture.componentInstance.saveApplicationTemplateId({
+      ...appA,
+      applicationTemplateId: 'tmpl-1',
+    });
+    expect(updateApplication).toHaveBeenCalledWith(
+      'a1',
+      expect.objectContaining({ applicationTemplateId: 'tmpl-1' }),
+    );
+  });
+
+  describe('getTemplate()', () => {
+    it('returns the matching template by id', async () => {
+      const template: ApplicationTemplate = { id: 'tmpl-1', name: 'Templ' };
+      const { fixture } = await renderSelect({ templates: [template] });
+      expect(fixture.componentInstance.getTemplate('tmpl-1')).toEqual(template);
+    });
+
+    it('returns undefined when no template matches', async () => {
+      const { fixture } = await renderSelect({
+        templates: [{ id: 'tmpl-1', name: 'Templ' }],
+      });
+      expect(fixture.componentInstance.getTemplate('missing')).toBeUndefined();
+    });
+  });
+
+  describe('AppErrorStateMatcher', () => {
+    const matcher = new AppErrorStateMatcher();
+
+    it('is an error when the control is invalid and dirty', () => {
+      const control = { invalid: true, dirty: true } as never;
+      expect(matcher.isErrorState(control, null)).toBe(true);
+    });
+
+    it('is an error when the control is invalid and the form is submitted', () => {
+      const control = { invalid: true, dirty: false } as never;
+      const form = { submitted: true } as never;
+      expect(matcher.isErrorState(control, form)).toBe(true);
+    });
+
+    it('is not an error when the control is valid', () => {
+      const control = { invalid: false, dirty: true } as never;
+      expect(matcher.isErrorState(control, null)).toBe(false);
+    });
+
+    it('is not an error for a null control', () => {
+      expect(matcher.isErrorState(null, null)).toBe(false);
+    });
   });
 });

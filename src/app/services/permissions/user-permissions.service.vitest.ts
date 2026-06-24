@@ -119,6 +119,55 @@ describe('UserPermissionsService', () => {
     expect(result).toEqual(mockTeamPerms);
   });
 
+  describe('manageable teams', () => {
+    const claims: TeamPermissionsClaim[] = [
+      { teamId: 'team-1', permissionValues: [TeamPermission.ManageTeam] },
+      { teamId: 'team-2', permissionValues: [TeamPermission.ViewTeam] },
+      { teamId: 'team-3', permissionValues: [TeamPermission.ManageTeam] },
+      // ManageTeam grant with a null teamId is filtered out.
+      { teamId: null, permissionValues: [TeamPermission.ManageTeam] },
+    ];
+
+    it('getManageableTeamIds keeps only ManageTeam claims with a team id', () => {
+      const service = createService();
+      expect(service.getManageableTeamIds(claims)).toEqual(['team-1', 'team-3']);
+    });
+
+    it('getManageableTeamIds returns empty when no claim grants ManageTeam', () => {
+      const service = createService();
+      expect(
+        service.getManageableTeamIds([
+          { teamId: 'team-1', permissionValues: [TeamPermission.ViewTeam] },
+        ]),
+      ).toEqual([]);
+    });
+
+    it('manageableTeamIds$ derives ids from the loaded team permissions', async () => {
+      const service = createService({ myTeamPermissions: claims });
+      await firstValueFrom(service.loadTeamPermissions());
+      expect(await firstValueFrom(service.manageableTeamIds$)).toEqual([
+        'team-1',
+        'team-3',
+      ]);
+    });
+
+    it('canManageAnyTeam$ is true when at least one team is manageable', async () => {
+      const service = createService({ myTeamPermissions: claims });
+      await firstValueFrom(service.loadTeamPermissions());
+      expect(await firstValueFrom(service.canManageAnyTeam$)).toBe(true);
+    });
+
+    it('canManageAnyTeam$ is false when no team is manageable', async () => {
+      const service = createService({
+        myTeamPermissions: [
+          { teamId: 'team-1', permissionValues: [TeamPermission.ViewTeam] },
+        ],
+      });
+      await firstValueFrom(service.loadTeamPermissions());
+      expect(await firstValueFrom(service.canManageAnyTeam$)).toBe(false);
+    });
+  });
+
   describe('hasPermission — all 12 SystemPermission values', () => {
     const allPermissions = Object.values(SystemPermission);
 
