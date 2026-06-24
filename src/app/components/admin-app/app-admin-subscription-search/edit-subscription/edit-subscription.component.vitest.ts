@@ -10,7 +10,6 @@ import {
   WebhookService,
   WebhookSubscription,
 } from '../../../../generated/player-api';
-import { DialogService } from '../../../../services/dialog/dialog.service';
 import { EditSubscriptionComponent } from './edit-subscription.component';
 import { renderComponent } from '../../../../test-utils/render-component';
 
@@ -28,17 +27,10 @@ async function renderEdit(
     currentSub?: WebhookSubscription | null;
     createResult?: 'ok' | 'err';
     updateResult?: 'ok' | 'err';
-    deleteResult?: 'ok' | 'err';
-    confirmDelete?: boolean;
   } = {},
 ) {
-  const {
-    currentSub = null,
-    createResult = 'ok',
-    updateResult = 'ok',
-    deleteResult = 'ok',
-    confirmDelete = true,
-  } = overrides;
+  const { currentSub = null, createResult = 'ok', updateResult = 'ok' } =
+    overrides;
 
   const close = vi.fn();
   const dialogRef = { close } as unknown as MatDialogRef<EditSubscriptionComponent>;
@@ -49,10 +41,6 @@ async function renderEdit(
   const partialUpdateWebhookSubscription = vi.fn(() =>
     updateResult === 'ok' ? of(undefined) : throwError(() => new Error('fail')),
   );
-  const deleteWebhookSubscription = vi.fn(() =>
-    deleteResult === 'ok' ? of(undefined) : throwError(() => new Error('fail')),
-  );
-  const confirm = vi.fn(() => of({ confirm: confirmDelete }));
 
   const rendered = await renderComponent(EditSubscriptionComponent, {
     declarations: [EditSubscriptionComponent],
@@ -65,10 +53,8 @@ async function renderEdit(
         useValue: {
           createWebhookSubscription,
           partialUpdateWebhookSubscription,
-          deleteWebhookSubscription,
         },
       },
-      { provide: DialogService, useValue: { confirm } },
     ],
   });
 
@@ -77,8 +63,6 @@ async function renderEdit(
     close,
     createWebhookSubscription,
     partialUpdateWebhookSubscription,
-    deleteWebhookSubscription,
-    confirm,
   };
 }
 
@@ -166,33 +150,12 @@ describe('EditSubscriptionComponent', () => {
     expect(close).toHaveBeenCalledWith(false);
   });
 
-  it('onDelete only deletes after confirm', async () => {
-    const { fixture, deleteWebhookSubscription, close } = await renderEdit({
-      currentSub: existingSub,
-      confirmDelete: true,
+  it('onCancel closes the dialog without saving', async () => {
+    const { fixture, close, createWebhookSubscription } = await renderEdit({
+      currentSub: null,
     });
-    fixture.componentInstance.onDelete();
-    expect(deleteWebhookSubscription).toHaveBeenCalledWith('s1');
+    fixture.componentInstance.onCancel();
     expect(close).toHaveBeenCalledWith(false);
-  });
-
-  it('onDelete is a no-op when confirm returns false', async () => {
-    const { fixture, deleteWebhookSubscription, close } = await renderEdit({
-      currentSub: existingSub,
-      confirmDelete: false,
-    });
-    fixture.componentInstance.onDelete();
-    expect(deleteWebhookSubscription).not.toHaveBeenCalled();
-    expect(close).not.toHaveBeenCalled();
-  });
-
-  it('onDelete closes with true when the delete call errors', async () => {
-    const { fixture, close } = await renderEdit({
-      currentSub: existingSub,
-      deleteResult: 'err',
-      confirmDelete: true,
-    });
-    fixture.componentInstance.onDelete();
-    expect(close).toHaveBeenCalledWith(true);
+    expect(createWebhookSubscription).not.toHaveBeenCalled();
   });
 });

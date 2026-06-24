@@ -4,9 +4,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDialogRef } from '@angular/material/dialog';
 import {
   User,
@@ -53,7 +55,13 @@ async function renderDialog(
     AddRemoveUsersDialogComponent,
     {
       declarations: [AddRemoveUsersDialogComponent],
-      imports: [MatTableModule, MatSortModule, MatPaginatorModule],
+      imports: [
+        FormsModule,
+        MatTableModule,
+        MatSortModule,
+        MatPaginatorModule,
+        MatSelectModule,
+      ],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: MatDialogRef, useValue: dialogRef },
@@ -286,8 +294,11 @@ describe('AddRemoveUsersDialogComponent', () => {
       c.team = team;
       c.userDataSource.data = [alice, bob];
       c.teamUserDataSource.data = [];
-      getTeamMemberships.mockReturnValue(
-        of([{ id: 'm', teamId: 't1', userId: 'u1', roleId: null }]),
+      // uploadUsers() calls getTeamMemberships(viewId, userId) and matches on
+      // userId, so return a membership keyed to the requested user — otherwise
+      // the new row has no teamMembership and the role-cell template throws.
+      getTeamMemberships.mockImplementation((_viewId: string, userId: string) =>
+        of([{ id: `m-${userId}`, teamId: 't1', userId, roleId: null }]),
       );
 
       // FileReader is async; resolve when onload has fired.
