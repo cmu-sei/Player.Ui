@@ -24,12 +24,14 @@ function createMockPermissionsService(
     canViewAdmin?: boolean;
     canManageViews?: boolean;
     canCreateViews?: boolean;
+    canManageAnyTeam?: boolean;
   } = {},
 ) {
   const {
     canViewAdmin = false,
     canManageViews = false,
     canCreateViews = false,
+    canManageAnyTeam = false,
   } = opts;
   return {
     permissions$: of(canCreateViews ? ['CreateViews'] : []),
@@ -38,6 +40,7 @@ function createMockPermissionsService(
     canViewAdminstration: () => of(canViewAdmin),
     can: () => of(canManageViews),
     hasPermission: (p: string) => of(canCreateViews && p === 'CreateViews'),
+    canManageAnyTeam$: of(canManageAnyTeam),
   };
 }
 
@@ -53,6 +56,7 @@ async function renderTopbar(
     canViewAdmin?: boolean;
     canManageViews?: boolean;
     canCreateViews?: boolean;
+    canManageAnyTeam?: boolean;
     confirmResult?: boolean;
   } = {},
 ) {
@@ -67,6 +71,7 @@ async function renderTopbar(
     canViewAdmin = false,
     canManageViews = false,
     canCreateViews = false,
+    canManageAnyTeam = false,
   } = overrides;
 
   mockLogout.mockClear();
@@ -86,6 +91,7 @@ async function renderTopbar(
           canViewAdmin,
           canManageViews,
           canCreateViews,
+          canManageAnyTeam,
         }),
       },
       {
@@ -305,6 +311,56 @@ describe('TopbarComponent', () => {
     expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
   });
 
+  it('should show Manage Teams when user can manage a team but cannot edit the view', async () => {
+    await renderTopbar({
+      canManageViews: false,
+      canManageAnyTeam: true,
+      team: { id: 'team-1', name: 'Team 1' },
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.getByText('Manage Teams')).toBeInTheDocument();
+    // Manage Teams replaces Edit View for these users.
+    expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
+  });
+
+  it('should hide Manage Teams when user can edit the view (Edit View takes precedence)', async () => {
+    await renderTopbar({
+      canManageViews: true,
+      canManageAnyTeam: true,
+      team: { id: 'team-1', name: 'Team 1' },
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
+    expect(screen.getByText('Edit View')).toBeInTheDocument();
+  });
+
+  it('should hide Manage Teams when team is not set even if user can manage a team', async () => {
+    await renderTopbar({
+      canManageAnyTeam: true,
+      team: undefined,
+      topbarView: TopbarView.PLAYER_PLAYER,
+    });
+    const user = userEvent.setup();
+    const menuButton = screen.getByText('Test User');
+    await user.click(menuButton);
+    expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
+  });
+
+  it('openManageTeams opens the manage teams dialog with the view id', async () => {
+    const { fixture, dialogOpen } = await renderTopbar({ viewId: 'view-42' });
+    fixture.componentInstance.openManageTeams();
+    expect(dialogOpen).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ data: { viewId: 'view-42' } }),
+    );
+  });
+
   it('should show Administration link when user has ViewViews system permission', async () => {
     await renderTopbar({
       canViewAdmin: true,
@@ -423,19 +479,23 @@ describe('TopbarComponent', () => {
   });
 
   describe('resetUI()', () => {
-    it('clears the team UI state when confirmed', async () => {
+    it('prompts for confirmation with the team name', async () => {
+      // We intentionally do not exercise the confirmed branch here: on a
+      // positive confirm resetUI() calls window.location.reload(), which under
+      // real-browser test mode reloads the runner page and kills the Vitest
+      // connection (and Location.reload is non-configurable, so it can't be
+      // stubbed either). With confirmResult left false the confirm observable
+      // still emits, so we assert resetUI() opens the confirm dialog with the
+      // team-specific prompt. The cancelled-state behavior is covered below.
       const { fixture, confirm } = await renderTopbar({
         team: { id: 'team-7', name: 'Team 7' },
-        confirmResult: true,
+        confirmResult: false,
       });
-      // resetUI() also calls window.location.reload(); jsdom logs a
-      // "Not implemented: navigation" warning but does not throw, so we just
-      // assert the localStorage key for the team was removed.
-      const removeItem = vi.spyOn(Storage.prototype, 'removeItem');
       fixture.componentInstance.resetUI();
-      expect(confirm).toHaveBeenCalled();
-      expect(removeItem).toHaveBeenCalledWith('team-7');
-      removeItem.mockRestore();
+      expect(confirm).toHaveBeenCalledWith(
+        'Reset UI?',
+        expect.stringContaining('Team 7'),
+      );
     });
 
     it('does nothing when the reset is cancelled', async () => {
