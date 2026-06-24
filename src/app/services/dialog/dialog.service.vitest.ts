@@ -140,7 +140,9 @@ describe('DialogService', () => {
     const { service, open, componentInstance } = setup();
     const subscription = { id: 's1', name: 'hook' };
     service.editSubscription(subscription);
-    expect(open).toHaveBeenCalledWith(EditSubscriptionComponent);
+    expect(open).toHaveBeenCalledWith(EditSubscriptionComponent, {
+      width: '500px',
+    });
     expect(componentInstance.currentSub).toBe(subscription);
   });
 

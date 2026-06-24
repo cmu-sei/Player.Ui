@@ -134,7 +134,7 @@ describe('AdminViewSearchComponent', () => {
 
   it('should show Name and Description column headers', async () => {
     await renderAdminViewSearch();
-    expect(screen.getByText('View Name')).toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText('Description')).toBeInTheDocument();
   });
 
