@@ -51,12 +51,22 @@ function createService(
 describe('LoggedInUserService', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
+  /**
+   * Verifies: with no logged-in auth user, neither permissions load nor player-user fetch is triggered
+   * Interacts with: UserPermissionsService.load and UserService.getUser spies; ComnAuthQuery.user$ seam
+   * Data: default user$ BehaviorSubject seeded with null
+   */
   it('does nothing while the auth user is null', () => {
     const { loadSpy, getUserSpy } = createService();
     expect(loadSpy).not.toHaveBeenCalled();
     expect(getUserSpy).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: emitting an auth user triggers permissions load and fetches the player user keyed by the auth sub
+   * Interacts with: UserPermissionsService.load and UserService.getUser spies; ComnAuthQuery.user$
+   * Data: a user$ that emits authUser('sub-1') after subscription
+   */
   it('loads permissions and the player user when a user logs in', async () => {
     const user$ = new BehaviorSubject<AuthUser>(null);
     const { loadSpy, getUserSpy } = createService({ user$ });
@@ -65,6 +75,11 @@ describe('LoggedInUserService', () => {
     expect(getUserSpy).toHaveBeenCalledWith('sub-1');
   });
 
+  /**
+   * Verifies: the fetched player user's fields are merged into the auth profile and exposed via loggedInUser$ alongside the original sub/email
+   * Interacts with: UserService.getUser (overridden to return a user with isSystemAdmin); ComnAuthQuery.user$; service.loggedInUser$
+   * Data: authUser('sub-1', { email }) plus a player user { id, name, isSystemAdmin: true }
+   */
   it('merges the player user into the auth profile and emits loggedInUser$', async () => {
     const user$ = new BehaviorSubject<AuthUser>(null);
     const { service } = createService({
@@ -80,6 +95,11 @@ describe('LoggedInUserService', () => {
     expect((logged.profile as Record<string, unknown>).isSystemAdmin).toBe(true);
   });
 
+  /**
+   * Verifies: after ngOnDestroy the subscription is torn down, so later auth user emissions no longer fetch the player user
+   * Interacts with: UserService.getUser spy; ComnAuthQuery.user$; service.ngOnDestroy
+   * Data: a user$ that emits a fresh authUser only after destroy; getUser spy cleared before that emission
+   */
   it('stops reacting to user changes after ngOnDestroy', () => {
     const user$ = new BehaviorSubject<AuthUser>(null);
     const { service, getUserSpy } = createService({ user$ });

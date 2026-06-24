@@ -24,16 +24,31 @@ async function renderPage(overrides: { viewId?: string | null } = {}) {
 }
 
 describe('UserPresencePageComponent', () => {
+  /**
+   * Verifies: UserPresencePageComponent instantiates successfully.
+   * Interacts with: renderPage harness with RouterQuery stub.
+   * Data: default renderPage() (viewId 'view-1').
+   */
   it('creates the component', async () => {
     const { fixture } = await renderPage();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: init reads the 'id' route param into the component's viewId.
+   * Interacts with: RouterQuery.getParams stub, component viewId.
+   * Data: renderPage override viewId 'my-view'.
+   */
   it('reads the viewId from the router query on init', async () => {
     const { fixture } = await renderPage({ viewId: 'my-view' });
     expect(fixture.componentInstance.viewId).toBe('my-view');
   });
 
+  /**
+   * Verifies: a null route id is tolerated, leaving viewId null without error.
+   * Interacts with: RouterQuery.getParams stub returning null, component viewId.
+   * Data: renderPage override viewId null.
+   */
   it('handles a null view id without throwing', async () => {
     const { fixture } = await renderPage({ viewId: null });
     expect(fixture.componentInstance.viewId).toBeNull();

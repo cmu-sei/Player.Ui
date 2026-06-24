@@ -15,16 +15,31 @@ async function renderAdminRoles() {
 }
 
 describe('AdminRolesComponent', () => {
+  /**
+   * Verifies: the tab-container component instantiates successfully.
+   * Interacts with: renderComponent importing MatTabsModule.
+   * Data: no overrides.
+   */
   it('should create', async () => {
     const { fixture } = await renderAdminRoles();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: the "Roles" tab label is rendered.
+   * Interacts with: the rendered DOM (queried via Testing Library screen).
+   * Data: no overrides.
+   */
   it('should display Roles tab', async () => {
     await renderAdminRoles();
     expect(screen.getByText('Roles')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the "Team Roles" tab label is rendered.
+   * Interacts with: the rendered DOM (queried via Testing Library screen).
+   * Data: no overrides.
+   */
   it('should display Team Roles tab', async () => {
     await renderAdminRoles();
     expect(screen.getByText('Team Roles')).toBeInTheDocument();

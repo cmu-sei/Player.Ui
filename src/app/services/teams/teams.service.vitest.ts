@@ -39,6 +39,11 @@ describe('TeamsService', () => {
 
   afterEach(() => httpMock?.verify());
 
+  /**
+   * Verifies: getUserTeamsByView issues a GET to the user/view teams URL and emits the flushed team list.
+   * Interacts with: HttpTestingController (expectOne/flush) over provideHttpClient, TeamsService.getUserTeamsByView.
+   * Data: single-team TeamData array keyed to user-1/view-1 in the request path.
+   */
   it('getUserTeamsByView() GETs the user/view teams endpoint and returns the teams', async () => {
     const ctx = setup();
     httpMock = ctx.httpMock;
@@ -56,6 +61,12 @@ describe('TeamsService', () => {
     expect(await promise).toEqual(teams);
   });
 
+  /**
+   * Verifies: a 500 response causes the returned observable to reject rather than swallow the error.
+   * Interacts with: HttpTestingController.flush with an error status, TeamsService.getUserTeamsByView.
+   * Data: 500 Server Error flushed for the user-1/view-1 teams request.
+   * Why: confirms catchError re-throws instead of suppressing; asserts via rejects rather than a value.
+   */
   it('getUserTeamsByView() surfaces server errors through catchError', async () => {
     const ctx = setup();
     httpMock = ctx.httpMock;

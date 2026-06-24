@@ -22,6 +22,11 @@ function createService() {
 describe('SystemMessageService', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
+  /**
+   * Verifies: displayMessage forwards title and message as the bottom sheet's data payload, targeting SystemMessageComponent.
+   * Interacts with: MatBottomSheet.open (stubbed vi.fn), SystemMessageService.displayMessage.
+   * Data: literal title/message strings passed to displayMessage.
+   */
   it('displayMessage() opens the bottom sheet with the title and message', () => {
     const { service, open } = createService();
     service.displayMessage('Heads up', 'Something happened');

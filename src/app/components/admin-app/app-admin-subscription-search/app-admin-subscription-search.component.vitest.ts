@@ -57,17 +57,32 @@ async function renderSearch(
 }
 
 describe('AppAdminSubscriptionSearchComponent', () => {
+  /**
+   * Verifies: the subscription-search component instantiates successfully.
+   * Interacts with: renderComponent with stubbed WebhookService and DialogService.
+   * Data: default subs list (Alpha, Beta).
+   */
   it('creates the component', async () => {
     const { fixture } = await renderSearch();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: ngOnInit loads all webhook subscriptions into the table datasource.
+   * Interacts with: stubbed WebhookService.getAllWebhooks.
+   * Data: default subs list.
+   */
   it('loads subscriptions into the data source on init', async () => {
     const { fixture, getAllWebhooks } = await renderSearch();
     expect(getAllWebhooks).toHaveBeenCalled();
     expect(fixture.componentInstance.dataSource.data).toEqual(subs);
   });
 
+  /**
+   * Verifies: applyFilter lowercases and trims the value into filterStr and the datasource filter.
+   * Interacts with: component.applyFilter and the MatTableDataSource filter.
+   * Data: padded mixed-case input '  ALPHA  '.
+   */
   it('applyFilter lowercases and trims the filter', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyFilter('  ALPHA  ');
@@ -75,6 +90,11 @@ describe('AppAdminSubscriptionSearchComponent', () => {
     expect(fixture.componentInstance.dataSource.filter).toBe('alpha');
   });
 
+  /**
+   * Verifies: clearFilter empties filterStr.
+   * Interacts with: component.applyFilter / clearFilter.
+   * Data: an 'alpha' filter set then cleared.
+   */
   it('clearFilter resets the filter to empty', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyFilter('alpha');
@@ -82,6 +102,11 @@ describe('AppAdminSubscriptionSearchComponent', () => {
     expect(fixture.componentInstance.filterStr).toBe('');
   });
 
+  /**
+   * Verifies: addNewSubscription opens the edit dialog with no argument and reloads the list.
+   * Interacts with: stubbed DialogService.editSubscription and WebhookService.getAllWebhooks.
+   * Data: default subs; getAllWebhooks called twice (init + reload).
+   */
   it('addNewSubscription opens the edit dialog then reloads', async () => {
     const { fixture, editSubscription, getAllWebhooks } = await renderSearch();
     fixture.componentInstance.addNewSubscription();
@@ -90,6 +115,11 @@ describe('AppAdminSubscriptionSearchComponent', () => {
     expect(getAllWebhooks).toHaveBeenCalledTimes(2);
   });
 
+  /**
+   * Verifies: editSubscription(sub) opens the edit dialog passing the subscription and reloads.
+   * Interacts with: stubbed DialogService.editSubscription and WebhookService.getAllWebhooks.
+   * Data: subs[0]; getAllWebhooks called twice.
+   */
   it('editSubscription(sub) opens the edit dialog with the given subscription', async () => {
     const { fixture, editSubscription, getAllWebhooks } = await renderSearch();
     fixture.componentInstance.editSubscription(subs[0]);
@@ -97,6 +127,12 @@ describe('AppAdminSubscriptionSearchComponent', () => {
     expect(getAllWebhooks).toHaveBeenCalledTimes(2);
   });
 
+  /**
+   * Verifies: when the edit dialog resolves truthy (error), the component logs and skips the reload.
+   * Interacts with: DialogService.editSubscription (editResult=true), a console.log spy, getAllWebhooks.
+   * Data: editResult override true; getAllWebhooks called only once (init).
+   * Why: a truthy dialog result signals an error branch that bypasses refreshSubs.
+   */
   it('editSubscription(sub) logs and does not reload when the dialog reports an error', async () => {
     const { fixture, getAllWebhooks } = await renderSearch({ editResult: true });
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -108,6 +144,11 @@ describe('AppAdminSubscriptionSearchComponent', () => {
   });
 
   describe('deleteSubscription()', () => {
+    /**
+     * Verifies: a confirmed delete prompts (message naming the sub), deletes by id, and reloads.
+     * Interacts with: stubbed DialogService.confirm, WebhookService.deleteWebhookSubscription, getAllWebhooks.
+     * Data: confirmDelete=true; deleting subs[0] (Alpha, id s1).
+     */
     it('deletes and reloads when the user confirms', async () => {
       const { fixture, deleteWebhookSubscription, confirm, getAllWebhooks } =
         await renderSearch({ confirmDelete: true });
@@ -120,6 +161,11 @@ describe('AppAdminSubscriptionSearchComponent', () => {
       expect(getAllWebhooks).toHaveBeenCalledTimes(2);
     });
 
+    /**
+     * Verifies: a declined confirm leaves the delete call untouched.
+     * Interacts with: stubbed DialogService.confirm and WebhookService.deleteWebhookSubscription.
+     * Data: confirmDelete=false.
+     */
     it('does nothing when the user cancels', async () => {
       const { fixture, deleteWebhookSubscription } = await renderSearch({
         confirmDelete: false,
@@ -129,6 +175,11 @@ describe('AppAdminSubscriptionSearchComponent', () => {
     });
   });
 
+  /**
+   * Verifies: ngOnDestroy completes the unsubscribe$ teardown subject.
+   * Interacts with: a spy on the component's unsubscribe$ Subject.complete.
+   * Data: none.
+   */
   it('ngOnDestroy completes the unsubscribe subject', async () => {
     const { fixture } = await renderSearch();
     const completeSpy = vi.spyOn(

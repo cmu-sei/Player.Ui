@@ -29,11 +29,23 @@ async function renderHome(overrides: { appTopBarText?: string } = {}) {
 }
 
 describe('HomeAppComponent', () => {
+  /**
+   * Verifies: HomeAppComponent instantiates successfully.
+   * Interacts with: renderHome harness with ComnSettingsService stub.
+   * Data: default renderHome() settings.
+   */
   it('should create', async () => {
     const { fixture } = await renderHome();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: the app-topbar custom element is rendered in the template.
+   * Interacts with: rendered DOM via document.querySelector.
+   * Data: default renderHome() settings.
+   * Why: queries the custom element name directly because CUSTOM_ELEMENTS_SCHEMA keeps
+   *       app-topbar unresolved in the test harness.
+   */
   it('should display topbar', async () => {
     await renderHome();
     // The topbar is rendered as a custom element (app-topbar) due to CUSTOM_ELEMENTS_SCHEMA
@@ -41,17 +53,32 @@ describe('HomeAppComponent', () => {
     expect(container).toBeTruthy();
   });
 
+  /**
+   * Verifies: component.title is populated from the AppTopBarText setting.
+   * Interacts with: ComnSettingsService stub, component instance.
+   * Data: renderHome() override appTopBarText 'My Player'.
+   */
   it('should set title from settings', async () => {
     const { fixture } = await renderHome({ appTopBarText: 'My Player' });
     expect(fixture.componentInstance.title).toBe('My Player');
   });
 
+  /**
+   * Verifies: the app-view-list child component is present in the template.
+   * Interacts with: rendered DOM via document.querySelector.
+   * Data: default renderHome() settings.
+   */
   it('should show view list component', async () => {
     await renderHome();
     const viewList = document.querySelector('app-view-list');
     expect(viewList).toBeTruthy();
   });
 
+  /**
+   * Verifies: component exposes the TopbarView enum and its PLAYER_HOME value resolves to 'player-home'.
+   * Interacts with: component instance, imported TopbarView enum.
+   * Data: default renderHome() settings.
+   */
   it('should pass PLAYER_HOME topbar view', async () => {
     const { fixture } = await renderHome();
     // The component exposes TopbarView enum and the template binds TopbarView.PLAYER_HOME

@@ -51,16 +51,31 @@ async function renderConfirmDialog(
 }
 
 describe('ConfirmDialogComponent', () => {
+  /**
+   * Verifies: the component instantiates without error under the dialog providers.
+   * Interacts with: MAT_DIALOG_DATA and MatDialogRef stubs via renderConfirmDialog.
+   * Data: default dialogData (title/message), no extra overrides.
+   */
   it('should create', async () => {
     const { fixture } = await renderConfirmDialog();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: the injected title is rendered into the dialog DOM.
+   * Interacts with: MAT_DIALOG_DATA title; queries DOM via screen.getByText.
+   * Data: title override 'Delete Item?'.
+   */
   it('should display dialog title', async () => {
     await renderConfirmDialog({ title: 'Delete Item?' });
     expect(screen.getByText('Delete Item?')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the injected message is rendered into the dialog DOM.
+   * Interacts with: MAT_DIALOG_DATA message; queries DOM via screen.getByText.
+   * Data: message override 'This action cannot be undone.'.
+   */
   it('should display dialog message', async () => {
     await renderConfirmDialog({ message: 'This action cannot be undone.' });
     expect(
@@ -68,16 +83,31 @@ describe('ConfirmDialogComponent', () => {
     ).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the affirmative ("YES") action button is present in the template.
+   * Interacts with: rendered ConfirmDialogComponent template; screen.getByText.
+   * Data: default dialogData.
+   */
   it('should display YES button', async () => {
     await renderConfirmDialog();
     expect(screen.getByText('YES')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the negative ("NO") action button is present in the template.
+   * Interacts with: rendered ConfirmDialogComponent template; screen.getByText.
+   * Data: default dialogData.
+   */
   it('should display NO button', async () => {
     await renderConfirmDialog();
     expect(screen.getByText('NO')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: clicking YES closes the dialog returning a payload with confirm=true.
+   * Interacts with: MatDialogRef.close (mockClose); driven by a real user click.
+   * Data: default dialogData; asserts on the first close-call argument.
+   */
   it('should close dialog with confirm=true when YES clicked', async () => {
     await renderConfirmDialog();
     const user = userEvent.setup();

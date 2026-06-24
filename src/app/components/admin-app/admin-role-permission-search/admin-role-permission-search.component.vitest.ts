@@ -104,11 +104,22 @@ async function renderSearch(
 }
 
 describe('AdminRolePermissionSearchComponent', () => {
+  /**
+   * Verifies: the component instantiates without error.
+   * Interacts with: PermissionService, RoleService, DialogService stubs.
+   * Data: default permissions and roles samples.
+   */
   it('creates the component', async () => {
     const { fixture } = await renderSearch();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: init fetches permissions and roles and loads each into its table
+   *   data source.
+   * Interacts with: PermissionService.getPermissions + RoleService.getRoles spies.
+   * Data: default permissions (two) and roles (two) samples.
+   */
   it('loads permissions and roles on init', async () => {
     const { fixture, getPermissions, getRoles } = await renderSearch();
     expect(getPermissions).toHaveBeenCalled();
@@ -119,6 +130,14 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(fixture.componentInstance.roleDataSource.data).toEqual(roles);
   });
 
+  /**
+   * Verifies: applyPermissionFilter lowercases the term into the data source
+   *   filter while keeping the raw text in filterPermissionString.
+   * Interacts with: component.applyPermissionFilter; permissionDataSource.filter.
+   * Data: filter term 'FOO'.
+   * Why: asserts the data source filter is 'foo' (lowercased) but the bound
+   *      string stays 'FOO'.
+   */
   it('filters permissions via applyPermissionFilter', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyPermissionFilter('FOO');
@@ -126,6 +145,12 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(fixture.componentInstance.filterPermissionString).toBe('FOO');
   });
 
+  /**
+   * Verifies: clearPermissionFilter blanks filterPermissionString after a prior
+   *   filter.
+   * Interacts with: component.applyPermissionFilter then clearPermissionFilter.
+   * Data: initial filter 'x', then cleared.
+   */
   it('clearPermissionFilter resets the filter', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyPermissionFilter('x');
@@ -133,12 +158,24 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(fixture.componentInstance.filterPermissionString).toBe('');
   });
 
+  /**
+   * Verifies: applyRoleFilter lowercases the term into the role data source
+   *   filter.
+   * Interacts with: component.applyRoleFilter; roleDataSource.filter.
+   * Data: filter term 'ADMIN' (asserted as 'admin').
+   */
   it('filters roles via applyRoleFilter', async () => {
     const { fixture } = await renderSearch();
     fixture.componentInstance.applyRoleFilter('ADMIN');
     expect(fixture.componentInstance.roleDataSource.filter).toBe('admin');
   });
 
+  /**
+   * Verifies: addPermission opens the create dialog then posts the returned
+   *   permission to the API.
+   * Interacts with: DialogService.createPermission + PermissionService.createPermission spies.
+   * Data: dialog returns a permission keyed 'new-key'.
+   */
   it('addPermission opens the create dialog and posts the new permission', async () => {
     const { fixture, createPermission, createPermissionDialog } =
       await renderSearch();
@@ -149,6 +186,14 @@ describe('AdminRolePermissionSearchComponent', () => {
     );
   });
 
+  /**
+   * Verifies: addPermission short-circuits without calling the API when the
+   *   dialog returns a permission with a blank key.
+   * Interacts with: DialogService.createPermission + PermissionService.createPermission spies.
+   * Data: dialog returns empty key.
+   * Why: createPermission.mockClear() drops the init-load calls so only
+   *      addPermission-triggered calls are asserted.
+   */
   it('addPermission exits early when the dialog returns a permission with no key', async () => {
     const { fixture, createPermission } = await renderSearch({
       newPermissionKey: '',
@@ -159,6 +204,11 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(createPermission).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: executePermissionAction('delete') confirms first, then deletes by id.
+   * Interacts with: DialogService.confirm + PermissionService.deletePermission spies.
+   * Data: confirmValue = true; permissions[0] (id 'p1').
+   */
   it('deletes a permission only after confirm', async () => {
     const { fixture, deletePermission, confirmDialog } = await renderSearch({
       confirmValue: true,
@@ -168,6 +218,11 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(deletePermission).toHaveBeenCalledWith('p1');
   });
 
+  /**
+   * Verifies: declining the confirm dialog skips the permission delete.
+   * Interacts with: DialogService.confirm + PermissionService.deletePermission spies.
+   * Data: confirmValue = false; permissions[0].
+   */
   it('does not delete a permission when confirm returns false', async () => {
     const { fixture, deletePermission } = await renderSearch({
       confirmValue: false,
@@ -176,24 +231,46 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(deletePermission).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: addRole posts the role when the create dialog returns a non-empty
+   *   name.
+   * Interacts with: DialogService.createRole + RoleService.createRole spies.
+   * Data: dialog returns name 'Admin'.
+   */
   it('addRole calls createRole when dialog returns a non-empty name', async () => {
     const { fixture, createRole } = await renderSearch({ newRoleName: 'Admin' });
     fixture.componentInstance.addRole();
     expect(createRole).toHaveBeenCalledWith({ name: 'Admin' });
   });
 
+  /**
+   * Verifies: addRole skips the API when the dialog returns an empty name.
+   * Interacts with: DialogService.createRole + RoleService.createRole spies.
+   * Data: dialog returns empty name.
+   */
   it('addRole is a no-op when dialog returns empty name', async () => {
     const { fixture, createRole } = await renderSearch({ newRoleName: '' });
     fixture.componentInstance.addRole();
     expect(createRole).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: executeRoleAction('delete') deletes the role by id once confirmed.
+   * Interacts with: DialogService.confirm + RoleService.deleteRole spies.
+   * Data: confirmValue = true; roles[0] (id 'r1').
+   */
   it('deletes a role only after confirm', async () => {
     const { fixture, deleteRole } = await renderSearch({ confirmValue: true });
     fixture.componentInstance.executeRoleAction('delete', roles[0]);
     expect(deleteRole).toHaveBeenCalledWith('r1');
   });
 
+  /**
+   * Verifies: executeRoleAction('select') opens the permission-picker dialog
+   *   seeded with the role and the full permission list.
+   * Interacts with: DialogService.selectRolePermissions spy.
+   * Data: roles[0] passed alongside the default permissions sample.
+   */
   it('executeRoleAction("select") opens the selectRolePermissions dialog', async () => {
     const { fixture, selectRolePermissionsDialog } = await renderSearch();
     fixture.componentInstance.executeRoleAction('select', roles[0]);
@@ -204,6 +281,12 @@ describe('AdminRolePermissionSearchComponent', () => {
     );
   });
 
+  /**
+   * Verifies: clearRoleFilter blanks both filterRoleString and the role data
+   *   source filter after a prior filter.
+   * Interacts with: component.applyRoleFilter then clearRoleFilter.
+   * Data: initial filter 'admin', then cleared.
+   */
   it('clearRoleFilter resets the role filter', async () => {
     const { fixture } = await renderSearch();
     const c = fixture.componentInstance;
@@ -214,6 +297,12 @@ describe('AdminRolePermissionSearchComponent', () => {
   });
 
   describe('editPermission()', () => {
+    /**
+     * Verifies: editPermission updates the permission by id with the name from
+     *   the dialog.
+     * Interacts with: DialogService.createPermission + PermissionService.updatePermission spies.
+     * Data: dialog returns name 'Renamed'; permissions[0] (id 'p1').
+     */
     it('updates the permission when the dialog returns a name', async () => {
       const { fixture, updatePermission } = await renderSearch({
         newPermissionKey: 'Renamed',
@@ -225,6 +314,12 @@ describe('AdminRolePermissionSearchComponent', () => {
       );
     });
 
+    /**
+     * Verifies: editPermission skips the update when the dialog returns an empty
+     *   name.
+     * Interacts with: PermissionService.updatePermission spy.
+     * Data: dialog returns empty key/name.
+     */
     it('is a no-op when the dialog returns an empty name', async () => {
       const { fixture, updatePermission } = await renderSearch({
         newPermissionKey: '',
@@ -234,6 +329,12 @@ describe('AdminRolePermissionSearchComponent', () => {
     });
   });
 
+  /**
+   * Verifies: executePermissionAction('edit') dispatches to editPermission and
+   *   updates the permission.
+   * Interacts with: PermissionService.updatePermission spy.
+   * Data: dialog returns name 'Edited'; permissions[0].
+   */
   it('executePermissionAction("edit") routes to editPermission', async () => {
     const { fixture, updatePermission } = await renderSearch({
       newPermissionKey: 'Edited',
@@ -245,6 +346,12 @@ describe('AdminRolePermissionSearchComponent', () => {
     );
   });
 
+  /**
+   * Verifies: an unrecognized permission action triggers an "Unknown Action" alert.
+   * Interacts with: window.alert spy.
+   * Data: action 'bogus'.
+   * Why: spies on window.alert and restores it after asserting.
+   */
   it('executePermissionAction with an unknown action alerts', async () => {
     const { fixture } = await renderSearch();
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -254,6 +361,11 @@ describe('AdminRolePermissionSearchComponent', () => {
   });
 
   describe('editRole()', () => {
+    /**
+     * Verifies: editRole updates the role by id with the name from the dialog.
+     * Interacts with: DialogService.createRole + RoleService.updateRole spies.
+     * Data: dialog returns name 'Renamed Role'; roles[0] (id 'r1').
+     */
     it('updates the role when the dialog returns a name', async () => {
       const { fixture, updateRole } = await renderSearch({
         newRoleName: 'Renamed Role',
@@ -262,6 +374,11 @@ describe('AdminRolePermissionSearchComponent', () => {
       expect(updateRole).toHaveBeenCalledWith('r1', { name: 'Renamed Role' });
     });
 
+    /**
+     * Verifies: editRole skips the update when the dialog returns an empty name.
+     * Interacts with: RoleService.updateRole spy.
+     * Data: dialog returns empty name.
+     */
     it('is a no-op when the dialog returns an empty name', async () => {
       const { fixture, updateRole } = await renderSearch({ newRoleName: '' });
       fixture.componentInstance.editRole(roles[0]);
@@ -269,6 +386,11 @@ describe('AdminRolePermissionSearchComponent', () => {
     });
   });
 
+  /**
+   * Verifies: executeRoleAction('edit') dispatches to editRole and updates the role.
+   * Interacts with: RoleService.updateRole spy.
+   * Data: dialog returns name 'Edited Role'; roles[0].
+   */
   it('executeRoleAction("edit") routes to editRole', async () => {
     const { fixture, updateRole } = await renderSearch({
       newRoleName: 'Edited Role',
@@ -277,12 +399,23 @@ describe('AdminRolePermissionSearchComponent', () => {
     expect(updateRole).toHaveBeenCalledWith('r1', { name: 'Edited Role' });
   });
 
+  /**
+   * Verifies: declining the confirm dialog skips the role delete.
+   * Interacts with: DialogService.confirm + RoleService.deleteRole spies.
+   * Data: confirmValue = false; roles[0].
+   */
   it('does not delete a role when confirm returns false', async () => {
     const { fixture, deleteRole } = await renderSearch({ confirmValue: false });
     fixture.componentInstance.executeRoleAction('delete', roles[0]);
     expect(deleteRole).not.toHaveBeenCalled();
   });
 
+  /**
+   * Verifies: an unrecognized role action triggers an "Unknown Action" alert.
+   * Interacts with: window.alert spy.
+   * Data: action 'bogus'.
+   * Why: spies on window.alert and restores it after asserting.
+   */
   it('executeRoleAction with an unknown action alerts', async () => {
     const { fixture } = await renderSearch();
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});

@@ -86,6 +86,11 @@ describe('AppComponent', () => {
     document.body.style.removeProperty('--mat-sys-on-primary');
   });
 
+  /**
+   * Verifies: AppComponent instantiates successfully under default settings.
+   * Interacts with: renderComponent harness with ComnAuth/Settings/Router/Title stubs.
+   * Data: default setup() overrides (light theme, "Player" title).
+   */
   it('creates the component', async () => {
     const { providers } = setup();
     const { fixture } = await renderComponent(AppComponent, {
@@ -95,6 +100,11 @@ describe('AppComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: document title is set from the AppTitle config value during init.
+   * Interacts with: Title.setTitle spy, ComnSettingsService stub.
+   * Data: setup() override with appTitle 'My Player'.
+   */
   it('sets the document title from AppTitle setting', async () => {
     const ctx = setup({ appTitle: 'My Player' });
     await renderComponent(AppComponent, {
@@ -104,6 +114,11 @@ describe('AppComponent', () => {
     expect(ctx.setTitle).toHaveBeenCalledWith('My Player');
   });
 
+  /**
+   * Verifies: body gains the darkMode class when the user theme stream emits dark.
+   * Interacts with: ComnAuthQuery.userTheme$ stub, document.body classList.
+   * Data: setup() override with initialTheme 'dark-theme'.
+   */
   it('applies darkMode body class when theme is dark', async () => {
     const ctx = setup({ initialTheme: 'dark-theme' });
     await renderComponent(AppComponent, {
@@ -113,6 +128,11 @@ describe('AppComponent', () => {
     expect(document.body.classList.contains('darkMode')).toBe(true);
   });
 
+  /**
+   * Verifies: body has no darkMode class when the theme stream emits light.
+   * Interacts with: ComnAuthQuery.userTheme$ stub, document.body classList.
+   * Data: setup() override with initialTheme 'light-theme'.
+   */
   it('does not apply darkMode body class when theme is light', async () => {
     const ctx = setup({ initialTheme: 'light-theme' });
     await renderComponent(AppComponent, {
@@ -122,6 +142,11 @@ describe('AppComponent', () => {
     expect(document.body.classList.contains('darkMode')).toBe(false);
   });
 
+  /**
+   * Verifies: --mat-sys-primary and --mat-sys-on-primary body styles are written from top-bar color settings.
+   * Interacts with: ComnSettingsService stub, document.body inline style.
+   * Data: setup() overrides topBarColor '#AB1234' and topBarTextColor '#EEEEEE'.
+   */
   it('writes primary color CSS variables from settings', async () => {
     const ctx = setup({
       topBarColor: '#AB1234',
@@ -139,6 +164,11 @@ describe('AppComponent', () => {
     );
   });
 
+  /**
+   * Verifies: a valid theme query param is forwarded to ComnAuthService.setUserTheme.
+   * Interacts with: ActivatedRoute.queryParamMap stub, ComnAuthService.setUserTheme spy.
+   * Data: setup() override queryTheme 'dark-theme'.
+   */
   it('calls setUserTheme when ?theme=dark-theme is in the query params', async () => {
     const ctx = setup({ queryTheme: 'dark-theme' });
     await renderComponent(AppComponent, {
@@ -148,6 +178,11 @@ describe('AppComponent', () => {
     expect(ctx.setUserTheme).toHaveBeenCalledWith('dark-theme');
   });
 
+  /**
+   * Verifies: an unrecognized theme query value falls back to 'light-theme'.
+   * Interacts with: ActivatedRoute.queryParamMap stub, ComnAuthService.setUserTheme spy.
+   * Data: setup() override queryTheme 'some-other-theme'.
+   */
   it('coerces unknown theme query param to light', async () => {
     const ctx = setup({ queryTheme: 'some-other-theme' });
     await renderComponent(AppComponent, {
@@ -157,6 +192,13 @@ describe('AppComponent', () => {
     expect(ctx.setUserTheme).toHaveBeenCalledWith('light-theme');
   });
 
+  /**
+   * Verifies: theme subscription is torn down on destroy so later userTheme$ emits are ignored.
+   * Interacts with: fixture.destroy(), ComnAuthQuery.userTheme$ subject, setUserTheme spy.
+   * Data: default setup(); asserts call count is unchanged after a post-destroy emit.
+   * Why: emits 'dark-theme' after destroy and compares against the pre-destroy call count
+   *       to prove no leaked subscription, rather than asserting an absolute count.
+   */
   it('cleans up subscriptions on destroy', async () => {
     const ctx = setup();
     const { fixture } = await renderComponent(AppComponent, {

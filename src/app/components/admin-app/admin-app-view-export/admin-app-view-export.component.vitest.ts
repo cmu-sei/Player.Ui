@@ -52,11 +52,21 @@ async function renderExport(
 }
 
 describe('AdminAppViewExportComponent', () => {
+  /**
+   * Verifies: the component instantiates without error.
+   * Interacts with: ViewsService.export stub + FileDownloadUtils spy.
+   * Data: default render (one id, success result).
+   */
   it('creates the component', async () => {
     const { fixture } = await renderExport();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
+  /**
+   * Verifies: the form defaults its archiveType to the first ArchiveType key.
+   * Interacts with: component.form.
+   * Data: default render.
+   */
   it('initializes the form with the first archive type', async () => {
     const { fixture } = await renderExport();
     expect(fixture.componentInstance.form.value.archiveType).toBe(
@@ -64,6 +74,12 @@ describe('AdminAppViewExportComponent', () => {
     );
   });
 
+  /**
+   * Verifies: the export button shows the selected count "Export (N)" when ids
+   *   are supplied.
+   * Interacts with: rendered DOM via screen.findByRole.
+   * Data: ids of length 2.
+   */
   it('shows "Export (N)" label when ids are provided', async () => {
     await renderExport({ ids: ['a', 'b'] });
     expect(
@@ -71,6 +87,11 @@ describe('AdminAppViewExportComponent', () => {
     ).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the export button reads "Export All" when no ids are selected.
+   * Interacts with: rendered DOM via screen.findByRole.
+   * Data: empty ids array.
+   */
   it('shows "Export All" label when ids is empty', async () => {
     await renderExport({ ids: [] });
     expect(
@@ -78,6 +99,11 @@ describe('AdminAppViewExportComponent', () => {
     ).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: clicking Cancel emits complete(false) without exporting.
+   * Interacts with: component.complete output; userEvent click.
+   * Data: default render.
+   */
   it('emits complete=false when cancel is clicked', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderExport();
@@ -87,6 +113,12 @@ describe('AdminAppViewExportComponent', () => {
     expect(spy).toHaveBeenCalledWith(false);
   });
 
+  /**
+   * Verifies: submitting calls ViewsService.export with the ids and the resolved
+   *   ArchiveType enum value (not the key).
+   * Interacts with: ViewsService.export spy; userEvent click.
+   * Data: ids = ['view-1','view-2'] with default first archive type.
+   */
   it('calls ViewsService.export with ids and archive type on submit', async () => {
     const user = userEvent.setup();
     const { exportFn } = await renderExport({ ids: ['view-1', 'view-2'] });
@@ -97,6 +129,13 @@ describe('AdminAppViewExportComponent', () => {
     expect(exportFn).toHaveBeenCalledWith(['view-1', 'view-2'], firstArchive);
   });
 
+  /**
+   * Verifies: a clean export result downloads the blob under its filename and
+   *   emits complete(true).
+   * Interacts with: ViewsService.export stub + FileDownloadUtils.downloadFile spy;
+   *   component.complete output.
+   * Data: export result with hasErrors=false, filename 'views.zip'.
+   */
   it('downloads the file and emits complete(true) when export has no errors', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderExport({
@@ -116,6 +155,12 @@ describe('AdminAppViewExportComponent', () => {
     expect(spy).toHaveBeenCalledWith(true);
   });
 
+  /**
+   * Verifies: an export result flagged with errors surfaces the partial-error
+   *   message.
+   * Interacts with: ViewsService.export stub; rendered DOM.
+   * Data: export result with hasErrors=true.
+   */
   it('shows the error message when export reports archive errors', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderExport({

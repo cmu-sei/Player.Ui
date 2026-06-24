@@ -47,6 +47,11 @@ describe('ApplicationsService', () => {
     vi.restoreAllMocks();
   });
 
+  /**
+   * Verifies: the observable issues a GET to /api/teams/{id}/application-instances and resolves to the flushed body unchanged
+   * Interacts with: HttpTestingController (expectOne/flush) standing in for HttpClient; service.getApplicationsByTeam
+   * Data: a single-element ApplicationData[] fixture flushed as the response
+   */
   it('getApplicationsByTeam() GETs the team application-instances endpoint', async () => {
     const ctx = setup();
     httpMock = ctx.httpMock;
@@ -64,6 +69,12 @@ describe('ApplicationsService', () => {
     expect(await promise).toEqual(apps);
   });
 
+  /**
+   * Verifies: a 500 response causes the returned observable to reject rather than swallow the error
+   * Interacts with: HttpTestingController flushing an error status; service.getApplicationsByTeam catchError path
+   * Data: a 500 "Server Error" flush with body 'boom'
+   * Why: catchError re-throws and also logs to console.log, which beforeEach silences to keep output clean
+   */
   it('getApplicationsByTeam() surfaces server errors through catchError', async () => {
     const ctx = setup();
     httpMock = ctx.httpMock;
