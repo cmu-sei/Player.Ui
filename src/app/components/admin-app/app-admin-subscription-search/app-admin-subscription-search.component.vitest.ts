@@ -19,11 +19,18 @@ const subs: WebhookSubscription[] = [
 ];
 
 async function renderSearch(
-  overrides: { list?: WebhookSubscription[] } = {},
+  overrides: {
+    list?: WebhookSubscription[];
+    editResult?: unknown;
+    confirmDelete?: boolean;
+  } = {},
 ) {
-  const { list = subs } = overrides;
+  const { list = subs, editResult = undefined, confirmDelete = false } =
+    overrides;
   const getAllWebhooks = vi.fn(() => of(list));
-  const editSubscription = vi.fn(() => of(undefined));
+  const deleteWebhookSubscription = vi.fn(() => of(undefined));
+  const editSubscription = vi.fn(() => of(editResult));
+  const confirm = vi.fn(() => of({ confirm: confirmDelete }));
 
   const rendered = await renderComponent(
     AppAdminSubscriptionSearchComponent,
@@ -31,13 +38,22 @@ async function renderSearch(
       declarations: [AppAdminSubscriptionSearchComponent],
       imports: [MatTableModule, MatSortModule],
       providers: [
-        { provide: WebhookService, useValue: { getAllWebhooks } },
-        { provide: DialogService, useValue: { editSubscription } },
+        {
+          provide: WebhookService,
+          useValue: { getAllWebhooks, deleteWebhookSubscription },
+        },
+        { provide: DialogService, useValue: { editSubscription, confirm } },
       ],
     },
   );
 
-  return { ...rendered, getAllWebhooks, editSubscription };
+  return {
+    ...rendered,
+    getAllWebhooks,
+    deleteWebhookSubscription,
+    editSubscription,
+    confirm,
+  };
 }
 
 describe('AppAdminSubscriptionSearchComponent', () => {
@@ -79,6 +95,38 @@ describe('AppAdminSubscriptionSearchComponent', () => {
     fixture.componentInstance.editSubscription(subs[0]);
     expect(editSubscription).toHaveBeenCalledWith(subs[0]);
     expect(getAllWebhooks).toHaveBeenCalledTimes(2);
+  });
+
+  it('editSubscription(sub) logs and does not reload when the dialog reports an error', async () => {
+    const { fixture, getAllWebhooks } = await renderSearch({ editResult: true });
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    fixture.componentInstance.editSubscription(subs[0]);
+    expect(logSpy).toHaveBeenCalledWith('Error editing/creating subscription');
+    // Only the ngOnInit load happened; the error branch skips refreshSubs.
+    expect(getAllWebhooks).toHaveBeenCalledTimes(1);
+    logSpy.mockRestore();
+  });
+
+  describe('deleteSubscription()', () => {
+    it('deletes and reloads when the user confirms', async () => {
+      const { fixture, deleteWebhookSubscription, confirm, getAllWebhooks } =
+        await renderSearch({ confirmDelete: true });
+      fixture.componentInstance.deleteSubscription(subs[0]);
+      expect(confirm).toHaveBeenCalledWith(
+        'Confirm Delete',
+        expect.stringContaining('Alpha'),
+      );
+      expect(deleteWebhookSubscription).toHaveBeenCalledWith('s1');
+      expect(getAllWebhooks).toHaveBeenCalledTimes(2);
+    });
+
+    it('does nothing when the user cancels', async () => {
+      const { fixture, deleteWebhookSubscription } = await renderSearch({
+        confirmDelete: false,
+      });
+      fixture.componentInstance.deleteSubscription(subs[0]);
+      expect(deleteWebhookSubscription).not.toHaveBeenCalled();
+    });
   });
 
   it('ngOnDestroy completes the unsubscribe subject', async () => {

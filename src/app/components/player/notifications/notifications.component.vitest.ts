@@ -244,4 +244,44 @@ describe('NotificationsComponent', () => {
     expect(deleteViewNotifications).toHaveBeenCalledWith('v1');
     expect(fixture.componentInstance.notificationsHistory).toEqual([]);
   });
+
+  it('openLink opens the link in a new browser tab', async () => {
+    const { fixture } = await renderNotifications();
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    fixture.componentInstance.openLink('https://example.test');
+    expect(open).toHaveBeenCalledWith('https://example.test', '_blank');
+    open.mockRestore();
+  });
+
+  describe('playBeep()', () => {
+    it('plays the beep audio when useBeep is enabled', async () => {
+      const { fixture } = await renderNotifications();
+      const play = vi
+        .spyOn(window.HTMLMediaElement.prototype, 'play')
+        .mockResolvedValue(undefined);
+      fixture.componentInstance.useBeep = true;
+      fixture.componentInstance.playBeep();
+      expect(play).toHaveBeenCalled();
+      play.mockRestore();
+    });
+
+    it('does nothing when useBeep is disabled', async () => {
+      const { fixture } = await renderNotifications();
+      const play = vi
+        .spyOn(window.HTMLMediaElement.prototype, 'play')
+        .mockResolvedValue(undefined);
+      fixture.componentInstance.useBeep = false;
+      fixture.componentInstance.playBeep();
+      expect(play).not.toHaveBeenCalled();
+      play.mockRestore();
+    });
+  });
+
+  it('onSubmit copies the send-message handler onto the user data message', async () => {
+    const { fixture } = await renderNotifications();
+    const c = fixture.componentInstance;
+    c.userData = { message: '' };
+    c.onSubmit();
+    expect(c.userData.message).toBe(c.sendMessage);
+  });
 });
