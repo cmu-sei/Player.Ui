@@ -132,6 +132,9 @@ _TeamCity*
 # Vitest browser-mode screenshot artifacts
 **/__screenshots__/
 
+# Vitest browser-mode attachment artifacts (transient test output)
+.vitest-attachments/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
