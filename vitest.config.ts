@@ -24,6 +24,15 @@ export default defineConfig({
     setupFiles: ['src/test-setup.vitest.ts'],
     include: ['src/app/**/*.vitest.ts'],
     reporters: ['default'],
+    // The `test:dashboard` script binds the API to 0.0.0.0 so the Vitest UI is
+    // reachable from the host. Binding to a non-loopback host makes Vitest
+    // default allowExec/allowWrite to false, which disables re-running tests
+    // and updating snapshots from the dashboard. Opt back in explicitly — safe
+    // in this local dev container.
+    api: {
+      allowExec: true,
+      allowWrite: true,
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

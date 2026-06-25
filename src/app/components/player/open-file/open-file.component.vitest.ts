@@ -112,6 +112,9 @@ describe('OpenFileComponent', () => {
    */
   it('alerts when the download errors', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    // The component's error handler does console.log(err); silence it so the
+    // deliberately-triggered error and its stack don't print to test output.
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const download = vi.fn(() => {
       return new (class extends Object {
         subscribe(next: unknown, err?: (e: unknown) => void) {
@@ -138,5 +141,6 @@ describe('OpenFileComponent', () => {
     });
     expect(alertSpy).toHaveBeenCalledWith('Error downloading file');
     alertSpy.mockRestore();
+    logSpy.mockRestore();
   });
 });

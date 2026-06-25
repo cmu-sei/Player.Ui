@@ -12,6 +12,7 @@ import { DialogService } from '../../../services/dialog/dialog.service';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { ClipboardModule } from 'ngx-clipboard';
 
 const mockUsers: User[] = [
   { id: 'user-1', name: 'Alice Smith' },
@@ -32,7 +33,7 @@ async function renderAdminUserSearch(
 
   const rendered = await renderComponent(AdminUserSearchComponent, {
     declarations: [AdminUserSearchComponent],
-    imports: [MatTableModule, MatSortModule, MatPaginatorModule],
+    imports: [MatTableModule, MatSortModule, MatPaginatorModule, ClipboardModule],
     providers: [
       {
         provide: UserService,

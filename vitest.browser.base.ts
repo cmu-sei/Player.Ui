@@ -81,7 +81,6 @@ export default defineConfig({
       '@cmusei/crucible-common',
       '@datorama/akita',
       '@datorama/akita-ng-router-store',
-      '@microsoft/signalr',
       '@testing-library/angular',
       '@testing-library/jest-dom/vitest',
       '@testing-library/user-event',
@@ -91,6 +90,11 @@ export default defineConfig({
       'rxjs/operators',
       'tslib',
     ],
+    // @microsoft/signalr is intentionally NOT pre-bundled: notification.service
+    // tests use vi.mock('@microsoft/signalr'), and Vitest cannot intercept a
+    // module that has been optimized into an esbuild chunk. Excluding it keeps
+    // the mock working in browser mode (it already worked in jsdom).
+    exclude: ['@microsoft/signalr'],
   },
   server: {
     host: '0.0.0.0',
@@ -105,12 +109,24 @@ export default defineConfig({
     api: {
       host: '0.0.0.0',
       port: 51311,
+      // Binding to a non-loopback host (0.0.0.0) makes Vitest default
+      // allowExec/allowWrite to false, which disables re-running tests and
+      // updating snapshots from the UI ("Cannot run tests when api.allowExec
+      // is false"). We bind 0.0.0.0 on purpose so the dashboard is reachable
+      // from the host, so opt back in explicitly. Safe here: this is a local
+      // dev container, not a shared/public host.
+      allowExec: true,
+      allowWrite: true,
     },
     browser: {
       enabled: true,
       api: {
         host: '0.0.0.0',
         port: 63320,
+        // Browser mode reads allowExec from browser.api (not test.api), so it
+        // must be set here too. Same rationale as above.
+        allowExec: true,
+        allowWrite: true,
       },
     },
   },
