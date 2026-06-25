@@ -1,3 +1,8 @@
+/*
+Copyright 2021 Carnegie Mellon University. All Rights Reserved. 
+ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+*/
+
 #!/usr/bin/env node
 // Patches @datorama/akita to work with ESM-native module loaders (Vitest 4+).
 // The package ships .js files with ESM `export` syntax but lacks "type": "module"
