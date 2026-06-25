@@ -129,5 +129,14 @@ export default defineConfig({
         allowWrite: true,
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      // Keep this list in sync with vitest.config.ts (jsdom). app.service.ts is
+      // an empty, unused injectable shell with nothing to assert; the generated
+      // API client is excluded because we don't test generated code.
+      exclude: ['**/generated/**', '**/app.service.ts'],
+      clean: false,
+    },
   },
 });

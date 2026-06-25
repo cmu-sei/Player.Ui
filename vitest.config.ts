@@ -36,7 +36,10 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['**/generated/**'],
+      // app.service.ts is an empty, unused injectable shell (just an unread
+      // HttpClient in its constructor) — nothing to assert, so it's excluded
+      // rather than dragging the coverage denominator down.
+      exclude: ['**/generated/**', '**/app.service.ts'],
       // Keep the checked-in TEST-COVERAGE-REPORT.md (and other manual files)
       // in coverage/ — without this, v8 wipes the dir before every run.
       clean: false,
