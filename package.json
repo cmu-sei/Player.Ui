@@ -12,7 +12,6 @@
     "test:dashboard": "vitest --ui --api.host 0.0.0.0 --api.port 51310",
     "test:dashboard:browser": "vitest --config vitest.browser.config.ts --ui --api.host 0.0.0.0 --browser.headless --watch",
     "lint": "ng lint",
-    "postinstall": "node scripts/patch-akita-esm.js",
     "docker:build": "docker build -t cmusei/player-ui:${npm_package_version} .",
     "docker:init": "docker network create identity --driver=overlay",
     "docker:stack": "npm run docker:stack:api && npm run docker:stack:identity",

@@ -84,6 +84,11 @@ export default defineConfig({
       '@angular/material/tree',
       '@analogjs/vitest-angular/setup-zone',
       '@cmusei/crucible-common',
+      // @datorama/akita ships ESM without "type": "module" and with
+      // extensionless relative imports. Pre-bundling here normalizes it to
+      // valid ESM, so the browser/jsdom loaders never see those quirks. These
+      // two entries MUST stay in the include list — dropping them brings the
+      // ESM-loading errors back. (This is why no node_modules patch is needed.)
       '@datorama/akita',
       '@datorama/akita-ng-router-store',
       '@testing-library/angular',
