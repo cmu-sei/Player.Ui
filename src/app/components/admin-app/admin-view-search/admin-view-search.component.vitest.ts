@@ -12,6 +12,8 @@ import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatBadgeModule } from '@angular/material/badge';
+import { ClipboardModule } from 'ngx-clipboard';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -58,7 +60,13 @@ async function renderAdminViewSearch(
 
   const result = await renderComponent(AdminViewSearchComponent, {
     declarations: [AdminViewSearchComponent],
-    imports: [MatTableModule, MatSortModule, MatCheckboxModule],
+    imports: [
+      MatTableModule,
+      MatSortModule,
+      MatCheckboxModule,
+      MatBadgeModule,
+      ClipboardModule,
+    ],
     providers: [
       {
         provide: ViewService,
