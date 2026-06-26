@@ -33,7 +33,7 @@ In a production environment, `settings.env.json` should contain only the setting
 
 ## Running unit tests
 
-Player UI uses **Vitest** with `@testing-library/angular`. Test files use the `.vitest.ts` extension.
+Player UI uses **Vitest** with `@testing-library/angular`. Test files use the `.spec.ts` extension.
 
 ```bash
 npm test                     # Run all tests (jsdom, headless, no GUI)
@@ -54,9 +54,9 @@ Comprehensive permission tests cover the three-tier permission system (System, T
 | File | Coverage |
 |------|----------|
 | `src/app/test-utils/mock-user-permissions.service.ts` | `userPermissionsProvider(systemPerms, teamPermClaims)` factory |
-| `src/app/services/permissions/user-permissions.service.vitest.ts` | All 12 `SystemPermission` values, `canViewAdminstration()`, `can()` with team/view permission paths |
-| `src/app/components/shared/top-bar/topbar.component.vitest.ts` | Administration link, Edit View, Exit Administration visibility |
-| `src/app/components/home-app/view-list/view-list.component.vitest.ts` | `CreateViews` permission gates the "Add New View" button |
+| `src/app/services/permissions/user-permissions.service.spec.ts` | All 12 `SystemPermission` values, `canViewAdminstration()`, `can()` with team/view permission paths |
+| `src/app/components/shared/top-bar/topbar.component.spec.ts` | Administration link, Edit View, Exit Administration visibility |
+| `src/app/components/home-app/view-list/view-list.component.spec.ts` | `CreateViews` permission gates the "Add New View" button |
 
 Key patterns tested:
 - System permission grants access regardless of team/view permission state
