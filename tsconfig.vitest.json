@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "es2020",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*.spec.ts", "src/**/*.ts"]
+}
