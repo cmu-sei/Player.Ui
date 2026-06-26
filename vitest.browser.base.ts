@@ -112,7 +112,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    include: ['src/app/**/*.vitest.ts'],
+    include: ['src/app/**/*.spec.ts'],
     setupFiles: ['src/test-setup.vitest.browser.ts'],
     reporters: ['default'],
     isolate: true,

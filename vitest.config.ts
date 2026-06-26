@@ -27,7 +27,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['src/test-setup.vitest.ts'],
-    include: ['src/app/**/*.vitest.ts'],
+    include: ['src/app/**/*.spec.ts'],
     reporters: ['default'],
     // The `test:dashboard` script binds the API to 0.0.0.0 so the Vitest UI is
     // reachable from the host. Binding to a non-loopback host makes Vitest

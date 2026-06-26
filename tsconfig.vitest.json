@@ -6,5 +6,5 @@
     "moduleResolution": "bundler",
     "esModuleInterop": true
   },
-  "include": ["src/**/*.vitest.ts", "src/**/*.ts"]
+  "include": ["src/**/*.spec.ts", "src/**/*.ts"]
 }
