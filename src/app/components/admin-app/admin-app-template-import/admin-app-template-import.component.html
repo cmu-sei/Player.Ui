@@ -3,16 +3,45 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<h2>Import {{ typeString | titlecase }}</h2>
-
-@if (!(finished$ | async)) {
-  <form [formGroup]="form" (ngSubmit)="import()">
-    <div class="d-flex flex-column gap-2">
-      <div class="d-flex align-items-center gap-2">
+@if (finished$ | async) {
+  <crucible-dialog [dialogTitle]="'Import ' + (typeString | titlecase)" [hideDefaultActions]="true">
+    <div crucibleDialogContent>
+      @if (result$ | async; as result) {
+        @if (result.failures.length > 0) {
+          <p class="text-danger">
+            Error: The following Application Templates already exist and were
+            not updated:
+          </p>
+          <ul>
+            @for (appTemplate of result.failures; track appTemplate) {
+              <li>{{ appTemplate }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="text-success">Import Successful</p>
+        }
+      }
+    </div>
+    <ng-container crucibleDialogActions>
+      <button matButton="filled" (click)="cancel()">OK</button>
+    </ng-container>
+  </crucible-dialog>
+} @else {
+  <crucible-dialog
+    [dialogTitle]="'Import ' + (typeString | titlecase)"
+    [form]="form"
+    submitLabel="Import"
+    loadingLabel="Importing..."
+    [loading]="loading"
+    [submitDisabled]="!form.valid"
+    (cancel)="cancel()"
+    (submit)="import()"
+  >
+    <div crucibleDialogContent [formGroup]="form" class="dialog-fields">
+      <div class="file-row">
         <button
           type="button"
-          color="primary"
-          mat-raised-button
+          matButton="outlined"
           (click)="fileInput.click()"
         >
           Choose File
@@ -24,51 +53,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           type="file"
           accept=".zip, .tar.gz, .tgz"
         />
-        <span class="file-name">{{ this.form.value.archive?.name }}</span>
+        <span class="file-name">{{ form.value.archive?.name }}</span>
       </div>
-      <div class="d-flex align-items-center gap-2">
+      <div class="toggle-row">
         <mat-slide-toggle
           formControlName="overwriteExisting"
           matTooltip="If an Application Template with a matching Id already exists, overwrite it. Otherwise, report as a failure."
         >Overwrite Existing</mat-slide-toggle>
       </div>
     </div>
-    <div class="d-flex justify-content-around">
-      <button
-        type="submit"
-        color="primary"
-        mat-raised-button
-        [disabled]="!form.valid || loading"
-      >
-        {{ loading ? 'Importing...' : 'Import' }}
-      </button>
-      <button type="reset" color="primary" mat-raised-button (click)="cancel()">
-        Cancel
-      </button>
-    </div>
-  </form>
-}
-
-@if (result$ | async; as result) {
-  <div>
-    @if (result.failures.length > 0) {
-      <h3 class="text-danger">
-        Error: The following Application Templates already exist and were not
-        updated:
-      </h3>
-      <ul>
-        @for (appTemplate of result.failures; track appTemplate) {
-          <li>
-            {{ appTemplate }}
-          </li>
-        }
-      </ul>
-    }
-    @if (result.failures.length == 0) {
-      <h3 class="text-success">Import Successful</h3>
-    }
-    <div class="d-flex justify-content-around">
-      <button mat-raised-button color="primary" (click)="cancel()">OK</button>
-    </div>
-  </div>
+  </crucible-dialog>
 }

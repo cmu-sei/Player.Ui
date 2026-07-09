@@ -17,22 +17,24 @@ import {
 } from '../../../../generated/player-api';
 import { UserPermissionsService } from '../../../../services/permissions/user-permissions.service';
 import { PermissionsService } from '../../../../services/permissions/permissions.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 @Component({
-    selector: 'app-roles',
-    templateUrl: './roles.component.html',
-    styleUrls: ['./roles.component.scss'],
-    standalone: false
+  selector: 'app-roles',
+  templateUrl: './roles.component.html',
+  styleUrls: ['./roles.component.scss'],
+  standalone: false,
 })
 export class SystemRolesComponent implements OnInit, OnDestroy {
   private roleService = inject(RolesService);
   private dialogService = inject(DialogService);
+  private confirmDialogService = inject(CrucibleDialogService);
   private userPermissionsService = inject(UserPermissionsService);
   private permissionService = inject(PermissionsService);
   //private signalRService = inject(SignalRService);
 
   public canEdit$ = this.userPermissionsService.hasPermission(
-    SystemPermission.ManageRoles
+    SystemPermission.ManageRoles,
   );
 
   public allPermission = 'All';
@@ -49,7 +51,7 @@ export class SystemRolesComponent implements OnInit, OnDestroy {
         ...permissions,
       ];
     }),
-    map((permissions) => new MatTableDataSource<Permission>(permissions))
+    map((permissions) => new MatTableDataSource<Permission>(permissions)),
   );
 
   public roles$ = this.roleService.roles$;
@@ -58,7 +60,7 @@ export class SystemRolesComponent implements OnInit, OnDestroy {
     map((x) => {
       const columnNames = x.map((y) => y.name);
       return ['permissions', ...columnNames];
-    })
+    }),
   );
 
   ngOnInit(): void {
@@ -143,17 +145,16 @@ export class SystemRolesComponent implements OnInit, OnDestroy {
   }
 
   deleteRole(role: Role) {
-    this.dialogService
-      .confirm(
-        'Delete Role?',
-        `Are you sure you want to delete ${role.name}?`,
-        {
-          buttonTrueText: 'Delete',
-          buttonFalseText: 'Cancel',
-        }
-      )
-      .subscribe((result) => {
-        if (result.confirm) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete Role?',
+        message: `Are you sure you want to delete ${role.name}?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.roleService.deleteRole(role.id).subscribe();
         }
       });

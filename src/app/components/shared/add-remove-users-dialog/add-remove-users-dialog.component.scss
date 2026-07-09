@@ -12,6 +12,15 @@
   --mat-form-field-filled-label-display: block;
 }
 
+.add-remove-users-content {
+  display: flex;
+  gap: 20px;
+}
+
+.team-list-wrapper {
+  display: flex;
+}
+
 .user-list-container {
   display: inline-block;
   flex-direction: column;

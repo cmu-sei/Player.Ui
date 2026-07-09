@@ -17,25 +17,26 @@ import {
   TeamRole,
 } from '../../../../generated/player-api';
 import { UserPermissionsService } from '../../../../services/permissions/user-permissions.service';
-import { PermissionsService } from '../../../../services/permissions/permissions.service';
 import { TeamRolesService } from '../../../../services/roles/team-roles.service';
 import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 @Component({
-    selector: 'app-team-roles',
-    templateUrl: './team-roles.component.html',
-    styleUrls: ['./team-roles.component.scss'],
-    standalone: false
+  selector: 'app-team-roles',
+  templateUrl: './team-roles.component.html',
+  styleUrls: ['./team-roles.component.scss'],
+  standalone: false,
 })
 export class TeamRolesComponent implements OnInit, OnDestroy {
   private roleService = inject(TeamRolesService);
   private dialogService = inject(DialogService);
+  private confirmDialogService = inject(CrucibleDialogService);
   private userPermissionsService = inject(UserPermissionsService);
   private permissionService = inject(TeamPermissionsService);
   //private signalRService = inject(SignalRService);
 
   public canEdit$ = this.userPermissionsService.hasPermission(
-    SystemPermission.ManageRoles
+    SystemPermission.ManageRoles,
   );
 
   public allPermission = 'All';
@@ -54,8 +55,8 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
       ];
     }),
     map(
-      (permissions) => new MatTableDataSource<TeamPermissionModel>(permissions)
-    )
+      (permissions) => new MatTableDataSource<TeamPermissionModel>(permissions),
+    ),
   );
 
   public roles$ = this.roleService.roles$;
@@ -64,7 +65,7 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
     map((x) => {
       const columnNames = x.map((y) => y.name);
       return ['permissions', ...columnNames];
-    })
+    }),
   );
 
   ngOnInit(): void {
@@ -102,7 +103,7 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
   setPermission(
     permission: TeamPermissionModel,
     role: TeamRole,
-    event: MatCheckboxChange
+    event: MatCheckboxChange,
   ) {
     if (permission.name == this.allPermission) {
       role.allPermissions = event.checked;
@@ -153,17 +154,16 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
   }
 
   deleteRole(role: TeamRole) {
-    this.dialogService
-      .confirm(
-        'Delete Role?',
-        `Are you sure you want to delete ${role.name}?`,
-        {
-          buttonTrueText: 'Delete',
-          buttonFalseText: 'Cancel',
-        }
-      )
-      .subscribe((result) => {
-        if (result.confirm) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete Role?',
+        message: `Are you sure you want to delete ${role.name}?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.roleService.deleteRole(role.id).subscribe();
         }
       });

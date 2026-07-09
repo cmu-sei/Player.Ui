@@ -11,15 +11,14 @@ import { ApplicationService, FileModel } from '../../../generated/player-api';
 import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 
 @Component({
-    selector: 'app-create-application-dialog',
-    templateUrl: './create-application-dialog.component.html',
-    styleUrls: ['./create-application-dialog.component.scss'],
-    standalone: false
+  selector: 'app-create-application-dialog',
+  templateUrl: './create-application-dialog.component.html',
+  styleUrls: ['./create-application-dialog.component.scss'],
+  standalone: false,
 })
 export class CreateApplicationDialogComponent implements OnInit {
   @Input() applicationId: string;
   @Input() file: FileModel;
-  @Input() viewName: string;
   @Input() currentTeams: TeamUserApp[];
 
   form: UntypedFormGroup;
@@ -27,7 +26,7 @@ export class CreateApplicationDialogComponent implements OnInit {
   constructor(
     public formBuilder: UntypedFormBuilder,
     private applicationService: ApplicationService,
-    private dialogRef: MatDialogRef<CreateApplicationDialogComponent>
+    private dialogRef: MatDialogRef<CreateApplicationDialogComponent>,
   ) {}
 
   ngOnInit(): void {
@@ -60,13 +59,6 @@ export class CreateApplicationDialogComponent implements OnInit {
 
     this.dialogRef.close({
       teams: teams,
-    });
-  }
-
-  cancel() {
-    // The user does not want the teams to have the application
-    this.dialogRef.close({
-      teams: [],
     });
   }
 }
