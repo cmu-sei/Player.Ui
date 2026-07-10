@@ -91,5 +91,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 </mat-toolbar>
 
 <ng-template #userPresenceDialog>
-  <app-user-presence [viewId]="viewId" (closeMe)="closeUserPresence()"></app-user-presence>
+  <app-user-presence
+    [viewId]="viewId"
+    [teamId]="team?.id"
+    (closeMe)="closeUserPresence()"
+  ></app-user-presence>
 </ng-template>

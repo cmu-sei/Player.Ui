@@ -13,9 +13,16 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatAccordion } from '@angular/material/expansion';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { debounceTime, map } from 'rxjs/operators';
-import { Team, TeamService } from '../../../../generated/player-api';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { debounceTime, map, shareReplay, switchMap } from 'rxjs/operators';
+import {
+  Team,
+  TeamPermission,
+  TeamPermissionsClaim,
+  TeamPermissionService,
+  TeamService,
+  ViewPermission,
+} from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
 
@@ -27,23 +34,47 @@ import { NotificationService } from '../../../../services/notification/notificat
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
   @Input() viewId: string;
+  @Input() teamId?: string;
   @Output() closeMe = new EventEmitter<any>();
 
   public _teams: Observable<Array<Team>>;
   public hideInactive = false;
+  private presenceTeamId?: string;
 
   constructor(
     private notificationService: NotificationService,
-    private teamService: TeamService
+    private teamService: TeamService,
+    private teamPermissionService: TeamPermissionService
   ) {}
 
   ngOnInit(): void {
     this._teams = this.teamService
       .getMyViewTeams(this.viewId)
       .pipe(
-        map((x) => x.sort((a: Team, b: Team) => (a.name < b.name ? -1 : 1)))
+        switchMap((teams) => {
+          const activeTeam = this.getActiveTeam(teams);
+          this.presenceTeamId = this.teamId ?? activeTeam?.id;
+          this.notificationService.joinPresence(this.viewId, this.presenceTeamId);
+
+          if (!activeTeam?.id) {
+            return of([]);
+          }
+
+          return this.teamPermissionService
+            .getMyTeamPermissions(undefined, activeTeam.id, false)
+            .pipe(
+              map((claims) =>
+                this.filterTeamsForPresence(teams, activeTeam, claims[0])
+              )
+            );
+        }),
+        map((x) =>
+          x.sort((a: Team, b: Team) =>
+            (a.name ?? '') < (b.name ?? '') ? -1 : 1
+          )
+        ),
+        shareReplay({ bufferSize: 1, refCount: true })
       );
-    this.notificationService.joinPresence(this.viewId);
   }
 
   @ViewChild(MatAccordion) accordion: MatAccordion;
@@ -71,6 +102,44 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
     return item.id;
   }
 
+  private getActiveTeam(teams: Team[]): Team | undefined {
+    return (
+      teams.find((team) => team.id === this.teamId) ??
+      teams.find((team) => team.isPrimary)
+    );
+  }
+
+  private filterTeamsForPresence(
+    teams: Team[],
+    activeTeam: Team,
+    claim?: TeamPermissionsClaim
+  ): Team[] {
+    const permissionValues = claim?.permissionValues ?? [];
+
+    if (
+      permissionValues.includes(ViewPermission.ViewView) ||
+      permissionValues.includes(ViewPermission.ManageView)
+    ) {
+      return teams;
+    }
+
+    const visibleTeamIds = new Set<string>();
+    if (activeTeam.id) {
+      visibleTeamIds.add(activeTeam.id);
+    }
+
+    if (
+      permissionValues.includes(TeamPermission.ViewTeam) ||
+      permissionValues.includes(TeamPermission.ManageTeam)
+    ) {
+      activeTeam.scopedTeamIds?.forEach((teamId) => visibleTeamIds.add(teamId));
+    }
+
+    return teams.filter(
+      (team) => team.id != null && visibleTeamIds.has(team.id)
+    );
+  }
+
   public getPresenceByTeamId(teamId: string): Observable<ViewPresence[]> {
     return this.notificationService.userPresence$.pipe(
       map((x) => x.filter((y) => y.teamIds.includes(teamId))),
@@ -90,6 +159,6 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.notificationService.leavePresence(this.viewId);
+    this.notificationService.leavePresence(this.viewId, this.presenceTeamId);
   }
 }
