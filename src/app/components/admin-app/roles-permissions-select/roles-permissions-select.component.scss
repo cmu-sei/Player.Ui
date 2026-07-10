@@ -1,6 +1,70 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-.mat-form-field {
-  width: 100%;
+.roles-permissions-select {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roles-permissions-select--team mat-form-field {
+  max-width: 100%;
+  width: 360px;
+}
+
+.roles-permissions-select--user {
+  align-items: center;
+  display: inline-flex;
+  flex-direction: row;
+  gap: 0;
+  vertical-align: middle;
+  width: auto;
+}
+
+.roles-permissions-select--user mat-form-field {
+  max-width: 100%;
+  width: 180px;
+}
+
+.scope-help {
+  align-items: center;
+  color: var(--mat-sys-primary);
+  cursor: help;
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  line-height: 1;
+  margin-right: -6px;
+  padding: 0;
+  width: 32px;
+}
+
+.scope-help mat-icon {
+  font-size: 20px;
+  height: 24px;
+  line-height: 24px;
+  width: 24px;
+}
+
+.role-included {
+  background: var(--mat-sys-surface-container-highest);
+  border-radius: 999px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 12px;
+  margin-left: 8px;
+  padding: 2px 8px;
+}
+
+.role-included-name {
+  color: var(--mat-sys-on-surface-variant);
+  opacity: 0.68;
+}
+
+.role-included-option {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.selected-permission-count {
+  color: var(--mat-sys-on-surface-variant);
+  margin-left: 4px;
 }

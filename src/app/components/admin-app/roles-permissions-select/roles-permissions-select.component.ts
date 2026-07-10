@@ -13,7 +13,8 @@ import {
   Team,
   UserService,
   TeamService,
-  Permission,
+  TeamPermissionModel,
+  TeamRole,
 } from '../../../generated/player-api';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { TeamPermissionsService } from '../../../services/permissions/team-permissions.service';
@@ -27,10 +28,10 @@ export enum ObjectType {
 }
 
 @Component({
-    selector: 'app-roles-permissions-select',
-    templateUrl: './roles-permissions-select.component.html',
-    styleUrls: ['./roles-permissions-select.component.scss'],
-    standalone: false
+  selector: 'app-roles-permissions-select',
+  templateUrl: './roles-permissions-select.component.html',
+  styleUrls: ['./roles-permissions-select.component.scss'],
+  standalone: false,
 })
 export class RolesPermissionsSelectComponent implements OnInit {
   @Input() user: User;
@@ -102,22 +103,31 @@ export class RolesPermissionsSelectComponent implements OnInit {
    * Updates the permission through the API
    * @param permission The permission object
    */
-  updatePermissions(permission: Permission, checked: boolean) {
-    const index = this.subject.permissions.findIndex(
-      (x) => x.id === permission.id
-    );
+  updatePermissions(permission: TeamPermissionModel, checked: boolean) {
+    const permissions = this.subject.permissions ?? [];
+    const index = permissions.findIndex((x) => x.id === permission.id);
+
     switch (this.subjectType) {
       case ObjectType.User:
         break;
 
       case ObjectType.Team:
         if (checked) {
-          this.subject.permissions.push(permission);
+          if (!this.subject.permissions) {
+            this.subject.permissions = [];
+          }
+
+          if (index === -1) {
+            this.subject.permissions.push(permission);
+          }
+
           this.teamPermissionsService
             .addToTeam(this.team.id, permission.id)
             .subscribe();
         } else {
-          this.subject.permissions.slice(index);
+          this.subject.permissions = permissions.filter(
+            (x) => x.id !== permission.id
+          );
           this.teamPermissionsService
             .removeFromTeam(this.team.id, permission.id)
             .subscribe();
@@ -178,5 +188,47 @@ export class RolesPermissionsSelectComponent implements OnInit {
       default:
         break;
     }
+  }
+
+  getSelectedRolePermissions(
+    roles: TeamRole[],
+    permissions: TeamPermissionModel[]
+  ): TeamPermissionModel[] {
+    const selectedRole = roles.find((role) => role.id === this.subject?.roleId);
+
+    if (selectedRole?.allPermissions) {
+      return this.sortPermissions(permissions);
+    }
+
+    return this.sortPermissions(selectedRole?.permissions ?? []);
+  }
+
+  isPermissionGrantedByRole(
+    permission: TeamPermissionModel,
+    rolePermissions: TeamPermissionModel[]
+  ): boolean {
+    return rolePermissions.some((rolePermission) =>
+      permission.id
+        ? rolePermission.id === permission.id
+        : rolePermission.name === permission.name
+    );
+  }
+
+  getSelectedPermissionNames(permissions: TeamPermissionModel[]): string[] {
+    return this.selectedPermissions
+      .map((permissionId) =>
+        permissions.find((permission) => permission.id === permissionId)
+      )
+      .filter((permission): permission is TeamPermissionModel => !!permission)
+      .map((permission) => permission.name)
+      .filter((permissionName): permissionName is string => !!permissionName);
+  }
+
+  private sortPermissions(
+    permissions: TeamPermissionModel[]
+  ): TeamPermissionModel[] {
+    return [...permissions].sort((a, b) =>
+      (a.name ?? '').localeCompare(b.name ?? '')
+    );
   }
 }
