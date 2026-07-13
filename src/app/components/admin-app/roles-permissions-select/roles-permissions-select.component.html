@@ -15,7 +15,6 @@ to use this component, add one of the following lines to the html of your edit p
 <div
   class="roles-permissions-select"
   [class.roles-permissions-select--team]="showPermissions"
-  [class.roles-permissions-select--user]="!showPermissions"
 >
   <mat-form-field subscriptSizing="dynamic">
     <mat-label>Role</mat-label>
@@ -62,22 +61,13 @@ to use this component, add one of the following lines to the html of your edit p
         @for (item of permissions ?? []; track item.id) {
           <mat-option
             [value]="item.id"
-            [class.role-included-option]="
-              isPermissionGrantedByRole(item, rolePermissions)
-            "
             (onSelectionChange)="
               $event.isUserInput
                 ? updatePermissions(item, $event.source.selected)
                 : null
             "
           >
-            <span
-              [class.role-included-name]="
-                isPermissionGrantedByRole(item, rolePermissions)
-              "
-            >
-              {{ item.key ?? item.name }}
-            </span>
+            <span>{{ item.key ?? item.name }}</span>
             @if (isPermissionGrantedByRole(item, rolePermissions)) {
               <span class="role-included">Included in role</span>
             }
@@ -90,12 +80,13 @@ to use this component, add one of the following lines to the html of your edit p
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>Scoped Teams</mat-label>
         <button
-          matSuffix
+          matPrefix
           mat-icon-button
           class="scope-help"
           type="button"
           matTooltip="Users on this team will also have these permissions applied to the selected scoped teams."
           aria-label="Scoped Teams help"
+          (click)="$event.stopPropagation()"
         >
           <mat-icon fontIcon="mdi-information-outline"></mat-icon>
         </button>
