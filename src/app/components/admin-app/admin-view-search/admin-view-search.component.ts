@@ -7,15 +7,12 @@ import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
 import { map } from 'rxjs';
-import {
-  MatDialog,
-  MatDialogRef,
-} from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 export interface Action {
   Value: string;
@@ -23,10 +20,10 @@ export interface Action {
 }
 
 @Component({
-    selector: 'app-admin-view-search',
-    templateUrl: './admin-view-search.component.html',
-    styleUrls: ['./admin-view-search.component.scss'],
-    standalone: false
+  selector: 'app-admin-view-search',
+  templateUrl: './admin-view-search.component.html',
+  styleUrls: ['./admin-view-search.component.scss'],
+  standalone: false,
 })
 export class AdminViewSearchComponent implements OnInit {
   @ViewChild(AdminViewEditComponent, { static: true })
@@ -58,10 +55,10 @@ export class AdminViewSearchComponent implements OnInit {
   constructor(
     private viewService: ViewService,
     public loggedInUserService: LoggedInUserService,
-    public dialogService: DialogService,
+    private confirmDialogService: CrucibleDialogService,
     public route: ActivatedRoute,
     public router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {}
 
   /**
@@ -131,17 +128,26 @@ export class AdminViewSearchComponent implements OnInit {
             title = 'Deactivate View?';
             activation = ViewStatus.Inactive;
           }
-          this.dialogService.confirm(title, msg).subscribe((result) => {
-            if (result['confirm']) {
-              view.status = activation;
-              this.viewService
-                .updateView(viewGuid, view)
-                .subscribe((updateview) => {
-                  console.log('successfully updated view ' + updateview.name);
-                  this.refreshViews();
-                });
-            }
-          });
+          this.confirmDialogService
+            .confirm({
+              title,
+              message: msg,
+              confirmText:
+                activation === ViewStatus.Active ? 'Activate' : 'Deactivate',
+              cancelText: 'Cancel',
+            })
+            .afterClosed()
+            .subscribe((confirmed) => {
+              if (confirmed) {
+                view.status = activation;
+                this.viewService
+                  .updateView(viewGuid, view)
+                  .subscribe((updateview) => {
+                    console.log('successfully updated view ' + updateview.name);
+                    this.refreshViews();
+                  });
+              }
+            });
         });
         break;
       }
@@ -190,7 +196,7 @@ export class AdminViewSearchComponent implements OnInit {
         map((views) => {
           this.viewDataSource.data = views;
           this.isLoading = false;
-        })
+        }),
       )
       .subscribe();
   }
@@ -202,7 +208,7 @@ export class AdminViewSearchComponent implements OnInit {
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: { view: null },
-        queryParamsHandling: 'merge'
+        queryParamsHandling: 'merge',
       });
     }
 
@@ -234,16 +240,15 @@ export class AdminViewSearchComponent implements OnInit {
     this.isAllSelected()
       ? this.selection.clear()
       : this.viewDataSource.filteredData.forEach((row) =>
-          this.selection.select(row.id)
+          this.selection.select(row.id),
         );
   }
 
   openDialog(templateRef: TemplateRef<any>) {
     this.dialogRef = this.dialog.open(templateRef, {
-      disableClose: true,
       autoFocus: true,
-      minHeight: '250px',
-      width: '350px',
+      width: '480px',
+      maxWidth: '90vw',
     });
   }
 

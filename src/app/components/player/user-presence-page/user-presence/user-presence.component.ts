@@ -27,6 +27,7 @@ import { NotificationService } from '../../../../services/notification/notificat
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
   @Input() viewId: string;
+  @Input() showCloseButton = true;
   @Output() closeMe = new EventEmitter<any>();
 
   public _teams: Observable<Array<Team>>;

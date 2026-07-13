@@ -8,8 +8,10 @@ import {
   Output,
   NgZone,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { ErrorStateMatcher } from '@angular/material/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MatStepper } from '@angular/material/stepper';
 import {
   UntypedFormControl,
@@ -34,6 +36,7 @@ import {
 } from '../../../../generated/player-api';
 import { User } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -59,6 +62,13 @@ export class TeamUserApp {
   standalone: false,
 })
 export class AdminViewEditComponent implements OnInit {
+  private readonly matDialogRef = inject<MatDialogRef<AdminViewEditComponent>>(
+    MatDialogRef,
+    { optional: true },
+  );
+
+  public readonly isDialog = this.matDialogRef !== null;
+
   @Output() editComplete = new EventEmitter<string>();
   @ViewChild(ViewApplicationsSelectComponent)
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
@@ -106,6 +116,7 @@ export class AdminViewEditComponent implements OnInit {
     public viewService: ViewService,
     public teamService: TeamService,
     public dialogService: DialogService,
+    private confirmDialogService: CrucibleDialogService,
     public userService: UserService,
     public fileService: FileService,
     public applicationService: ApplicationService,
@@ -258,13 +269,17 @@ export class AdminViewEditComponent implements OnInit {
    * Delete an view after confirmation
    */
   deleteView(): void {
-    this.dialogService
-      .confirm(
-        'Delete View',
-        'Are you sure that you want to delete view ' + this.view.name + '?',
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete View',
+        message:
+          'Are you sure that you want to delete view ' + this.view.name + '?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.viewService
             .deleteView(this.view.id)
             .pipe(take(1))
@@ -334,13 +349,16 @@ export class AdminViewEditComponent implements OnInit {
    * @param tm The team to delete
    */
   deleteTeam(tm: Team): void {
-    this.dialogService
-      .confirm(
-        'Delete View',
-        'Are you sure that you want to delete team ' + tm.name + '?',
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete Team',
+        message: 'Are you sure that you want to delete team ' + tm.name + '?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.teamService.deleteTeam(tm.id).subscribe(() => {
             console.log('successfully deleted team');
             this.updateViewTeams();
@@ -380,6 +398,9 @@ export class AdminViewEditComponent implements OnInit {
           { maxWidth: '100vw', width: 'auto' },
         )
         .subscribe((result) => {
+          if (!result?.['teamUsers']) {
+            return;
+          }
           this.teams.find((t) => t.team.id === team.id).users =
             result['teamUsers'];
         });
@@ -498,7 +519,7 @@ export class AdminViewEditComponent implements OnInit {
    */
   toggleAllTeamsForFile(checked: boolean) {
     if (checked) {
-      this.teamsForFile = this.teams.map(t => t.team.id);
+      this.teamsForFile = this.teams.map((t) => t.team.id);
     } else {
       this.teamsForFile = [];
     }
@@ -509,9 +530,10 @@ export class AdminViewEditComponent implements OnInit {
    * Unchecks "Select All" if not all teams are selected
    */
   onTeamsForFileChange() {
-    const allTeamIds = this.teams.map(t => t.team.id);
-    const allSelected = allTeamIds.length === this.teamsForFile.length &&
-                        allTeamIds.every(id => this.teamsForFile.includes(id));
+    const allTeamIds = this.teams.map((t) => t.team.id);
+    const allSelected =
+      allTeamIds.length === this.teamsForFile.length &&
+      allTeamIds.every((id) => this.teamsForFile.includes(id));
     this.selectAllTeamsForFile = allSelected;
   }
 
@@ -581,10 +603,16 @@ export class AdminViewEditComponent implements OnInit {
    * @param name: The name of the file
    */
   deleteFile(id: string, name: string) {
-    this.dialogService
-      .confirm('Delete File?', 'Are you sure you want to delete file ' + name)
-      .subscribe((result) => {
-        if (result['confirm']) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete File?',
+        message: 'Are you sure you want to delete file ' + name,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.fileService.deleteFile(id).subscribe((resp) => {
             if (resp != null) {
               window.alert('Error deleting file');
@@ -634,7 +662,7 @@ export class AdminViewEditComponent implements OnInit {
         (application) => {
           this.appNames.push(application.name);
           this.dialogService
-            .createApplication(application.id, file, this.view.name, this.teams)
+            .createApplication(application.id, file, this.teams)
             .subscribe((val) => {
               if (val !== undefined) {
                 console.log('Create app for teams:  ', val);
@@ -690,7 +718,7 @@ export class AdminViewEditComponent implements OnInit {
       .subscribe({
         error: (err) => {
           console.error('Error updating file teams:', err);
-        }
+        },
       });
   }
 
@@ -702,9 +730,11 @@ export class AdminViewEditComponent implements OnInit {
     if (!file.teamIds || !this.teams) {
       return false;
     }
-    const allTeamIds = this.teams.map(t => t.team.id);
-    return allTeamIds.length === file.teamIds.length &&
-           allTeamIds.every(id => file.teamIds.includes(id));
+    const allTeamIds = this.teams.map((t) => t.team.id);
+    return (
+      allTeamIds.length === file.teamIds.length &&
+      allTeamIds.every((id) => file.teamIds.includes(id))
+    );
   }
 
   /**
@@ -714,14 +744,14 @@ export class AdminViewEditComponent implements OnInit {
    */
   toggleAllTeamsForViewFile(checked: boolean, file: FileModel) {
     if (checked) {
-      file.teamIds = this.teams.map(t => t.team.id);
+      file.teamIds = this.teams.map((t) => t.team.id);
       this.fileService
         .updateFile(file.id, file.name, file.teamIds, null)
         .pipe(take(1))
         .subscribe({
           error: (err) => {
             console.error('Error updating file teams:', err);
-          }
+          },
         });
     } else {
       // Allow clearing teams in UI, but don't save until at least one team is selected

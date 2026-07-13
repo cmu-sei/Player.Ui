@@ -91,5 +91,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 </mat-toolbar>
 
 <ng-template #userPresenceDialog>
-  <app-user-presence [viewId]="viewId" (closeMe)="closeUserPresence()"></app-user-presence>
+  <crucible-dialog dialogTitle="Users" [hideDefaultActions]="true">
+    <div crucibleDialogContent>
+      <app-user-presence
+        [viewId]="viewId"
+        [showCloseButton]="false"
+        (closeMe)="closeUserPresence()"
+      ></app-user-presence>
+    </div>
+    <ng-container crucibleDialogActions>
+      <button matButton="filled" mat-dialog-close>Close</button>
+    </ng-container>
+  </crucible-dialog>
 </ng-template>

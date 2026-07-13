@@ -15,7 +15,6 @@ import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { SafeHtml } from '@angular/platform-browser';
 
 export interface Action {
   Value: string;
@@ -152,8 +151,9 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
 
   openDialog(templateRef: TemplateRef<any>) {
     this.dialogRef = this.dialog.open(templateRef, {
-      disableClose: true,
       autoFocus: true,
+      width: '480px',
+      maxWidth: '90vw',
     });
   }
 
