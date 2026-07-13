@@ -3,24 +3,22 @@
 
 import {
   Component,
-  OnInit,
-  Input,
   ChangeDetectionStrategy,
   Output,
   EventEmitter,
+  Optional,
 } from '@angular/core';
 import {
   UntypedFormGroup,
   UntypedFormBuilder,
   Validators,
 } from '@angular/forms';
+import { MatDialogRef } from '@angular/material/dialog';
 import {
   ApplicationService,
-  ArchiveType,
   ImportApplicationTemplatesResult,
 } from '../../../generated/player-api';
-import { BehaviorSubject, finalize, Observable, tap } from 'rxjs';
-import { ApplicationsService } from '../../../services/applications/applications.service';
+import { BehaviorSubject, finalize, tap } from 'rxjs';
 
 @Component({
     selector: 'app-admin-app-template-import',
@@ -39,6 +37,7 @@ export class AdminAppTemplateImportComponent {
   loading = false;
   resultSubject = new BehaviorSubject<ImportApplicationTemplatesResult>(null);
   result$ = this.resultSubject.asObservable();
+  private completeEmitted = false;
 
   onFileSelected(event: any): void {
     this.form.patchValue({ archive: event.target.files[0] ?? null });
@@ -46,11 +45,19 @@ export class AdminAppTemplateImportComponent {
 
   constructor(
     private applicationService: ApplicationService,
-    formBuilder: UntypedFormBuilder
+    formBuilder: UntypedFormBuilder,
+    @Optional()
+    private dialogRef?: MatDialogRef<AdminAppTemplateImportComponent>
   ) {
     this.form = formBuilder.group({
       archive: [null, Validators.required],
       overwriteExisting: [false, Validators.required],
+    });
+
+    this.dialogRef?.beforeClosed().subscribe(() => {
+      if (this.finished.value) {
+        this.emitComplete();
+      }
     });
   }
 
@@ -59,6 +66,15 @@ export class AdminAppTemplateImportComponent {
   }
 
   cancel() {
+    this.emitComplete();
+  }
+
+  private emitComplete() {
+    if (this.completeEmitted) {
+      return;
+    }
+
+    this.completeEmitted = true;
     this.complete.emit(false);
   }
 

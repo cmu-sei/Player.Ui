@@ -1,6 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+import { A11yModule } from '@angular/cdk/a11y';
 import { CdkTableModule } from '@angular/cdk/table';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
@@ -49,6 +50,7 @@ import {
   ComnSettingsModule,
   ComnSettingsService,
   ComnHeaderBarModule,
+  CRUCIBLE_DIALOG_IMPORTS,
 } from '@cmusei/crucible-common';
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
@@ -60,10 +62,6 @@ import { AppService } from './app.service';
 import { AdminAppTemplateSearchComponent } from './components/admin-app/admin-app-template-search/admin-app-template-search.component';
 import { AdminTemplateDetailsComponent } from './components/admin-app/admin-app-template-search/admin-template-details/admin-template-details.component';
 import { AdminAppComponent } from './components/admin-app/admin-app.component';
-import { AdminRolePermissionSearchComponent } from './components/admin-app/admin-role-permission-search/admin-role-permission-search.component';
-import { CreatePermissionDialogComponent } from './components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
-import { CreateRoleDialogComponent } from './components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
-import { SelectRolePermissionsDialogComponent } from './components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
 import { AdminUserEditComponent } from './components/admin-app/admin-user-search/admin-user-edit/admin-user-edit.component';
 import { AdminUserSearchComponent } from './components/admin-app/admin-user-search/admin-user-search.component';
 import { AdminViewEditComponent } from './components/admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
@@ -78,7 +76,6 @@ import { FocusedAppComponent } from './components/player/focused-app/focused-app
 import { NotificationsComponent } from './components/player/notifications/notifications.component';
 import { PlayerComponent } from './components/player/player.component';
 import { AddRemoveUsersDialogComponent } from './components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
-import { ConfirmDialogComponent } from './components/shared/confirm-dialog/confirm-dialog.component';
 import { SystemMessageComponent } from './components/shared/system-message/system-message.component';
 import { TopbarComponent } from './components/shared/top-bar/topbar.component';
 import { BASE_PATH } from './generated/player-api';
@@ -172,16 +169,11 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         PlayerComponent,
         HomeAppComponent,
         ViewListComponent,
-        ConfirmDialogComponent,
-        CreatePermissionDialogComponent,
-        CreateRoleDialogComponent,
-        SelectRolePermissionsDialogComponent,
         SystemMessageComponent,
         AdminAppComponent,
         AdminViewSearchComponent,
         AdminUserSearchComponent,
         AdminAppTemplateSearchComponent,
-        AdminRolePermissionSearchComponent,
         AdminUserEditComponent,
         AdminViewEditComponent,
         AddRemoveUsersDialogComponent,
@@ -222,6 +214,8 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         ComnSettingsModule.forRoot(),
         ComnAuthModule.forRoot(),
         ComnHeaderBarModule,
+        A11yModule,
+        ...CRUCIBLE_DIALOG_IMPORTS,
         TableVirtualScrollModule,
         ResizableModule], providers: [
         AppService,

@@ -40,9 +40,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >Hide Offline</mat-checkbox
       >
     </span>
+    @if (showCloseButton) {
     <span class="me-1">
       <button
         mat-icon-button
+        mat-dialog-close
         (click)="closeMe.emit()"
         title="Close"
         tabindex="-1"
@@ -53,6 +55,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         ></mat-icon>
       </button>
     </span>
+    }
   </div>
 
   <mat-accordion multi>

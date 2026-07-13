@@ -4,16 +4,12 @@
 import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Injectable } from '@angular/core';
-import { ConfirmDialogComponent } from '../../components/shared/confirm-dialog/confirm-dialog.component';
 import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
 import {
   FileModel,
   Team,
   WebhookSubscription,
 } from '../../generated/player-api';
-import { CreatePermissionDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-permission-dialog/create-permission-dialog.component';
-import { CreateRoleDialogComponent } from '../../components/admin-app/admin-role-permission-search/create-role-dialog/create-role-dialog.component';
-import { SelectRolePermissionsDialogComponent } from '../../components/admin-app/admin-role-permission-search/select-role-permissions-dialog/select-role-permissions-dialog.component';
 import { EditFileDialogComponent } from '../../components/shared/edit-file-dialog/edit-file-dialog.component';
 import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from '../../components/shared/create-application-dialog/create-application-dialog.component';
@@ -22,73 +18,16 @@ import { NameDialogComponent } from '../../components/shared/name-dialog/name-di
 
 @Injectable()
 export class DialogService {
-  public WAS_CANCELLED = 'wasCancelled';
-
   constructor(private dialog: MatDialog) {}
-
-  public confirm(title: string, message: string, data?: any): Observable<any> {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: data || {},
-    });
-    dialogRef.componentInstance.title = title;
-    dialogRef.componentInstance.message = message;
-
-    return dialogRef.afterClosed();
-  }
 
   public name(title: string, message: string, data?: any): Observable<any> {
     const dialogRef = this.dialog.open(NameDialogComponent, {
       data: data || {},
+      minWidth: '400px',
+      maxWidth: '90vw',
     });
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.message = message;
-
-    return dialogRef.afterClosed();
-  }
-
-  public createPermission(
-    title: string,
-    permission: any,
-    configData?: any
-  ): Observable<boolean> {
-    const dialogRef = this.dialog.open(
-      CreatePermissionDialogComponent,
-      configData || {}
-    );
-    dialogRef.componentInstance.title = title;
-    dialogRef.componentInstance.permission = permission;
-
-    return dialogRef.afterClosed();
-  }
-
-  public createRole(
-    title: string,
-    name: string,
-    configData?: any
-  ): Observable<boolean> {
-    const dialogRef = this.dialog.open(
-      CreateRoleDialogComponent,
-      configData || {}
-    );
-    dialogRef.componentInstance.title = title;
-    dialogRef.componentInstance.name = name;
-
-    return dialogRef.afterClosed();
-  }
-
-  public selectRolePermissions(
-    title: string,
-    role: any,
-    permissions: any[],
-    configData?: any
-  ): Observable<boolean> {
-    const dialogRef = this.dialog.open(
-      SelectRolePermissionsDialogComponent,
-      configData || {}
-    );
-    dialogRef.componentInstance.title = title;
-    dialogRef.componentInstance.role = role;
-    dialogRef.componentInstance.permissions = permissions;
 
     return dialogRef.afterClosed();
   }
@@ -97,11 +36,11 @@ export class DialogService {
     title: string,
     team: Team,
     configData?: any,
-    canManageRoles = true
+    canManageRoles = true,
   ): Observable<boolean> {
     const dialogRef = this.dialog.open(
       AddRemoveUsersDialogComponent,
-      configData || {}
+      this.withDialogDefaults(configData),
     );
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.canManageRoles = canManageRoles;
@@ -113,9 +52,12 @@ export class DialogService {
     fileId: string,
     viewId: string,
     oldName: string,
-    oldTeams: string[]
+    oldTeams: string[],
   ): Observable<boolean> {
-    const dialogRef = this.dialog.open(EditFileDialogComponent);
+    const dialogRef = this.dialog.open(
+      EditFileDialogComponent,
+      this.withDialogDefaults(),
+    );
     dialogRef.componentInstance.fileId = fileId;
     dialogRef.componentInstance.viewId = viewId;
     dialogRef.componentInstance.oldName = oldName;
@@ -124,9 +66,12 @@ export class DialogService {
   }
 
   public editSubscription(
-    subscription?: WebhookSubscription
+    subscription?: WebhookSubscription,
   ): Observable<boolean> {
-    const dialogRef = this.dialog.open(EditSubscriptionComponent);
+    const dialogRef = this.dialog.open(EditSubscriptionComponent, {
+      width: '500px',
+      maxWidth: '90vw',
+    });
     dialogRef.componentInstance.currentSub = subscription;
     return dialogRef.afterClosed();
   }
@@ -134,14 +79,23 @@ export class DialogService {
   public createApplication(
     applicationId: string,
     file: FileModel,
-    viewName: string,
-    currentTeams: TeamUserApp[]
+    currentTeams: TeamUserApp[],
   ): Observable<boolean> {
-    const dialogRef = this.dialog.open(CreateApplicationDialogComponent);
+    const dialogRef = this.dialog.open(CreateApplicationDialogComponent, {
+      width: '480px',
+      maxWidth: '90vw',
+    });
     dialogRef.componentInstance.applicationId = applicationId;
     dialogRef.componentInstance.file = file;
-    dialogRef.componentInstance.viewName = viewName;
     dialogRef.componentInstance.currentTeams = currentTeams;
     return dialogRef.afterClosed();
+  }
+
+  private withDialogDefaults(configData?: any): any {
+    return {
+      minWidth: '400px',
+      maxWidth: '90vw',
+      ...(configData || {}),
+    };
   }
 }

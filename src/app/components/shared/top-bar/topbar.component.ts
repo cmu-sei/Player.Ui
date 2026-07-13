@@ -13,7 +13,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
+import {
+  ComnAuthQuery,
+  ComnAuthService,
+  CrucibleDialogService,
+  Theme,
+} from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { filter, map, takeUntil } from 'rxjs/operators';
@@ -21,13 +26,10 @@ import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-
 import { ManageTeamsComponent } from '../../player/manage-teams/manage-teams.component';
 import { UserPresenceComponent } from '../../player/user-presence-page/user-presence/user-presence.component';
 import { TopbarView } from './topbar.models';
-import { Router } from '@angular/router';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import {
   SystemPermission,
-  TeamPermission,
   ViewPermission,
 } from '../../../generated/player-api';
 
@@ -77,7 +79,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     private loggedInUserService: LoggedInUserService,
     private authQuery: ComnAuthQuery,
     private dialog: MatDialog,
-    private dialogService: DialogService,
+    private confirmDialogService: CrucibleDialogService,
     private snackbar: MatSnackBar,
     private permissionsService: UserPermissionsService,
   ) {}
@@ -148,13 +150,16 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   resetUI() {
-    this.dialogService
-      .confirm(
-        'Reset UI?',
-        `Are you sure that you want to reset your UI preferences for the ${this.team.name} Team?`,
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Reset UI?',
+        message: `Are you sure that you want to reset your UI preferences for the ${this.team.name} Team?`,
+        confirmText: 'Reset',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           localStorage.removeItem(this.team.id);
           window.location.reload();
         }

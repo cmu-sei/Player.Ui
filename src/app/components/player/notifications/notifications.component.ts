@@ -3,19 +3,21 @@
 
 import { Component, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { ComnSettingsService } from '@cmusei/crucible-common';
+import {
+  ComnSettingsService,
+  CrucibleDialogService,
+} from '@cmusei/crucible-common';
 import { NotificationDataStatus } from '../../../models/notification-data';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import { NotificationService } from '../../../services/notification/notification.service';
 import { ViewService } from '../../../generated/player-api/api/view.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-    selector: 'app-notifications',
-    templateUrl: './notifications.component.html',
-    styleUrls: ['./notifications.component.scss'],
-    standalone: false
+  selector: 'app-notifications',
+  templateUrl: './notifications.component.html',
+  styleUrls: ['./notifications.component.scss'],
+  standalone: false,
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   @Input() viewGuid: string;
@@ -40,9 +42,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public constructor(
     private notificationService: NotificationService,
     private settingsService: ComnSettingsService,
-    private dialogService: DialogService,
+    private confirmDialogService: CrucibleDialogService,
     private viewService: ViewService,
-    private titleService: Title
+    private titleService: Title,
   ) {
     this.useBadge =
       this.settingsService.settings.NotificationsSettings.useBadge;
@@ -70,11 +72,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .subscribe((data) => {
         if (data != undefined && data.length > 0) {
           this.notificationsHistory = this.notificationsHistory.concat(
-            <Array<NotificationDataStatus>>data
+            <Array<NotificationDataStatus>>data,
           );
           this.notificationsHistory = this.notificationsHistory.sort(
             (a: NotificationDataStatus, b: NotificationDataStatus) =>
-              a.broadcastTime < b.broadcastTime ? 1 : -1
+              a.broadcastTime < b.broadcastTime ? 1 : -1,
           );
         }
       });
@@ -118,7 +120,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
           this.notificationsHistory.length = 0;
         } else {
           const index = this.notificationsHistory.findIndex(
-            (n) => n.key === +key
+            (n) => n.key === +key,
           );
           if (index > -1) {
             this.notificationsHistory.splice(index, 1);
@@ -130,7 +132,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.viewGuid,
       this.teamGuid,
       this.userGuid,
-      this.userToken
+      this.userToken,
     );
   }
 
@@ -140,21 +142,24 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   public sendMessage(): void {
     if (this.messageToSend.trim().length > 0) {
-      this.dialogService
-        .confirm(
-          'Confirm Message Send',
-          'Are you sure that you want to send a system wide message to all users logged into this view?',
-          null
-        )
-        .subscribe((result) => {
-          if (result['confirm'] == true) {
+      this.confirmDialogService
+        .confirm({
+          title: 'Confirm Message Send',
+          message:
+            'Are you sure that you want to send a system wide message to all users logged into this view?',
+          confirmText: 'Send',
+          cancelText: 'Cancel',
+        })
+        .afterClosed()
+        .subscribe((confirmed) => {
+          if (confirmed) {
             if (this.messageToSend.trim().length > 225) {
               // Trim after 225 characters
               this.messageToSend = this.messageToSend.trim().substring(0, 225);
             }
             this.notificationService.sendNotification(
               this.viewGuid,
-              this.messageToSend
+              this.messageToSend,
             );
             this.messageToSend = '';
           }
@@ -191,20 +196,24 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   deleteNotification(notification: NotificationDataStatus): void {
-    this.dialogService
-      .confirm(
-        'Delete Notification',
-        'This will delete this notification for EVERYONE in this view.  Are you sure that you want to delete notification:  ' +
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete Notification',
+        message:
+          'This will delete this notification for EVERYONE in this view.  Are you sure that you want to delete notification:  ' +
           notification.text +
-          '?'
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+          '?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.viewService
             .deleteNotification(this.viewGuid, notification.key)
             .subscribe(() => {
               const index = this.notificationsHistory.findIndex(
-                (n) => n.key === notification.key
+                (n) => n.key === notification.key,
               );
               if (index > -1) {
                 this.notificationsHistory.splice(index, 1);
@@ -216,13 +225,17 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   deleteViewNotifications(): void {
-    this.dialogService
-      .confirm(
-        'DELETE ALL NOTIFICATIONS!',
-        'This will delete all notifications for everyone in this view!  Are you sure that you want to delete ALL NOTIFICATIONS?'
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+    this.confirmDialogService
+      .confirm({
+        title: 'DELETE ALL NOTIFICATIONS!',
+        message:
+          'This will delete all notifications for everyone in this view!  Are you sure that you want to delete ALL NOTIFICATIONS?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.viewService
             .deleteViewNotifications(this.viewGuid)
             .subscribe(() => {
@@ -238,14 +251,14 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.titleService.setTitle(this.settingsService.settings.AppTitle);
     } else if (count === 1) {
       this.titleService.setTitle(
-        this.settingsService.settings.AppTitle + ' (1 Alert)'
+        this.settingsService.settings.AppTitle + ' (1 Alert)',
       );
     } else {
       this.titleService.setTitle(
         this.settingsService.settings.AppTitle +
           ' (' +
           count.toString() +
-          ' Alerts)'
+          ' Alerts)',
       );
     }
   }

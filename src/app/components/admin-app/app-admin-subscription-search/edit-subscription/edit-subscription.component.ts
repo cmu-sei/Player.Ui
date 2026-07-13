@@ -14,7 +14,6 @@ import {
   WebhookSubscription,
   WebhookSubscriptionForm,
 } from '../../../../generated/player-api';
-import { DialogService } from '../../../../services/dialog/dialog.service';
 
 @Component({
     selector: 'app-edit-subscription',
@@ -33,8 +32,7 @@ export class EditSubscriptionComponent implements OnInit {
   constructor(
     private webhookService: WebhookService,
     private formBuilder: UntypedFormBuilder,
-    private dialogRef: MatDialogRef<EditSubscriptionComponent>,
-    private dialogService: DialogService
+    private dialogRef: MatDialogRef<EditSubscriptionComponent>
   ) {}
 
   ngOnInit(): void {
@@ -84,27 +82,8 @@ export class EditSubscriptionComponent implements OnInit {
     }
   }
 
-  onDelete() {
-    this.dialogService
-      .confirm(
-        'Confirm Delete',
-        'Are you sure you want to delete this subscription?'
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
-          this.webhookService
-            .deleteWebhookSubscription(this.currentSub.id)
-            .pipe(take(1))
-            .subscribe({
-              next: () => {
-                this.dialogRef.close(false);
-              },
-              error: () => {
-                this.dialogRef.close(true);
-              },
-            });
-        }
-      });
+  onCancel() {
+    this.dialogRef.close(false);
   }
 
   editSecretChanged(change: MatCheckboxChange) {

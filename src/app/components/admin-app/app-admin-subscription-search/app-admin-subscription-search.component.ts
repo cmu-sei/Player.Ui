@@ -13,30 +13,37 @@ import {
   WebhookSubscription,
 } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 @Component({
-    selector: 'app-admin-subscription-search',
-    templateUrl: './app-admin-subscription-search.component.html',
-    styleUrls: ['./app-admin-subscription-search.component.scss'],
-    standalone: false
+  selector: 'app-admin-subscription-search',
+  templateUrl: './app-admin-subscription-search.component.html',
+  styleUrls: ['./app-admin-subscription-search.component.scss'],
+  standalone: false,
 })
 export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
-  public displayedColumns: string[] = ['name', 'lastError', 'eventTypes'];
+  public displayedColumns: string[] = [
+    'actions',
+    'name',
+    'eventTypes',
+    'lastError',
+  ];
   public editing = false;
   public filterStr = '';
   public unsubscribe$: Subject<null> = new Subject<null>();
 
   constructor(
     private webhookService: WebhookService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private confirmDialogService: CrucibleDialogService,
   ) {}
   ngOnInit(): void {
     // Initialize table
     this.dataSource = new MatTableDataSource<WebhookSubscription>(
-      new Array<WebhookSubscription>()
+      new Array<WebhookSubscription>(),
     );
     this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
     this.dataSource.sort = this.sort;
@@ -72,6 +79,25 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
         this.refreshSubs();
       }
     });
+  }
+
+  deleteSubscription(subscription: WebhookSubscription) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Confirm Delete',
+        message: 'Are you sure you want to delete ' + subscription.name + '?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.webhookService
+            .deleteWebhookSubscription(subscription.id)
+            .pipe(takeUntil(this.unsubscribe$))
+            .subscribe(() => this.refreshSubs());
+        }
+      });
   }
 
   applyFilter(filterStr: string) {

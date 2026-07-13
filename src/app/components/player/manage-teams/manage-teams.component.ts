@@ -10,6 +10,7 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 import {
@@ -44,6 +45,7 @@ interface ManageableTeam {
     MatIconModule,
     MatListModule,
     MatProgressSpinnerModule,
+    ...CRUCIBLE_DIALOG_IMPORTS,
   ],
 })
 export class ManageTeamsComponent {

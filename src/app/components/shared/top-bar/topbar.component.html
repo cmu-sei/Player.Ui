@@ -2,98 +2,137 @@
 Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<mat-toolbar class="toolbar" [style.backgroundColor]="'var(--mat-sys-primary)'"
-  [style.color]="'var(--mat-sys-on-primary)'">
+<mat-toolbar
+  class="toolbar"
+  [style.backgroundColor]="'var(--mat-sys-primary)'"
+  [style.color]="'var(--mat-sys-on-primary)'"
+>
   <mat-toolbar-row>
     <span class="margin-auto">
-      <a mat-icon-button style="outline: none; background-color: var(--mat-sys-on-primary);" [routerLink]="['/']">
+      <a
+        mat-icon-button
+        style="outline: none; background-color: var(--mat-sys-on-primary)"
+        [routerLink]="['/']"
+      >
         <mat-icon svgIcon="ic_crucible_player"></mat-icon>
       </a>
     </span>
     <span class="view-text">{{ title }}</span>
     @if (teams && team && teams.length > 0) {
-    <div class="team-text copy-text" ngxClipboard [cbContent]="team.id"
-      (cbOnSuccess)="openSnackBar('Copied Team Id to clipboard')" [matTooltip]="'Click to copy Team Id: ' + team.id">
-      Team:
-    </div>
-    <span class="team-text">{{ team.name }}</span>
-    @if (teams.length > 1) {
-    <div>
-      <button mat-button [matMenuTriggerFor]="teamMenu" matTooltip="Select a Team" aria-label="Select a Team">
-        <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
-      </button>
-      <mat-menu #teamMenu="matMenu" [overlapTrigger]="false">
-        @for (val of teams; track val) {
-        <button mat-menu-item (click)="setTeamFn(val.id)">
-          {{ val.name }}
-        </button>
-        }
-      </mat-menu>
-    </div>
-    }
+      <div
+        class="team-text copy-text"
+        ngxClipboard
+        [cbContent]="team.id"
+        (cbOnSuccess)="openSnackBar('Copied Team Id to clipboard')"
+        [matTooltip]="'Click to copy Team Id: ' + team.id"
+      >
+        Team:
+      </div>
+      <span class="team-text">{{ team.name }}</span>
+      @if (teams.length > 1) {
+        <div>
+          <button
+            mat-button
+            [matMenuTriggerFor]="teamMenu"
+            matTooltip="Select a Team"
+            aria-label="Select a Team"
+          >
+            <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
+          </button>
+          <mat-menu #teamMenu="matMenu" [overlapTrigger]="false">
+            @for (val of teams; track val) {
+              <button mat-menu-item (click)="setTeamFn(val.id)">
+                {{ val.name }}
+              </button>
+            }
+          </mat-menu>
+        </div>
+      }
     }
     @if (teams) {
-    <button mat-icon-button aria-label="Users" matTooltip="Users" (click)="openUserPresence()">
-      <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple-outline"></mat-icon>
-    </button>
+      <button
+        mat-icon-button
+        aria-label="Users"
+        matTooltip="Users"
+        (click)="openUserPresence()"
+      >
+        <mat-icon
+          class="mdi-24px"
+          fontIcon="mdi-account-multiple-outline"
+        ></mat-icon>
+      </button>
     }
     <span class="spacer"></span>
     @if (currentUser$ | async; as currentUser) {
-    <div class="team-text">
-      <button mat-button [matMenuTriggerFor]="menu" matTooltip="Menu" aria-label="Menu">
-        <strong>{{ currentUser.profile.name }}</strong>
-        <mat-icon aria-hidden="false" fontIcon="mdi-chevron-down"></mat-icon>
-      </button>
-      <mat-menu #menu="matMenu" [overlapTrigger]="false" class="user-dropdown-menu">
-        @if (team && showEditView$ | async) {
-        <a mat-menu-item (click)="editFn($event)" [href]="getEditViewUrl()">
-          Edit View
-        </a>
-        }
-        @if (team && (showManageTeams$ | async)) {
-        <button mat-menu-item (click)="openManageTeams()">
-          Manage Teams
+      <div class="team-text">
+        <button
+          mat-button
+          [matMenuTriggerFor]="menu"
+          matTooltip="Menu"
+          aria-label="Menu"
+        >
+          <strong>{{ currentUser.profile.name }}</strong>
+          <mat-icon aria-hidden="false" fontIcon="mdi-chevron-down"></mat-icon>
         </button>
-        }
-        @if ((showAdministration$ | async) && topbarView === 'player-admin') {
-        <a [routerLink]="['/']" mat-menu-item>
-          Exit Administration
-        </a>
-        }
-        @if (
-        (showAdministration$ | async) &&
-        topbarView !== TopbarView.PLAYER_ADMIN
-        ) {
-        <a [routerLink]="['/admin']" mat-menu-item>
-          Administration
-        </a>
-        }
-        @if (topbarView === 'player-player') {
-        <button mat-menu-item (click)="resetUI()">
-          Reset UI
-        </button>
-        }
-        @if (topbarView === 'player-player') {
-        <a [routerLink]="['/']" mat-menu-item>
-          Exit View
-        </a>
-        }
-        <button mat-menu-item (click)="logout()">Logout</button>
-        <mat-slide-toggle aria-labelledby="theme-toggle" class="mat-menu-item toggle" color="primary"
-          [checked]="(theme$ | async) === 'dark-theme' ? true : false" (click)="$event.stopPropagation()"
-          (change)="themeFn($event)">
-          <mat-label id="theme-toggle">Dark Theme</mat-label>
-        </mat-slide-toggle>
-      </mat-menu>
-    </div>
+        <mat-menu
+          #menu="matMenu"
+          [overlapTrigger]="false"
+          class="user-dropdown-menu"
+        >
+          @if (team && showEditView$ | async) {
+            <a mat-menu-item (click)="editFn($event)" [href]="getEditViewUrl()">
+              Edit View
+            </a>
+          }
+          @if (team && (showManageTeams$ | async)) {
+            <button mat-menu-item (click)="openManageTeams()">
+              Manage Teams
+            </button>
+          }
+          @if ((showAdministration$ | async) && topbarView === 'player-admin') {
+            <a [routerLink]="['/']" mat-menu-item> Exit Administration </a>
+          }
+          @if (
+            (showAdministration$ | async) &&
+            topbarView !== TopbarView.PLAYER_ADMIN
+          ) {
+            <a [routerLink]="['/admin']" mat-menu-item> Administration </a>
+          }
+          @if (topbarView === 'player-player') {
+            <button mat-menu-item (click)="resetUI()">Reset UI</button>
+          }
+          @if (topbarView === 'player-player') {
+            <a [routerLink]="['/']" mat-menu-item> Exit View </a>
+          }
+          <button mat-menu-item (click)="logout()">Logout</button>
+          <mat-slide-toggle
+            aria-labelledby="theme-toggle"
+            class="mat-menu-item toggle"
+            color="primary"
+            [checked]="(theme$ | async) === 'dark-theme' ? true : false"
+            (click)="$event.stopPropagation()"
+            (change)="themeFn($event)"
+          >
+            <mat-label id="theme-toggle">Dark Theme</mat-label>
+          </mat-slide-toggle>
+        </mat-menu>
+      </div>
     }
   </mat-toolbar-row>
 </mat-toolbar>
 
 <ng-template #userPresenceDialog>
-  <app-user-presence
-    [viewId]="viewId"
-    [teamId]="team?.id"
-    (closeMe)="closeUserPresence()"
-  ></app-user-presence>
+  <crucible-dialog dialogTitle="Users" [hideDefaultActions]="true">
+    <div crucibleDialogContent>
+      <app-user-presence
+        [viewId]="viewId"
+        [teamId]="team?.id"
+        [showCloseButton]="false"
+        (closeMe)="closeUserPresence()"
+      ></app-user-presence>
+    </div>
+    <ng-container crucibleDialogActions>
+      <button matButton="filled" mat-dialog-close>Close</button>
+    </ng-container>
+  </crucible-dialog>
 </ng-template>

@@ -10,7 +10,7 @@
 import { ViewStatus } from './viewStatus';
 
 
-export interface View { 
+export interface View {
     id?: string;
     name?: string | null;
     description?: string | null;

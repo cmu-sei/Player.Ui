@@ -3,12 +3,13 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Optional, Output } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
   Validators,
 } from '@angular/forms';
+import { MatDialogRef } from '@angular/material/dialog';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
 import { ImportViewsResult } from '../../../generated/player-api';
 import { ViewsService } from '../../../services/views/views.service';
@@ -29,6 +30,7 @@ export class AdminAppViewImportComponent {
   loading = false;
   resultSubject = new BehaviorSubject<ImportViewsResult>(null);
   result$ = this.resultSubject.asObservable();
+  private completeEmitted = false;
 
   onFileSelected(event: any): void {
     this.form.patchValue({ archive: event.target.files[0] ?? null });
@@ -36,12 +38,20 @@ export class AdminAppViewImportComponent {
 
   constructor(
     private viewService: ViewsService,
-    formBuilder: UntypedFormBuilder
+    formBuilder: UntypedFormBuilder,
+    @Optional()
+    private dialogRef?: MatDialogRef<AdminAppViewImportComponent>
   ) {
     this.form = formBuilder.group({
       archive: [null, Validators.required],
       matchApplicationTemplatesByName: [false, Validators.required],
       matchRolesByName: [false, Validators.required],
+    });
+
+    this.dialogRef?.beforeClosed().subscribe(() => {
+      if (this.finished.value) {
+        this.emitComplete();
+      }
     });
   }
 
@@ -54,6 +64,15 @@ export class AdminAppViewImportComponent {
   }
 
   cancel() {
+    this.emitComplete();
+  }
+
+  private emitComplete() {
+    if (this.completeEmitted) {
+      return;
+    }
+
+    this.completeEmitted = true;
     this.complete.emit(false);
   }
 

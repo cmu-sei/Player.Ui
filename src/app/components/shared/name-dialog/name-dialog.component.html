@@ -3,40 +3,52 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<h1 mat-dialog-title>{{ title }}</h1>
-<div style="font-family: 'open_sansregular', sans-serif">{{ message }}</div>
+<crucible-dialog
+  [dialogTitle]="title"
+  [form]="form"
+  submitLabel="Save"
+  [submitDisabled]="!form.valid || !form.dirty"
+  [guardUnsavedWork]="true"
+  (cancel)="onCancel()"
+  (submit)="onClick()"
+>
+  <div crucibleDialogContent [formGroup]="form">
+    @if (message) {
+      <p class="dialog-message">{{ message }}</p>
+    }
 
-<form [formGroup]="form" class="name-form">
-  <mat-form-field class="form-full-width">
-    <mat-label>Name</mat-label>
-    <input
-      formControlName="name"
-      matInput
-      placeholder="Name"
-      autocomplete="off"
+    <mat-form-field class="form-full-width">
+      <mat-label>Name</mat-label>
+      <input
+        formControlName="name"
+        matInput
+        placeholder="Name"
+        autocomplete="off"
+        cdkFocusInitial
       />
 
-    @if (name.invalid && (name.dirty || name.touched)) {
-      <mat-error>
-        @for (validator of validators; track validator) {
-          @if (name.hasError(validator.name)) {
-            {{ validator.errorMessage }}<br />
+      @if (name.invalid && (name.dirty || name.touched)) {
+        <mat-error>
+          @for (validator of validators; track validator) {
+            @if (name.hasError(validator.name)) {
+              {{ validator.errorMessage }}<br />
+            }
           }
-        }
-      </mat-error>
-    }
-  </mat-form-field>
-</form>
+        </mat-error>
+      }
+    </mat-form-field>
 
-<mat-dialog-actions fxLayout="row" fxLayoutAlign="space-around center">
-  <button
-    mat-stroked-button
-    hotkeyAction="ENTER"
-    (click)="onClick()"
-    [disabled]="!form.valid || !form.dirty"
-    tabindex="3"
-    >
-    Save
-  </button>
-  <button mat-stroked-button (click)="onCancel()" tabindex="3">Cancel</button>
-</mat-dialog-actions>
+    @if (data.showDescription) {
+      <mat-form-field class="form-full-width">
+        <mat-label>Description</mat-label>
+        <textarea
+          formControlName="description"
+          matInput
+          placeholder="Description"
+          autocomplete="off"
+          rows="3"
+        ></textarea>
+      </mat-form-field>
+    }
+  </div>
+</crucible-dialog>

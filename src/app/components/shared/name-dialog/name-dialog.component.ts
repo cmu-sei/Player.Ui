@@ -2,40 +2,42 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 import { Component, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import {
-  MAT_DIALOG_DATA,
-  MatDialogRef,
-} from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NameValidatorModel } from './name-dialog.models';
 
 @Component({
-    selector: 'name-dialog',
-    templateUrl: './name-dialog.component.html',
-    styleUrls: ['./name-dialog.component.scss'],
-    standalone: false
+  selector: 'name-dialog',
+  templateUrl: './name-dialog.component.html',
+  styleUrls: ['./name-dialog.component.scss'],
+  standalone: false,
 })
 export class NameDialogComponent {
   public title: string;
   public message: string;
   public removeArtifacts = true;
   public form: FormGroup;
-  public validators: Array<NameValidatorModel>;
+  public validators: Array<NameValidatorModel> = [];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<NameDialogComponent>,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
   ) {
-    this.dialogRef.disableClose = true;
-
     this.form = this.formBuilder.group({
       name: [data.nameValue, [Validators.required]],
     });
 
+    if (data.showDescription) {
+      this.form.addControl(
+        'description',
+        this.formBuilder.control(data.descriptionValue ?? ''),
+      );
+    }
+
     if (data.validators) {
       this.validators = data.validators;
       const validators = (data.validators as Array<NameValidatorModel>).map(
-        (x) => x.validator
+        (x) => x.validator,
       );
       this.form.controls['name'].addValidators(validators);
     }
@@ -52,6 +54,9 @@ export class NameDialogComponent {
       ? (this.data.removeArtifacts = this.removeArtifacts)
       : (this.data.removeArtifacts = false);
     this.data.nameValue = this.form?.get('name').value;
+    if (this.data.showDescription) {
+      this.data.descriptionValue = this.form?.get('description')?.value;
+    }
     this.data.wasCancelled = false;
     this.dialogRef.close(this.data);
   }

@@ -6,13 +6,13 @@ import {
   ApplicationTemplate,
   ApplicationService,
 } from '../../../../generated/player-api';
-import { DialogService } from '../../../../services/dialog/dialog.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 @Component({
-    selector: 'app-admin-template-details',
-    templateUrl: './admin-template-details.component.html',
-    styleUrls: ['./admin-template-details.component.scss'],
-    standalone: false
+  selector: 'app-admin-template-details',
+  templateUrl: './admin-template-details.component.html',
+  styleUrls: ['./admin-template-details.component.scss'],
+  standalone: false,
 })
 export class AdminTemplateDetailsComponent {
   @Input() appTemplate: ApplicationTemplate;
@@ -20,7 +20,7 @@ export class AdminTemplateDetailsComponent {
 
   constructor(
     public applicationService: ApplicationService,
-    public dialogService: DialogService
+    private confirmDialogService: CrucibleDialogService,
   ) {}
 
   /**
@@ -39,15 +39,19 @@ export class AdminTemplateDetailsComponent {
    * Deletes the application template
    */
   deleteApplicationTemplate() {
-    this.dialogService
-      .confirm(
-        'Delete Application Template?',
-        'Are you sure that you want to delete application template ' +
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete Application Template?',
+        message:
+          'Are you sure that you want to delete application template ' +
           this.appTemplate.name +
-          '?'
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+          '?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.applicationService
             .deleteApplicationTemplate(this.appTemplate.id)
             .subscribe(() => {

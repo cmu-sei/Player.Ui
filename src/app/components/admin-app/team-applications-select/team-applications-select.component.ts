@@ -10,7 +10,7 @@ import {
   View,
   ApplicationTemplate,
 } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 export enum ObjectType {
   Unknown,
@@ -19,10 +19,10 @@ export enum ObjectType {
 }
 
 @Component({
-    selector: 'app-team-applications-select',
-    templateUrl: './team-applications-select.component.html',
-    styleUrls: ['./team-applications-select.component.scss'],
-    standalone: false
+  selector: 'app-team-applications-select',
+  templateUrl: './team-applications-select.component.html',
+  styleUrls: ['./team-applications-select.component.scss'],
+  standalone: false,
 })
 export class TeamApplicationsSelectComponent implements OnInit {
   @Input() team: Team;
@@ -39,7 +39,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
 
   constructor(
     public applicationService: ApplicationService,
-    public dialogService: DialogService
+    private confirmDialogService: CrucibleDialogService,
   ) {}
 
   /**
@@ -49,7 +49,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
     if (!this.team) {
       // a team must be provided or will not be functional
       console.log(
-        'The applications select component requires a team, therefore will be non-functional.'
+        'The applications select component requires a team, therefore will be non-functional.',
       );
       return;
     } else {
@@ -127,17 +127,21 @@ export class TeamApplicationsSelectComponent implements OnInit {
    * @param app App to remove
    */
   removeApplicationInstanceFromTeam(app: ApplicationInstance): void {
-    this.dialogService
-      .confirm(
-        'Remove Application from Team',
-        'Are you sure that you want to remove application ' +
+    this.confirmDialogService
+      .confirm({
+        title: 'Remove Application from Team',
+        message:
+          'Are you sure that you want to remove application ' +
           app.name +
           ' from team ' +
           this.team.name +
-          '?'
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+          '?',
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.applicationService
             .deleteApplicationInstance(app.id)
             .subscribe(() => {
@@ -170,7 +174,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
       return app.name;
     } else if (app.applicationTemplateId != null) {
       const template = this.applicationTemplates.find(
-        (x) => x.id === app.applicationTemplateId
+        (x) => x.id === app.applicationTemplateId,
       );
 
       if (template != null) {

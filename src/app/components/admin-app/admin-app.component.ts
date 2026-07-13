@@ -50,6 +50,13 @@ export class AdminAppComponent implements OnInit, OnDestroy {
       permission: SystemPermission.ViewApplications,
     },
     {
+      name: 'Subscriptions',
+      section: Section.ADMIN_SUBS,
+      icon: 'assets/img/subscription.png',
+      svgIcon: false,
+      permission: SystemPermission.ViewWebhookSubscriptions,
+    },
+    {
       name: 'Users',
       section: Section.ADMIN_USERS,
       icon: 'assets/img/SP_Icon_User.png',
@@ -62,13 +69,6 @@ export class AdminAppComponent implements OnInit, OnDestroy {
       icon: 'assets/img/SP_Icon_Alert.png',
       svgIcon: false,
       permission: SystemPermission.ViewRoles,
-    },
-    {
-      name: 'Subscriptions',
-      section: Section.ADMIN_SUBS,
-      icon: 'assets/img/subscription.png',
-      svgIcon: false,
-      permission: SystemPermission.ViewWebhookSubscriptions,
     },
   ];
 
