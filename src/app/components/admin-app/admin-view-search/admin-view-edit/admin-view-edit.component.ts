@@ -355,20 +355,38 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
-   * Saves the team name
-   * @param name New name of the team
-   * @param id team Guid
+   * Selects a team for editing
+   * @param teamContainer Team container to edit
    */
-  saveTeamName(name: string, id: string): void {
+  selectTeam(teamContainer: TeamUserApp): void {
+    this.currentTeam = teamContainer;
+    this.teamNameFormControl.setValue(teamContainer.team.name ?? '');
+  }
+
+  /**
+   * Saves the team name
+   * @param teamContainer Team container to update
+   */
+  saveTeamName(teamContainer: TeamUserApp): void {
+    const name = this.teamNameFormControl.value;
+
+    if (this.teamNameFormControl.invalid || name === teamContainer.name) {
+      return;
+    }
+
+    const id = teamContainer.team.id;
+
     this.teamService
-      .getTeam(id)
+      .updateTeam(id, {
+        name,
+        roleId: teamContainer.team.roleId,
+      })
       .pipe(take(1))
-      .subscribe((tm) => {
-        tm.name = name;
-        this.teamService.updateTeam(id, tm).subscribe((updatedTeam) => {
-          this.teams.find((t) => t.team.id === id).team = updatedTeam;
-          console.log('Team updated:  ' + updatedTeam.name);
-        });
+      .subscribe((updatedTeam) => {
+        teamContainer.team = updatedTeam;
+        teamContainer.name = updatedTeam.name;
+        this.teamNameFormControl.setValue(updatedTeam.name ?? '');
+        console.log('Team updated:  ' + updatedTeam.name);
       });
   }
 
@@ -423,7 +441,7 @@ export class AdminViewEditComponent implements OnInit {
       .subscribe((newTeam) => {
         const team = new TeamUserApp('New Team', newTeam, new Array<User>());
         this.teams.unshift(team);
-        this.currentTeam = team;
+        this.selectTeam(team);
         // This uses the rxjs take and ngZone to determine when the html is rendered
         this.zone.onMicrotaskEmpty
           .asObservable()

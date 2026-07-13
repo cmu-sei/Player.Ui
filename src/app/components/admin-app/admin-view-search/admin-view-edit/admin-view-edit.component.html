@@ -155,7 +155,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                     currentTeam !== undefined &&
                     teamContainer.team.id === currentTeam.team.id
                   "
-                  (opened)="currentTeam = currentTeam"
+                  (opened)="selectTeam(teamContainer)"
                 >
                   <mat-expansion-panel-header>
                     <mat-panel-title>
@@ -190,13 +190,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                             id="teamName{{ teamContainer.team.id }}"
                             matInput
                             [formControl]="teamNameFormControl"
-                            (change)="
-                              saveTeamName(
-                                $event.target.value,
-                                teamContainer.team.id
-                              )
-                            "
-                            value="{{ teamContainer.team.name }}"
+                            (change)="saveTeamName(teamContainer)"
                             [errorStateMatcher]="matcher"
                           />
                           @if (
@@ -221,11 +215,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                           <mat-checkbox
                             color="primary"
                             [checked]="
-                              view.defaultTeamId == teamContainer.team.id
+                              view.defaultTeamId === teamContainer.team.id
                             "
                             (change)="
                               setDefaultTeam(
-                                view.defaultTeamId != teamContainer.team.id
+                                view.defaultTeamId !== teamContainer.team.id
                                   ? teamContainer.team.id
                                   : null
                               )
