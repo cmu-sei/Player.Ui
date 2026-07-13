@@ -165,9 +165,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                       }
                     </mat-panel-title>
                   </mat-expansion-panel-header>
-                  <div class="d-flex">
+                  <div class="d-flex align-items-start gap-4">
                     <div class="d-flex w-50 justify-content-center">
-                      <div>
+                      <div class="w-100">
                         <div class="d-flex align-items-center">
                           <button
                             mat-icon-button
@@ -184,7 +184,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                             {{ teamContainer.team.id }}
                           </span>
                         </div>
-                        <mat-form-field>
+                        <mat-form-field class="w-100">
                           <mat-label>Team Name (required)</mat-label>
                           <input
                             id="teamName{{ teamContainer.team.id }}"
@@ -253,7 +253,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                         </div>
                       </div>
                     </div>
-                    <div class="w-50">
+                    <div class="team-applications-column">
                       <app-team-applications-select
                         [view]="view"
                         [team]="teamContainer.team"
