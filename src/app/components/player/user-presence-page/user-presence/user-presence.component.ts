@@ -52,12 +52,12 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
     this._teams = this.teamService.getMyViewTeams(this.viewId).pipe(
       switchMap((teams) => {
         const activeTeam = this.getActiveTeam(teams);
-        this.presenceTeamId = this.teamId ?? activeTeam?.id;
-        this.notificationService.joinPresence(this.viewId, this.presenceTeamId);
-
         if (!activeTeam?.id) {
           return of([]);
         }
+
+        this.presenceTeamId = activeTeam.id;
+        this.notificationService.joinPresence(this.viewId, this.presenceTeamId);
 
         return this.teamPermissionService
           .getMyTeamPermissions(undefined, activeTeam.id, false)
@@ -102,10 +102,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   }
 
   private getActiveTeam(teams: Team[]): Team | undefined {
-    return (
-      teams.find((team) => team.id === this.teamId) ??
-      teams.find((team) => team.isPrimary)
-    );
+    return teams.find((team) => team.isPrimary);
   }
 
   private filterTeamsForPresence(
@@ -113,7 +110,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
     activeTeam: Team,
     claim?: TeamPermissionsClaim,
   ): Team[] {
-    const permissionValues = claim?.permissionValues ?? [];
+    const permissionValues = claim?.directPermissionValues ?? [];
 
     if (
       permissionValues.includes(ViewPermission.ViewView) ||
@@ -158,6 +155,8 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.notificationService.leavePresence(this.viewId, this.presenceTeamId);
+    if (this.presenceTeamId) {
+      this.notificationService.leavePresence(this.viewId, this.presenceTeamId);
+    }
   }
 }
