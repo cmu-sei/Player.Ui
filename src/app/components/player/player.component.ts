@@ -39,8 +39,11 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-import { View } from '../../generated/player-api';
-import { TeamService } from '../../generated/player-api/api/team.service';
+import {
+  Team,
+  TeamMembershipService,
+  View,
+} from '../../generated/player-api';
 import { ViewService } from '../../generated/player-api/api/view.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { SystemMessageService } from '../../services/system-message/system-message.service';
@@ -86,7 +89,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     private viewsService: ViewsService,
     private viewService: ViewService,
     private loggedInUserService: LoggedInUserService,
-    private teamService: TeamService,
+    private teamMembershipService: TeamMembershipService,
     private settingsService: ComnSettingsService,
     private dialog: MatDialog,
     private messageService: SystemMessageService,
@@ -134,8 +137,30 @@ export class PlayerComponent implements OnInit, OnDestroy {
             ? this.viewService.getView(state.params['id'])
             : new Observable<View>(),
           state.params['id']
-            ? this.teamService.getMyViewTeams(state.params['id'])
-            : new Observable<any>(),
+            ? this.user$.pipe(
+                switchMap((user) =>
+                  user
+                    ? this.teamMembershipService
+                        .getTeamMemberships(
+                          user.profile.sub,
+                          state.params['id'],
+                        )
+                        .pipe(
+                          map((memberships) =>
+                            memberships.map(
+                              (membership): Team => ({
+                                id: membership.teamId,
+                                name: membership.teamName,
+                                isMember: true,
+                                isPrimary: membership.isPrimary,
+                              }),
+                            ),
+                          ),
+                        )
+                    : EMPTY,
+                ),
+              )
+            : new Observable<Team[]>(),
         ]).pipe(
           // this pipe allows us to return all previous observable values.
           switchMap(([view, teams]) => {

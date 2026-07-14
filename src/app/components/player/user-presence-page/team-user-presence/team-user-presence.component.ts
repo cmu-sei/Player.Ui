@@ -22,17 +22,17 @@ export class TeamUserPresenceComponent {
     this.updateDataSource();
   }
 
-  @Input() set users(val: Array<ViewPresence>) {
-    this.userList = val;
+  @Input() set users(val: Array<ViewPresence> | null) {
+    this.userList = val ?? [];
     this.updateDataSource();
   }
 
-  @Input() set searchTerm(val: string) {
-    this.userDatasource.filter = val;
+  @Input() set searchTerm(val: string | null) {
+    this.userDatasource.filter = val ?? '';
     this.calculateTableHeight();
   }
 
-  private userList: Array<ViewPresence>;
+  private userList: Array<ViewPresence> = [];
   private hideInactiveInternal = false;
 
   public userDatasource = new TableVirtualScrollDataSource<ViewPresence>(

@@ -97,6 +97,26 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
     this.hideInactive = value;
   }
 
+  public getPresenceCount(
+    users: ViewPresence[] | null,
+    searchTerm: string | null,
+  ): number {
+    let filteredUsers = users ?? [];
+
+    if (this.hideInactive) {
+      filteredUsers = filteredUsers.filter((user) => user.online);
+    }
+
+    const filter = searchTerm?.toLowerCase() ?? '';
+    if (filter) {
+      filteredUsers = filteredUsers.filter((user) =>
+        user.userName.toLowerCase().includes(filter),
+      );
+    }
+
+    return filteredUsers.length;
+  }
+
   public trackByTeamId(item: Team) {
     return item.id;
   }

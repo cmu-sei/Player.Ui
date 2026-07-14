@@ -152,20 +152,32 @@ export class RolesPermissionsSelectComponent implements OnInit {
     if (checked) {
       this.teamPermissionScopesService
         .addScope(this.team.id, targetTeam.id)
-        .subscribe();
-      if (!this.team.scopedTeamIds) {
-        this.team.scopedTeamIds = [];
-      }
-      if (!this.team.scopedTeamIds.includes(targetTeam.id)) {
-        this.team.scopedTeamIds.push(targetTeam.id);
-      }
+        .subscribe({
+          next: () => {
+            if (!this.team.scopedTeamIds) {
+              this.team.scopedTeamIds = [];
+            }
+            if (!this.team.scopedTeamIds.includes(targetTeam.id)) {
+              this.team.scopedTeamIds.push(targetTeam.id);
+            }
+          },
+          error: () => {
+            this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
+          },
+        });
     } else {
       this.teamPermissionScopesService
         .removeScope(this.team.id, targetTeam.id)
-        .subscribe();
-      this.team.scopedTeamIds = (this.team.scopedTeamIds ?? []).filter(
-        (id) => id !== targetTeam.id
-      );
+        .subscribe({
+          next: () => {
+            this.team.scopedTeamIds = (this.team.scopedTeamIds ?? []).filter(
+              (id) => id !== targetTeam.id
+            );
+          },
+          error: () => {
+            this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
+          },
+        });
     }
   }
 
