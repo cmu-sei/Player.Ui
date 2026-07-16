@@ -290,6 +290,10 @@ export class AddRemoveUsersDialogComponent implements OnInit {
                 const teamMembership = tmbs.find(
                   (tmb) => tmb.teamId === this.team.id,
                 );
+                if (teamMembership.roleId === null) {
+                  teamMembership.roleId = '';
+                  teamMembership.roleName = '';
+                }
                 this.addTeamUserToTable(
                   new TeamUser(user.name, user, teamMembership),
                 );

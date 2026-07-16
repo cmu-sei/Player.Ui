@@ -19,5 +19,7 @@ export interface TeamPermissionsClaim {
     teamId?: string;
     isPrimary?: boolean;
     permissionValues?: Array<string> | null;
+    directPermissionValues?: Array<string> | null;
+    sourceTeamIds?: Array<string> | null;
 }
 
