@@ -111,7 +111,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <app-notifications
           [viewGuid]="data.view.id"
           [teamGuid]="data.team.id"
-          [userGuid]="user.profile.id"
+          [userGuid]="user.profile.sub"
           [userToken]="user.access_token"
           [userName]="user.profile.name"
           class="notification-height"
@@ -125,4 +125,3 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 } @else {
   LOADING
 }
-
