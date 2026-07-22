@@ -22,19 +22,21 @@ import { renderComponent } from '../../../test-utils/render-component';
 const team: Team = { id: 't1', name: 'Red' };
 const view: View = { id: 'v1', name: 'Demo View' };
 
-const appA: Application = { id: 'a1', name: 'App A' };
-const appB: Application = { id: 'a2', name: 'App B' };
+const makeApplication = (
+  application: Omit<Application, 'viewId'>,
+): Application => ({ viewId: 'v1', ...application });
+
+const appA = makeApplication({ id: 'a1', name: 'App A' });
+const appB = makeApplication({ id: 'a2', name: 'App B' });
 
 const instA: ApplicationInstance = {
   id: 'i1',
-  teamId: 't1',
   applicationId: 'a1',
   displayOrder: 0,
   name: 'App A',
 };
 const instB: ApplicationInstance = {
   id: 'i2',
-  teamId: 't1',
   applicationId: 'a2',
   displayOrder: 1,
   name: 'App B',
@@ -69,30 +71,27 @@ async function renderSelect(
   const updateApplicationInstance = vi.fn(() => of({} as ApplicationInstance));
   const confirm = vi.fn(() => of({ confirm: confirmRemove }));
 
-  const rendered = await renderComponent(
-    TeamApplicationsSelectComponent,
-    {
-      declarations: [TeamApplicationsSelectComponent],
-      schemas: [NO_ERRORS_SCHEMA],
-      componentProperties: { team: t, view: v },
-      providers: [
-        {
-          provide: ApplicationService,
-          useValue: {
-            getTeamApplicationInstances,
-            getViewApplications,
-            getApplicationTemplates,
-            createApplicationInstance,
-            moveUpApplicationInstance,
-            moveDownApplicationInstance,
-            deleteApplicationInstance,
-            updateApplicationInstance,
-          },
+  const rendered = await renderComponent(TeamApplicationsSelectComponent, {
+    declarations: [TeamApplicationsSelectComponent],
+    schemas: [NO_ERRORS_SCHEMA],
+    componentProperties: { team: t, view: v },
+    providers: [
+      {
+        provide: ApplicationService,
+        useValue: {
+          getTeamApplicationInstances,
+          getViewApplications,
+          getApplicationTemplates,
+          createApplicationInstance,
+          moveUpApplicationInstance,
+          moveDownApplicationInstance,
+          deleteApplicationInstance,
+          updateApplicationInstance,
         },
-        { provide: DialogService, useValue: { confirm } },
-      ],
-    },
-  );
+      },
+      { provide: DialogService, useValue: { confirm } },
+    ],
+  });
 
   return {
     ...rendered,
@@ -147,10 +146,10 @@ describe('TeamApplicationsSelectComponent', () => {
    */
   it('refreshViewAppsAvailable only keeps view apps not already used by the team', async () => {
     const { fixture } = await renderSelect({
-      viewApps: [appA, appB, { id: 'a3', name: 'App C' }],
+      viewApps: [appA, appB, makeApplication({ id: 'a3', name: 'App C' })],
     });
     expect(fixture.componentInstance.viewApplications).toEqual([
-      { id: 'a3', name: 'App C' },
+      makeApplication({ id: 'a3', name: 'App C' }),
     ]);
   });
 
@@ -232,7 +231,9 @@ describe('TeamApplicationsSelectComponent', () => {
   it('getAppName returns the app.name when set', async () => {
     const { fixture } = await renderSelect();
     expect(
-      fixture.componentInstance.getAppName({ id: 'x', name: 'Named' }),
+      fixture.componentInstance.getAppName(
+        makeApplication({ id: 'x', name: 'Named' }),
+      ),
     ).toBe('Named');
   });
 
@@ -242,13 +243,18 @@ describe('TeamApplicationsSelectComponent', () => {
    * Data: app with applicationTemplateId 'tmpl-1'; template named 'From Template'.
    */
   it('getAppName falls back to template name via applicationTemplateId', async () => {
-    const template: ApplicationTemplate = { id: 'tmpl-1', name: 'From Template' };
+    const template: ApplicationTemplate = {
+      id: 'tmpl-1',
+      name: 'From Template',
+    };
     const { fixture } = await renderSelect({ templates: [template] });
     expect(
-      fixture.componentInstance.getAppName({
-        id: 'x',
-        applicationTemplateId: 'tmpl-1',
-      }),
+      fixture.componentInstance.getAppName(
+        makeApplication({
+          id: 'x',
+          applicationTemplateId: 'tmpl-1',
+        }),
+      ),
     ).toBe('From Template');
   });
 
@@ -259,6 +265,8 @@ describe('TeamApplicationsSelectComponent', () => {
    */
   it('getAppName returns null when neither name nor known template id is present', async () => {
     const { fixture } = await renderSelect();
-    expect(fixture.componentInstance.getAppName({ id: 'x' })).toBeNull();
+    expect(
+      fixture.componentInstance.getAppName(makeApplication({ id: 'x' })),
+    ).toBeNull();
   });
 });

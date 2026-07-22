@@ -9,7 +9,7 @@
       "projectType": "application",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular/build:application",
           "options": {
             "outputPath": {
               "base": "dist"
@@ -82,7 +82,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "options": {
             "port": 4301
           },
@@ -100,9 +100,17 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "player-ui:build"
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "setupFiles": ["src/test-setup.ts"],
+            "coverageExclude": ["**/generated/**", "**/app.service.ts"],
+            "coverageReporters": ["text", "json", "html"]
           }
         },
         "lint": {
@@ -112,7 +120,7 @@
           }
         }
       }
-    },
+    }
   },
   "schematics": {
     "@schematics/angular:component": {

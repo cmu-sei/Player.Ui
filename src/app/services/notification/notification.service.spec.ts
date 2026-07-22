@@ -8,14 +8,9 @@ import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
 import { NotificationService } from './notification.service';
 import { NotificationData } from '../../models/notification-data';
 import { ViewPresence } from '../../models/view-presence';
+import * as signalR from '@microsoft/signalr';
 
-// @microsoft/signalr is mocked so connectToNotificationServer()/joinPresence()
-// build fake hub connections instead of opening real WebSockets. Each fake
-// records its registered handlers (so a test can trigger a server event) and
-// its invoke() calls (so a test can assert what was sent to the hub).
-const { connections } = vi.hoisted(() => ({
-  connections: [] as FakeHubConnection[],
-}));
+const connections: FakeHubConnection[] = [];
 
 class FakeHubConnection {
   handlers: Record<string, (data: unknown) => void> = {};
@@ -36,25 +31,24 @@ class FakeHubConnection {
   }
 }
 
-vi.mock('@microsoft/signalr', () => {
-  class HubConnectionBuilder {
-    withUrl() {
-      return this;
-    }
-    withAutomaticReconnect() {
-      return this;
-    }
-    withStatefulReconnect() {
-      return this;
-    }
-    build() {
+function mockSignalRBuilder() {
+  vi.spyOn(signalR.HubConnectionBuilder.prototype, 'withUrl').mockReturnThis();
+  vi.spyOn(
+    signalR.HubConnectionBuilder.prototype,
+    'withAutomaticReconnect',
+  ).mockReturnThis();
+  vi.spyOn(
+    signalR.HubConnectionBuilder.prototype,
+    'withStatefulReconnect',
+  ).mockReturnThis();
+  vi.spyOn(signalR.HubConnectionBuilder.prototype, 'build').mockImplementation(
+    () => {
       const connection = new FakeHubConnection();
       connections.push(connection);
-      return connection;
-    }
-  }
-  return { HubConnectionBuilder };
-});
+      return connection as unknown as signalR.HubConnection;
+    },
+  );
+}
 
 // Flush pending microtasks so the start().then(...) chains run.
 const flush = () => new Promise((r) => setTimeout(r));
@@ -97,6 +91,7 @@ function makeData(overrides: Partial<NotificationData> = {}): NotificationData {
 describe('NotificationService', () => {
   beforeEach(() => {
     connections.length = 0;
+    mockSignalRBuilder();
     // The service logs connection lifecycle to the console; keep test output clean.
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     TestBed.resetTestingModule();

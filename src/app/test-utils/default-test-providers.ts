@@ -63,7 +63,7 @@ function getProvideToken(provider: AnyProvider): ProviderToken<unknown> | null {
 }
 
 export function getDefaultProviders(
-  overrides?: readonly AnyProvider[]
+  overrides?: readonly AnyProvider[],
 ): AnyProvider[] {
   const defaults: Provider[] = [
     // App Services
@@ -176,7 +176,7 @@ export function getDefaultProviders(
 
   const overrideTokens = new Set(overrides.map(getProvideToken));
   const filtered = defaults.filter(
-    (p) => !overrideTokens.has(getProvideToken(p))
+    (p) => !overrideTokens.has(getProvideToken(p)),
   );
   return [...filtered, ...overrides];
 }

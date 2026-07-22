@@ -80,7 +80,9 @@ async function renderTopbar(
   const dialogOpen = vi.fn();
   const dialogCloseAll = vi.fn();
   const snackbarOpen = vi.fn();
-  const confirm = vi.fn(() => of({ confirm: overrides.confirmResult ?? false }));
+  const confirm = vi.fn(() =>
+    of({ confirm: overrides.confirmResult ?? false }),
+  );
 
   const rendered = await renderComponent(TopbarComponent, {
     declarations: [TopbarComponent],
@@ -261,7 +263,9 @@ describe('TopbarComponent', () => {
    * Data: sidenav stub with opened=true.
    */
   it('should not show sidebar toggle button (topbar has no toggle button)', async () => {
-    const result = await renderTopbar({ sidenav: { opened: true } });
+    const result = await renderTopbar({
+      sidenav: { opened: true } as MatSidenav,
+    });
     result.fixture.detectChanges();
     expect(
       result.fixture.nativeElement.querySelector(

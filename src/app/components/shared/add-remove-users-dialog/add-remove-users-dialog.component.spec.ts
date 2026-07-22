@@ -49,9 +49,10 @@ async function renderDialog(
   } = overrides;
 
   const close = vi.fn();
-  const dialogRef = { close, disableClose: false } as unknown as MatDialogRef<
-    AddRemoveUsersDialogComponent
-  >;
+  const dialogRef = {
+    close,
+    disableClose: false,
+  } as unknown as MatDialogRef<AddRemoveUsersDialogComponent>;
 
   const getUsers = vi.fn(() => of(users));
   const getTeamUsers = vi.fn(() => of(teamUsers));
@@ -59,7 +60,9 @@ async function renderDialog(
   const removeUserFromTeam = vi.fn(() =>
     removeError ? throwError(() => new Error('fail')) : of(undefined),
   );
-  const getTeamMemberships = vi.fn(() => of([aliceMembership]));
+  const getTeamMemberships = vi.fn((_userId: string, _viewId: string) =>
+    of([aliceMembership]),
+  );
   const updateTeamMembership = vi.fn(() => of(undefined));
   const getRoles = vi.fn(() => of([]));
 
@@ -70,34 +73,31 @@ async function renderDialog(
     afterClosed: () => of({ confirm: confirmSelfRemoval }),
   }));
 
-  const rendered = await renderComponent(
-    AddRemoveUsersDialogComponent,
-    {
-      declarations: [AddRemoveUsersDialogComponent],
-      imports: [
-        FormsModule,
-        MatTableModule,
-        MatSortModule,
-        MatPaginatorModule,
-        MatSelectModule,
-      ],
-      schemas: [NO_ERRORS_SCHEMA],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRef },
-        {
-          provide: UserService,
-          useValue: { getUsers, getTeamUsers, addUserToTeam, removeUserFromTeam },
-        },
-        { provide: TeamService, useValue: {} },
-        {
-          provide: TeamMembershipService,
-          useValue: { getTeamMemberships, updateTeamMembership },
-        },
-        { provide: TeamRolesService, useValue: { getRoles } },
-        { provide: MatDialog, useValue: { open: dialogOpen } },
-      ],
-    },
-  );
+  const rendered = await renderComponent(AddRemoveUsersDialogComponent, {
+    declarations: [AddRemoveUsersDialogComponent],
+    imports: [
+      FormsModule,
+      MatTableModule,
+      MatSortModule,
+      MatPaginatorModule,
+      MatSelectModule,
+    ],
+    schemas: [NO_ERRORS_SCHEMA],
+    providers: [
+      { provide: MatDialogRef, useValue: dialogRef },
+      {
+        provide: UserService,
+        useValue: { getUsers, getTeamUsers, addUserToTeam, removeUserFromTeam },
+      },
+      { provide: TeamService, useValue: {} },
+      {
+        provide: TeamMembershipService,
+        useValue: { getTeamMemberships, updateTeamMembership },
+      },
+      { provide: TeamRolesService, useValue: { getRoles } },
+      { provide: MatDialog, useValue: { open: dialogOpen } },
+    ],
+  });
 
   return {
     ...rendered,
@@ -378,7 +378,8 @@ describe('AddRemoveUsersDialogComponent', () => {
      *      row resolves a membership; without it the role-cell template would throw.
      */
     it('adds the user to the team list and removes them from the pool', async () => {
-      const { fixture, addUserToTeam, getTeamMemberships } = await renderDialog();
+      const { fixture, addUserToTeam, getTeamMemberships } =
+        await renderDialog();
       const c = fixture.componentInstance;
       c.team = team;
       stubSearchBox(c);
@@ -462,7 +463,9 @@ describe('AddRemoveUsersDialogComponent', () => {
       const { fixture, removeUserFromTeam } = await renderDialog();
       const c = fixture.componentInstance;
       c.isBusy = true;
-      c.teamUserDataSource.data = [new TeamUser('Alice', alice, aliceMembership)];
+      c.teamUserDataSource.data = [
+        new TeamUser('Alice', alice, aliceMembership),
+      ];
       c.removeUserFromTeam(new TeamUser('Alice', alice, aliceMembership));
       expect(removeUserFromTeam).not.toHaveBeenCalled();
     });
@@ -588,15 +591,16 @@ describe('AddRemoveUsersDialogComponent', () => {
      *      otherwise the new row has no membership and the role-cell template throws.
      */
     it('adds each user id parsed from the csv to the team', async () => {
-      const { fixture, addUserToTeam, getTeamMemberships } = await renderDialog();
+      const { fixture, addUserToTeam, getTeamMemberships } =
+        await renderDialog();
       const c = fixture.componentInstance;
       c.team = team;
       c.userDataSource.data = [alice, bob];
       c.teamUserDataSource.data = [];
-      // uploadUsers() calls getTeamMemberships(viewId, userId) and matches on
+      // uploadUsers() calls getTeamMemberships(userId, viewId) and matches on
       // userId, so return a membership keyed to the requested user — otherwise
       // the new row has no teamMembership and the role-cell template throws.
-      getTeamMemberships.mockImplementation((_viewId: string, userId: string) =>
+      getTeamMemberships.mockImplementation((userId: string, _viewId: string) =>
         of([{ id: `m-${userId}`, teamId: 't1', userId, roleId: null }]),
       );
 

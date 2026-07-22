@@ -454,8 +454,8 @@ export class AddRemoveUsersDialogComponent implements OnInit {
           .pipe(
             switchMap(() => {
               return this.teamMembershipService.getTeamMemberships(
-                this.team.viewId,
                 user,
+                this.team.viewId,
               );
             }),
           )
