@@ -12,7 +12,7 @@ import {
   ComnSettingsService,
 } from '@cmusei/crucible-common';
 import { ViewService } from '../../generated/player-api/api/view.service';
-import { TeamService } from '../../generated/player-api/api/team.service';
+import { TeamMembershipService } from '../../generated/player-api';
 import { ViewsService } from '../../services/views/views.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { SystemMessageService } from '../../services/system-message/system-message.service';
@@ -36,7 +36,17 @@ async function renderPlayer(
   const navigate = vi.fn();
   const setPrimaryTeamId = vi.fn(() => of({}));
   const getView = vi.fn(() => of(overrides.view ?? { id: 'view-1' }));
-  const getMyViewTeams = vi.fn(() => of(overrides.teams ?? []));
+  const getTeamMemberships = vi.fn(() =>
+    of(
+      (overrides.teams ?? [])
+        .filter((team: any) => team.isMember !== false)
+        .map((team: any) => ({
+          teamId: team.id,
+          teamName: team.name,
+          isPrimary: team.isPrimary,
+        })),
+    ),
+  );
   const loadTeamPermissions = vi.fn(() => of([]));
   const user = overrides.user ?? { profile: { sub: 'u1' } };
 
@@ -66,7 +76,10 @@ async function renderPlayer(
       { provide: ViewsService, useValue: { setPrimaryTeamId } },
       { provide: ViewService, useValue: { getView } },
       { provide: LoggedInUserService, useValue: { loggedInUser$: of(user) } },
-      { provide: TeamService, useValue: { getMyViewTeams } },
+      {
+        provide: TeamMembershipService,
+        useValue: { getTeamMemberships },
+      },
       {
         provide: ComnSettingsService,
         useValue: { settings: { AppTitle: 'Player' } },
@@ -93,7 +106,7 @@ async function renderPlayer(
     dialog,
     setPrimaryTeamId,
     getView,
-    getMyViewTeams,
+    getTeamMemberships,
     loadTeamPermissions,
   };
 }
@@ -286,14 +299,14 @@ describe('PlayerComponent', () => {
         { id: 'team-b', isMember: true, isPrimary: false },
         { id: 'team-c', isMember: false, isPrimary: false },
       ];
-      const { fixture, getView, getMyViewTeams } = await renderPlayer({
+      const { fixture, getView, getTeamMemberships } = await renderPlayer({
         routerState,
         teams,
         view: { id: 'view-1', name: 'Demo' },
       });
       const data = await firstValueFrom(fixture.componentInstance.loadData());
       expect(getView).toHaveBeenCalledWith('view-1');
-      expect(getMyViewTeams).toHaveBeenCalledWith('view-1');
+      expect(getTeamMemberships).toHaveBeenCalledWith('u1', 'view-1');
       expect(data.team.id).toBe('team-a');
       expect(data.teams.map((t: { id: string }) => t.id)).toEqual([
         'team-a',

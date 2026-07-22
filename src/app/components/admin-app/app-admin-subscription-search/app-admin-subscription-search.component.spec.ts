@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import {
   WebhookService,
   WebhookSubscription,
@@ -30,7 +31,9 @@ async function renderSearch(
   const getAllWebhooks = vi.fn(() => of(list));
   const deleteWebhookSubscription = vi.fn(() => of(undefined));
   const editSubscription = vi.fn(() => of(editResult));
-  const confirm = vi.fn(() => of({ confirm: confirmDelete }));
+  const confirm = vi.fn(() => ({
+    afterClosed: () => of(confirmDelete),
+  }));
 
   const rendered = await renderComponent(
     AppAdminSubscriptionSearchComponent,
@@ -42,7 +45,8 @@ async function renderSearch(
           provide: WebhookService,
           useValue: { getAllWebhooks, deleteWebhookSubscription },
         },
-        { provide: DialogService, useValue: { editSubscription, confirm } },
+        { provide: DialogService, useValue: { editSubscription } },
+        { provide: CrucibleDialogService, useValue: { confirm } },
       ],
     },
   );
@@ -154,8 +158,10 @@ describe('AppAdminSubscriptionSearchComponent', () => {
         await renderSearch({ confirmDelete: true });
       fixture.componentInstance.deleteSubscription(subs[0]);
       expect(confirm).toHaveBeenCalledWith(
-        'Confirm Delete',
-        expect.stringContaining('Alpha'),
+        expect.objectContaining({
+          title: 'Confirm Delete',
+          message: expect.stringContaining('Alpha'),
+        }),
       );
       expect(deleteWebhookSubscription).toHaveBeenCalledWith('s1');
       expect(getAllWebhooks).toHaveBeenCalledTimes(2);

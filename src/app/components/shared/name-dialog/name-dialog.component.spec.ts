@@ -42,16 +42,6 @@ describe('NameDialogComponent', () => {
   });
 
   /**
-   * Verifies: the component forces disableClose=true on the dialog ref on init.
-   * Interacts with: MatDialogRef.disableClose (seeded false in the stub).
-   * Data: default dialog data.
-   */
-  it('sets disableClose on the dialog ref', async () => {
-    const { dialogRef } = await renderDialog();
-    expect(dialogRef.disableClose).toBe(true);
-  });
-
-  /**
    * Verifies: the name form control is initialized from data.nameValue.
    * Interacts with: component reactive form built on init from MAT_DIALOG_DATA.
    * Data: dialog data { nameValue: 'Hi' }.

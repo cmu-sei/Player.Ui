@@ -13,6 +13,7 @@ import { TeamPermissionsService } from '../../../../services/permissions/team-pe
 import { TeamRolesService } from '../../../../services/roles/team-roles.service';
 import { DialogService } from '../../../../services/dialog/dialog.service';
 import { SystemPermission, TeamRole } from '../../../../generated/player-api';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 const mockTeamPermissions = [
   {
@@ -56,12 +57,12 @@ async function renderTeamRoles(
   hasManageRoles = false,
   overrides: {
     nameResult?: { wasCancelled: boolean; nameValue?: string };
-    confirmResult?: { confirm: boolean };
+    confirmResult?: boolean;
   } = {},
 ) {
   const {
     nameResult = { wasCancelled: true, nameValue: '' },
-    confirmResult = { confirm: false },
+    confirmResult = false,
   } = overrides;
 
   const stubs = {
@@ -74,7 +75,9 @@ async function renderTeamRoles(
     load: vi.fn(() => of(mockTeamPermissions)),
     createTeamPermission: vi.fn(() => of(mockTeamPermissions[0])),
     name: vi.fn(() => of(nameResult)),
-    confirm: vi.fn(() => of(confirmResult)),
+    confirm: vi.fn(() => ({
+      afterClosed: () => of(confirmResult),
+    })),
   };
 
   const rendered = await renderComponent(TeamRolesComponent, {
@@ -109,7 +112,11 @@ async function renderTeamRoles(
       },
       {
         provide: DialogService,
-        useValue: { confirm: stubs.confirm, name: stubs.name },
+        useValue: { name: stubs.name },
+      },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm: stubs.confirm },
       },
     ],
   });
@@ -351,7 +358,7 @@ describe('TeamRolesComponent', () => {
      */
     it('deletes when confirmed', async () => {
       const { fixture, stubs } = await renderTeamRoles(true, {
-        confirmResult: { confirm: true },
+        confirmResult: true,
       });
       fixture.componentInstance.deleteRole({
         id: 'trole-1',
@@ -367,7 +374,7 @@ describe('TeamRolesComponent', () => {
      */
     it('is a no-op when cancelled', async () => {
       const { fixture, stubs } = await renderTeamRoles(true, {
-        confirmResult: { confirm: false },
+        confirmResult: false,
       });
       fixture.componentInstance.deleteRole({
         id: 'trole-1',

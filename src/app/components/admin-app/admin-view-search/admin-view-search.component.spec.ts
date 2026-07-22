@@ -16,6 +16,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { ClipboardModule } from 'ngx-clipboard';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 const mockViews: View[] = [
   {
@@ -54,7 +55,9 @@ async function renderAdminViewSearch(
     getView: vi.fn(getView),
     createView: vi.fn((v: View) => of({ ...v, id: 'created-view' })),
     updateView: vi.fn((_id: string, v: View) => of(v)),
-    confirm: vi.fn(() => of({ confirm: confirmResult })),
+    confirm: vi.fn(() => ({
+      afterClosed: () => of(confirmResult),
+    })),
     dialogOpen: vi.fn(() => ({ close: vi.fn() })),
   };
 
@@ -78,7 +81,7 @@ async function renderAdminViewSearch(
         },
       },
       {
-        provide: DialogService,
+        provide: CrucibleDialogService,
         useValue: { confirm: stubs.confirm },
       },
       {
@@ -253,8 +256,10 @@ describe('AdminViewSearchComponent', () => {
     });
     fixture.componentInstance.executeViewAction('activate', 'view-2');
     expect(stubs.confirm).toHaveBeenCalledWith(
-      'Activate View?',
-      expect.stringContaining('Activate'),
+      expect.objectContaining({
+        title: 'Activate View?',
+        message: expect.stringContaining('Activate'),
+      }),
     );
     expect(stubs.updateView).toHaveBeenCalledWith(
       'view-2',
@@ -275,8 +280,10 @@ describe('AdminViewSearchComponent', () => {
     });
     fixture.componentInstance.executeViewAction('activate', 'view-1');
     expect(stubs.confirm).toHaveBeenCalledWith(
-      'Deactivate View?',
-      expect.stringContaining('deactivate'),
+      expect.objectContaining({
+        title: 'Deactivate View?',
+        message: expect.stringContaining('deactivate'),
+      }),
     );
     expect(stubs.updateView).toHaveBeenCalledWith(
       'view-1',

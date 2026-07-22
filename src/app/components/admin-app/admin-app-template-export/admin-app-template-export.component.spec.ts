@@ -6,6 +6,7 @@ import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { MatSelectModule } from '@angular/material/select';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { of, throwError } from 'rxjs';
 import {
   ApplicationService,
@@ -49,7 +50,7 @@ async function renderExport(
 
   const result = await renderComponent(AdminAppTemplateExportComponent, {
     declarations: [AdminAppTemplateExportComponent],
-    imports: [MatSelectModule],
+    imports: [MatSelectModule, ...CRUCIBLE_DIALOG_IMPORTS],
     componentProperties: { ids },
     providers: [
       {
@@ -102,24 +103,27 @@ describe('AdminAppTemplateExportComponent', () => {
   });
 
   /**
-   * Verifies: the export button shows the selected count "Export (N)" when ids
-   *   are supplied.
+   * Verifies: the shared dialog renders the Export action when ids are supplied.
    * Interacts with: rendered DOM via screen.findByRole.
    * Data: ids of length 3.
    */
-  it('shows "Export (N)" label when ids are provided', async () => {
+  it('shows the Export action when ids are provided', async () => {
     await renderExport({ ids: ['a', 'b', 'c'] });
-    expect(await screen.findByRole('button', { name: /Export \(3\)/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /^Export$/ }),
+    ).toBeInTheDocument();
   });
 
   /**
-   * Verifies: the export button reads "Export All" when no ids are selected.
+   * Verifies: the shared dialog still renders the Export action when no ids are selected.
    * Interacts with: rendered DOM via screen.findByRole.
    * Data: empty ids array.
    */
-  it('shows "Export All" label when ids is empty', async () => {
+  it('shows the Export action when ids is empty', async () => {
     await renderExport({ ids: [] });
-    expect(await screen.findByRole('button', { name: /Export All/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /^Export$/ }),
+    ).toBeInTheDocument();
   });
 
   /**
@@ -148,7 +152,7 @@ describe('AdminAppTemplateExportComponent', () => {
     const { fixture, exportApplicationTemplates } = await renderExport({
       ids: ['id-a', 'id-b'],
     });
-    await user.click(screen.getByRole('button', { name: /Export \(2\)/ }));
+    await user.click(screen.getByRole('button', { name: /^Export$/ }));
     expect(exportApplicationTemplates).toHaveBeenCalledWith(
       false, // includeIcons
       false, // embedIcons (disabled because includeIcons=false)

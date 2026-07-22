@@ -5,6 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { of } from 'rxjs';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import {
   ApplicationService,
   ImportApplicationTemplatesResult,
@@ -24,6 +25,7 @@ async function renderImport(
 
   const rendered = await renderComponent(AdminAppTemplateImportComponent, {
     declarations: [AdminAppTemplateImportComponent],
+    imports: [...CRUCIBLE_DIALOG_IMPORTS],
     providers: [
       {
         provide: ApplicationService,

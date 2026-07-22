@@ -7,13 +7,13 @@ import { of } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import {
   View,
   Application,
   ApplicationTemplate,
 } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import {
   AppErrorStateMatcher,
   ViewApplicationsSelectComponent,
@@ -54,7 +54,9 @@ async function renderSelect(
   );
   const updateApplication = vi.fn(() => of({} as Application));
   const deleteApplication = vi.fn(() => of(undefined));
-  const confirm = vi.fn(() => of({ confirm: confirmDelete }));
+  const confirm = vi.fn(() => ({
+    afterClosed: () => of(confirmDelete),
+  }));
 
   const rendered = await renderComponent(ViewApplicationsSelectComponent, {
     declarations: [ViewApplicationsSelectComponent],
@@ -72,7 +74,7 @@ async function renderSelect(
           deleteApplication,
         },
       },
-      { provide: DialogService, useValue: { confirm } },
+      { provide: CrucibleDialogService, useValue: { confirm } },
     ],
   });
 

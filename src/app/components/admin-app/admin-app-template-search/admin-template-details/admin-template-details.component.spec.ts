@@ -6,9 +6,9 @@ import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { of } from 'rxjs';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { ApplicationTemplate } from '../../../../generated/player-api';
 import { ApplicationService } from '../../../../generated/player-api/api/application.service';
-import { DialogService } from '../../../../services/dialog/dialog.service';
 import { AdminTemplateDetailsComponent } from './admin-template-details.component';
 import { renderComponent } from '../../../../test-utils/render-component';
 
@@ -33,7 +33,9 @@ async function renderDetails(
     of(t),
   );
   const deleteApplicationTemplate = vi.fn(() => of(undefined));
-  const confirmDialog = vi.fn(() => of({ confirm }));
+  const confirmDialog = vi.fn(() => ({
+    afterClosed: () => of(confirm),
+  }));
 
   const rendered = await renderComponent(AdminTemplateDetailsComponent, {
     declarations: [AdminTemplateDetailsComponent],
@@ -48,7 +50,7 @@ async function renderDetails(
         },
       },
       {
-        provide: DialogService,
+        provide: CrucibleDialogService,
         useValue: { confirm: confirmDialog },
       },
     ],
@@ -111,7 +113,12 @@ describe('AdminTemplateDetailsComponent', () => {
             deleteApplicationTemplate: vi.fn(),
           },
         },
-        { provide: DialogService, useValue: { confirm: () => of({ confirm: false }) } },
+        {
+          provide: CrucibleDialogService,
+          useValue: {
+            confirm: () => ({ afterClosed: () => of(false) }),
+          },
+        },
       ],
     });
     fixture.componentInstance.editAppTemplate();
@@ -178,8 +185,10 @@ describe('AdminTemplateDetailsComponent', () => {
       screen.getByRole('button', { name: /Delete Application Template/ }),
     );
     expect(confirmDialog).toHaveBeenCalledWith(
-      'Delete Application Template?',
-      expect.stringContaining('Alpha'),
+      expect.objectContaining({
+        title: 'Delete Application Template?',
+        message: expect.stringContaining('Alpha'),
+      }),
     );
   });
 });

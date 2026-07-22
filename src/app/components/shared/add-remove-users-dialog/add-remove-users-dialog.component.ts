@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -21,7 +21,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -82,10 +82,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     public teamService: TeamService,
     public teamMembershipService: TeamMembershipService,
     public roleService: TeamRolesService,
-    private dialog: MatDialog,
+    private confirmService: CrucibleDialogService,
     private loggedInUserService: LoggedInUserService,
   ) {
-    this.dialogRef.disableClose = true;
     this.isLoading = false;
     this.isBusy = false;
     this.filterString = '';
@@ -291,6 +290,10 @@ export class AddRemoveUsersDialogComponent implements OnInit {
                 const teamMembership = tmbs.find(
                   (tmb) => tmb.teamId === this.team.id,
                 );
+                if (teamMembership.roleId === null) {
+                  teamMembership.roleId = '';
+                  teamMembership.roleName = '';
+                }
                 this.addTeamUserToTable(
                   new TeamUser(user.name, user, teamMembership),
                 );
@@ -348,16 +351,21 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     }
 
     if (tuser.user.id === this.currentUserId) {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: {} });
-      dialogRef.componentInstance.title = 'Remove yourself from team?';
-      dialogRef.componentInstance.message =
-        'You are about to remove your own account from this team. ' +
-        'You may lose access to this team. Are you sure?';
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result && result.confirm) {
-          this.performRemoveUserFromTeam(tuser);
-        }
-      });
+      this.confirmService
+        .confirm({
+          title: 'Remove yourself from team?',
+          message:
+            'You are about to remove your own account from this team. ' +
+            'You may lose access to this team. Are you sure?',
+          confirmText: 'Remove',
+          cancelText: 'Cancel',
+        })
+        .afterClosed()
+        .subscribe((confirmed) => {
+          if (confirmed) {
+            this.performRemoveUserFromTeam(tuser);
+          }
+        });
     } else {
       this.performRemoveUserFromTeam(tuser);
     }

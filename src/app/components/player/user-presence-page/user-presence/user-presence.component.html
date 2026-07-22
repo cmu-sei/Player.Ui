@@ -40,9 +40,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >Hide Offline</mat-checkbox
       >
     </span>
+    @if (showCloseButton) {
     <span class="me-1">
       <button
         mat-icon-button
+        mat-dialog-close
         (click)="closeMe.emit()"
         title="Close"
         tabindex="-1"
@@ -53,18 +55,30 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         ></mat-icon>
       </button>
     </span>
+    }
   </div>
 
-  <mat-accordion multi>
+  <mat-accordion class="presence-accordion" multi>
     @for (team of _teams | async; track trackByTeamId(team)) {
-      <div>
+      @let users = getPresenceByTeamId(team.id) | async;
+      @let currentSearchTerm = searchTerm$ | async;
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ team.name }}
+          </mat-panel-title>
+          <mat-panel-description>
+            Count: {{ getPresenceCount(users, currentSearchTerm) }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
         <app-team-user-presence
           [team]="team"
-          [users]="getPresenceByTeamId(team.id) | async"
-          [searchTerm]="searchTerm$ | async"
+          [users]="users"
+          [searchTerm]="currentSearchTerm"
           [hideInactive]="hideInactive"
         ></app-team-user-presence>
-      </div>
+      </mat-expansion-panel>
     }
   </mat-accordion>
 </div>

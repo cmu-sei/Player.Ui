@@ -22,6 +22,7 @@ export interface Team {
     roleId?: string | null;
     roleName?: string | null;
     permissions?: Array<TeamPermissionModel> | null;
+    scopedTeamIds?: Array<string> | null;
     isMember?: boolean;
     isPrimary?: boolean;
 }

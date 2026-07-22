@@ -2,15 +2,12 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import {
-  PageEvent,
-  MatPaginator,
-} from '@angular/material/paginator';
-import { MatSort, MatSortable } from '@angular/material/sort';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { User, UserService, RoleService } from '../../../generated/player-api';
+import { User, UserService } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
-import { DialogService } from '../../../services/dialog/dialog.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 export interface Action {
   Value: string;
@@ -18,10 +15,10 @@ export interface Action {
 }
 
 @Component({
-    selector: 'app-admin-user-search',
-    templateUrl: './admin-user-search.component.html',
-    styleUrls: ['./admin-user-search.component.scss'],
-    standalone: false
+  selector: 'app-admin-user-search',
+  templateUrl: './admin-user-search.component.html',
+  styleUrls: ['./admin-user-search.component.scss'],
+  standalone: false,
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public displayedColumns: string[] = ['id', 'name', 'role'];
@@ -36,7 +33,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   constructor(
     private userService: UserService,
     private rolesService: RolesService,
-    private dialogService: DialogService
+    private confirmDialogService: CrucibleDialogService,
   ) {}
 
   /**
@@ -81,17 +78,16 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * @param user The user to delete
    */
   deleteUser(user: User) {
-    this.dialogService
-      .confirm(
-        'Delete User?',
-        `Are you sure you want to delete ${user.name || user.id}?`,
-        {
-          buttonTrueText: 'Delete',
-          buttonFalseText: 'Cancel',
-        }
-      )
-      .subscribe((result) => {
-        if (result.confirm) {
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete User?',
+        message: `Are you sure you want to delete ${user.name || user.id}?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.userService.deleteUser(user.id).subscribe(() => {
             // Refresh the users list after successful deletion
             this.refreshUsers();

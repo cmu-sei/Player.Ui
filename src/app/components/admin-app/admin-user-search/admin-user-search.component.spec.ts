@@ -8,7 +8,7 @@ import { AdminUserSearchComponent } from './admin-user-search.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { User, UserService } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
-import { DialogService } from '../../../services/dialog/dialog.service';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -28,7 +28,9 @@ async function renderAdminUserSearch(
     getUsers: vi.fn(() => of(mockUsers)),
     deleteUser: vi.fn(() => of(undefined)),
     getRoles: vi.fn(() => of([])),
-    confirm: vi.fn(() => of({ confirm: confirmResult })),
+    confirm: vi.fn(() => ({
+      afterClosed: () => of(confirmResult),
+    })),
   };
 
   const rendered = await renderComponent(AdminUserSearchComponent, {
@@ -44,7 +46,7 @@ async function renderAdminUserSearch(
         useValue: { getRoles: stubs.getRoles },
       },
       {
-        provide: DialogService,
+        provide: CrucibleDialogService,
         useValue: { confirm: stubs.confirm },
       },
     ],
@@ -162,9 +164,11 @@ describe('AdminUserSearchComponent', () => {
       stubs.getUsers.mockClear();
       fixture.componentInstance.deleteUser(mockUsers[0]);
       expect(stubs.confirm).toHaveBeenCalledWith(
-        'Delete User?',
-        expect.stringContaining('Alice Smith'),
-        expect.objectContaining({ buttonTrueText: 'Delete' }),
+        expect.objectContaining({
+          title: 'Delete User?',
+          message: expect.stringContaining('Alice Smith'),
+          confirmText: 'Delete',
+        }),
       );
       expect(stubs.deleteUser).toHaveBeenCalledWith('user-1');
       // refreshUsers() runs after a successful delete
@@ -182,9 +186,10 @@ describe('AdminUserSearchComponent', () => {
       });
       fixture.componentInstance.deleteUser({ id: 'user-3' } as User);
       expect(stubs.confirm).toHaveBeenCalledWith(
-        'Delete User?',
-        expect.stringContaining('user-3'),
-        expect.anything(),
+        expect.objectContaining({
+          title: 'Delete User?',
+          message: expect.stringContaining('user-3'),
+        }),
       );
     });
 

@@ -6,6 +6,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import {
   Team,
   TeamService,
@@ -85,7 +86,9 @@ async function renderEdit(
     getApplicationTemplates: vi.fn(() => of([])),
     createApplication: vi.fn(() => of({ id: 'app-1', name: 'App' })),
     getViewApplications: vi.fn(() => of([])),
-    confirm: vi.fn(() => of({ confirm: confirmResult })),
+    confirm: vi.fn(() => ({
+      afterClosed: () => of(confirmResult),
+    })),
     addRemoveUsersToTeam: vi.fn(() => of({ teamUsers: [] })),
     editFile: vi.fn(() => of({ name: 'renamed.txt' })),
     createApplicationDialog: vi.fn(() => of(undefined)),
@@ -135,11 +138,14 @@ async function renderEdit(
       {
         provide: DialogService,
         useValue: {
-          confirm: stubs.confirm,
           addRemoveUsersToTeam: stubs.addRemoveUsersToTeam,
           editFile: stubs.editFile,
           createApplication: stubs.createApplicationDialog,
         },
+      },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm: stubs.confirm },
       },
       {
         provide: TeamPermissionsService,
@@ -494,16 +500,21 @@ describe('AdminViewEditComponent', () => {
   });
 
   /**
-   * Verifies: saveTeamName fetches the team, applies the new name, writes it back, and updates the local list.
-   * Interacts with: stubbed TeamService.getTeam and updateTeam.
+   * Verifies: saveTeamName applies the form value, writes it back, and updates the local list.
+   * Interacts with: stubbed TeamService.updateTeam.
    * Data: a team 't1' renamed to 'Renamed'.
    */
   it('saveTeamName fetches, renames, and writes the team back', async () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
-    c.teams = [new TeamUserApp('Old', { id: 't1', name: 'Old' } as Team, [])];
-    c.saveTeamName('Renamed', 't1');
-    expect(stubs.getTeam).toHaveBeenCalledWith('t1');
+    const team = new TeamUserApp(
+      'Old',
+      { id: 't1', name: 'Old' } as Team,
+      [],
+    );
+    c.teams = [team];
+    c.teamNameFormControl.setValue('Renamed');
+    c.saveTeamName(team);
     expect(stubs.updateTeam).toHaveBeenCalledWith(
       't1',
       expect.objectContaining({ name: 'Renamed' }),

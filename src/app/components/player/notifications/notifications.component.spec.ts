@@ -5,8 +5,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { BehaviorSubject, of, Subject } from 'rxjs';
-import { ComnSettingsService } from '@cmusei/crucible-common';
-import { DialogService } from '../../../services/dialog/dialog.service';
+import {
+  ComnSettingsService,
+  CrucibleDialogService,
+} from '@cmusei/crucible-common';
 import { NotificationService } from '../../../services/notification/notification.service';
 import { ViewService } from '../../../generated/player-api/api/view.service';
 import { NotificationDataStatus } from '../../../models/notification-data';
@@ -43,7 +45,9 @@ async function renderNotifications(
   const sendNotification = vi.fn();
 
   const setTitle = vi.fn();
-  const confirmDialog = vi.fn(() => of({ confirm }));
+  const confirmDialog = vi.fn(() => ({
+    afterClosed: () => of(confirm),
+  }));
 
   const deleteViewNotification = vi.fn(() => of(undefined));
   const deleteViewNotifications = vi.fn(() => of(undefined));
@@ -83,7 +87,10 @@ async function renderNotifications(
           },
         },
       },
-      { provide: DialogService, useValue: { confirm: confirmDialog } },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm: confirmDialog },
+      },
       {
         provide: ViewService,
         useValue: {

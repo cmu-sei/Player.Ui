@@ -132,11 +132,11 @@ describe('ManageTeamsComponent', () => {
   });
 
   /**
-   * Verifies: teams where isMember is false are dropped and their user counts are never fetched.
+   * Verifies: manageable scoped teams are included even when the user is not a direct member.
    * Interacts with: TeamService.getMyViewTeams, UserService.getTeamUsers spy.
-   * Data: override Red(member)+Green(non-member), both manageable; expects only t1, no getTeamUsers('t3').
+   * Data: override Red(member)+Green(scoped), both manageable.
    */
-  it('excludes teams the user is not a member of', async () => {
+  it('includes manageable scoped teams', async () => {
     const { fixture, getTeamUsers } = await renderManageTeams({
       teams: [red, green],
       manageableIds: ['t1', 't3'],
@@ -144,9 +144,8 @@ describe('ManageTeamsComponent', () => {
     });
     await fixture.whenStable();
     const teams = fixture.componentInstance['teams']();
-    expect(teams.map((t) => t.team.id)).toEqual(['t1']);
-    // green (t3) is not a member, so its users are never fetched.
-    expect(getTeamUsers).not.toHaveBeenCalledWith('t3');
+    expect(teams.map((t) => t.team.id)).toEqual(['t3', 't1']);
+    expect(getTeamUsers).toHaveBeenCalledWith('t3');
   });
 
   /**

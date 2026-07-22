@@ -10,11 +10,14 @@ import { renderComponent } from 'src/app/test-utils/render-component';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { TopbarView } from './topbar.models';
-import { ComnAuthService, ComnAuthQuery } from '@cmusei/crucible-common';
+import {
+  ComnAuthService,
+  ComnAuthQuery,
+  CrucibleDialogService,
+} from '@cmusei/crucible-common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import { Team } from '../../../generated/player-api';
 
 const mockLogout = vi.fn();
@@ -80,9 +83,9 @@ async function renderTopbar(
   const dialogOpen = vi.fn();
   const dialogCloseAll = vi.fn();
   const snackbarOpen = vi.fn();
-  const confirm = vi.fn(() =>
-    of({ confirm: overrides.confirmResult ?? false }),
-  );
+  const confirm = vi.fn(() => ({
+    afterClosed: () => of(overrides.confirmResult ?? false),
+  }));
 
   const rendered = await renderComponent(TopbarComponent, {
     declarations: [TopbarComponent],
@@ -124,7 +127,7 @@ async function renderTopbar(
         useValue: { open: dialogOpen, closeAll: dialogCloseAll },
       },
       {
-        provide: DialogService,
+        provide: CrucibleDialogService,
         useValue: { confirm },
       },
       {
@@ -682,8 +685,11 @@ describe('TopbarComponent', () => {
       });
       fixture.componentInstance.resetUI();
       expect(confirm).toHaveBeenCalledWith(
-        'Reset UI?',
-        expect.stringContaining('Team 7'),
+        expect.objectContaining({
+          title: 'Reset UI?',
+          message: expect.stringContaining('Team 7'),
+          confirmText: 'Reset',
+        }),
       );
     });
 

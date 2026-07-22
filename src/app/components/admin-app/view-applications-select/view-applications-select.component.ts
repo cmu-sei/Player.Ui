@@ -8,7 +8,6 @@ import {
   ApplicationService,
   Application,
 } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import {
   UntypedFormControl,
   FormGroupDirective,
@@ -16,12 +15,13 @@ import {
   Validators,
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 @Component({
-    selector: 'app-view-applications-select',
-    templateUrl: './view-applications-select.component.html',
-    styleUrls: ['./view-applications-select.component.scss'],
-    standalone: false
+  selector: 'app-view-applications-select',
+  templateUrl: './view-applications-select.component.html',
+  styleUrls: ['./view-applications-select.component.scss'],
+  standalone: false,
 })
 export class ViewApplicationsSelectComponent implements OnInit {
   @Input() view: View;
@@ -45,7 +45,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
 
   constructor(
     public applicationService: ApplicationService,
-    public dialogService: DialogService
+    private confirmDialogService: CrucibleDialogService,
   ) {}
 
   /**
@@ -57,7 +57,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
     if (!this.view) {
       // either a team or a view must be provided, so roles and permissions will not be functional
       console.log(
-        'The applications select component requires either an view, therefore will be non-functional.'
+        'The applications select component requires either an view, therefore will be non-functional.',
       );
       return;
     } else {
@@ -171,15 +171,19 @@ export class ViewApplicationsSelectComponent implements OnInit {
    * @param app The app to delete
    */
   deleteViewApplication(app: Application) {
-    this.dialogService
-      .confirm(
-        'Delete Application',
-        'Are you sure that you want to remove the application ' +
+    this.confirmDialogService
+      .confirm({
+        title: 'Delete Application',
+        message:
+          'Are you sure that you want to remove the application ' +
           this.getAppName(app) +
-          '?'
-      )
-      .subscribe((result) => {
-        if (result['confirm']) {
+          '?',
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+      })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (confirmed) {
           this.applicationService.deleteApplication(app.id).subscribe(() => {
             console.log('successfully deleted application');
             this.updateApplications();
@@ -191,9 +195,12 @@ export class ViewApplicationsSelectComponent implements OnInit {
   getAppName(app: Application) {
     if (app.name != null) {
       return app.name;
-    } else if (app.applicationTemplateId != null && this.applicationTemplates?.length > 0) {
+    } else if (
+      app.applicationTemplateId != null &&
+      this.applicationTemplates?.length > 0
+    ) {
       const template = this.applicationTemplates.find(
-        (x) => x.id === app.applicationTemplateId
+        (x) => x.id === app.applicationTemplateId,
       );
 
       if (template != null) {
@@ -209,9 +216,12 @@ export class ViewApplicationsSelectComponent implements OnInit {
   getAppIcon(app: Application) {
     if (app.icon != null) {
       return app.icon;
-    } else if (app.applicationTemplateId != null && this.applicationTemplates?.length > 0) {
+    } else if (
+      app.applicationTemplateId != null &&
+      this.applicationTemplates?.length > 0
+    ) {
       const template = this.applicationTemplates.find(
-        (x) => x.id === app.applicationTemplateId
+        (x) => x.id === app.applicationTemplateId,
       );
 
       if (template != null) {
@@ -226,7 +236,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
 
   getTemplate(applicationTemplateId: string) {
     const template = this.applicationTemplates.find(
-      (x) => x.id === applicationTemplateId
+      (x) => x.id === applicationTemplateId,
     );
     return template;
   }
@@ -235,7 +245,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
 export class AppErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
     control: UntypedFormControl | null,
-    form: FormGroupDirective | NgForm | null
+    form: FormGroupDirective | NgForm | null,
   ): boolean {
     const isSubmitted = form && form.submitted;
     return !!(control && control.invalid && (control.dirty || isSubmitted));

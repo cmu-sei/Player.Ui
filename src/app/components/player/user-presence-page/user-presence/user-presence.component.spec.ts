@@ -4,7 +4,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
-import { Team, TeamService } from '../../../../generated/player-api';
+import {
+  Team,
+  TeamPermissionService,
+  TeamService,
+  ViewPermission,
+} from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
 import { UserPresenceComponent } from './user-presence.component';
@@ -12,7 +17,7 @@ import { renderComponent } from '../../../../test-utils/render-component';
 
 const teams: Team[] = [
   { id: 't2', name: 'Beta' },
-  { id: 't1', name: 'Alpha' },
+  { id: 't1', name: 'Alpha', isPrimary: true, scopedTeamIds: ['t2'] },
 ];
 
 const presence: ViewPresence[] = [
@@ -41,6 +46,9 @@ async function renderPresence() {
   const joinPresence = vi.fn();
   const leavePresence = vi.fn();
   const getMyViewTeams = vi.fn(() => of(teams));
+  const getMyTeamPermissions = vi.fn(() =>
+    of([{ directPermissionValues: [ViewPermission.ViewView] }]),
+  );
 
   const rendered = await renderComponent(UserPresenceComponent, {
     declarations: [UserPresenceComponent],
@@ -52,10 +60,21 @@ async function renderPresence() {
         useValue: { userPresence$, joinPresence, leavePresence },
       },
       { provide: TeamService, useValue: { getMyViewTeams } },
+      {
+        provide: TeamPermissionService,
+        useValue: { getMyTeamPermissions },
+      },
     ],
   });
 
-  return { ...rendered, userPresence$, joinPresence, leavePresence, getMyViewTeams };
+  return {
+    ...rendered,
+    userPresence$,
+    joinPresence,
+    leavePresence,
+    getMyViewTeams,
+    getMyTeamPermissions,
+  };
 }
 
 describe('UserPresenceComponent', () => {
@@ -76,7 +95,7 @@ describe('UserPresenceComponent', () => {
    */
   it('joins the presence channel for the given viewId on init', async () => {
     const { joinPresence } = await renderPresence();
-    expect(joinPresence).toHaveBeenCalledWith('view-1');
+    expect(joinPresence).toHaveBeenCalledWith('view-1', 't1');
   });
 
   /**
@@ -87,7 +106,7 @@ describe('UserPresenceComponent', () => {
   it('ngOnDestroy leaves the presence channel', async () => {
     const { fixture, leavePresence } = await renderPresence();
     fixture.componentInstance.ngOnDestroy();
-    expect(leavePresence).toHaveBeenCalledWith('view-1');
+    expect(leavePresence).toHaveBeenCalledWith('view-1', 't1');
   });
 
   /**

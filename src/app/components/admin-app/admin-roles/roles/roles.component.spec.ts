@@ -13,6 +13,7 @@ import { PermissionsService } from '../../../../services/permissions/permissions
 import { RolesService } from '../../../../services/roles/roles.service';
 import { DialogService } from '../../../../services/dialog/dialog.service';
 import { Role, SystemPermission } from '../../../../generated/player-api';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 const mockPermissions = [
   {
@@ -56,12 +57,12 @@ async function renderRoles(
   hasManageRoles = false,
   overrides: {
     nameResult?: { wasCancelled: boolean; nameValue?: string };
-    confirmResult?: { confirm: boolean };
+    confirmResult?: boolean;
   } = {},
 ) {
   const {
     nameResult = { wasCancelled: true, nameValue: '' },
-    confirmResult = { confirm: false },
+    confirmResult = false,
   } = overrides;
 
   const stubs = {
@@ -74,7 +75,9 @@ async function renderRoles(
     load: vi.fn(() => of(mockPermissions)),
     createPermission: vi.fn(() => of(mockPermissions[0])),
     name: vi.fn(() => of(nameResult)),
-    confirm: vi.fn(() => of(confirmResult)),
+    confirm: vi.fn(() => ({
+      afterClosed: () => of(confirmResult),
+    })),
   };
 
   const rendered = await renderComponent(SystemRolesComponent, {
@@ -107,7 +110,11 @@ async function renderRoles(
       },
       {
         provide: DialogService,
-        useValue: { confirm: stubs.confirm, name: stubs.name },
+        useValue: { name: stubs.name },
+      },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm: stubs.confirm },
       },
     ],
   });
@@ -347,7 +354,7 @@ describe('SystemRolesComponent', () => {
      */
     it('deletes when confirmed', async () => {
       const { fixture, stubs } = await renderRoles(true, {
-        confirmResult: { confirm: true },
+        confirmResult: true,
       });
       fixture.componentInstance.deleteRole({
         id: 'role-1',
@@ -363,7 +370,7 @@ describe('SystemRolesComponent', () => {
      */
     it('is a no-op when cancelled', async () => {
       const { fixture, stubs } = await renderRoles(true, {
-        confirmResult: { confirm: false },
+        confirmResult: false,
       });
       fixture.componentInstance.deleteRole({
         id: 'role-1',

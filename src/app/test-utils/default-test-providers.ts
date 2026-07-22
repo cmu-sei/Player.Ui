@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { EnvironmentProviders, Provider, ProviderToken } from '@angular/core';
-import { of } from 'rxjs';
+import { EMPTY, of } from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute } from '@angular/router';
 
@@ -154,7 +154,15 @@ export function getDefaultProviders(
 
     // Dialog tokens
     { provide: MAT_DIALOG_DATA, useValue: {} },
-    { provide: MatDialogRef, useValue: { close: () => {} } },
+    {
+      provide: MatDialogRef,
+      useValue: {
+        close: () => {},
+        beforeClosed: () => EMPTY,
+        afterClosed: () => EMPTY,
+        keydownEvents: () => EMPTY,
+      },
+    },
 
     // Router
     {

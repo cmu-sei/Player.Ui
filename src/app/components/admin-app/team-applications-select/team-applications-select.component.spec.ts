@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { of } from 'rxjs';
 import {
   Team,
@@ -12,7 +13,6 @@ import {
   ApplicationTemplate,
 } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import {
   ObjectType,
   TeamApplicationsSelectComponent,
@@ -69,7 +69,9 @@ async function renderSelect(
   const moveDownApplicationInstance = vi.fn(() => of(instances));
   const deleteApplicationInstance = vi.fn(() => of(undefined));
   const updateApplicationInstance = vi.fn(() => of({} as ApplicationInstance));
-  const confirm = vi.fn(() => of({ confirm: confirmRemove }));
+  const confirm = vi.fn(() => ({
+    afterClosed: () => of(confirmRemove),
+  }));
 
   const rendered = await renderComponent(TeamApplicationsSelectComponent, {
     declarations: [TeamApplicationsSelectComponent],
@@ -89,7 +91,7 @@ async function renderSelect(
           updateApplicationInstance,
         },
       },
-      { provide: DialogService, useValue: { confirm } },
+      { provide: CrucibleDialogService, useValue: { confirm } },
     ],
   });
 

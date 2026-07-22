@@ -10,6 +10,7 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 import {
@@ -44,6 +45,7 @@ interface ManageableTeam {
     MatIconModule,
     MatListModule,
     MatProgressSpinnerModule,
+    ...CRUCIBLE_DIALOG_IMPORTS,
   ],
 })
 export class ManageTeamsComponent {
@@ -78,9 +80,13 @@ export class ManageTeamsComponent {
               this.permissionsService.getManageableTeamIds(claims);
             return this.teamService.getMyViewTeams(this.viewId).pipe(
               switchMap((teams) => {
+                // No isMember filter: getMyViewTeams now also returns teams scoped to the
+                // user (member of a granting team). manageableIds (from the user's
+                // ManageTeam claims) already restricts this to teams they can manage,
+                // whether reached via membership or a scope.
                 const manageable = teams.filter(
                   (t): t is Team & { id: string } =>
-                    !!t.id && t.isMember && manageableIds.includes(t.id),
+                    !!t.id && manageableIds.includes(t.id),
                 );
                 if (manageable.length === 0) {
                   return of([] as ManageableTeam[]);

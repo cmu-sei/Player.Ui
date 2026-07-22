@@ -10,48 +10,105 @@ to use this component, add one of the following lines to the html of your edit p
 <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 -->
 
-<mat-form-field subscriptSizing="dynamic">
-  <mat-select
-    [value]="subject.roleId ?? ''"
-    name="userRole"
-    (selectionChange)="updateRole($event.value)"
-    placeholder="Role"
-    >
-    @if (user) {
-      <mat-option value="">None</mat-option>
-    }
-    @for (role of roles$ | async; track role.id) {
-      <mat-option [value]="role.id">
-        {{ role.name }}
-      </mat-option>
-    }
-  </mat-select>
-</mat-form-field>
+@let roles = roles$ | async;
 
-@if (showPermissions) {
-  <div class="add-margin">
-    <div>
-      <mat-form-field subscriptSizing="dynamic">
-        <mat-select
-          placeholder="Permissions"
-          [(ngModel)]="selectedPermissions"
-          name="userPermissions"
-          multiple
+<div
+  class="roles-permissions-select"
+  [class.roles-permissions-select--team]="showPermissions"
+>
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Role</mat-label>
+    <mat-select
+      [value]="subject.roleId ?? ''"
+      name="userRole"
+      (selectionChange)="updateRole($event.value)"
+    >
+      @if (user) {
+        <mat-option value="">None</mat-option>
+      }
+      @for (role of roles ?? []; track role.id) {
+        <mat-option [value]="role.id">
+          {{ role.name }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (showPermissions) {
+    @let permissions = permissions$ | async;
+    @let rolePermissions =
+      getSelectedRolePermissions(roles ?? [], permissions ?? []);
+
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-label>Additional Permissions</mat-label>
+      <mat-select
+        [(ngModel)]="selectedPermissions"
+        name="userPermissions"
+        multiple
+      >
+        @let selectedPermissionNames =
+          getSelectedPermissionNames(permissions ?? []);
+        <mat-select-trigger>
+          @if (selectedPermissionNames.length > 0) {
+            <span>{{ selectedPermissionNames[0] }}</span>
+            @if (selectedPermissionNames.length > 1) {
+              <span class="selected-permission-count">
+                (+{{ selectedPermissionNames.length - 1 }} more)
+              </span>
+            }
+          }
+        </mat-select-trigger>
+        @for (item of permissions ?? []; track item.id) {
+          <mat-option
+            [value]="item.id"
+            (onSelectionChange)="
+              $event.isUserInput
+                ? updatePermissions(item, $event.source.selected)
+                : null
+            "
           >
-          @for (item of permissions$ | async; track item.id) {
+            <span>{{ item.key ?? item.name }}</span>
+            @if (isPermissionGrantedByRole(item, rolePermissions)) {
+              <span class="role-included">Included in role</span>
+            }
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (scopeTargetTeams.length > 0) {
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>Scoped Teams</mat-label>
+        <button
+          matPrefix
+          mat-icon-button
+          class="scope-help"
+          type="button"
+          matTooltip="Users on this team will also have these permissions applied to the selected scoped teams."
+          aria-label="Scoped Teams help"
+          (click)="$event.stopPropagation()"
+        >
+          <mat-icon fontIcon="mdi-information-outline"></mat-icon>
+        </button>
+        <mat-select
+          [(ngModel)]="selectedScopedTeams"
+          name="scopedTeams"
+          multiple
+        >
+          @for (targetTeam of scopeTargetTeams; track targetTeam.id) {
             <mat-option
-              [value]="item.id"
-          (onSelectionChange)="
-            $event.isUserInput
-              ? updatePermissions(item, $event.source.selected)
-              : null
-          "
-              >
-              {{ item.key ?? item.name }}
+              [value]="targetTeam.id"
+              (onSelectionChange)="
+                $event.isUserInput
+                  ? updateScopedTeam(targetTeam, $event.source.selected)
+                  : null
+              "
+            >
+              {{ targetTeam.name }}
             </mat-option>
           }
         </mat-select>
       </mat-form-field>
-    </div>
-  </div>
-}
+    }
+  }
+</div>

@@ -176,7 +176,7 @@ export class NotificationService {
     return data;
   }
 
-  joinPresence(viewId: string) {
+  joinPresence(viewId: string, teamId?: string) {
     if (this.viewConnection == null) {
       this.viewConnection = new signalR.HubConnectionBuilder()
         .withUrl(
@@ -191,7 +191,7 @@ export class NotificationService {
       this.viewConnection
         .start()
         .then(() => {
-          this.invokeJoinPresence(viewId);
+          this.invokeJoinPresence(viewId, teamId);
         })
         .catch((x) => {
           console.log(x);
@@ -199,13 +199,13 @@ export class NotificationService {
         });
 
       this.viewConnection.onreconnected(() => {
-        this.viewConnection.invoke('JoinPresence', viewId);
+        this.invokeJoinPresence(viewId, teamId);
       });
     } else {
-      this.invokeJoinPresence(viewId);
+      this.invokeJoinPresence(viewId, teamId);
 
       this.viewConnection.onreconnected(() => {
-        this.viewConnection.invoke('JoinPresence', viewId);
+        this.invokeJoinPresence(viewId, teamId);
       });
     }
 
@@ -219,14 +219,18 @@ export class NotificationService {
     });
   }
 
-  leavePresence(viewId: string) {
+  leavePresence(viewId: string, teamId?: string) {
     if (this.viewConnection != null) {
-      this.viewConnection.invoke('LeavePresence', viewId).then();
+      const methodName = teamId ? 'LeavePresenceForTeam' : 'LeavePresence';
+      const args = teamId ? [viewId, teamId] : [viewId];
+      this.viewConnection.invoke(methodName, ...args).then();
     }
   }
 
-  private invokeJoinPresence(viewId: string) {
-    this.viewConnection.invoke('JoinPresence', viewId).then((x) => {
+  private invokeJoinPresence(viewId: string, teamId?: string) {
+    const methodName = teamId ? 'JoinPresenceForTeam' : 'JoinPresence';
+    const args = teamId ? [viewId, teamId] : [viewId];
+    this.viewConnection.invoke(methodName, ...args).then((x) => {
       this.userPresenceList = x;
       this.userPresenceList$.next(this.userPresenceList);
     });

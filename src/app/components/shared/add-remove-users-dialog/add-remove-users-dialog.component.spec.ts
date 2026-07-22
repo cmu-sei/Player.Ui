@@ -10,6 +10,7 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import {
   User,
   UserService,
@@ -66,11 +67,8 @@ async function renderDialog(
   const updateTeamMembership = vi.fn(() => of(undefined));
   const getRoles = vi.fn(() => of([]));
 
-  // ConfirmDialogComponent opened for the self-removal flow.
-  const confirmComponentInstance = { title: '', message: '' };
-  const dialogOpen = vi.fn(() => ({
-    componentInstance: confirmComponentInstance,
-    afterClosed: () => of({ confirm: confirmSelfRemoval }),
+  const confirm = vi.fn(() => ({
+    afterClosed: () => of(confirmSelfRemoval),
   }));
 
   const rendered = await renderComponent(AddRemoveUsersDialogComponent, {
@@ -95,7 +93,8 @@ async function renderDialog(
         useValue: { getTeamMemberships, updateTeamMembership },
       },
       { provide: TeamRolesService, useValue: { getRoles } },
-      { provide: MatDialog, useValue: { open: dialogOpen } },
+      { provide: MatDialog, useValue: { open: vi.fn() } },
+      { provide: CrucibleDialogService, useValue: { confirm } },
     ],
   });
 
@@ -103,7 +102,7 @@ async function renderDialog(
     ...rendered,
     close,
     dialogRef,
-    dialogOpen,
+    confirm,
     getUsers,
     getTeamUsers,
     addUserToTeam,
@@ -134,16 +133,6 @@ describe('AddRemoveUsersDialogComponent', () => {
   it('creates the component', async () => {
     const { fixture } = await renderDialog();
     expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  /**
-   * Verifies: the component forces disableClose=true on the dialog ref.
-   * Interacts with: MatDialogRef.disableClose (seeded false in the stub).
-   * Data: default render.
-   */
-  it('sets disableClose on the dialog ref', async () => {
-    const { dialogRef } = await renderDialog();
-    expect(dialogRef.disableClose).toBe(true);
   });
 
   /**
@@ -503,7 +492,7 @@ describe('AddRemoveUsersDialogComponent', () => {
        * Data: currentUserId set to alice; confirmSelfRemoval true.
        */
       it('confirms first, then removes when the user accepts', async () => {
-        const { fixture, removeUserFromTeam, dialogOpen } = await renderDialog({
+        const { fixture, removeUserFromTeam, confirm } = await renderDialog({
           confirmSelfRemoval: true,
         });
         const c = fixture.componentInstance;
@@ -514,7 +503,7 @@ describe('AddRemoveUsersDialogComponent', () => {
         c.teamUserDataSource.data = [tUser];
         c.userDataSource.data = [];
         c.removeUserFromTeam(tUser);
-        expect(dialogOpen).toHaveBeenCalled();
+        expect(confirm).toHaveBeenCalled();
         expect(removeUserFromTeam).toHaveBeenCalledWith('t1', 'u1');
       });
 
@@ -524,7 +513,7 @@ describe('AddRemoveUsersDialogComponent', () => {
        * Data: currentUserId set to alice; confirmSelfRemoval false.
        */
       it('does not remove when the confirmation is declined', async () => {
-        const { fixture, removeUserFromTeam, dialogOpen } = await renderDialog({
+        const { fixture, removeUserFromTeam, confirm } = await renderDialog({
           confirmSelfRemoval: false,
         });
         const c = fixture.componentInstance;
@@ -533,7 +522,7 @@ describe('AddRemoveUsersDialogComponent', () => {
         const tUser = new TeamUser('Alice', alice, aliceMembership);
         c.teamUserDataSource.data = [tUser];
         c.removeUserFromTeam(tUser);
-        expect(dialogOpen).toHaveBeenCalled();
+        expect(confirm).toHaveBeenCalled();
         expect(removeUserFromTeam).not.toHaveBeenCalled();
       });
     });

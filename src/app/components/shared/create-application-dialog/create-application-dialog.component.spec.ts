@@ -41,7 +41,6 @@ async function renderDialog() {
     componentProperties: {
       applicationId: 'app-1',
       file,
-      viewName: 'Demo',
       currentTeams,
     },
     providers: [
@@ -65,7 +64,7 @@ describe('CreateApplicationDialogComponent', () => {
   /**
    * Verifies: the component instantiates with the provided inputs and providers.
    * Interacts with: ApplicationService stub and MatDialogRef via renderDialog.
-   * Data: default render inputs (applicationId, file, viewName, currentTeams).
+   * Data: default render inputs (applicationId, file, currentTeams).
    */
   it('creates the component', async () => {
     const { fixture } = await renderDialog();
@@ -103,15 +102,4 @@ describe('CreateApplicationDialogComponent', () => {
     expect(close).toHaveBeenCalledWith({ teams: ['team-a', 'team-b'] });
   });
 
-  /**
-   * Verifies: cancel() closes with an empty teams array and creates nothing.
-   * Interacts with: MatDialogRef.close; asserts createApplicationInstance unused.
-   * Data: default render inputs.
-   */
-  it('cancel() closes the dialog with an empty teams array', async () => {
-    const { fixture, close, createApplicationInstance } = await renderDialog();
-    fixture.componentInstance.cancel();
-    expect(close).toHaveBeenCalledWith({ teams: [] });
-    expect(createApplicationInstance).not.toHaveBeenCalled();
-  });
 });

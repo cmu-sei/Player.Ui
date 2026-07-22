@@ -3,50 +3,40 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<h2>Export Views</h2>
-
-@if (!(hasErrors$ | async)) {
-  <form [formGroup]="form" (ngSubmit)="export()">
-    <mat-form-field>
-      <mat-label>Archive Type</mat-label>
-      <mat-select formControlName="archiveType">
-        @for (archiveType of archiveTypes; track archiveType) {
-          <mat-option
-            [value]="archiveType"
-            >
-            {{ archiveType }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-    <div class="d-flex justify-content-around">
-      <button
-        type="submit"
-        color="primary"
-        mat-raised-button
-        [disabled]="!form.valid || loading"
-        >
-        {{
-        loading
-        ? 'Exporting....'
-        : 'Export ' + (ids.length == 0 ? 'All' : '(' + ids.length + ')')
-        }}
-      </button>
-      <button type="reset" color="primary" mat-raised-button (click)="cancel()">
-        Cancel
-      </button>
-    </div>
-  </form>
-}
-
 @if (hasErrors$ | async) {
-  <div>
-    <h3 class="text-danger">
-      Some errors occurred during export. Check errors.txt in the archive for
-      details.
-    </h3>
-    <div class="d-flex justify-content-around">
-      <button mat-raised-button color="primary" (click)="cancel()">OK</button>
+  <crucible-dialog dialogTitle="Export Views" [hideDefaultActions]="true">
+    <div crucibleDialogContent>
+      <p class="text-danger">
+        Some errors occurred during export. Check errors.txt in the archive for
+        details.
+      </p>
     </div>
-  </div>
+    <ng-container crucibleDialogActions>
+      <button matButton="filled" (click)="cancel()">OK</button>
+    </ng-container>
+  </crucible-dialog>
+} @else {
+  <crucible-dialog
+    dialogTitle="Export Views"
+    [form]="form"
+    submitLabel="Export"
+    loadingLabel="Exporting..."
+    [loading]="loading"
+    [submitDisabled]="!form.valid"
+    (cancel)="cancel()"
+    (submit)="export()"
+  >
+    <div crucibleDialogContent [formGroup]="form" class="dialog-fields">
+      <mat-form-field>
+        <mat-label>Archive Type</mat-label>
+        <mat-select formControlName="archiveType">
+          @for (archiveType of archiveTypes; track archiveType) {
+            <mat-option [value]="archiveType">
+              {{ archiveType }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </crucible-dialog>
 }
