@@ -12,11 +12,21 @@ import { UserPermissionsService } from '../../../../services/permissions/user-pe
 import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
 import { TeamRolesService } from '../../../../services/roles/team-roles.service';
 import { DialogService } from '../../../../services/dialog/dialog.service';
-import { SystemPermission } from '../../../../generated/player-api';
+import { SystemPermission, TeamRole } from '../../../../generated/player-api';
 
 const mockTeamPermissions = [
-  { id: 'tp-1', name: 'ViewTeam', description: 'Can view team', immutable: true },
-  { id: 'tp-2', name: 'EditTeam', description: 'Can edit team', immutable: false },
+  {
+    id: 'tp-1',
+    name: 'ViewTeam',
+    description: 'Can view team',
+    immutable: true,
+  },
+  {
+    id: 'tp-2',
+    name: 'EditTeam',
+    description: 'Can edit team',
+    immutable: false,
+  },
 ];
 
 const mockTeamRoles = [
@@ -236,12 +246,10 @@ describe('TeamRolesComponent', () => {
      */
     it('edits the role (by id) when toggling the "All" permission', async () => {
       const { fixture, stubs } = await renderTeamRoles();
-      const role = { id: 'trole-1', allPermissions: false } as never;
-      fixture.componentInstance.setPermission(
-        { name: 'All' } as never,
-        role,
-        { checked: true } as never,
-      );
+      const role: TeamRole = { id: 'trole-1', allPermissions: false };
+      fixture.componentInstance.setPermission({ name: 'All' } as never, role, {
+        checked: true,
+      } as never);
       expect(role.allPermissions).toBe(true);
       expect(stubs.editRole).toHaveBeenCalledWith('trole-1', role);
     });
@@ -329,7 +337,7 @@ describe('TeamRolesComponent', () => {
     const { fixture, stubs } = await renderTeamRoles(true, {
       nameResult: { wasCancelled: false, nameValue: 'Renamed' },
     });
-    const role = { id: 'trole-1', name: 'Old' } as never;
+    const role: TeamRole = { id: 'trole-1', name: 'Old' };
     fixture.componentInstance.renameRole(role);
     expect(role.name).toBe('Renamed');
     expect(stubs.editRole).toHaveBeenCalledWith('trole-1', role);

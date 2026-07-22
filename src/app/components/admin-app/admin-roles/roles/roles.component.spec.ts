@@ -12,11 +12,21 @@ import { UserPermissionsService } from '../../../../services/permissions/user-pe
 import { PermissionsService } from '../../../../services/permissions/permissions.service';
 import { RolesService } from '../../../../services/roles/roles.service';
 import { DialogService } from '../../../../services/dialog/dialog.service';
-import { SystemPermission } from '../../../../generated/player-api';
+import { Role, SystemPermission } from '../../../../generated/player-api';
 
 const mockPermissions = [
-  { id: 'perm-1', name: 'ViewViews', description: 'Can view views', immutable: true },
-  { id: 'perm-2', name: 'ManageUsers', description: 'Can manage users', immutable: false },
+  {
+    id: 'perm-1',
+    name: 'ViewViews',
+    description: 'Can view views',
+    immutable: true,
+  },
+  {
+    id: 'perm-2',
+    name: 'ManageUsers',
+    description: 'Can manage users',
+    immutable: false,
+  },
 ];
 
 const mockRoles = [
@@ -234,12 +244,10 @@ describe('SystemRolesComponent', () => {
      */
     it('edits the role when toggling the "All" permission', async () => {
       const { fixture, stubs } = await renderRoles();
-      const role = { id: 'role-1', allPermissions: false } as never;
-      fixture.componentInstance.setPermission(
-        { name: 'All' } as never,
-        role,
-        { checked: true } as never,
-      );
+      const role: Role = { id: 'role-1', allPermissions: false };
+      fixture.componentInstance.setPermission({ name: 'All' } as never, role, {
+        checked: true,
+      } as never);
       expect(role.allPermissions).toBe(true);
       expect(stubs.editRole).toHaveBeenCalledWith(role);
     });
@@ -325,7 +333,7 @@ describe('SystemRolesComponent', () => {
     const { fixture, stubs } = await renderRoles(true, {
       nameResult: { wasCancelled: false, nameValue: 'Renamed' },
     });
-    const role = { id: 'role-1', name: 'Old' } as never;
+    const role: Role = { id: 'role-1', name: 'Old' };
     fixture.componentInstance.renameRole(role);
     expect(role.name).toBe('Renamed');
     expect(stubs.editRole).toHaveBeenCalledWith(role);
@@ -341,7 +349,10 @@ describe('SystemRolesComponent', () => {
       const { fixture, stubs } = await renderRoles(true, {
         confirmResult: { confirm: true },
       });
-      fixture.componentInstance.deleteRole({ id: 'role-1', name: 'X' } as never);
+      fixture.componentInstance.deleteRole({
+        id: 'role-1',
+        name: 'X',
+      } as never);
       expect(stubs.deleteRole).toHaveBeenCalledWith('role-1');
     });
 
@@ -354,7 +365,10 @@ describe('SystemRolesComponent', () => {
       const { fixture, stubs } = await renderRoles(true, {
         confirmResult: { confirm: false },
       });
-      fixture.componentInstance.deleteRole({ id: 'role-1', name: 'X' } as never);
+      fixture.componentInstance.deleteRole({
+        id: 'role-1',
+        name: 'X',
+      } as never);
       expect(stubs.deleteRole).not.toHaveBeenCalled();
     });
   });

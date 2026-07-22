@@ -13,7 +13,7 @@ import {
   TeamPermissionService,
   ViewPermission,
 } from '../../generated/player-api';
-import { getDefaultProviders } from 'src/app/test-utils/vitest-default-providers';
+import { getDefaultProviders } from 'src/app/test-utils/default-test-providers';
 
 function createService(
   overrides: {
@@ -176,7 +176,10 @@ describe('UserPermissionsService', () => {
      */
     it('getManageableTeamIds keeps only ManageTeam claims with a team id', () => {
       const service = createService();
-      expect(service.getManageableTeamIds(claims)).toEqual(['team-1', 'team-3']);
+      expect(service.getManageableTeamIds(claims)).toEqual([
+        'team-1',
+        'team-3',
+      ]);
     });
 
     /**

@@ -26,14 +26,14 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { getDefaultProviders } from './vitest-default-providers';
+import { getDefaultProviders } from './default-test-providers';
 
 export async function renderComponent<T>(
   component: Type<T>,
-  options?: Partial<RenderComponentOptions<T>>
+  options?: Partial<RenderComponentOptions<T>>,
 ) {
   const providers: (Provider | EnvironmentProviders)[] = getDefaultProviders(
-    options?.providers
+    options?.providers,
   );
   return render(component, {
     ...options,

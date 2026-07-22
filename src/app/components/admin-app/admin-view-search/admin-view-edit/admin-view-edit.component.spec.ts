@@ -13,6 +13,7 @@ import {
   ViewService,
   UserService,
   FileService,
+  FileModel,
 } from '../../../../generated/player-api';
 import { ApplicationService } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
@@ -57,7 +58,12 @@ async function renderEdit(
 ) {
   const {
     confirmResult = true,
-    initialView = { id: 'v1', name: 'Demo View', description: 'd', status: 'Active' },
+    initialView = {
+      id: 'v1',
+      name: 'Demo View',
+      description: 'd',
+      status: 'Active',
+    },
   } = overrides;
 
   const stubs: ServiceStubs = {
@@ -65,9 +71,7 @@ async function renderEdit(
     deleteView: vi.fn(() => of(undefined)),
     getViewTeams: vi.fn(() => of([])),
     deleteTeam: vi.fn(() => of(undefined)),
-    getTeam: vi.fn((id: string) =>
-      of({ id, name: 'Old' } as Team),
-    ),
+    getTeam: vi.fn((id: string) => of({ id, name: 'Old' } as Team)),
     updateTeam: vi.fn((_id: string, t: Team) => of({ ...t })),
     createTeam: vi.fn((_viewId: string, t: Team) =>
       of({ ...t, id: 'new-team' }),
@@ -94,7 +98,10 @@ async function renderEdit(
     providers: [
       {
         provide: ViewService,
-        useValue: { updateView: stubs.updateView, deleteView: stubs.deleteView },
+        useValue: {
+          updateView: stubs.updateView,
+          deleteView: stubs.deleteView,
+        },
       },
       {
         provide: TeamService,
@@ -232,9 +239,9 @@ describe('AdminViewEditComponent', () => {
     fixture.componentInstance.viewNameFormControl.setValue('Renamed View');
     fixture.componentInstance.saveView();
     expect(stubs.updateView).toHaveBeenCalled();
-    expect(
-      (stubs.updateView.mock.calls[0][1] as View).name,
-    ).toBe('Renamed View');
+    expect((stubs.updateView.mock.calls[0][1] as View).name).toBe(
+      'Renamed View',
+    );
   });
 
   /**
@@ -701,9 +708,14 @@ describe('AdminViewEditComponent', () => {
    */
   it('teamsForFileUpdated saves when teams are selected', async () => {
     const { fixture, stubs } = await renderEdit();
-    const file = { id: 'f1', name: 'doc.txt', teamIds: [] } as never;
+    const file: FileModel = { id: 'f1', name: 'doc.txt', teamIds: [] };
     fixture.componentInstance.teamsForFileUpdated({ value: ['t1'] }, file);
-    expect(stubs.updateFile).toHaveBeenCalledWith('f1', 'doc.txt', ['t1'], null);
+    expect(stubs.updateFile).toHaveBeenCalledWith(
+      'f1',
+      'doc.txt',
+      ['t1'],
+      null,
+    );
   });
 
   /**
@@ -713,7 +725,11 @@ describe('AdminViewEditComponent', () => {
    */
   it('teamsForFileUpdated clears teams locally but does not save when none selected', async () => {
     const { fixture, stubs } = await renderEdit();
-    const file = { id: 'f1', name: 'doc.txt', teamIds: ['t1'] } as never;
+    const file: FileModel = {
+      id: 'f1',
+      name: 'doc.txt',
+      teamIds: ['t1'],
+    };
     fixture.componentInstance.teamsForFileUpdated({ value: [] }, file);
     expect(file.teamIds).toEqual([]);
     expect(stubs.updateFile).not.toHaveBeenCalled();
@@ -731,7 +747,7 @@ describe('AdminViewEditComponent', () => {
       new TeamUserApp('Red', { id: 't1' } as Team, []),
       new TeamUserApp('Blue', { id: 't2' } as Team, []),
     ];
-    const file = { id: 'f1', name: 'doc.txt', teamIds: [] } as never;
+    const file: FileModel = { id: 'f1', name: 'doc.txt', teamIds: [] };
     c.toggleAllTeamsForViewFile(true, file);
     expect(file.teamIds).toEqual(['t1', 't2']);
     expect(stubs.updateFile).toHaveBeenCalledWith(
@@ -749,7 +765,11 @@ describe('AdminViewEditComponent', () => {
    */
   it('toggleAllTeamsForViewFile clears teams locally without saving when unchecked', async () => {
     const { fixture, stubs } = await renderEdit();
-    const file = { id: 'f1', name: 'doc.txt', teamIds: ['t1'] } as never;
+    const file: FileModel = {
+      id: 'f1',
+      name: 'doc.txt',
+      teamIds: ['t1'],
+    };
     fixture.componentInstance.toggleAllTeamsForViewFile(false, file);
     expect(file.teamIds).toEqual([]);
     expect(stubs.updateFile).not.toHaveBeenCalled();
@@ -770,7 +790,9 @@ describe('AdminViewEditComponent', () => {
     c.staged = [];
     c.selectFile([new File(['x'], 'up.txt')] as unknown as FileList);
     stubs.uploadMultipleFiles.mockReturnValueOnce(
-      of(new HttpResponse({ status: 201, body: [{ id: 'f9', name: 'up.txt' }] })),
+      of(
+        new HttpResponse({ status: 201, body: [{ id: 'f9', name: 'up.txt' }] }),
+      ),
     );
     c.uploadFile();
     expect(stubs.uploadMultipleFiles).toHaveBeenCalled();
@@ -858,7 +880,9 @@ describe('AdminViewEditComponent', () => {
       const c = fixture.componentInstance;
       c.view = { id: 'v1' };
       const getFiles = vi.spyOn(c, 'getViewFiles').mockImplementation(() => {});
-      const getApps = vi.spyOn(c, 'getExistingApps').mockImplementation(() => {});
+      const getApps = vi
+        .spyOn(c, 'getExistingApps')
+        .mockImplementation(() => {});
       const getTeams = vi
         .spyOn(c, 'updateViewTeams')
         .mockImplementation(() => {});

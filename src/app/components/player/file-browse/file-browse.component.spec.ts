@@ -4,11 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import {
-  FileService,
-  Team,
-  TeamService,
-} from '../../../generated/player-api';
+import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
 import { FileBrowseComponent } from './file-browse.component';
 import { renderComponent } from '../../../test-utils/render-component';
@@ -31,11 +27,7 @@ async function renderBrowse(
     teams?: Team[];
   } = {},
 ) {
-  const {
-    viewId = 'v1',
-    files: f = files,
-    teams: t = teams,
-  } = overrides;
+  const { viewId = 'v1', files: f = files, teams: t = teams } = overrides;
 
   const getViewFiles = vi.fn(() => of(f));
   const getMyViewTeams = vi.fn(() => of(t));
@@ -139,23 +131,24 @@ describe('FileBrowseComponent', () => {
       .spyOn(URL, 'createObjectURL')
       .mockReturnValue('blob://x');
     const click = vi.fn();
+    const createElement = document.createElement.bind(document);
     // Stub the anchor click to avoid jsdom "Not implemented: navigation".
-    const createEl = vi
-      .spyOn(document, 'createElement')
-      .mockImplementation(((tag: string) => {
-        if (tag === 'a') {
-          return {
-            set href(_v: string) {},
-            get href() {
-              return '';
-            },
-            set download(_v: string) {},
-            target: '',
-            click,
-          } as unknown as HTMLElement;
-        }
-        return document.createElement.wrappedMethod(tag);
-      }) as typeof document.createElement);
+    const createEl = vi.spyOn(document, 'createElement').mockImplementation(((
+      tag: string,
+    ) => {
+      if (tag === 'a') {
+        return {
+          set href(_v: string) {},
+          get href() {
+            return '';
+          },
+          set download(_v: string) {},
+          target: '',
+          click,
+        } as unknown as HTMLElement;
+      }
+      return createElement(tag);
+    }) as typeof document.createElement);
     fixture.componentInstance.downloadFile('f1', 'doc.txt');
     expect(download).toHaveBeenCalledWith('f1');
     expect(createUrl).toHaveBeenCalled();

@@ -21,12 +21,16 @@ import {
 import { renderComponent } from '../../../test-utils/render-component';
 
 const view: View = { id: 'v1', name: 'Demo' };
-const appA: Application = {
+const makeApplication = (
+  application: Omit<Application, 'viewId'>,
+): Application => ({ viewId: 'v1', ...application });
+
+const appA = makeApplication({
   id: 'a1',
   name: 'Alpha',
   url: 'https://a.test',
   icon: 'icon-a.png',
-};
+});
 
 async function renderSelect(
   overrides: {
@@ -52,28 +56,25 @@ async function renderSelect(
   const deleteApplication = vi.fn(() => of(undefined));
   const confirm = vi.fn(() => of({ confirm: confirmDelete }));
 
-  const rendered = await renderComponent(
-    ViewApplicationsSelectComponent,
-    {
-      declarations: [ViewApplicationsSelectComponent],
-      imports: [MatSelectModule, MatCheckboxModule, MatSlideToggleModule],
-      schemas: [NO_ERRORS_SCHEMA],
-      componentProperties: { view: v },
-      providers: [
-        {
-          provide: ApplicationService,
-          useValue: {
-            getViewApplications,
-            getApplicationTemplates,
-            getApplication,
-            updateApplication,
-            deleteApplication,
-          },
+  const rendered = await renderComponent(ViewApplicationsSelectComponent, {
+    declarations: [ViewApplicationsSelectComponent],
+    imports: [MatSelectModule, MatCheckboxModule, MatSlideToggleModule],
+    schemas: [NO_ERRORS_SCHEMA],
+    componentProperties: { view: v },
+    providers: [
+      {
+        provide: ApplicationService,
+        useValue: {
+          getViewApplications,
+          getApplicationTemplates,
+          getApplication,
+          updateApplication,
+          deleteApplication,
         },
-        { provide: DialogService, useValue: { confirm } },
-      ],
-    },
-  );
+      },
+      { provide: DialogService, useValue: { confirm } },
+    ],
+  });
 
   return {
     ...rendered,
@@ -168,7 +169,10 @@ describe('ViewApplicationsSelectComponent', () => {
    */
   it('saveApplicationEmbeddable persists the application directly', async () => {
     const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationEmbeddable({ ...appA, embeddable: true });
+    fixture.componentInstance.saveApplicationEmbeddable({
+      ...appA,
+      embeddable: true,
+    });
     expect(updateApplication).toHaveBeenCalledWith(
       'a1',
       expect.objectContaining({ embeddable: true }),
@@ -208,9 +212,11 @@ describe('ViewApplicationsSelectComponent', () => {
    */
   it('getAppName returns the app name when set', async () => {
     const { fixture } = await renderSelect();
-    expect(fixture.componentInstance.getAppName({ id: 'x', name: 'N' })).toBe(
-      'N',
-    );
+    expect(
+      fixture.componentInstance.getAppName(
+        makeApplication({ id: 'x', name: 'N' }),
+      ),
+    ).toBe('N');
   });
 
   /**
@@ -222,10 +228,12 @@ describe('ViewApplicationsSelectComponent', () => {
     const template: ApplicationTemplate = { id: 'tmpl-1', name: 'Templ' };
     const { fixture } = await renderSelect({ templates: [template] });
     expect(
-      fixture.componentInstance.getAppName({
-        id: 'x',
-        applicationTemplateId: 'tmpl-1',
-      }),
+      fixture.componentInstance.getAppName(
+        makeApplication({
+          id: 'x',
+          applicationTemplateId: 'tmpl-1',
+        }),
+      ),
     ).toBe('Templ');
   });
 
@@ -236,9 +244,9 @@ describe('ViewApplicationsSelectComponent', () => {
    */
   it('getAppName returns "Application" when no name or template', async () => {
     const { fixture } = await renderSelect();
-    expect(fixture.componentInstance.getAppName({ id: 'x' })).toBe(
-      'Application',
-    );
+    expect(
+      fixture.componentInstance.getAppName(makeApplication({ id: 'x' })),
+    ).toBe('Application');
   });
 
   /**
@@ -249,7 +257,9 @@ describe('ViewApplicationsSelectComponent', () => {
   it('getAppIcon returns the app icon when set', async () => {
     const { fixture } = await renderSelect();
     expect(
-      fixture.componentInstance.getAppIcon({ id: 'x', icon: 'i.png' }),
+      fixture.componentInstance.getAppIcon(
+        makeApplication({ id: 'x', icon: 'i.png' }),
+      ),
     ).toBe('i.png');
   });
 
@@ -266,10 +276,12 @@ describe('ViewApplicationsSelectComponent', () => {
     };
     const { fixture } = await renderSelect({ templates: [template] });
     expect(
-      fixture.componentInstance.getAppIcon({
-        id: 'x',
-        applicationTemplateId: 'tmpl-1',
-      }),
+      fixture.componentInstance.getAppIcon(
+        makeApplication({
+          id: 'x',
+          applicationTemplateId: 'tmpl-1',
+        }),
+      ),
     ).toBe('tmpl.png');
   });
 
@@ -280,9 +292,9 @@ describe('ViewApplicationsSelectComponent', () => {
    */
   it('getAppIcon returns the default dashboard image when nothing is set', async () => {
     const { fixture } = await renderSelect();
-    expect(fixture.componentInstance.getAppIcon({ id: 'x' })).toBe(
-      'assets/img/SP_Icon_Dashboard.png',
-    );
+    expect(
+      fixture.componentInstance.getAppIcon(makeApplication({ id: 'x' })),
+    ).toBe('assets/img/SP_Icon_Dashboard.png');
   });
 
   /**
