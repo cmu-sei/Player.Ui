@@ -20,6 +20,7 @@ export interface CreateViewCommand {
     name?: string | null;
     description?: string | null;
     status?: ViewStatus;
+    isTemplate?: boolean;
     createAdminTeam?: boolean;
 }
 export namespace CreateViewCommand {
