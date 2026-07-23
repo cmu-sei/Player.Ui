@@ -568,11 +568,11 @@ export class AdminViewEditComponent implements OnInit {
   }
 
   /**
-   * Get the files in this view that can be accessed by the user
+   * Get all files in this view for administration.
    */
   getViewFiles() {
     this.fileService
-      .getViewFiles(this.view.id)
+      .getViewFiles(this.view.id, true)
       .pipe(take(1))
       .subscribe(
         (data) => {
