@@ -113,7 +113,7 @@ export class SystemRolesComponent implements OnInit, OnDestroy {
       .name('Create New Role?', '', { nameValue: '' })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           this.roleService.createRole({ name: result.nameValue }).subscribe();
         }
       });
@@ -124,7 +124,7 @@ export class SystemRolesComponent implements OnInit, OnDestroy {
       .name('Create New Permission?', '', { nameValue: '' })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           this.permissionService
             .createPermission({ name: result.nameValue })
             .subscribe();
@@ -137,7 +137,7 @@ export class SystemRolesComponent implements OnInit, OnDestroy {
       .name('Rename Role?', '', { nameValue: role.name })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           role.name = result.nameValue;
           this.roleService.editRole(role).subscribe();
         }

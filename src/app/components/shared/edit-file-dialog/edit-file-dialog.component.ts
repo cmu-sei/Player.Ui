@@ -66,10 +66,4 @@ export class EditFileDialogComponent implements OnInit {
     );
   }
 
-  cancel() {
-    this.dialogRef.close({
-      name: this.oldName,
-      teams: this.oldTeams,
-    });
-  }
 }

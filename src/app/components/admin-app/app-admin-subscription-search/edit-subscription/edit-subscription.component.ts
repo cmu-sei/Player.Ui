@@ -82,10 +82,6 @@ export class EditSubscriptionComponent implements OnInit {
     }
   }
 
-  onCancel() {
-    this.dialogRef.close(false);
-  }
-
   editSecretChanged(change: MatCheckboxChange) {
     const control = this.form.get('clientSecret');
 

@@ -122,7 +122,7 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
       .name('Create New Team Role?', '', { nameValue: '' })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           this.roleService.createRole({ name: result.nameValue }).subscribe();
         }
       });
@@ -133,7 +133,7 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
       .name('Create New Team Permission?', '', { nameValue: '' })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           this.permissionService
             .createTeamPermission({ name: result.nameValue })
             .subscribe();
@@ -146,7 +146,7 @@ export class TeamRolesComponent implements OnInit, OnDestroy {
       .name('Rename Role?', '', { nameValue: role.name })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           role.name = result.nameValue;
           this.roleService.editRole(role.id, role).subscribe();
         }
