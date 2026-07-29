@@ -9,7 +9,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   submitLabel="Save"
   [submitDisabled]="!form.valid || !form.dirty"
   [guardUnsavedWork]="true"
-  (cancel)="onCancel()"
   (submit)="onClick()"
 >
   <div crucibleDialogContent [formGroup]="form">

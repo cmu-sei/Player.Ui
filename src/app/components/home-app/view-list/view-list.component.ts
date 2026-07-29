@@ -102,7 +102,7 @@ export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .pipe(take(1))
       .subscribe((result) => {
-        if (!result.wasCancelled) {
+        if (result) {
           this.viewsService
             .createView({
               name: result.nameValue,

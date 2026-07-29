@@ -6,7 +6,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   [dialogTitle]="currentSub == null ? 'Add Subscription' : 'Edit Subscription'"
   [form]="form"
   submitLabel="Save"
-  (cancel)="onCancel()"
   (submit)="onSubmit()"
 >
   <div crucibleDialogContent [formGroup]="form" class="d-flex flex-column">

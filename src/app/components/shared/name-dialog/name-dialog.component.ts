@@ -57,15 +57,6 @@ export class NameDialogComponent {
     if (this.data.showDescription) {
       this.data.descriptionValue = this.form?.get('description')?.value;
     }
-    this.data.wasCancelled = false;
-    this.dialogRef.close(this.data);
-  }
-
-  onCancel(): void {
-    this.data.artifacts && this.data.artifacts.length > 0
-      ? (this.data.removeArtifacts = this.removeArtifacts)
-      : (this.data.removeArtifacts = false);
-    this.data.wasCancelled = true;
     this.dialogRef.close(this.data);
   }
 }
