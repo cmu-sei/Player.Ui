@@ -85,6 +85,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "jsdom": "^28.1.0",
+    "patch-package": "^8.0.1",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
