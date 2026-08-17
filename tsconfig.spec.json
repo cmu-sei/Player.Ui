@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "baseUrl": "./",
+    "types": ["node"]
+  },
+  "files": ["src/app/app.module.ts", "src/polyfills.ts"],
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "src/test-setup.ts",
+    "src/app/test-utils/**/*.ts"
+  ],
+  "angularCompilerOptions": {
+    "strictTemplates": false
+  }
+}

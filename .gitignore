@@ -126,6 +126,15 @@ _TeamCity*
 *.coverage
 *.coveragexml
 
+# Vitest / v8 coverage output
+/coverage
+
+# Vitest browser-mode screenshot artifacts
+**/__screenshots__/
+
+# Vitest browser-mode attachment artifacts (transient test output)
+.vitest-attachments/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
@@ -306,6 +315,13 @@ __pycache__/
 /dist
 /docker
 tsconfig.local-npm.json
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Git worktrees
+.worktrees/
 
 # OpenAPI generator output files
 swagger.json

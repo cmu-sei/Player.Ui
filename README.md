@@ -31,6 +31,36 @@ All configurable values (URLs, etc.) should be made to use the **SettingsService
 
 In a production environment, `settings.env.json` should contain only the settings that need to be changed for that environment; `settings.json` serves as a reference for the default values as well as any unchanged settings. `settings.json` should not be altered in a production environment for any reason.
 
+## Running unit tests
+
+Player UI uses Angular's `@angular/build:unit-test` builder with **Vitest** and
+`@testing-library/angular`. Testing Library is an intentional test-authoring layer on top of
+Angular's TestBed. Test files use the standard `.spec.ts` extension.
+
+```bash
+npm test             # Run all tests once through ng test
+npm run test:watch   # Run tests in watch mode
+npm test -- --coverage  # Run once with v8 coverage
+ng test              # Run tests directly with the Angular CLI
+```
+
+### Permission Tests
+
+Comprehensive permission tests cover the three-tier permission system (System, Team, View):
+
+| File                                                                | Coverage                                                                                            |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `src/app/test-utils/mock-user-permissions.service.ts`               | `userPermissionsProvider(systemPerms, teamPermClaims)` factory                                      |
+| `src/app/services/permissions/user-permissions.service.spec.ts`     | All 12 `SystemPermission` values, `canViewAdminstration()`, `can()` with team/view permission paths |
+| `src/app/components/shared/top-bar/topbar.component.spec.ts`        | Administration link, Edit View, Exit Administration visibility                                      |
+| `src/app/components/home-app/view-list/view-list.component.spec.ts` | `CreateViews` permission gates the "Add New View" button                                            |
+
+Key patterns tested:
+
+- System permission grants access regardless of team/view permission state
+- `TeamPermission` and `ViewPermission` grant access when the matching system perm is absent
+- `teamId` scoping: only the specified team's permissions are checked when a `teamId` is provided
+
 ## Reporting bugs and requesting features
 
 Think you found a bug? Please report all Crucible bugs - including bugs for the individual Crucible apps - in the [cmu-sei/crucible issue tracker](https://github.com/cmu-sei/crucible/issues).
