@@ -12,6 +12,12 @@
         "prettier" // Make sure this goes LAST
       ],
       "rules": {
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "argsIgnorePattern": "^_"
+          }
+        ],
         "@angular-eslint/directive-selector": [
           "error",
           {

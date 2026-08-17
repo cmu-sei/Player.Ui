@@ -2,6 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
+import { Component, input } from '@angular/core';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
 import { AdminUserSearchComponent } from './admin-user-search.component';
@@ -13,11 +14,22 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { ClipboardModule } from 'ngx-clipboard';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 const mockUsers: User[] = [
   { id: 'user-1', name: 'Alice Smith' },
   { id: 'user-2', name: 'Bob Jones' },
 ];
+
+@Component({ selector: 'app-roles-permissions-select', template: '' })
+class RolesPermissionsSelectStubComponent {
+  readonly user = input<User>();
+}
 
 async function renderAdminUserSearch(
   overrides: { confirmResult?: boolean } = {},
@@ -35,7 +47,19 @@ async function renderAdminUserSearch(
 
   const rendered = await renderComponent(AdminUserSearchComponent, {
     declarations: [AdminUserSearchComponent],
-    imports: [MatTableModule, MatSortModule, MatPaginatorModule, ClipboardModule],
+    imports: [
+      MatCardModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatProgressSpinnerModule,
+      MatInputModule,
+      MatButtonModule,
+      MatTableModule,
+      MatSortModule,
+      MatPaginatorModule,
+      ClipboardModule,
+      RolesPermissionsSelectStubComponent,
+    ],
     providers: [
       {
         provide: UserService,
@@ -56,16 +80,6 @@ async function renderAdminUserSearch(
 }
 
 describe('AdminUserSearchComponent', () => {
-  /**
-   * Verifies: the user-search component instantiates successfully.
-   * Interacts with: renderComponent with stubbed UserService, RolesService, DialogService.
-   * Data: default mockUsers and a non-confirming dialog.
-   */
-  it('should create', async () => {
-    const { fixture } = await renderAdminUserSearch();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the search input is rendered.
    * Interacts with: the rendered DOM (queried by placeholder).

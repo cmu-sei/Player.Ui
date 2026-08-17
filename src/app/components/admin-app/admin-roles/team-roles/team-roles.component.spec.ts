@@ -4,16 +4,32 @@
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
 import { of, BehaviorSubject } from 'rxjs';
+import { ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatCheckboxHarness } from '@angular/material/checkbox/testing';
 import { MatTableModule } from '@angular/material/table';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import {
+  MatCheckbox,
+  MatCheckboxChange,
+  MatCheckboxModule,
+} from '@angular/material/checkbox';
 import { TeamRolesComponent } from './team-roles.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { UserPermissionsService } from '../../../../services/permissions/user-permissions.service';
+import { userPermissionsProvider } from 'src/app/test-utils/mock-user-permissions.service';
 import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
 import { TeamRolesService } from '../../../../services/roles/team-roles.service';
 import { DialogService } from '../../../../services/dialog/dialog.service';
-import { SystemPermission, TeamRole } from '../../../../generated/player-api';
+import {
+  Role,
+  SystemPermission,
+  TeamPermissionModel,
+  TeamRole,
+} from '../../../../generated/player-api';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 const mockTeamPermissions = [
   {
@@ -40,33 +56,22 @@ const mockTeamRoles = [
   },
 ];
 
-function createMockUserPermissionsService(hasManageRoles: boolean) {
-  return {
-    permissions$: of(hasManageRoles ? [SystemPermission.ManageRoles] : []),
-    teamPermissions$: of([]),
-    load: () => of(hasManageRoles ? [SystemPermission.ManageRoles] : []),
-    loadTeamPermissions: () => of([]),
-    canViewAdminstration: () => of(hasManageRoles),
-    hasPermission: (p: string) =>
-      of(hasManageRoles && p === SystemPermission.ManageRoles),
-    can: () => of(false),
-  };
-}
-
 async function renderTeamRoles(
   hasManageRoles = false,
   overrides: {
     nameResult?: { wasCancelled: boolean; nameValue?: string };
     confirmResult?: boolean;
+    roles?: typeof mockTeamRoles;
   } = {},
 ) {
   const {
     nameResult = { wasCancelled: true, nameValue: '' },
     confirmResult = false,
+    roles = structuredClone(mockTeamRoles),
   } = overrides;
 
   const stubs = {
-    getRoles: vi.fn(() => of(mockTeamRoles)),
+    getRoles: vi.fn(() => of(roles)),
     editRole: vi.fn(() => of(mockTeamRoles[0])),
     createRole: vi.fn(() => of(mockTeamRoles[0])),
     deleteRole: vi.fn(() => of(undefined)),
@@ -82,12 +87,17 @@ async function renderTeamRoles(
 
   const rendered = await renderComponent(TeamRolesComponent, {
     declarations: [TeamRolesComponent],
-    imports: [MatTableModule, MatCheckboxModule],
+    imports: [
+      MatIconModule,
+      MatTooltipModule,
+      MatButtonModule,
+      MatTableModule,
+      MatCheckboxModule,
+    ],
     providers: [
-      {
-        provide: UserPermissionsService,
-        useValue: createMockUserPermissionsService(hasManageRoles),
-      },
+      userPermissionsProvider(
+        hasManageRoles ? [SystemPermission.ManageRoles] : [],
+      ),
       {
         provide: TeamPermissionsService,
         useValue: {
@@ -101,7 +111,7 @@ async function renderTeamRoles(
       {
         provide: TeamRolesService,
         useValue: {
-          roles$: new BehaviorSubject(mockTeamRoles).asObservable(),
+          roles$: new BehaviorSubject(roles).asObservable(),
           getRoles: stubs.getRoles,
           editRole: stubs.editRole,
           createRole: stubs.createRole,
@@ -121,27 +131,42 @@ async function renderTeamRoles(
     ],
   });
 
-  return { ...rendered, stubs };
+  return { ...rendered, stubs, roles };
 }
 
-function getAddButton(container: Element): HTMLButtonElement {
-  // The Add button has [matTooltip]="adding ? 'Cancel' : 'Add'" and fontIcon mdi-plus-circle
-  const buttons = container.querySelectorAll('th button[mat-icon-button]');
-  // First button in the header row is the Add/Cancel button
-  return buttons[0] as HTMLButtonElement;
+// The Add button carries [matTooltip]="adding ? 'Cancel' : 'Add'", so it is
+// found by asking each MatTooltip directive for its message rather than by
+// picking a position out of the header row's buttons.
+function getAddButton(
+  fixture: ComponentFixture<TeamRolesComponent>,
+): HTMLButtonElement {
+  const button = fixture.debugElement
+    .queryAll(By.directive(MatTooltip))
+    .find((el) => el.injector.get(MatTooltip).message === 'Add');
+  if (!button) {
+    throw new Error('No button with an "Add" tooltip was rendered');
+  }
+  return button.nativeElement as HTMLButtonElement;
+}
+
+function checkboxChange(
+  fixture: ComponentFixture<TeamRolesComponent>,
+  checked: boolean,
+): MatCheckboxChange {
+  const source = fixture.debugElement
+    .query(By.directive(MatCheckbox))
+    .injector.get(MatCheckbox);
+  return { source, checked };
+}
+
+// Matrix cell checkboxes in row order: All, then one per loaded team permission.
+function matrixCheckboxes(fixture: ComponentFixture<TeamRolesComponent>) {
+  return TestbedHarnessEnvironment.loader(fixture).getAllHarnesses(
+    MatCheckboxHarness,
+  );
 }
 
 describe('TeamRolesComponent', () => {
-  /**
-   * Verifies: the team-permission-matrix component instantiates successfully.
-   * Interacts with: renderComponent with stubbed UserPermissionsService, TeamPermissionsService, TeamRolesService, DialogService.
-   * Data: default renderTeamRoles (no ManageRoles, cancelled name/confirm dialogs).
-   */
-  it('should create the component', async () => {
-    const { fixture } = await renderTeamRoles();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the "Permissions" matrix header is rendered.
    * Interacts with: the rendered DOM (queried via Testing Library screen).
@@ -168,10 +193,8 @@ describe('TeamRolesComponent', () => {
    * Data: renderTeamRoles(true) — ManageRoles granted.
    */
   it('should enable Add button when user has ManageRoles permission', async () => {
-    const { container } = await renderTeamRoles(true);
-    const addBtn = getAddButton(container);
-    expect(addBtn).not.toBeNull();
-    expect(addBtn.disabled).toBe(false);
+    const { fixture } = await renderTeamRoles(true);
+    expect(getAddButton(fixture).disabled).toBe(false);
   });
 
   /**
@@ -180,10 +203,8 @@ describe('TeamRolesComponent', () => {
    * Data: renderTeamRoles(false) — ManageRoles denied.
    */
   it('should disable Add button when user lacks ManageRoles permission', async () => {
-    const { container } = await renderTeamRoles(false);
-    const addBtn = getAddButton(container);
-    expect(addBtn).not.toBeNull();
-    expect(addBtn.disabled).toBe(true);
+    const { fixture } = await renderTeamRoles(false);
+    expect(getAddButton(fixture).disabled).toBe(true);
   });
 
   /**
@@ -216,9 +237,9 @@ describe('TeamRolesComponent', () => {
      */
     it('reads allPermissions for the synthetic "All" row', async () => {
       const { fixture } = await renderTeamRoles();
-      const role = { allPermissions: true, permissions: [] } as never;
+      const role: Role = { allPermissions: true, permissions: [] };
       expect(
-        fixture.componentInstance.hasPermission({ name: 'All' } as never, role),
+        fixture.componentInstance.hasPermission({ name: 'All' }, role),
       ).toBe(true);
     });
 
@@ -229,16 +250,16 @@ describe('TeamRolesComponent', () => {
      */
     it('checks the role permission list for a normal permission', async () => {
       const { fixture } = await renderTeamRoles();
-      const role = { permissions: [{ id: 'tp-1' }] } as never;
+      const role: Role = { permissions: [{ id: 'tp-1' }] };
       expect(
         fixture.componentInstance.hasPermission(
-          { id: 'tp-1', name: 'ViewTeam' } as never,
+          { id: 'tp-1', name: 'ViewTeam' },
           role,
         ),
       ).toBe(true);
       expect(
         fixture.componentInstance.hasPermission(
-          { id: 'tp-x', name: 'Other' } as never,
+          { id: 'tp-x', name: 'Other' },
           role,
         ),
       ).toBe(false);
@@ -254,9 +275,11 @@ describe('TeamRolesComponent', () => {
     it('edits the role (by id) when toggling the "All" permission', async () => {
       const { fixture, stubs } = await renderTeamRoles();
       const role: TeamRole = { id: 'trole-1', allPermissions: false };
-      fixture.componentInstance.setPermission({ name: 'All' } as never, role, {
-        checked: true,
-      } as never);
+      fixture.componentInstance.setPermission(
+        { name: 'All' },
+        role,
+        checkboxChange(fixture, true),
+      );
       expect(role.allPermissions).toBe(true);
       expect(stubs.editRole).toHaveBeenCalledWith('trole-1', role);
     });
@@ -268,11 +291,13 @@ describe('TeamRolesComponent', () => {
      */
     it('adds a permission when checked and not already present', async () => {
       const { fixture, stubs } = await renderTeamRoles();
-      const role = { id: 'trole-1', permissions: [] } as never;
-      const perm = { id: 'tp-2', name: 'EditTeam' } as never;
-      fixture.componentInstance.setPermission(perm, role, {
-        checked: true,
-      } as never);
+      const role: TeamRole = { id: 'trole-1', permissions: [] };
+      const perm: TeamPermissionModel = { id: 'tp-2', name: 'EditTeam' };
+      fixture.componentInstance.setPermission(
+        perm,
+        role,
+        checkboxChange(fixture, true),
+      );
       expect(stubs.addPermission).toHaveBeenCalledWith('trole-1', perm);
     });
 
@@ -283,12 +308,93 @@ describe('TeamRolesComponent', () => {
      */
     it('removes a permission when unchecked', async () => {
       const { fixture, stubs } = await renderTeamRoles();
-      const role = { id: 'trole-1', permissions: [{ id: 'tp-2' }] } as never;
-      const perm = { id: 'tp-2', name: 'EditTeam' } as never;
-      fixture.componentInstance.setPermission(perm, role, {
-        checked: false,
-      } as never);
+      const role: TeamRole = { id: 'trole-1', permissions: [{ id: 'tp-2' }] };
+      const perm: TeamPermissionModel = { id: 'tp-2', name: 'EditTeam' };
+      fixture.componentInstance.setPermission(
+        perm,
+        role,
+        checkboxChange(fixture, false),
+      );
       expect(stubs.removePermission).toHaveBeenCalledWith('trole-1', 'tp-2');
+    });
+  });
+
+  describe('permission matrix checkboxes', () => {
+    /**
+     * Verifies: each rendered checkbox reports the team role's current state.
+     * Interacts with: the rendered matrix through MatCheckboxHarness.
+     * Data: renderTeamRoles(true); rows are All (allPermissions false), ViewTeam (held), EditTeam (not held).
+     * Why: pins the [checked]="hasPermission(permission, role)" binding — the calls-only tests below pass
+     *   with that binding dropped.
+     */
+    it('reflects the team role state in the rendered checkboxes', async () => {
+      const { fixture } = await renderTeamRoles(true);
+      const [all, viewTeam, editTeam] = await matrixCheckboxes(fixture);
+      expect(await all.isChecked()).toBe(false);
+      expect(await viewTeam.isChecked()).toBe(true);
+      expect(await editTeam.isChecked()).toBe(false);
+    });
+
+    /**
+     * Verifies: checking a permission the team role lacks adds it to that role.
+     * Interacts with: the EditTeam checkbox via MatCheckboxHarness; stubbed TeamRolesService.addPermission.
+     * Data: renderTeamRoles(true); mockTeamRoles holds tp-1 only, so tp-2 is the unheld row.
+     * Why: drives the (change)="setPermission(permission, role, $event)" binding rather than calling the
+     *   method directly — deleting that binding leaves every method-level test green.
+     */
+    it('checking a permission the role lacks calls addPermission', async () => {
+      const { fixture, stubs } = await renderTeamRoles(true);
+      const [, , editTeam] = await matrixCheckboxes(fixture);
+      await editTeam.check();
+      expect(stubs.addPermission).toHaveBeenCalledWith(
+        'trole-1',
+        expect.objectContaining({ id: 'tp-2', name: 'EditTeam' }),
+      );
+      expect(stubs.removePermission).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: unchecking a permission the team role holds removes it from that role.
+     * Interacts with: the ViewTeam checkbox via MatCheckboxHarness; stubbed TeamRolesService.removePermission.
+     * Data: renderTeamRoles(true); mockTeamRoles holds tp-1, the checked row.
+     */
+    it('unchecking a permission the role holds calls removePermission', async () => {
+      const { fixture, stubs } = await renderTeamRoles(true);
+      const [, viewTeam] = await matrixCheckboxes(fixture);
+      await viewTeam.uncheck();
+      expect(stubs.removePermission).toHaveBeenCalledWith('trole-1', 'tp-1');
+      expect(stubs.addPermission).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: checking the synthetic All row flips allPermissions on the team role and saves it by id.
+     * Interacts with: the All checkbox via MatCheckboxHarness; stubbed TeamRolesService.editRole.
+     * Data: renderTeamRoles(true); the rendered role starts with allPermissions false.
+     */
+    it('checking the All row edits the role with allPermissions set', async () => {
+      const { fixture, stubs, roles } = await renderTeamRoles(true);
+      const [all] = await matrixCheckboxes(fixture);
+      await all.check();
+      expect(roles[0].allPermissions).toBe(true);
+      expect(stubs.editRole).toHaveBeenCalledWith(
+        'trole-1',
+        expect.objectContaining({ id: 'trole-1', allPermissions: true }),
+      );
+    });
+
+    /**
+     * Verifies: without ManageRoles every matrix checkbox renders disabled.
+     * Interacts with: the rendered matrix through MatCheckboxHarness; UserPermissionsService stub.
+     * Data: renderTeamRoles(false) — three rows (All plus the two team permissions).
+     * Why: pins the [disabled] binding, the only thing keeping a read-only user from editing the matrix.
+     */
+    it('disables every checkbox when the user lacks ManageRoles', async () => {
+      const { fixture } = await renderTeamRoles(false);
+      const boxes = await matrixCheckboxes(fixture);
+      expect(boxes).toHaveLength(3);
+      for (const box of boxes) {
+        expect(await box.isDisabled()).toBe(true);
+      }
     });
   });
 
@@ -360,10 +466,7 @@ describe('TeamRolesComponent', () => {
       const { fixture, stubs } = await renderTeamRoles(true, {
         confirmResult: true,
       });
-      fixture.componentInstance.deleteRole({
-        id: 'trole-1',
-        name: 'X',
-      } as never);
+      fixture.componentInstance.deleteRole({ id: 'trole-1', name: 'X' });
       expect(stubs.deleteRole).toHaveBeenCalledWith('trole-1');
     });
 
@@ -376,10 +479,7 @@ describe('TeamRolesComponent', () => {
       const { fixture, stubs } = await renderTeamRoles(true, {
         confirmResult: false,
       });
-      fixture.componentInstance.deleteRole({
-        id: 'trole-1',
-        name: 'X',
-      } as never);
+      fixture.componentInstance.deleteRole({ id: 'trole-1', name: 'X' });
       expect(stubs.deleteRole).not.toHaveBeenCalled();
     });
   });

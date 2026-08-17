@@ -4,10 +4,9 @@
 import { EnvironmentProviders, Provider, ProviderToken } from '@angular/core';
 import { EMPTY, of } from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 
 // App Services
-import { AppService } from '../app.service';
 import { ApplicationsService } from '../services/applications/applications.service';
 import { DialogService } from '../services/dialog/dialog.service';
 import { ErrorService } from '../services/error/error.service';
@@ -22,6 +21,7 @@ import { ViewsService } from '../services/views/views.service';
 import { PermissionsService } from '../services/permissions/permissions.service';
 import { UserPermissionsService } from '../services/permissions/user-permissions.service';
 import { TeamPermissionsService } from '../services/permissions/team-permissions.service';
+import { TeamPermissionScopesService } from '../services/permissions/team-permission-scopes.service';
 
 // Role Services
 import { RolesService } from '../services/roles/roles.service';
@@ -35,6 +35,7 @@ import {
   PermissionService,
   RoleService,
   TeamMembershipService,
+  TeamPermissionScopeService,
   TeamPermissionService,
   TeamRoleService,
   TeamService,
@@ -42,6 +43,7 @@ import {
   ViewMembershipService,
   ViewService,
   WebhookService,
+  XApiService,
 } from '../generated/player-api';
 
 // Akita Router
@@ -56,6 +58,43 @@ import {
 
 type AnyProvider = Provider | EnvironmentProviders;
 
+const PLACEHOLDER_PASSTHROUGH = new Set<string>(['ngOnDestroy', 'then']);
+const PLACEHOLDER_DI_PROBED = new Set<string>(['name']);
+
+function unstubbed(token: ProviderToken<unknown>): Provider {
+  const name = ('name' in token ? token.name : String(token)).replace(
+    /^_+/,
+    '',
+  );
+  const fail = (prop: string) =>
+    new Error(
+      `${name}.${prop} was used by the code under test, but ${name} has no stub here — ` +
+        `it is only a placeholder so unrelated tests can construct their component. ` +
+        `Pass an explicit stub for this test: { provide: ${name}, useValue: { ${prop}: ... } }`,
+    );
+  const value = new Proxy(
+    {},
+    {
+      get(target, prop) {
+        if (
+          typeof prop === 'symbol' ||
+          prop in target ||
+          PLACEHOLDER_PASSTHROUGH.has(prop)
+        ) {
+          return Reflect.get(target, prop);
+        }
+        if (PLACEHOLDER_DI_PROBED.has(prop)) {
+          return () => {
+            throw fail(prop);
+          };
+        }
+        throw fail(prop);
+      },
+    },
+  );
+  return { provide: token, useValue: value };
+}
+
 function getProvideToken(provider: AnyProvider): ProviderToken<unknown> | null {
   if (typeof provider === 'function') return provider as ProviderToken<unknown>;
   const withProvide = provider as { provide?: ProviderToken<unknown> };
@@ -67,11 +106,10 @@ export function getDefaultProviders(
 ): AnyProvider[] {
   const defaults: Provider[] = [
     // App Services
-    { provide: AppService, useValue: {} },
-    { provide: ApplicationsService, useValue: { load: () => of([]) } },
-    { provide: DialogService, useValue: { confirm: () => of(true) } },
+    unstubbed(ApplicationsService),
+    unstubbed(DialogService),
     { provide: ErrorService, useValue: { handleError: () => {} } },
-    { provide: FocusedAppService, useValue: { focusedApp$: of(null) } },
+    { provide: FocusedAppService, useValue: { focusedAppUrl: of('') } },
     {
       provide: LoggedInUserService,
       useValue: {
@@ -79,41 +117,37 @@ export function getDefaultProviders(
         setLoggedInUser: () => {},
       },
     },
-    { provide: NotificationService, useValue: {} },
-    { provide: SystemMessageService, useValue: {} },
-    { provide: TeamsService, useValue: { load: () => of([]) } },
-    { provide: ViewsService, useValue: { load: () => of([]) } },
+    unstubbed(NotificationService),
+    unstubbed(SystemMessageService),
+    unstubbed(TeamsService),
+    unstubbed(ViewsService),
 
     // Permission Services
     { provide: PermissionsService, useValue: { load: () => of([]) } },
-    {
-      provide: UserPermissionsService,
-      useValue: {
-        permissions$: of([]),
-        teamPermissions$: of([]),
-        loadPermissions: () => of([]),
-      },
-    },
+    unstubbed(UserPermissionsService),
     { provide: TeamPermissionsService, useValue: { load: () => of([]) } },
+    unstubbed(TeamPermissionScopesService),
 
     // Role Services
-    { provide: RolesService, useValue: { load: () => of([]) } },
-    { provide: TeamRolesService, useValue: { load: () => of([]) } },
+    unstubbed(RolesService),
+    unstubbed(TeamRolesService),
 
     // Generated API Services
-    { provide: ApplicationService, useValue: {} },
-    { provide: FileService, useValue: {} },
+    unstubbed(ApplicationService),
+    unstubbed(FileService),
     { provide: HealthService, useValue: { healthCheck: () => of({}) } },
-    { provide: PermissionService, useValue: {} },
-    { provide: RoleService, useValue: {} },
-    { provide: TeamMembershipService, useValue: {} },
-    { provide: TeamPermissionService, useValue: {} },
-    { provide: TeamRoleService, useValue: {} },
-    { provide: TeamService, useValue: {} },
-    { provide: UserService, useValue: {} },
-    { provide: ViewMembershipService, useValue: {} },
-    { provide: ViewService, useValue: {} },
-    { provide: WebhookService, useValue: {} },
+    unstubbed(PermissionService),
+    unstubbed(RoleService),
+    unstubbed(TeamMembershipService),
+    unstubbed(TeamPermissionScopeService),
+    unstubbed(TeamPermissionService),
+    unstubbed(TeamRoleService),
+    unstubbed(TeamService),
+    unstubbed(UserService),
+    unstubbed(ViewMembershipService),
+    unstubbed(ViewService),
+    unstubbed(WebhookService),
+    unstubbed(XApiService),
 
     // Akita Router
     {
@@ -169,12 +203,12 @@ export function getDefaultProviders(
       provide: ActivatedRoute,
       useValue: {
         params: of({}),
-        paramMap: of({ get: () => null, has: () => false }),
+        paramMap: of(convertToParamMap({})),
         queryParams: of({}),
-        queryParamMap: of({ get: () => null, has: () => false }),
+        queryParamMap: of(convertToParamMap({})),
         snapshot: {
           params: {},
-          paramMap: { get: () => null, has: () => false },
+          paramMap: convertToParamMap({}),
         },
       },
     },

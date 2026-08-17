@@ -2,11 +2,19 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
+import {
+  FormGroup,
+  FormGroupDirective,
+  UntypedFormControl,
+  Validators,
+} from '@angular/forms';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  CrucibleDialogService,
+  CRUCIBLE_DIALOG_IMPORTS,
+} from '@cmusei/crucible-common';
 import {
   Team,
   TeamService,
@@ -26,6 +34,23 @@ import {
   UserErrorStateMatcher,
 } from './admin-view-edit.component';
 import { renderComponent } from '../../../../test-utils/render-component';
+import { fileList } from '../../../../test-utils/file-list';
+import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
+import { MatInputModule } from '@angular/material/input';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 type ServiceStubs = {
   updateView: ReturnType<typeof vi.fn>;
@@ -49,7 +74,29 @@ type ServiceStubs = {
   editFile: ReturnType<typeof vi.fn>;
   createApplicationDialog: ReturnType<typeof vi.fn>;
   clipboardCopy: ReturnType<typeof vi.fn>;
+  loadTeamPermissions: ReturnType<typeof vi.fn>;
+  getTeamRoles: ReturnType<typeof vi.fn>;
 };
+
+// The parent only ever touches these three members of the applications-select
+// child, so the stand-in is typed off the real component: renaming any of them
+// breaks this spec at compile time.
+type ApplicationsSelectStub = Pick<
+  ViewApplicationsSelectComponent,
+  'view' | 'currentApp' | 'updateApplications'
+>;
+
+function applicationsSelectStub(
+  overrides: Partial<ApplicationsSelectStub> = {},
+): ViewApplicationsSelectComponent {
+  const stub: ApplicationsSelectStub = {
+    view: undefined,
+    currentApp: undefined,
+    updateApplications: vi.fn(),
+    ...overrides,
+  };
+  return stub as ViewApplicationsSelectComponent;
+}
 
 async function renderEdit(
   overrides: {
@@ -93,11 +140,30 @@ async function renderEdit(
     editFile: vi.fn(() => of({ name: 'renamed.txt' })),
     createApplicationDialog: vi.fn(() => of(undefined)),
     clipboardCopy: vi.fn(),
+    loadTeamPermissions: vi.fn(() => of([])),
+    getTeamRoles: vi.fn(() => of([])),
   };
 
   const rendered = await renderComponent(AdminViewEditComponent, {
+    imports: [
+      MatExpansionModule,
+      MatCardModule,
+      MatCheckboxModule,
+      MatDialogModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatMenuModule,
+      MatSelectModule,
+      MatProgressBarModule,
+      MatProgressSpinnerModule,
+      MatStepperModule,
+      MatInputModule,
+      MatBadgeModule,
+      MatTooltipModule,
+      MatButtonModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+    ],
     declarations: [AdminViewEditComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     providers: [
       {
         provide: ViewService,
@@ -149,11 +215,11 @@ async function renderEdit(
       },
       {
         provide: TeamPermissionsService,
-        useValue: { load: vi.fn(() => of([])) },
+        useValue: { load: stubs.loadTeamPermissions },
       },
       {
         provide: TeamRolesService,
-        useValue: { getRoles: vi.fn(() => of([])) },
+        useValue: { getRoles: stubs.getTeamRoles },
       },
       {
         provide: Clipboard,
@@ -168,25 +234,43 @@ async function renderEdit(
 
 describe('AdminViewEditComponent', () => {
   /**
-   * Verifies: the view-edit component instantiates successfully.
-   * Interacts with: renderComponent with the full ServiceStubs set (View/Team/User/File/Application/Dialog services, Clipboard).
-   * Data: default renderEdit (initialView 'Demo View', confirm=true).
+   * Verifies: ngOnInit loads the team permission and team role catalogs.
+   * Interacts with: TeamPermissionsService.load and TeamRolesService.getRoles stubs.
+   * Data: default renderEdit; both stubs return of([]).
+   * Why: the component forkJoins these two calls, so the assertion is that both
+   *   were issued — the previous test carried this name but only checked that two
+   *   collections were empty, which the empty stubs guaranteed on their own.
    */
-  it('creates the component', async () => {
-    const { fixture } = await renderEdit();
-    expect(fixture.componentInstance).toBeTruthy();
+  it('ngOnInit loads team permissions and roles', async () => {
+    const { stubs } = await renderEdit();
+    expect(stubs.loadTeamPermissions).toHaveBeenCalled();
+    expect(stubs.getTeamRoles).toHaveBeenCalled();
   });
 
   /**
-   * Verifies: after init the teams and viewFiles collections start empty.
-   * Interacts with: the empty-stream stubs (getViewTeams/getViewFiles return of([])).
-   * Data: default renderEdit.
+   * Verifies: ngOnInit clears any previously held view, team, file, and app state.
+   * Interacts with: component.ngOnInit re-run against a dirtied instance.
+   * Data: instance seeded with a view plus non-empty teams/staged/viewFiles/appNames.
    */
-  it('ngOnInit loads team permissions and roles', async () => {
+  it('ngOnInit resets the previously loaded view state', async () => {
     const { fixture } = await renderEdit();
     const c = fixture.componentInstance;
+    c.view = { id: 'v1', name: 'Stale' };
+    c.teams = [new TeamUserApp('Red', { id: 't1' } as Team, [])];
+    // PlayerFile is module-private to the component, so the staged entry is
+    // typed off the field it is assigned to.
+    c.staged = [{ id: 'f0', file: new File([], 'stale.txt') }];
+    c.viewFiles = [{ id: 'f1', name: 'stale.txt' }];
+    c.appNames = ['Stale App'];
+
+    c.ngOnInit();
+
+    expect(c.view).toBeUndefined();
     expect(c.teams).toEqual([]);
+    expect(c.staged).toEqual([]);
     expect(c.viewFiles).toEqual([]);
+    expect(c.appNames).toEqual([]);
+    expect(c.isLoadingTeams).toBe(false);
   });
 
   /**
@@ -364,11 +448,11 @@ describe('AdminViewEditComponent', () => {
     const yes = fixture.componentInstance.isAllTeamsSelected({
       id: 'f1',
       teamIds: ['t1', 't2'],
-    } as never);
+    });
     const no = fixture.componentInstance.isAllTeamsSelected({
       id: 'f1',
       teamIds: ['t1'],
-    } as never);
+    });
     expect(yes).toBe(true);
     expect(no).toBe(false);
   });
@@ -432,10 +516,10 @@ describe('AdminViewEditComponent', () => {
     const { fixture } = await renderEdit();
     const c = fixture.componentInstance;
     const updateApplications = vi.fn();
-    c.viewApplicationsSelectComponent = {
+    c.viewApplicationsSelectComponent = applicationsSelectStub({
       updateApplications,
-      currentApp: { id: 'x' },
-    } as never;
+      currentApp: { id: 'x', viewId: 'v1' },
+    });
     c.view = { id: 'v1', name: 'Demo View' };
     c.updateView();
     expect(c.viewApplicationsSelectComponent.view).toEqual(c.view);
@@ -453,11 +537,8 @@ describe('AdminViewEditComponent', () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
     c.view = { id: 'v1' };
-    c.viewApplicationsSelectComponent = {
-      updateApplications: vi.fn(),
-      currentApp: undefined,
-    } as never;
-    c.addViewApplication({ id: null, name: 'New Application' } as never);
+    c.viewApplicationsSelectComponent = applicationsSelectStub();
+    c.addViewApplication(c.BLANK_TEMPLATE);
     expect(stubs.createApplication).toHaveBeenCalledWith('v1', {
       name: 'New Application',
       viewId: 'v1',
@@ -473,11 +554,8 @@ describe('AdminViewEditComponent', () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
     c.view = { id: 'v1' };
-    c.viewApplicationsSelectComponent = {
-      updateApplications: vi.fn(),
-      currentApp: undefined,
-    } as never;
-    c.addViewApplication({ id: 'tpl-9', name: 'From Template' } as never);
+    c.viewApplicationsSelectComponent = applicationsSelectStub();
+    c.addViewApplication({ id: 'tpl-9', name: 'From Template' });
     expect(stubs.createApplication).toHaveBeenCalledWith('v1', {
       viewId: 'v1',
       applicationTemplateId: 'tpl-9',
@@ -507,11 +585,7 @@ describe('AdminViewEditComponent', () => {
   it('saveTeamName fetches, renames, and writes the team back', async () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
-    const team = new TeamUserApp(
-      'Old',
-      { id: 't1', name: 'Old' } as Team,
-      [],
-    );
+    const team = new TeamUserApp('Old', { id: 't1', name: 'Old' } as Team, []);
     c.teams = [team];
     c.teamNameFormControl.setValue('Renamed');
     c.saveTeamName(team);
@@ -576,7 +650,7 @@ describe('AdminViewEditComponent', () => {
     const c = fixture.componentInstance;
     c.staged = [];
     const file = new File(['data'], 'doc.txt');
-    c.selectFile([file] as unknown as FileList);
+    c.selectFile(fileList(file));
     expect(c.staged).toHaveLength(1);
     expect(c.uploading).toBe(false);
   });
@@ -592,7 +666,7 @@ describe('AdminViewEditComponent', () => {
     const fileA = new File(['a'], 'a.txt');
     const fileB = new File(['b'], 'b.txt');
     c.staged = [];
-    c.selectFile([fileA, fileB] as unknown as FileList);
+    c.selectFile(fileList(fileA, fileB));
     c.removeFile(c.staged[0]);
     expect(c.staged.map((f) => f.file.name)).toEqual(['b.txt']);
   });
@@ -619,7 +693,7 @@ describe('AdminViewEditComponent', () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
     c.view = { id: 'v1' };
-    c.viewFiles = [{ id: 'f1', name: 'dup.txt' } as never];
+    c.viewFiles = [{ id: 'f1', name: 'dup.txt' }];
     stubs.getViewFiles.mockReturnValueOnce(
       of([
         { id: 'f1b', name: 'dup.txt' },
@@ -639,8 +713,8 @@ describe('AdminViewEditComponent', () => {
     const { fixture, stubs } = await renderEdit({ confirmResult: true });
     const c = fixture.componentInstance;
     c.viewFiles = [
-      { id: 'f1', name: 'a.txt' } as never,
-      { id: 'f2', name: 'b.txt' } as never,
+      { id: 'f1', name: 'a.txt' },
+      { id: 'f2', name: 'b.txt' },
     ];
     c.deleteFile('f1', 'a.txt');
     expect(stubs.deleteFile).toHaveBeenCalledWith('f1');
@@ -667,7 +741,7 @@ describe('AdminViewEditComponent', () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
     c.view = { id: 'v1' };
-    c.viewFiles = [{ id: 'f1', name: 'old.txt' } as never];
+    c.viewFiles = [{ id: 'f1', name: 'old.txt' }];
     stubs.editFile.mockReturnValueOnce(of({ name: 'new.txt' }));
     c.editFile('f1', 'old.txt', ['t1']);
     expect(stubs.editFile).toHaveBeenCalledWith('f1', 'v1', 'old.txt', ['t1']);
@@ -687,7 +761,7 @@ describe('AdminViewEditComponent', () => {
     stubs.createApplication.mockReturnValueOnce(
       of({ id: 'app-7', name: 'doc.txt' }),
     );
-    c.createApplication({ id: 'f1', name: 'doc.txt' } as never);
+    c.createApplication({ id: 'f1', name: 'doc.txt' });
     expect(stubs.createApplication).toHaveBeenCalledWith(
       'v1',
       expect.objectContaining({ name: 'doc.txt', embeddable: true }),
@@ -799,7 +873,7 @@ describe('AdminViewEditComponent', () => {
     c.teamsForFile = ['t1'];
     c.viewFiles = [];
     c.staged = [];
-    c.selectFile([new File(['x'], 'up.txt')] as unknown as FileList);
+    c.selectFile(fileList(new File(['x'], 'up.txt')));
     stubs.uploadMultipleFiles.mockReturnValueOnce(
       of(
         new HttpResponse({ status: 201, body: [{ id: 'f9', name: 'up.txt' }] }),
@@ -837,7 +911,7 @@ describe('AdminViewEditComponent', () => {
   it('resetStepper returns the stepper to index 0 and clears the view', async () => {
     const { fixture } = await renderEdit();
     const c = fixture.componentInstance;
-    c.stepper = { selectedIndex: 3 } as never;
+    c.stepper = { selectedIndex: 3 } as MatStepper;
     c.resetStepper();
     expect(c.stepper.selectedIndex).toBe(0);
     expect(c.view).toBeUndefined();
@@ -859,7 +933,6 @@ describe('AdminViewEditComponent', () => {
     fixture.componentInstance.downloadFile('f1', 'report.txt');
     expect(link.download).toBe('report.txt');
     expect(clickSpy).toHaveBeenCalled();
-    vi.restoreAllMocks();
   });
 
   /**
@@ -877,7 +950,6 @@ describe('AdminViewEditComponent', () => {
     stubs.download.mockReturnValueOnce(of(new Blob(['x'])));
     fixture.componentInstance.downloadFile('f1', 'photo.png');
     expect(link.download).toBe('');
-    vi.restoreAllMocks();
   });
 
   describe('onViewStepChange', () => {
@@ -928,7 +1000,9 @@ describe('AdminViewEditComponent', () => {
       const { fixture } = await renderEdit();
       const c = fixture.componentInstance;
       const updateApplications = vi.fn();
-      c.viewApplicationsSelectComponent = { updateApplications } as never;
+      c.viewApplicationsSelectComponent = applicationsSelectStub({
+        updateApplications,
+      });
       const getTemplates = vi
         .spyOn(c, 'updateApplicationTemplates')
         .mockImplementation(() => {});
@@ -946,7 +1020,8 @@ describe('AdminViewEditComponent', () => {
      */
     it('is an error state when the control is invalid and dirty', () => {
       const matcher = new UserErrorStateMatcher();
-      const control = { invalid: true, dirty: true } as never;
+      const control = new UntypedFormControl('', Validators.required);
+      control.markAsDirty();
       expect(matcher.isErrorState(control, null)).toBe(true);
     });
 
@@ -957,8 +1032,11 @@ describe('AdminViewEditComponent', () => {
      */
     it('is an error state when invalid and the form was submitted', () => {
       const matcher = new UserErrorStateMatcher();
-      const control = { invalid: true, dirty: false } as never;
-      const form = { submitted: true } as never;
+      const control = new UntypedFormControl('', Validators.required);
+      const form = new FormGroupDirective([], []);
+      form.form = new FormGroup({});
+      form.onSubmit(new Event('submit'));
+      expect(control.dirty).toBe(false);
       expect(matcher.isErrorState(control, form)).toBe(true);
     });
 
@@ -969,7 +1047,8 @@ describe('AdminViewEditComponent', () => {
      */
     it('is not an error state when the control is valid', () => {
       const matcher = new UserErrorStateMatcher();
-      const control = { invalid: false, dirty: true } as never;
+      const control = new UntypedFormControl('a value', Validators.required);
+      control.markAsDirty();
       expect(matcher.isErrorState(control, null)).toBe(false);
     });
   });

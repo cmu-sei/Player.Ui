@@ -109,9 +109,28 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "runnerConfig": "vitest.config.ts",
+            "tsConfig": "tsconfig.spec.json",
             "setupFiles": ["src/test-setup.ts"],
-            "coverageExclude": ["**/generated/**", "**/app.service.ts"],
-            "coverageReporters": ["text", "json", "html"]
+            "coverageExclude": [
+              "**/generated/**",
+              "**/*.spec.ts",
+              "src/app/test-utils/**"
+            ],
+            "coverageReporters": ["text", "json", "html"],
+            "coverageThresholds": {
+              "statements": 78,
+              "branches": 74,
+              "functions": 74,
+              "lines": 81
+            }
+          },
+          "configurations": {
+            "browser": {
+              "browsers": ["chromium"]
+            },
+            "coverage": {
+              "coverage": true
+            }
           }
         },
         "lint": {

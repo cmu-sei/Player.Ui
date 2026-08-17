@@ -1,11 +1,16 @@
 // Copyright 2026 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { NameDialogComponent } from './name-dialog.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { A11yModule } from '@angular/cdk/a11y';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 async function renderDialog(
   overrides: {
@@ -14,13 +19,16 @@ async function renderDialog(
 ) {
   const { data = { nameValue: 'Alpha' } } = overrides;
 
-  const close = vi.fn();
-  const dialogRef = { close, disableClose: false } as unknown as MatDialogRef<
-    NameDialogComponent
-  >;
+  const { dialogRef, close } = dialogRefStub<NameDialogComponent>();
 
   const rendered = await renderComponent(NameDialogComponent, {
     declarations: [NameDialogComponent],
+    imports: [
+      MatFormFieldModule,
+      MatInputModule,
+      A11yModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+    ],
     providers: [
       { provide: MatDialogRef, useValue: dialogRef },
       { provide: MAT_DIALOG_DATA, useValue: data },
@@ -31,16 +39,6 @@ async function renderDialog(
 }
 
 describe('NameDialogComponent', () => {
-  /**
-   * Verifies: the component instantiates under the dialog providers.
-   * Interacts with: MatDialogRef and MAT_DIALOG_DATA stubs via renderDialog.
-   * Data: default dialog data { nameValue: 'Alpha' }.
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderDialog();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the name form control is initialized from data.nameValue.
    * Interacts with: component reactive form built on init from MAT_DIALOG_DATA.
@@ -99,17 +97,26 @@ describe('NameDialogComponent', () => {
   });
 
   /**
-   * Verifies: when artifacts exist, onClick() keeps the user's removeArtifacts
-   *   selection rather than overwriting it with the default.
+   * Verifies: when artifacts exist, onClick() copies the user's removeArtifacts selection through in
+   *   both directions rather than writing a fixed value.
    * Interacts with: component.removeArtifacts flag; mutates injected data.
-   * Data: dialog data with artifacts ['art-1'] and removeArtifacts set true.
+   * Data: dialog data with artifacts ['art-1'], clicked once with the flag false and once with it true.
+   * Why: the flag defaults to true, so asserting only the true case passes even if the branch assigned a
+   *   literal; exercising false first — the non-default — and then true pins the copy itself.
    */
-  it('onClick() preserves the user removeArtifacts choice when artifacts exist', async () => {
-    const data = { nameValue: 'A', artifacts: ['art-1'] };
+  it('onClick() copies the user removeArtifacts choice when artifacts exist', async () => {
+    const data = { nameValue: 'A', artifacts: ['art-1'] } as {
+      nameValue: string;
+      artifacts: string[];
+      removeArtifacts?: boolean;
+    };
     const { fixture } = await renderDialog({ data });
+    fixture.componentInstance.removeArtifacts = false;
+    fixture.componentInstance.onClick();
+    expect(data.removeArtifacts).toBe(false);
     fixture.componentInstance.removeArtifacts = true;
     fixture.componentInstance.onClick();
-    expect((data as { removeArtifacts?: boolean }).removeArtifacts).toBe(true);
+    expect(data.removeArtifacts).toBe(true);
   });
 
   /**

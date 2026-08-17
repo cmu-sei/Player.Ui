@@ -10,36 +10,43 @@ import { ImportViewsResult } from '../../../generated/player-api';
 import { ViewsService } from '../../../services/views/views.service';
 import { AdminAppViewImportComponent } from './admin-app-view-import.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
+import { ComponentFixture } from '@angular/core/testing';
+import { fileList } from '../../../test-utils/file-list';
 
-async function renderImport(
-  overrides: { result?: ImportViewsResult } = {},
-) {
+async function renderImport(overrides: { result?: ImportViewsResult } = {}) {
   const { result = { failures: [] } as ImportViewsResult } = overrides;
 
   const importFn = vi.fn(() => of(result));
 
   const rendered = await renderComponent(AdminAppViewImportComponent, {
     declarations: [AdminAppViewImportComponent],
-    imports: [...CRUCIBLE_DIALOG_IMPORTS],
-    providers: [
-      { provide: ViewsService, useValue: { import: importFn } },
+    imports: [
+      MatSlideToggleModule,
+      MatTooltipModule,
+      MatButtonModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
     ],
+    providers: [{ provide: ViewsService, useValue: { import: importFn } }],
   });
 
   return { ...rendered, importFn };
 }
 
-describe('AdminAppViewImportComponent', () => {
-  /**
-   * Verifies: the component instantiates without error.
-   * Interacts with: ViewsService.import stub.
-   * Data: default render (no failures result).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderImport();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
+function fileInput(
+  fixture: ComponentFixture<AdminAppViewImportComponent>,
+): HTMLInputElement {
+  const root: HTMLElement = fixture.nativeElement;
+  const input = root.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!input) {
+    throw new Error('The file input was not rendered');
+  }
+  return input;
+}
 
+describe('AdminAppViewImportComponent', () => {
   /**
    * Verifies: the Import button is disabled until a file is chosen.
    * Interacts with: rendered DOM via screen.getByRole.
@@ -60,10 +67,8 @@ describe('AdminAppViewImportComponent', () => {
     fixture.componentInstance.form.patchValue({
       archive: new Blob(['x'], { type: 'application/zip' }),
     });
-    fixture.detectChanges();
-    expect(
-      screen.getByRole('button', { name: /^Import$/ }),
-    ).not.toBeDisabled();
+    await fixture.whenStable();
+    expect(screen.getByRole('button', { name: /^Import$/ })).not.toBeDisabled();
   });
 
   /**
@@ -95,7 +100,7 @@ describe('AdminAppViewImportComponent', () => {
       matchApplicationTemplatesByName: true,
       matchRolesByName: true,
     });
-    fixture.detectChanges();
+    await fixture.whenStable();
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(importFn).toHaveBeenCalledWith(true, true, archive);
   });
@@ -111,7 +116,7 @@ describe('AdminAppViewImportComponent', () => {
     fixture.componentInstance.form.patchValue({
       archive: new Blob(['x']),
     });
-    fixture.detectChanges();
+    await fixture.whenStable();
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(await screen.findByText(/Import Successful/)).toBeInTheDocument();
   });
@@ -135,7 +140,7 @@ describe('AdminAppViewImportComponent', () => {
     fixture.componentInstance.form.patchValue({
       archive: new Blob(['x']),
     });
-    fixture.detectChanges();
+    await fixture.whenStable();
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(
       await screen.findByText(/The following errors occurred/),
@@ -147,19 +152,18 @@ describe('AdminAppViewImportComponent', () => {
   });
 
   /**
-   * Verifies: onFileSelected pulls the chosen File off the input event and
-   *   stores it as the form's archive.
-   * Interacts with: component.onFileSelected with a synthetic change event.
-   * Data: a File built from event.target.files[0].
-   * Why: the Event is hand-built (cast through unknown) since jsdom file inputs
-   *      cannot be populated programmatically.
+   * Verifies: a change event on the rendered file input stores the chosen File as the form's archive.
+   * Interacts with: the template's (change)="onFileSelected($event)" binding on the hidden file input.
+   * Data: a views.zip File exposed through the input's files list.
+   * Why: jsdom cannot populate a file input, so files is defined on the element and a real change event dispatched.
    */
-  it('onFileSelected captures the file from the input event', async () => {
+  it('captures the file from the file input change event', async () => {
     const { fixture } = await renderImport();
     const file = new File(['x'], 'views.zip');
-    fixture.componentInstance.onFileSelected({
-      target: { files: [file] },
-    } as unknown as Event);
+    const input = fileInput(fixture);
+    Object.defineProperty(input, 'files', { value: fileList(file) });
+    input.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
     expect(fixture.componentInstance.form.value.archive).toBe(file);
   });
 });

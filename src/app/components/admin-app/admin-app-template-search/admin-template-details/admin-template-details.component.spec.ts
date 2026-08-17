@@ -11,6 +11,9 @@ import { ApplicationTemplate } from '../../../../generated/player-api';
 import { ApplicationService } from '../../../../generated/player-api/api/application.service';
 import { AdminTemplateDetailsComponent } from './admin-template-details.component';
 import { renderComponent } from '../../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 const template: ApplicationTemplate = {
   id: 't1',
@@ -29,8 +32,8 @@ async function renderDetails(
 ) {
   const { appTemplate = { ...template }, confirm = true } = overrides;
 
-  const updateApplicationTemplate = vi.fn((_id: string, t: ApplicationTemplate) =>
-    of(t),
+  const updateApplicationTemplate = vi.fn(
+    (_id: string, t: ApplicationTemplate) => of(t),
   );
   const deleteApplicationTemplate = vi.fn(() => of(undefined));
   const confirmDialog = vi.fn(() => ({
@@ -39,7 +42,12 @@ async function renderDetails(
 
   const rendered = await renderComponent(AdminTemplateDetailsComponent, {
     declarations: [AdminTemplateDetailsComponent],
-    imports: [MatCheckboxModule],
+    imports: [
+      MatFormFieldModule,
+      MatInputModule,
+      MatButtonModule,
+      MatCheckboxModule,
+    ],
     componentProperties: { appTemplate },
     providers: [
       {
@@ -65,16 +73,6 @@ async function renderDetails(
 }
 
 describe('AdminTemplateDetailsComponent', () => {
-  /**
-   * Verifies: the component instantiates without error.
-   * Interacts with: ApplicationService + DialogService stubs.
-   * Data: default template input.
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderDetails();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: editAppTemplate calls the update API with the template id and the
    *   current template object.
@@ -103,7 +101,12 @@ describe('AdminTemplateDetailsComponent', () => {
     const updateApplicationTemplate = vi.fn(() => of(updated));
     const { fixture } = await renderComponent(AdminTemplateDetailsComponent, {
       declarations: [AdminTemplateDetailsComponent],
-      imports: [MatCheckboxModule],
+      imports: [
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule,
+        MatCheckboxModule,
+      ],
       componentProperties: { appTemplate: { ...template } },
       providers: [
         {
@@ -168,7 +171,9 @@ describe('AdminTemplateDetailsComponent', () => {
   it('renders a Delete Application Template button', async () => {
     await renderDetails();
     expect(
-      await screen.findByRole('button', { name: /Delete Application Template/ }),
+      await screen.findByRole('button', {
+        name: /Delete Application Template/,
+      }),
     ).toBeInTheDocument();
   });
 

@@ -14,6 +14,12 @@ import { DialogService } from '../../../services/dialog/dialog.service';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { ManageTeamsComponent } from './manage-teams.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatListModule } from '@angular/material/list';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 
 const red: Team = { id: 't1', name: 'Red', isMember: true } as Team;
 const blue: Team = { id: 't2', name: 'Blue', isMember: true } as Team;
@@ -56,7 +62,15 @@ async function renderManageTeams(
   const addRemoveUsersToTeam = vi.fn(() => of(addRemoveResult));
 
   const rendered = await renderComponent(ManageTeamsComponent, {
-    imports: [ManageTeamsComponent],
+    imports: [
+      MatListModule,
+      MatCardModule,
+      MatDialogModule,
+      MatProgressSpinnerModule,
+      MatButtonModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+      ManageTeamsComponent,
+    ],
     providers: [
       { provide: MAT_DIALOG_DATA, useValue: { viewId } },
       { provide: ViewService, useValue: { getView } },
@@ -82,16 +96,6 @@ async function renderManageTeams(
 }
 
 describe('ManageTeamsComponent', () => {
-  /**
-   * Verifies: ManageTeamsComponent instantiates successfully.
-   * Interacts with: renderManageTeams harness with View/Team/User/Permissions/Dialog stubs.
-   * Data: default renderManageTeams() (Red+Blue teams, counts 3 and 5).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderManageTeams();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the view signal resolves to the fetched view's name.
    * Interacts with: ViewService.getView, component's view resource/signal.

@@ -8,6 +8,7 @@
     "build": "ng build",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
+    "test:coverage": "ng test --watch=false --configuration coverage",
     "lint": "ng lint",
     "docker:build": "docker build -t cmusei/player-ui:${npm_package_version} .",
     "docker:init": "docker network create identity --driver=overlay",

@@ -13,6 +13,11 @@ import {
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { AppAdminSubscriptionSearchComponent } from './app-admin-subscription-search.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 const subs: WebhookSubscription[] = [
   { id: 's1', name: 'Alpha', eventTypes: [] },
@@ -26,8 +31,11 @@ async function renderSearch(
     confirmDelete?: boolean;
   } = {},
 ) {
-  const { list = subs, editResult = undefined, confirmDelete = false } =
-    overrides;
+  const {
+    list = subs,
+    editResult = undefined,
+    confirmDelete = false,
+  } = overrides;
   const getAllWebhooks = vi.fn(() => of(list));
   const deleteWebhookSubscription = vi.fn(() => of(undefined));
   const editSubscription = vi.fn(() => of(editResult));
@@ -35,21 +43,26 @@ async function renderSearch(
     afterClosed: () => of(confirmDelete),
   }));
 
-  const rendered = await renderComponent(
-    AppAdminSubscriptionSearchComponent,
-    {
-      declarations: [AppAdminSubscriptionSearchComponent],
-      imports: [MatTableModule, MatSortModule],
-      providers: [
-        {
-          provide: WebhookService,
-          useValue: { getAllWebhooks, deleteWebhookSubscription },
-        },
-        { provide: DialogService, useValue: { editSubscription } },
-        { provide: CrucibleDialogService, useValue: { confirm } },
-      ],
-    },
-  );
+  const rendered = await renderComponent(AppAdminSubscriptionSearchComponent, {
+    declarations: [AppAdminSubscriptionSearchComponent],
+    imports: [
+      MatFormFieldModule,
+      MatIconModule,
+      MatInputModule,
+      MatTooltipModule,
+      MatButtonModule,
+      MatTableModule,
+      MatSortModule,
+    ],
+    providers: [
+      {
+        provide: WebhookService,
+        useValue: { getAllWebhooks, deleteWebhookSubscription },
+      },
+      { provide: DialogService, useValue: { editSubscription } },
+      { provide: CrucibleDialogService, useValue: { confirm } },
+    ],
+  });
 
   return {
     ...rendered,
@@ -61,16 +74,6 @@ async function renderSearch(
 }
 
 describe('AppAdminSubscriptionSearchComponent', () => {
-  /**
-   * Verifies: the subscription-search component instantiates successfully.
-   * Interacts with: renderComponent with stubbed WebhookService and DialogService.
-   * Data: default subs list (Alpha, Beta).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderSearch();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: ngOnInit loads all webhook subscriptions into the table datasource.
    * Interacts with: stubbed WebhookService.getAllWebhooks.
@@ -138,13 +141,14 @@ describe('AppAdminSubscriptionSearchComponent', () => {
    * Why: a truthy dialog result signals an error branch that bypasses refreshSubs.
    */
   it('editSubscription(sub) logs and does not reload when the dialog reports an error', async () => {
-    const { fixture, getAllWebhooks } = await renderSearch({ editResult: true });
+    const { fixture, getAllWebhooks } = await renderSearch({
+      editResult: true,
+    });
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     fixture.componentInstance.editSubscription(subs[0]);
     expect(logSpy).toHaveBeenCalledWith('Error editing/creating subscription');
     // Only the ngOnInit load happened; the error branch skips refreshSubs.
     expect(getAllWebhooks).toHaveBeenCalledTimes(1);
-    logSpy.mockRestore();
   });
 
   describe('deleteSubscription()', () => {

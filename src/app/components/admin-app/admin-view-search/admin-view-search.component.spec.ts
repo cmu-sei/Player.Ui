@@ -2,21 +2,32 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
+import { Component, EventEmitter, Output, TemplateRef } from '@angular/core';
+import { ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
 import { NEVER, of, Subject } from 'rxjs';
 import { AdminViewSearchComponent } from './admin-view-search.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatBadgeModule } from '@angular/material/badge';
 import { ClipboardModule } from 'ngx-clipboard';
 import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
+import type { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
 
 const mockViews: View[] = [
   {
@@ -32,6 +43,47 @@ const mockViews: View[] = [
     status: ViewStatus.Inactive,
   },
 ];
+
+@Component({ selector: 'app-admin-view-edit', template: '' })
+class AdminViewEditStubComponent {
+  @Output() editComplete = new EventEmitter<string>();
+}
+
+// executeViewAction drives exactly these five members of the edit child, so the
+// stand-in is typed off the real component: renaming any of them fails to compile.
+type ViewEditStub = Pick<
+  AdminViewEditComponent,
+  | 'resetStepper'
+  | 'updateView'
+  | 'updateApplicationTemplates'
+  | 'setView'
+  | 'updateViewTeams'
+>;
+
+function viewEditStub(): ViewEditStub {
+  return {
+    resetStepper: vi.fn(),
+    updateView: vi.fn(),
+    updateApplicationTemplates: vi.fn(),
+    setView: vi.fn(),
+    updateViewTeams: vi.fn(),
+  };
+}
+
+// The header buttons carry only a matTooltip, so they are found by asking each
+// MatTooltip directive for its message.
+function tooltipButton(
+  fixture: ComponentFixture<AdminViewSearchComponent>,
+  message: string,
+): HTMLButtonElement {
+  const button = fixture.debugElement
+    .queryAll(By.directive(MatTooltip))
+    .find((el) => el.injector.get(MatTooltip).message === message);
+  if (!button) {
+    throw new Error(`No button with a "${message}" tooltip was rendered`);
+  }
+  return button.nativeElement as HTMLButtonElement;
+}
 
 async function renderAdminViewSearch(
   overrides: {
@@ -49,6 +101,7 @@ async function renderAdminViewSearch(
   // Use a Subject so getViews() does not emit synchronously during ngOnInit
   // (the component calls refreshViews() before initializing viewDataSource).
   const viewsSubject = new Subject<View[]>();
+  const dialogClose = vi.fn();
 
   const stubs = {
     getViews: vi.fn(() => viewsSubject.asObservable()),
@@ -58,17 +111,27 @@ async function renderAdminViewSearch(
     confirm: vi.fn(() => ({
       afterClosed: () => of(confirmResult),
     })),
-    dialogOpen: vi.fn(() => ({ close: vi.fn() })),
+    dialogOpen: vi.fn(() => ({ close: dialogClose })),
+    dialogClose,
   };
 
   const result = await renderComponent(AdminViewSearchComponent, {
     declarations: [AdminViewSearchComponent],
     imports: [
+      MatCardModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatInputModule,
+      MatTooltipModule,
+      MatButtonModule,
       MatTableModule,
       MatSortModule,
+      MatPaginatorModule,
+      MatProgressSpinnerModule,
       MatCheckboxModule,
       MatBadgeModule,
       ClipboardModule,
+      AdminViewEditStubComponent,
     ],
     providers: [
       {
@@ -99,16 +162,15 @@ async function renderAdminViewSearch(
         provide: ActivatedRoute,
         useValue: {
           params: of({}),
-          paramMap: of({ get: () => null, has: () => false }),
+          paramMap: of(convertToParamMap({})),
           queryParams: of({}),
-          queryParamMap: of({ get: () => null, has: () => false }),
+          queryParamMap: of(convertToParamMap({})),
           snapshot: {
             params: {},
-            paramMap: { get: () => null, has: () => false },
-            queryParamMap: {
-              get: (k: string) => (k === 'view' ? queryParamView : null),
-              has: (k: string) => k === 'view' && queryParamView != null,
-            },
+            paramMap: convertToParamMap({}),
+            queryParamMap: convertToParamMap(
+              queryParamView == null ? {} : { view: queryParamView },
+            ),
           },
         },
       },
@@ -121,23 +183,12 @@ async function renderAdminViewSearch(
 
   // Now that ngOnInit has run and viewDataSource is initialized, emit the views.
   viewsSubject.next(mockViews);
-  result.fixture.detectChanges();
+  await result.fixture.whenStable();
 
   return { ...result, stubs, viewsSubject };
 }
 
 describe('AdminViewSearchComponent', () => {
-  /**
-   * Verifies: the view-search component instantiates successfully.
-   * Interacts with: renderComponent with stubbed ViewService, DialogService, LoggedInUserService, MatDialog, router.
-   * Data: default overrides; views emitted via a Subject after init.
-   * Why: getViews is backed by a Subject so it does not emit synchronously during ngOnInit (before viewDataSource exists).
-   */
-  it('should create', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the search input is rendered.
    * Interacts with: the rendered DOM (queried by placeholder).
@@ -227,14 +278,8 @@ describe('AdminViewSearchComponent', () => {
       getView: () => of(mockViews[0]),
     });
     const c = fixture.componentInstance;
-    const editStub = {
-      resetStepper: vi.fn(),
-      updateView: vi.fn(),
-      updateApplicationTemplates: vi.fn(),
-      setView: vi.fn(),
-      updateViewTeams: vi.fn(),
-    };
-    c.adminViewEditComponent = editStub as never;
+    const editStub = viewEditStub();
+    c.adminViewEditComponent = editStub as AdminViewEditComponent;
     c.executeViewAction('edit', 'view-1');
     expect(stubs.getView).toHaveBeenCalledWith('view-1');
     expect(editStub.resetStepper).toHaveBeenCalled();
@@ -315,7 +360,6 @@ describe('AdminViewSearchComponent', () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     fixture.componentInstance.executeViewAction('bogus', 'view-1');
     expect(alertSpy).toHaveBeenCalledWith('Unknown Action');
-    alertSpy.mockRestore();
   });
 
   /**
@@ -328,13 +372,7 @@ describe('AdminViewSearchComponent', () => {
       getView: () => of(mockViews[0]),
     });
     const c = fixture.componentInstance;
-    c.adminViewEditComponent = {
-      resetStepper: vi.fn(),
-      updateView: vi.fn(),
-      updateApplicationTemplates: vi.fn(),
-      setView: vi.fn(),
-      updateViewTeams: vi.fn(),
-    } as never;
+    c.adminViewEditComponent = viewEditStub() as AdminViewEditComponent;
     const executeSpy = vi.spyOn(c, 'executeViewAction');
     c.addNewView();
     expect(stubs.createView).toHaveBeenCalledWith(
@@ -384,36 +422,37 @@ describe('AdminViewSearchComponent', () => {
   });
 
   /**
-   * Verifies: openDialog opens via MatDialog and importComplete closes that ref and refreshes views.
-   * Interacts with: stubbed MatDialog.open (returns a ref with a close spy) and a spy on refreshViews.
-   * Data: open returns a fake dialog ref { close }.
+   * Verifies: the Import Views button opens the import template in a dialog and importComplete closes that ref and refreshes views.
+   * Interacts with: the rendered Import Views button, stubbed MatDialog.open, and a spy on refreshViews.
+   * Data: the component's own #importDialog TemplateRef, passed by the template's (click) binding.
+   * Why: clicking the button covers the (click)="openDialog(importDialog)" binding, which a direct openDialog() call leaves untested.
    */
-  it('openDialog opens a dialog and importComplete closes it and refreshes', async () => {
+  it('the Import Views button opens a dialog and importComplete closes it and refreshes', async () => {
     const { fixture, stubs } = await renderAdminViewSearch();
     const c = fixture.componentInstance;
-    const close = vi.fn();
-    stubs.dialogOpen.mockReturnValueOnce({ close } as never);
-    c.openDialog({} as never);
-    expect(stubs.dialogOpen).toHaveBeenCalled();
+    tooltipButton(fixture, 'Import Views').click();
+    await fixture.whenStable();
+    expect(stubs.dialogOpen).toHaveBeenCalledWith(
+      expect.any(TemplateRef),
+      expect.objectContaining({ width: '480px' }),
+    );
     const refreshSpy = vi.spyOn(c, 'refreshViews');
     c.importComplete();
-    expect(close).toHaveBeenCalled();
+    expect(stubs.dialogClose).toHaveBeenCalled();
     expect(refreshSpy).toHaveBeenCalled();
   });
 
   /**
-   * Verifies: closeDialog closes the currently open dialog ref.
-   * Interacts with: stubbed MatDialog.open (ref with a close spy).
-   * Data: open returns a fake dialog ref { close }.
+   * Verifies: closeDialog closes the ref opened by the Export Views button.
+   * Interacts with: the rendered Export Views button and stubbed MatDialog.open (ref with a close spy).
+   * Data: the component's own #exportDialog TemplateRef.
    */
   it('closeDialog closes the open dialog', async () => {
     const { fixture, stubs } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    const close = vi.fn();
-    stubs.dialogOpen.mockReturnValueOnce({ close } as never);
-    c.openDialog({} as never);
-    c.closeDialog();
-    expect(close).toHaveBeenCalled();
+    tooltipButton(fixture, 'Export Views').click();
+    await fixture.whenStable();
+    fixture.componentInstance.closeDialog();
+    expect(stubs.dialogClose).toHaveBeenCalled();
   });
 
   /**

@@ -4,14 +4,23 @@
 import { describe, it, expect, vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
-import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
+import {
+  MatCheckboxChange,
+  MatCheckboxModule,
+} from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import {
   WebhookService,
   WebhookSubscription,
 } from '../../../../generated/player-api';
 import { EditSubscriptionComponent } from './edit-subscription.component';
 import { renderComponent } from '../../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { A11yModule } from '@angular/cdk/a11y';
+import { dialogRefStub } from '../../../../test-utils/dialog-refs';
 
 const existingSub: WebhookSubscription = {
   id: 's1',
@@ -29,11 +38,13 @@ async function renderEdit(
     updateResult?: 'ok' | 'err';
   } = {},
 ) {
-  const { currentSub = null, createResult = 'ok', updateResult = 'ok' } =
-    overrides;
+  const {
+    currentSub = null,
+    createResult = 'ok',
+    updateResult = 'ok',
+  } = overrides;
 
-  const close = vi.fn();
-  const dialogRef = { close } as unknown as MatDialogRef<EditSubscriptionComponent>;
+  const { dialogRef, close } = dialogRefStub<EditSubscriptionComponent>();
 
   const createWebhookSubscription = vi.fn(() =>
     createResult === 'ok' ? of(undefined) : throwError(() => new Error('fail')),
@@ -44,7 +55,15 @@ async function renderEdit(
 
   const rendered = await renderComponent(EditSubscriptionComponent, {
     declarations: [EditSubscriptionComponent],
-    imports: [MatSelectModule, MatCheckboxModule],
+    imports: [
+      MatFormFieldModule,
+      MatInputModule,
+      MatTooltipModule,
+      A11yModule,
+      MatSelectModule,
+      MatCheckboxModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+    ],
     componentProperties: { currentSub },
     providers: [
       { provide: MatDialogRef, useValue: dialogRef },
@@ -67,16 +86,6 @@ async function renderEdit(
 }
 
 describe('EditSubscriptionComponent', () => {
-  /**
-   * Verifies: the edit-subscription component instantiates successfully.
-   * Interacts with: renderComponent with stubbed MatDialogRef and WebhookService.
-   * Data: default renderEdit (currentSub null, create/update succeed).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderEdit();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: with no currentSub the form's name/callbackUri/clientId/eventTypes controls initialize to null.
    * Interacts with: the component's reactive form (getRawValue).

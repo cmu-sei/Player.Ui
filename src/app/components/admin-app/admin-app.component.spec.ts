@@ -2,6 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
+import { Component, input } from '@angular/core';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
 import { Router } from '@angular/router';
@@ -10,6 +11,32 @@ import { renderComponent } from 'src/app/test-utils/render-component';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 import { SystemPermission } from '../../generated/player-api';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+
+@Component({ selector: 'app-topbar', template: '' })
+class TopbarStubComponent {
+  readonly topbarView = input<string>();
+  readonly title = input<string>();
+}
+
+@Component({ selector: 'app-admin-view-search', template: '' })
+class AdminViewSearchStubComponent {}
+
+@Component({ selector: 'app-admin-user-search', template: '' })
+class AdminUserSearchStubComponent {}
+
+@Component({ selector: 'app-admin-app-template-search', template: '' })
+class AdminAppTemplateSearchStubComponent {}
+
+@Component({ selector: 'app-admin-roles', template: '' })
+class AdminRolesStubComponent {}
+
+@Component({ selector: 'app-admin-subscription-search', template: '' })
+class AdminSubscriptionSearchStubComponent {}
 
 async function renderAdmin(
   overrides: { permissions?: string[]; section?: string | null } = {},
@@ -18,6 +45,19 @@ async function renderAdmin(
 
   const rendered = await renderComponent(AdminAppComponent, {
     declarations: [AdminAppComponent],
+    imports: [
+      MatListModule,
+      MatIconModule,
+      MatSidenavModule,
+      MatToolbarModule,
+      MatButtonModule,
+      TopbarStubComponent,
+      AdminViewSearchStubComponent,
+      AdminUserSearchStubComponent,
+      AdminAppTemplateSearchStubComponent,
+      AdminRolesStubComponent,
+      AdminSubscriptionSearchStubComponent,
+    ],
     providers: [
       {
         provide: UserPermissionsService,
@@ -40,24 +80,12 @@ async function renderAdmin(
   // Spy on the real Router provided by renderComponent's provideRouter([])
   // so addParam()/sectionChangedFn() don't actually navigate.
   const router = rendered.fixture.debugElement.injector.get(Router);
-  const navigate = vi
-    .spyOn(router, 'navigate')
-    .mockResolvedValue(true);
+  const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
   return { ...rendered, navigate };
 }
 
 describe('AdminAppComponent', () => {
-  /**
-   * Verifies: the component instantiates without error under default providers.
-   * Interacts with: UserPermissionsService + RouterQuery stubs via renderAdmin.
-   * Data: default overrides (no permissions, null section).
-   */
-  it('should create the component', async () => {
-    const { fixture } = await renderAdmin();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the static "Administration" heading is rendered in the template.
    * Interacts with: rendered DOM via Testing Library screen query.

@@ -2,7 +2,6 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
@@ -14,6 +13,9 @@ import {
 import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { CreateApplicationDialogComponent } from './create-application-dialog.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 const file: FileModel = {
   id: 'f1',
@@ -26,18 +28,15 @@ const currentTeams: TeamUserApp[] = [
 ];
 
 async function renderDialog() {
-  const close = vi.fn();
-  const dialogRef = { close } as unknown as MatDialogRef<
-    CreateApplicationDialogComponent
-  >;
+  const { dialogRef, close } =
+    dialogRefStub<CreateApplicationDialogComponent>();
 
   const getTeamApplicationInstances = vi.fn(() => of([{}]));
   const createApplicationInstance = vi.fn(() => of({}));
 
   const rendered = await renderComponent(CreateApplicationDialogComponent, {
     declarations: [CreateApplicationDialogComponent],
-    imports: [MatSelectModule],
-    schemas: [NO_ERRORS_SCHEMA],
+    imports: [MatFormFieldModule, ...CRUCIBLE_DIALOG_IMPORTS, MatSelectModule],
     componentProperties: {
       applicationId: 'app-1',
       file,
@@ -61,16 +60,6 @@ async function renderDialog() {
 }
 
 describe('CreateApplicationDialogComponent', () => {
-  /**
-   * Verifies: the component instantiates with the provided inputs and providers.
-   * Interacts with: ApplicationService stub and MatDialogRef via renderDialog.
-   * Data: default render inputs (applicationId, file, currentTeams).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderDialog();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: ngOnInit pre-selects the teams form control from the file's teamIds.
    * Interacts with: component reactive form built on init.
@@ -101,5 +90,4 @@ describe('CreateApplicationDialogComponent', () => {
     });
     expect(close).toHaveBeenCalledWith({ teams: ['team-a', 'team-b'] });
   });
-
 });

@@ -2,20 +2,19 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
+import { SecurityContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
-import {
-  ComnAuthQuery,
-  ComnAuthService,
-  Theme,
-} from '@cmusei/crucible-common';
+import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { ApplicationListComponent } from './application-list.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatListModule } from '@angular/material/list';
+import { MatButtonModule } from '@angular/material/button';
 
 const teams: TeamData[] = [
   { id: 'team-a', name: 'Primary', isPrimary: true } as TeamData,
@@ -46,8 +45,8 @@ async function renderList(
   const focusedAppUrl = new BehaviorSubject<string>('about:blank');
 
   const rendered = await renderComponent(ApplicationListComponent, {
+    imports: [MatListModule, MatButtonModule],
     declarations: [ApplicationListComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     componentProperties: { viewId: 'v1', teams: t, mini: false },
     providers: [
       {
@@ -66,12 +65,6 @@ async function renderList(
         provide: ComnAuthQuery,
         useValue: { userTheme$: of(theme) },
       },
-      {
-        provide: DomSanitizer,
-        useValue: {
-          bypassSecurityTrustResourceUrl: (u: string) => `safe(${u})`,
-        },
-      },
     ],
   });
 
@@ -85,16 +78,6 @@ async function renderList(
 
 describe('ApplicationListComponent', () => {
   /**
-   * Verifies: ApplicationListComponent instantiates successfully.
-   * Interacts with: renderList harness with Applications/FocusedApp/Auth/Sanitizer stubs.
-   * Data: default renderList() (one embeddable app, light theme, two teams).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderList();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  /**
    * Verifies: applications are fetched for the team flagged isPrimary, not just the first team.
    * Interacts with: ApplicationsService.getApplicationsByTeam spy.
    * Data: default teams array where 'team-a' is the primary team.
@@ -106,7 +89,7 @@ describe('ApplicationListComponent', () => {
 
   /**
    * Verifies: each app's themedUrl substitutes the current theme into the {theme} placeholder and safeUrl is sanitized.
-   * Interacts with: applications$ stream, ComnAuthQuery.userTheme$, DomSanitizer stub.
+   * Interacts with: applications$ stream, ComnAuthQuery.userTheme$, the real DomSanitizer.
    * Data: renderList override with a {theme}-placeholder URL and dark-theme.
    */
   it('applies theme query string and safe URL to each app', async () => {
@@ -118,9 +101,10 @@ describe('ApplicationListComponent', () => {
     expect(apps[0].themedUrl).toBe(
       'https://a.test/app?other=1&theme=dark-theme',
     );
-    expect(apps[0].safeUrl as unknown as string).toBe(
-      'safe(https://a.test/app?other=1&theme=dark-theme)',
-    );
+    const sanitizer = TestBed.inject(DomSanitizer);
+    expect(
+      sanitizer.sanitize(SecurityContext.RESOURCE_URL, apps[0].safeUrl),
+    ).toBe('https://a.test/app?other=1&theme=dark-theme');
   });
 
   /**
@@ -155,7 +139,7 @@ describe('ApplicationListComponent', () => {
   /**
    * Verifies: a plain click on an embeddable app is prevented and pushed into the focused-app URL stream.
    * Interacts with: openApplication, MouseEvent.preventDefault spy, FocusedAppService.focusedAppUrl subject.
-   * Data: default renderList(); a synthetic non-ctrl MouseEvent and an app with a themedUrl.
+   * Data: default renderList(); a real non-ctrl MouseEvent and an app with a themedUrl.
    * Why: awaits fixture.whenStable() to flush the isAuthenticated() promise that openInFocusedApp awaits
    *       before the focusedAppUrl is updated.
    */
@@ -163,14 +147,12 @@ describe('ApplicationListComponent', () => {
     const { fixture, focusedAppUrl } = await renderList();
     // Let the stream run so currentApp gets seeded.
     await firstValueFrom(fixture.componentInstance.applications$);
-    const event = {
-      ctrlKey: false,
-      preventDefault: vi.fn(),
-    } as unknown as MouseEvent;
+    const event = new MouseEvent('click', { ctrlKey: false });
+    const preventDefault = vi.spyOn(event, 'preventDefault');
     const app = makeApp('a2', 'https://a2.test/app');
     app.themedUrl = 'https://a2.test/app';
     fixture.componentInstance.openApplication(app, event);
-    expect(event.preventDefault).toHaveBeenCalled();
+    expect(preventDefault).toHaveBeenCalled();
     // Flush the isAuthenticated() promise that openInFocusedApp awaits.
     await fixture.whenStable();
     expect(focusedAppUrl.value).toBe('https://a2.test/app');
@@ -179,17 +161,15 @@ describe('ApplicationListComponent', () => {
   /**
    * Verifies: a ctrl-click is not intercepted, allowing the browser's default open-in-new-tab behavior.
    * Interacts with: openApplication, MouseEvent.preventDefault spy.
-   * Data: default renderList(); a synthetic ctrlKey:true MouseEvent.
+   * Data: default renderList(); a real ctrlKey:true MouseEvent.
    */
   it('openApplication respects ctrl-click (does not intercept)', async () => {
     const { fixture } = await renderList();
-    const event = {
-      ctrlKey: true,
-      preventDefault: vi.fn(),
-    } as unknown as MouseEvent;
+    const event = new MouseEvent('click', { ctrlKey: true });
+    const preventDefault = vi.spyOn(event, 'preventDefault');
     const app = makeApp('a2', 'https://a2.test/app');
     fixture.componentInstance.openApplication(app, event);
-    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(preventDefault).not.toHaveBeenCalled();
   });
 
   /**
@@ -224,9 +204,7 @@ describe('ApplicationListComponent', () => {
    */
   it('trackByFn returns the item id', async () => {
     const { fixture } = await renderList();
-    expect(
-      fixture.componentInstance.trackByFn(0, { id: 'foo' }),
-    ).toBe('foo');
+    expect(fixture.componentInstance.trackByFn(0, { id: 'foo' })).toBe('foo');
   });
 
   /**
@@ -238,7 +216,12 @@ describe('ApplicationListComponent', () => {
     const { fixture, getApplicationsByTeam } = await renderList();
     getApplicationsByTeam.mockClear();
     fixture.componentInstance.ngOnChanges({
-      teams: { currentValue: teams, previousValue: [], firstChange: false, isFirstChange: () => false },
+      teams: {
+        currentValue: teams,
+        previousValue: [],
+        firstChange: false,
+        isFirstChange: () => false,
+      },
     });
     expect(getApplicationsByTeam).toHaveBeenCalled();
   });

@@ -1,7 +1,7 @@
 // Copyright 2026 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
@@ -95,10 +95,6 @@ describe('NotificationService', () => {
     // The service logs connection lifecycle to the console; keep test output clean.
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     TestBed.resetTestingModule();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe('connectToNotificationServer()', () => {

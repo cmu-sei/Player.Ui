@@ -7,44 +7,44 @@ import userEvent from '@testing-library/user-event';
 import { of } from 'rxjs';
 import { TopbarComponent } from './topbar.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { userPermissionsProvider } from 'src/app/test-utils/mock-user-permissions.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { TopbarView } from './topbar.models';
 import {
   ComnAuthService,
   ComnAuthQuery,
   CrucibleDialogService,
+  CRUCIBLE_DIALOG_IMPORTS,
 } from '@cmusei/crucible-common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Team } from '../../../generated/player-api';
+import {
+  SystemPermission,
+  Team,
+  TeamPermission,
+  TeamPermissionsClaim,
+  ViewPermission,
+} from '../../../generated/player-api';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 const mockLogout = vi.fn();
 
-function createMockPermissionsService(
-  opts: {
-    canViewAdmin?: boolean;
-    canManageViews?: boolean;
-    canCreateViews?: boolean;
-    canManageAnyTeam?: boolean;
-  } = {},
-) {
-  const {
-    canViewAdmin = false,
-    canManageViews = false,
-    canCreateViews = false,
-    canManageAnyTeam = false,
-  } = opts;
-  return {
-    permissions$: of(canCreateViews ? ['CreateViews'] : []),
-    teamPermissions$: of([]),
-    loadPermissions: () => of([]),
-    canViewAdminstration: () => of(canViewAdmin),
-    can: () => of(canManageViews),
-    hasPermission: (p: string) => of(canCreateViews && p === 'CreateViews'),
-    canManageAnyTeam$: of(canManageAnyTeam),
-  };
+const TEAM_1: Team = { id: 'team-1', name: 'Team 1' };
+
+function manageTeamClaim(teamId = 'team-1'): TeamPermissionsClaim {
+  return { teamId, permissionValues: [TeamPermission.ManageTeam] };
+}
+
+function manageViewClaim(teamId = 'team-1'): TeamPermissionsClaim {
+  return { teamId, permissionValues: [ViewPermission.ManageView] };
 }
 
 async function renderTopbar(
@@ -56,10 +56,8 @@ async function renderTopbar(
     teams?: Team[];
     team?: Team;
     mini?: boolean;
-    canViewAdmin?: boolean;
-    canManageViews?: boolean;
-    canCreateViews?: boolean;
-    canManageAnyTeam?: boolean;
+    systemPermissions?: SystemPermission[];
+    teamClaims?: TeamPermissionsClaim[];
     confirmResult?: boolean;
   } = {},
 ) {
@@ -71,13 +69,9 @@ async function renderTopbar(
     teams = undefined,
     team = undefined,
     mini = false,
-    canViewAdmin = false,
-    canManageViews = false,
-    canCreateViews = false,
-    canManageAnyTeam = false,
+    systemPermissions = [],
+    teamClaims = [],
   } = overrides;
-
-  mockLogout.mockClear();
 
   const setUserTheme = vi.fn();
   const dialogOpen = vi.fn();
@@ -88,17 +82,20 @@ async function renderTopbar(
   }));
 
   const rendered = await renderComponent(TopbarComponent, {
+    imports: [
+      MatDialogModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatMenuModule,
+      MatSlideToggleModule,
+      MatToolbarModule,
+      MatTooltipModule,
+      MatButtonModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+    ],
     declarations: [TopbarComponent],
     providers: [
-      {
-        provide: UserPermissionsService,
-        useValue: createMockPermissionsService({
-          canViewAdmin,
-          canManageViews,
-          canCreateViews,
-          canManageAnyTeam,
-        }),
-      },
+      userPermissionsProvider(systemPermissions, teamClaims),
       {
         provide: LoggedInUserService,
         useValue: {
@@ -156,17 +153,13 @@ async function renderTopbar(
   };
 }
 
-describe('TopbarComponent', () => {
-  /**
-   * Verifies: the component instantiates under the full provider set.
-   * Interacts with: permissions/auth/dialog stubs via renderTopbar.
-   * Data: default render (Player title, PLAYER_HOME view, no permissions).
-   */
-  it('should create', async () => {
-    const { fixture } = await renderTopbar();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
+async function openUserMenu() {
+  const user = userEvent.setup();
+  await user.click(screen.getByText('Test User'));
+  return user;
+}
 
+describe('TopbarComponent', () => {
   /**
    * Verifies: the title input is rendered in the toolbar.
    * Interacts with: rendered template; screen.getByText.
@@ -188,47 +181,13 @@ describe('TopbarComponent', () => {
   });
 
   /**
-   * Verifies: the Administration menu item appears when admin access is granted.
-   * Interacts with: UserPermissionsService.canViewAdminstration$; opens the user menu via click.
-   * Data: canViewAdmin true; PLAYER_HOME view.
-   */
-  it('should show Administration link when showAdministration$ emits true', async () => {
-    await renderTopbar({
-      canViewAdmin: true,
-      topbarView: TopbarView.PLAYER_HOME,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Administration')).toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: the Administration menu item is hidden when admin access is denied.
-   * Interacts with: UserPermissionsService.canViewAdminstration$; opens the user menu via click.
-   * Data: canViewAdmin false; PLAYER_HOME view.
-   */
-  it('should hide Administration link when showAdministration$ emits false', async () => {
-    await renderTopbar({
-      canViewAdmin: false,
-      topbarView: TopbarView.PLAYER_HOME,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
-  });
-
-  /**
    * Verifies: the Logout item is present in the opened user menu.
    * Interacts with: rendered menu; opens it via a user click.
    * Data: default render.
    */
   it('should show logout option', async () => {
     await renderTopbar();
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
+    await openUserMenu();
     expect(screen.getByText('Logout')).toBeInTheDocument();
   });
 
@@ -239,9 +198,7 @@ describe('TopbarComponent', () => {
    */
   it('should show dark theme toggle', async () => {
     await renderTopbar();
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
+    await openUserMenu();
     expect(screen.getByText('Dark Theme')).toBeInTheDocument();
   });
 
@@ -252,29 +209,9 @@ describe('TopbarComponent', () => {
    */
   it('should call logout when logout clicked', async () => {
     await renderTopbar();
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    const logoutButton = screen.getByText('Logout');
-    await user.click(logoutButton);
+    const user = await openUserMenu();
+    await user.click(screen.getByText('Logout'));
     expect(mockLogout).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: the topbar does not render a "Close Sidebar" toggle button.
-   * Interacts with: rendered DOM queried directly via querySelector.
-   * Data: sidenav stub with opened=true.
-   */
-  it('should not show sidebar toggle button (topbar has no toggle button)', async () => {
-    const result = await renderTopbar({
-      sidenav: { opened: true } as MatSidenav,
-    });
-    result.fixture.detectChanges();
-    expect(
-      result.fixture.nativeElement.querySelector(
-        'button[aria-label="Close Sidebar"]',
-      ),
-    ).toBeNull();
   });
 
   /**
@@ -287,245 +224,215 @@ describe('TopbarComponent', () => {
     expect(screen.getByText('Player')).toBeInTheDocument();
   });
 
-  /**
-   * Verifies: the Exit Administration item shows while in the admin view.
-   * Interacts with: topbarView input + canViewAdmin permission; opens the menu via click.
-   * Data: canViewAdmin true; PLAYER_ADMIN view.
-   */
-  it('should show Exit Administration when in admin view', async () => {
-    await renderTopbar({
-      canViewAdmin: true,
-      topbarView: TopbarView.PLAYER_ADMIN,
+  describe('Administration entry', () => {
+    /**
+     * Verifies: the Administration link appears for a user holding a View* system permission.
+     * Interacts with: UserPermissionsService.canViewAdminstration(); opens the menu via click.
+     * Data: systemPermissions [ViewViews]; PLAYER_HOME view.
+     */
+    it('should show Administration link when user has ViewViews system permission', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ViewViews],
+        topbarView: TopbarView.PLAYER_HOME,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Administration')).toBeInTheDocument();
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Exit Administration')).toBeInTheDocument();
+
+    /**
+     * Verifies: the Administration link is hidden for a user holding no View* permission.
+     * Interacts with: UserPermissionsService.canViewAdminstration(); opens the menu via click.
+     * Data: systemPermissions [ManageRoles] — a non-View* permission; PLAYER_HOME view.
+     * Why: an empty permission list would also hide the link, so a user who holds a
+     *   different system permission is the case that pins the View* filter itself.
+     */
+    it('should hide Administration link when user lacks any View* permission', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ManageRoles],
+        topbarView: TopbarView.PLAYER_HOME,
+      });
+      await openUserMenu();
+      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: inside the admin view, Exit Administration is shown while the
+     *   Administration entry is suppressed (mutually exclusive).
+     * Interacts with: canViewAdminstration() + topbarView; opens the menu via click.
+     * Data: systemPermissions [ViewViews]; PLAYER_ADMIN view.
+     */
+    it('should show Exit Administration and hide Administration when in admin view', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ViewViews],
+        topbarView: TopbarView.PLAYER_ADMIN,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Exit Administration')).toBeInTheDocument();
+      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: the Exit Administration item is hidden outside the admin view.
+     * Interacts with: topbarView input + canViewAdminstration(); opens the menu via click.
+     * Data: systemPermissions [ViewViews]; PLAYER_HOME view.
+     */
+    it('should hide Exit Administration when not in admin view', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ViewViews],
+        topbarView: TopbarView.PLAYER_HOME,
+      });
+      await openUserMenu();
+      expect(screen.queryByText('Exit Administration')).not.toBeInTheDocument();
+    });
   });
 
-  /**
-   * Verifies: the Exit Administration item is hidden outside the admin view.
-   * Interacts with: topbarView input + canViewAdmin permission; opens the menu via click.
-   * Data: canViewAdmin true; PLAYER_HOME view.
-   */
-  it('should hide Exit Administration when not in admin view', async () => {
-    await renderTopbar({
-      canViewAdmin: true,
-      topbarView: TopbarView.PLAYER_HOME,
+  describe('Edit View entry', () => {
+    /**
+     * Verifies: Edit View appears via the ManageViews *system* permission.
+     * Interacts with: UserPermissionsService.can(ManageViews, ...) + team input; opens the menu via click.
+     * Data: systemPermissions [ManageViews], no team claims; team 'Team 1'; PLAYER_PLAYER view.
+     * Why: the system path has to hold on its own, with the view-permission path unavailable.
+     */
+    it('should show Edit View for the ManageViews system permission', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ManageViews],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Edit View')).toBeInTheDocument();
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Exit Administration')).not.toBeInTheDocument();
+
+    /**
+     * Verifies: Edit View appears via the per-view ManageView claim with no system permission.
+     * Interacts with: UserPermissionsService.can(..., viewPermission: ManageView) + team input.
+     * Data: systemPermissions []; team claim { team-1, [ManageView] }; team 'Team 1'.
+     * Why: this is the path a scoped-team user takes. Both cases used to pass a single
+     *   canManageViews boolean into a can() stub that ignored its arguments, so they were
+     *   the same test twice and neither pinned the permission it named.
+     */
+    it('should show Edit View for the ManageView view-permission alone', async () => {
+      await renderTopbar({
+        systemPermissions: [],
+        teamClaims: [manageViewClaim()],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Edit View')).toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: Edit View is hidden when the user holds neither ManageViews nor ManageView.
+     * Interacts with: UserPermissionsService.can() + team input; opens the menu via click.
+     * Data: systemPermissions []; no team claims; team 'Team 1'; PLAYER_PLAYER view.
+     */
+    it('should hide Edit View when user lacks ManageViews/ManageView permission', async () => {
+      await renderTopbar({
+        systemPermissions: [],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: Edit View is hidden when no team is set, despite having permission.
+     * Interacts with: UserPermissionsService.can() + team input; opens the menu via click.
+     * Data: systemPermissions [ManageViews]; team undefined; PLAYER_PLAYER view.
+     */
+    it('should hide Edit View when team is not set even if user has permission', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ManageViews],
+        team: undefined,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
+    });
   });
 
-  /**
-   * Verifies: Edit View appears when the user can manage views and a team is set.
-   * Interacts with: UserPermissionsService.can$ (canManageViews) + team input; opens the menu via click.
-   * Data: canManageViews true; team 'Team 1'; PLAYER_PLAYER view.
-   */
-  it('should show Edit View when user has ManageViews permission and team is set', async () => {
-    await renderTopbar({
-      canManageViews: true,
-      team: { id: 'team-1', name: 'Team 1' },
-      topbarView: TopbarView.PLAYER_PLAYER,
+  describe('Manage Teams entry', () => {
+    /**
+     * Verifies: the Reset UI item is available in the menu while in the player view.
+     * Interacts with: topbarView input + team input; opens the menu via click.
+     * Data: PLAYER_PLAYER view; team 'Team 1'.
+     */
+    it('should show Reset UI option in menu when in player view', async () => {
+      await renderTopbar({
+        topbarView: TopbarView.PLAYER_PLAYER,
+        team: TEAM_1,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Reset UI')).toBeInTheDocument();
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Edit View')).toBeInTheDocument();
-  });
 
-  /**
-   * Verifies: the Reset UI item is available in the menu while in the player view.
-   * Interacts with: topbarView input + team input; opens the menu via click.
-   * Data: PLAYER_PLAYER view; team 'Team 1'.
-   */
-  it('should show Reset UI option in menu when in player view', async () => {
-    await renderTopbar({
-      topbarView: TopbarView.PLAYER_PLAYER,
-      team: { id: 'team-1', name: 'Team 1' },
+    /**
+     * Verifies: Manage Teams shows (and Edit View does not) when the user can
+     *   manage a team but cannot edit the view.
+     * Interacts with: canManageAnyTeam$ (derived from the ManageTeam claim) + can(); opens the menu.
+     * Data: team claim { team-1, [ManageTeam] }; no system permissions; team 'Team 1'.
+     */
+    it('should show Manage Teams when user can manage a team but cannot edit the view', async () => {
+      await renderTopbar({
+        systemPermissions: [],
+        teamClaims: [manageTeamClaim()],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Manage Teams')).toBeInTheDocument();
+      // Manage Teams replaces Edit View for these users.
+      expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Reset UI')).toBeInTheDocument();
-  });
 
-  /**
-   * Verifies: Edit View also appears for the per-view ManageView permission path
-   *   when a team is set (companion to the system-permission case above).
-   * Interacts with: UserPermissionsService.can$ (canManageViews) + team input; opens the menu via click.
-   * Data: canManageViews true; team 'Team 1'; PLAYER_PLAYER view.
-   */
-  it('should show Edit View when user has ManageView view-permission and team is set', async () => {
-    await renderTopbar({
-      canManageViews: true,
-      team: { id: 'team-1', name: 'Team 1' },
-      topbarView: TopbarView.PLAYER_PLAYER,
+    /**
+     * Verifies: when the user can edit the view, Edit View takes precedence and
+     *   Manage Teams is suppressed.
+     * Interacts with: canManageAnyTeam$ + can(); opens the menu via click.
+     * Data: systemPermissions [ManageViews] plus a ManageTeam claim; team 'Team 1'.
+     */
+    it('should hide Manage Teams when user can edit the view (Edit View takes precedence)', async () => {
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ManageViews],
+        teamClaims: [manageTeamClaim()],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
+      expect(screen.getByText('Edit View')).toBeInTheDocument();
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Edit View')).toBeInTheDocument();
-  });
 
-  /**
-   * Verifies: Edit View is hidden when the user lacks view-management permission,
-   *   even with a team set.
-   * Interacts with: UserPermissionsService.can$ (canManageViews false) + team input; opens the menu via click.
-   * Data: canManageViews false; team 'Team 1'; PLAYER_PLAYER view.
-   */
-  it('should hide Edit View when user lacks ManageViews/ManageView permission', async () => {
-    await renderTopbar({
-      canManageViews: false,
-      team: { id: 'team-1', name: 'Team 1' },
-      topbarView: TopbarView.PLAYER_PLAYER,
+    /**
+     * Verifies: Manage Teams is hidden when no team is set, despite team-manage rights.
+     * Interacts with: canManageAnyTeam$; opens the menu via click.
+     * Data: team claim { team-1, [ManageTeam] }; team undefined; PLAYER_PLAYER view.
+     */
+    it('should hide Manage Teams when team is not set even if user can manage a team', async () => {
+      await renderTopbar({
+        teamClaims: [manageTeamClaim()],
+        team: undefined,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
-  });
 
-  /**
-   * Verifies: Edit View is hidden when no team is set, despite having permission.
-   * Interacts with: UserPermissionsService.can$ (canManageViews) + team input; opens the menu via click.
-   * Data: canManageViews true; team undefined; PLAYER_PLAYER view.
-   */
-  it('should hide Edit View when team is not set even if user has permission', async () => {
-    await renderTopbar({
-      canManageViews: true,
-      team: undefined,
-      topbarView: TopbarView.PLAYER_PLAYER,
+    /**
+     * Verifies: openManageTeams opens a dialog passing the current view id as data.
+     * Interacts with: MatDialog.open (dialogOpen spy).
+     * Data: viewId 'view-42'; asserts data { viewId: 'view-42' }.
+     */
+    it('openManageTeams opens the manage teams dialog with the view id', async () => {
+      const { fixture, dialogOpen } = await renderTopbar({ viewId: 'view-42' });
+      fixture.componentInstance.openManageTeams();
+      expect(dialogOpen).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ data: { viewId: 'view-42' } }),
+      );
     });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: Manage Teams shows (and Edit View does not) when the user can
-   *   manage a team but cannot edit the view.
-   * Interacts with: canManageAnyTeam$ + can$ permissions and team input; opens the menu via click.
-   * Data: canManageViews false, canManageAnyTeam true; team 'Team 1'.
-   */
-  it('should show Manage Teams when user can manage a team but cannot edit the view', async () => {
-    await renderTopbar({
-      canManageViews: false,
-      canManageAnyTeam: true,
-      team: { id: 'team-1', name: 'Team 1' },
-      topbarView: TopbarView.PLAYER_PLAYER,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Manage Teams')).toBeInTheDocument();
-    // Manage Teams replaces Edit View for these users.
-    expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: when the user can edit the view, Edit View takes precedence and
-   *   Manage Teams is suppressed.
-   * Interacts with: canManageAnyTeam$ + can$ permissions and team input; opens the menu via click.
-   * Data: canManageViews true, canManageAnyTeam true; team 'Team 1'.
-   */
-  it('should hide Manage Teams when user can edit the view (Edit View takes precedence)', async () => {
-    await renderTopbar({
-      canManageViews: true,
-      canManageAnyTeam: true,
-      team: { id: 'team-1', name: 'Team 1' },
-      topbarView: TopbarView.PLAYER_PLAYER,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
-    expect(screen.getByText('Edit View')).toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: Manage Teams is hidden when no team is set, despite team-manage rights.
-   * Interacts with: canManageAnyTeam$ permission and team input; opens the menu via click.
-   * Data: canManageAnyTeam true; team undefined; PLAYER_PLAYER view.
-   */
-  it('should hide Manage Teams when team is not set even if user can manage a team', async () => {
-    await renderTopbar({
-      canManageAnyTeam: true,
-      team: undefined,
-      topbarView: TopbarView.PLAYER_PLAYER,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: openManageTeams opens a dialog passing the current view id as data.
-   * Interacts with: MatDialog.open (dialogOpen spy).
-   * Data: viewId 'view-42'; asserts data { viewId: 'view-42' }.
-   */
-  it('openManageTeams opens the manage teams dialog with the view id', async () => {
-    const { fixture, dialogOpen } = await renderTopbar({ viewId: 'view-42' });
-    fixture.componentInstance.openManageTeams();
-    expect(dialogOpen).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ data: { viewId: 'view-42' } }),
-    );
-  });
-
-  /**
-   * Verifies: the Administration link appears for a user with system view access
-   *   (companion case to the showAdministration$ test above).
-   * Interacts with: UserPermissionsService.canViewAdminstration$; opens the menu via click.
-   * Data: canViewAdmin true; PLAYER_HOME view.
-   */
-  it('should show Administration link when user has ViewViews system permission', async () => {
-    await renderTopbar({
-      canViewAdmin: true,
-      topbarView: TopbarView.PLAYER_HOME,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Administration')).toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: the Administration link is hidden for a user lacking any View* access.
-   * Interacts with: UserPermissionsService.canViewAdminstration$; opens the menu via click.
-   * Data: canViewAdmin false; PLAYER_HOME view.
-   */
-  it('should hide Administration link when user lacks any View* permission', async () => {
-    await renderTopbar({
-      canViewAdmin: false,
-      topbarView: TopbarView.PLAYER_HOME,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: inside the admin view, Exit Administration is shown while the
-   *   Administration entry is suppressed (mutually exclusive).
-   * Interacts with: canViewAdminstration$ + topbarView; opens the menu via click.
-   * Data: canViewAdmin true; PLAYER_ADMIN view.
-   */
-  it('should show Exit Administration and hide Administration when in admin view with permissions', async () => {
-    await renderTopbar({
-      canViewAdmin: true,
-      topbarView: TopbarView.PLAYER_ADMIN,
-    });
-    const user = userEvent.setup();
-    const menuButton = screen.getByText('Test User');
-    await user.click(menuButton);
-    expect(screen.getByText('Exit Administration')).toBeInTheDocument();
-    expect(screen.queryByText('Administration')).not.toBeInTheDocument();
   });
 
   describe('setTeamFn()', () => {
@@ -618,7 +525,7 @@ describe('TopbarComponent', () => {
    */
   it('sidenavToggleFn emits the negation of the current sidenav opened state', async () => {
     const { fixture } = await renderTopbar({
-      sidenav: { opened: true } as never,
+      sidenav: { opened: true } as MatSidenav,
     });
     const spy = vi.fn();
     fixture.componentInstance.sidenavToggle.subscribe(spy);

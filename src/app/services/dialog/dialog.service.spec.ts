@@ -11,25 +11,31 @@ import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remov
 import { EditFileDialogComponent } from '../../components/shared/edit-file-dialog/edit-file-dialog.component';
 import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-subscription-search/edit-subscription/edit-subscription.component';
 import { CreateApplicationDialogComponent } from '../../components/shared/create-application-dialog/create-application-dialog.component';
+import { TeamUserApp } from '../../components/admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { Team, FileModel } from '../../generated/player-api';
 
-// Each open() returns a fake dialog ref whose componentInstance is a plain
-// object that captures whatever DialogService assigns to it, plus an
-// afterClosed() we control. This lets us assert which component was opened,
-// what config it got, and which inputs were set — without rendering anything.
+// Each open() returns a fake dialog ref whose componentInstance captures
+// whatever DialogService assigns to it, plus an afterClosed() we control. This
+// lets us assert which component was opened, what config it got, and which
+// inputs were set — without rendering anything.
+//
+// It is typed against the real dialog components rather than a bag of unknowns,
+// so renaming an input on any of them fails this spec at compile time instead of
+// leaving it asserting a property the component no longer has.
+type DialogComponentInstance = Partial<NameDialogComponent> &
+  Partial<AddRemoveUsersDialogComponent> &
+  Partial<EditFileDialogComponent> &
+  Partial<EditSubscriptionComponent> &
+  Partial<CreateApplicationDialogComponent>;
+
 function setup(closedWith: unknown = true) {
-  const componentInstance: Record<string, unknown> & {
-    loadTeam?: ReturnType<typeof vi.fn>;
-  } = { loadTeam: vi.fn() };
+  const componentInstance: DialogComponentInstance = { loadTeam: vi.fn() };
   const afterClosed = vi.fn(() => of(closedWith));
   const dialogRef = { componentInstance, afterClosed };
   const open = vi.fn(() => dialogRef);
 
   TestBed.configureTestingModule({
-    providers: [
-      { provide: MatDialog, useValue: { open } },
-      DialogService,
-    ],
+    providers: [{ provide: MatDialog, useValue: { open } }, DialogService],
   });
 
   const service = TestBed.inject(DialogService);
@@ -73,6 +79,35 @@ describe('DialogService', () => {
     });
     expect(componentInstance.title).toBe('Members');
     expect(componentInstance.loadTeam).toHaveBeenCalledWith(team);
+  });
+
+  /**
+   * Verifies: addRemoveUsersToTeam() defaults canManageRoles to true when the caller omits it.
+   * Interacts with: MatDialog.open stub; service.addRemoveUsersToTeam.
+   * Data: a Team fixture, no canManageRoles argument.
+   * Why: the flag gates every role-editing control in the dialog, so the default has to be pinned separately from the explicit-false path.
+   */
+  it('addRemoveUsersToTeam() grants role management by default', () => {
+    const { service, componentInstance } = setup();
+    service.addRemoveUsersToTeam('Members', { id: 't1', name: 'Red' });
+    expect(componentInstance.canManageRoles).toBe(true);
+  });
+
+  /**
+   * Verifies: addRemoveUsersToTeam() forwards canManageRoles: false onto the dialog instance.
+   * Interacts with: MatDialog.open stub; service.addRemoveUsersToTeam.
+   * Data: a Team fixture with canManageRoles passed as false.
+   * Why: manage-teams passes false for scoped-team users; if this assignment is lost they silently regain role management.
+   */
+  it('addRemoveUsersToTeam() forwards canManageRoles: false', () => {
+    const { service, componentInstance } = setup();
+    service.addRemoveUsersToTeam(
+      'Members',
+      { id: 't1', name: 'Red' },
+      undefined,
+      false,
+    );
+    expect(componentInstance.canManageRoles).toBe(false);
   });
 
   /**
@@ -123,13 +158,13 @@ describe('DialogService', () => {
   /**
    * Verifies: createApplication() opens with its sizing config and forwards applicationId, file, and currentTeams onto the instance
    * Interacts with: MatDialog.open stub; service.createApplication
-   * Data: an applicationId string, a FileModel fixture, and a currentTeams array
+   * Data: an applicationId string, a FileModel fixture, and one real TeamUserApp
    */
   it('createApplication() opens the dialog and forwards all inputs', () => {
     const { service, open, componentInstance } = setup();
-    const file = { id: 'f1', name: 'icon.png' } as FileModel;
-    const currentTeams = [{ id: 'tua1' }];
-    service.createApplication('app1', file, currentTeams as never);
+    const file: FileModel = { id: 'f1', name: 'icon.png' };
+    const currentTeams = [new TeamUserApp('Red', { id: 't1' }, [])];
+    service.createApplication('app1', file, currentTeams);
     expect(open).toHaveBeenCalledWith(CreateApplicationDialogComponent, {
       width: '480px',
       maxWidth: '90vw',

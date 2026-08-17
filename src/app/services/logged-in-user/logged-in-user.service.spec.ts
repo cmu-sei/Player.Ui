@@ -10,7 +10,10 @@ import { LoggedInUserService } from './logged-in-user.service';
 import { UserService } from '../../generated/player-api';
 import { UserPermissionsService } from '../permissions/user-permissions.service';
 
-function authUser(sub: string, profile: Record<string, unknown> = {}): AuthUser {
+function authUser(
+  sub: string,
+  profile: Record<string, unknown> = {},
+): AuthUser {
   return { profile: { sub, ...profile } } as unknown as AuthUser;
 }
 
@@ -91,8 +94,12 @@ describe('LoggedInUserService', () => {
     const logged = await firstValueFrom(service.loggedInUser$);
     expect(logged.profile.sub).toBe('sub-1');
     expect(logged.profile.email).toBe('a@test');
-    expect((logged.profile as Record<string, unknown>).name).toBe('Player Name');
-    expect((logged.profile as Record<string, unknown>).isSystemAdmin).toBe(true);
+    expect((logged.profile as Record<string, unknown>).name).toBe(
+      'Player Name',
+    );
+    expect((logged.profile as Record<string, unknown>).isSystemAdmin).toBe(
+      true,
+    );
   });
 
   /**

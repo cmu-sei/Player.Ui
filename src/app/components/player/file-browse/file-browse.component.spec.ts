@@ -3,11 +3,14 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
 import { FileBrowseComponent } from './file-browse.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 const files: FileModel[] = [
   { id: 'f1', name: 'doc.txt', teamIds: ['team-a'] },
@@ -19,6 +22,29 @@ const teams: Team[] = [
   { id: 'team-a', name: 'Red' },
   { id: 'team-b', name: 'Blue' },
 ];
+
+function makeAnchorStub() {
+  const setDownload = vi.fn();
+  const click = vi.fn();
+  const anchor = document.createElement('a');
+  Object.defineProperty(anchor, 'download', {
+    configurable: true,
+    set: setDownload,
+    get: () => '',
+  });
+  anchor.click = click;
+  return { anchor, setDownload, click };
+}
+
+function stubAnchorCreation(anchor: HTMLAnchorElement) {
+  const createElement = document.createElement.bind(document);
+  return vi
+    .spyOn(document, 'createElement')
+    .mockImplementation(((tag: string) =>
+      tag === 'a'
+        ? anchor
+        : createElement(tag)) as typeof document.createElement);
+}
 
 async function renderBrowse(
   overrides: {
@@ -34,6 +60,7 @@ async function renderBrowse(
   const download = vi.fn(() => of(new Blob(['x'])));
 
   const rendered = await renderComponent(FileBrowseComponent, {
+    imports: [MatListModule, MatIconModule, MatButtonModule],
     declarations: [FileBrowseComponent],
     providers: [
       {
@@ -48,9 +75,7 @@ async function renderBrowse(
         provide: ActivatedRoute,
         useValue: {
           snapshot: {
-            paramMap: {
-              get: (k: string) => (k === 'id' ? viewId : null),
-            },
+            paramMap: convertToParamMap({ id: viewId }),
           },
         },
       },
@@ -61,16 +86,6 @@ async function renderBrowse(
 }
 
 describe('FileBrowseComponent', () => {
-  /**
-   * Verifies: FileBrowseComponent instantiates successfully.
-   * Interacts with: renderBrowse harness with FileService/TeamService/ActivatedRoute stubs.
-   * Data: default renderBrowse() (three files across two teams).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderBrowse();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: init fetches files and teams using the view id from the route, populating files and a teams map.
    * Interacts with: FileService.getViewFiles, TeamService.getMyViewTeams, ActivatedRoute.snapshot.paramMap.
@@ -120,69 +135,45 @@ describe('FileBrowseComponent', () => {
   });
 
   /**
-   * Verifies: downloadFile fetches the blob, creates an object URL, and clicks a generated anchor for a non-image file.
+   * Verifies: downloadFile fetches the blob, points the anchor at the object URL, names the download after
+   *   the file, and clicks it for a non-image file.
    * Interacts with: FileService.download, URL.createObjectURL spy, document.createElement anchor stub.
    * Data: file id 'f1' / 'doc.txt'.
-   * Why: stubs the anchor's click to avoid jsdom "Not implemented: navigation" when a real download is triggered.
+   * Why: the download attribute is the whole point of this branch, so it is asserted with the file name
+   *   rather than left to a no-op setter; the anchor's click is stubbed to avoid jsdom
+   *   "Not implemented: navigation".
    */
   it('downloadFile triggers a browser download for a non-image file', async () => {
     const { fixture, download } = await renderBrowse();
+    const { anchor, setDownload, click } = makeAnchorStub();
     const createUrl = vi
       .spyOn(URL, 'createObjectURL')
       .mockReturnValue('blob://x');
-    const click = vi.fn();
-    const createElement = document.createElement.bind(document);
-    // Stub the anchor click to avoid jsdom "Not implemented: navigation".
-    const createEl = vi.spyOn(document, 'createElement').mockImplementation(((
-      tag: string,
-    ) => {
-      if (tag === 'a') {
-        return {
-          set href(_v: string) {},
-          get href() {
-            return '';
-          },
-          set download(_v: string) {},
-          target: '',
-          click,
-        } as unknown as HTMLElement;
-      }
-      return createElement(tag);
-    }) as typeof document.createElement);
+    stubAnchorCreation(anchor);
     fixture.componentInstance.downloadFile('f1', 'doc.txt');
     expect(download).toHaveBeenCalledWith('f1');
     expect(createUrl).toHaveBeenCalled();
+    expect(anchor.getAttribute('href')).toBe('blob://x');
+    expect(anchor.getAttribute('target')).toBe('_blank');
+    expect(setDownload).toHaveBeenCalledWith('doc.txt');
     expect(click).toHaveBeenCalled();
-    createEl.mockRestore();
-    createUrl.mockRestore();
   });
 
   /**
-   * Verifies: downloadFile omits the anchor download attribute for image files (opens inline instead of forcing a save).
+   * Verifies: downloadFile omits the anchor download attribute for image files (opens inline instead of
+   *   forcing a save) while still clicking the anchor.
    * Interacts with: FileService.download, anchor download setter spy via createElement stub.
    * Data: file id 'f2' / 'image.png'.
-   * Why: instruments the anchor's download setter so it can assert the attribute is never assigned.
+   * Why: instruments the anchor's download setter so it can assert the attribute is never assigned, and
+   *   asserts the click so a downloadFile that did nothing at all could not pass.
    */
   it('downloadFile does not set download attribute for image files', async () => {
     const { fixture } = await renderBrowse();
+    const { anchor, setDownload, click } = makeAnchorStub();
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://x');
-    const setDownload = vi.fn();
-    const anchorStub = {
-      set href(_v: string) {},
-      get href() {
-        return '';
-      },
-      set download(v: string) {
-        setDownload(v);
-      },
-      target: '',
-      click: vi.fn(),
-    };
-    const createEl = vi
-      .spyOn(document, 'createElement')
-      .mockReturnValue(anchorStub as unknown as HTMLAnchorElement);
+    stubAnchorCreation(anchor);
     fixture.componentInstance.downloadFile('f2', 'image.png');
     expect(setDownload).not.toHaveBeenCalled();
-    createEl.mockRestore();
+    expect(click).toHaveBeenCalled();
   });
 });

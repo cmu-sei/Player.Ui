@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
 import {
   Team,
@@ -14,6 +14,14 @@ import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
 import { UserPresenceComponent } from './user-presence.component';
 import { renderComponent } from '../../../../test-utils/render-component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 const teams: Team[] = [
   { id: 't2', name: 'Beta' },
@@ -41,6 +49,14 @@ const presence: ViewPresence[] = [
   } as ViewPresence,
 ];
 
+@Component({ selector: 'app-team-user-presence', template: '' })
+class TeamUserPresenceStubComponent {
+  @Input() team!: Team;
+  @Input() users!: ViewPresence[] | null;
+  @Input() searchTerm!: string | null;
+  @Input() hideInactive!: boolean;
+}
+
 async function renderPresence() {
   const userPresence$ = new BehaviorSubject<ViewPresence[]>(presence);
   const joinPresence = vi.fn();
@@ -51,8 +67,18 @@ async function renderPresence() {
   );
 
   const rendered = await renderComponent(UserPresenceComponent, {
+    imports: [
+      MatExpansionModule,
+      MatCheckboxModule,
+      MatDialogModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatInputModule,
+      MatTooltipModule,
+      MatButtonModule,
+      TeamUserPresenceStubComponent,
+    ],
     declarations: [UserPresenceComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     componentProperties: { viewId: 'view-1' },
     providers: [
       {
@@ -78,16 +104,6 @@ async function renderPresence() {
 }
 
 describe('UserPresenceComponent', () => {
-  /**
-   * Verifies: UserPresenceComponent instantiates successfully.
-   * Interacts with: renderPresence harness with NotificationService/TeamService stubs.
-   * Data: default renderPresence() (viewId 'view-1', two teams, three presences).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderPresence();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: init joins the presence channel for the bound viewId.
    * Interacts with: NotificationService.joinPresence spy.
@@ -170,15 +186,26 @@ describe('UserPresenceComponent', () => {
   });
 
   /**
-   * Verifies: getPresenceByTeamId returns only that team's presences, ordering online users before offline ones.
+   * Verifies: getPresenceByTeamId returns only that team's presences, ordering online users before
+   *   offline ones and breaking ties by username.
    * Interacts with: NotificationService.userPresence$ stream, component getPresenceByTeamId.
-   * Data: team 't1' has u1 (online) and u2 (offline); expects ['u1', 'u2'].
+   * Data: a purpose-built emission whose order (Bob offline, Zoe online, Carol on t2, Alice online)
+   *   contradicts the expected ['u1', 'u4', 'u2'] on every axis the comparator sorts by.
+   * Why: the shared presence fixture is already in sorted order, so asserting against it passes with the
+   *   comparator deleted. Feeding an order that has to change — and one that ties two online users so the
+   *   username branch is reached — is what pins the sort.
    */
-  it('getPresenceByTeamId filters to the team and sorts online users first', async () => {
-    const { fixture } = await renderPresence();
+  it('getPresenceByTeamId filters to the team and sorts online first, then by username', async () => {
+    const { fixture, userPresence$ } = await renderPresence();
+    userPresence$.next([
+      { userId: 'u2', userName: 'Bob', online: false, teamIds: ['t1'] },
+      { userId: 'u4', userName: 'Zoe', online: true, teamIds: ['t1'] },
+      { userId: 'u3', userName: 'Carol', online: true, teamIds: ['t2'] },
+      { userId: 'u1', userName: 'Alice', online: true, teamIds: ['t1'] },
+    ] as ViewPresence[]);
     const result = await firstValueFrom(
       fixture.componentInstance.getPresenceByTeamId('t1'),
     );
-    expect(result.map((p) => p.userId)).toEqual(['u1', 'u2']); // online first, then offline
+    expect(result.map((p) => p.userId)).toEqual(['u1', 'u4', 'u2']);
   });
 });

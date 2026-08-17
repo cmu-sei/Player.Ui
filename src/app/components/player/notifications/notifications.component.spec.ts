@@ -2,7 +2,6 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import {
@@ -14,6 +13,13 @@ import { ViewService } from '../../../generated/player-api/api/view.service';
 import { NotificationDataStatus } from '../../../models/notification-data';
 import { NotificationsComponent } from './notifications.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatListModule } from '@angular/material/list';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonModule } from '@angular/material/button';
 
 function makeNotification(
   overrides: Partial<NotificationDataStatus> = {},
@@ -33,11 +39,12 @@ function makeNotification(
 async function renderNotifications(
   overrides: {
     confirm?: boolean;
+    viewAdmin?: boolean;
   } = {},
 ) {
-  const { confirm = true } = overrides;
+  const { confirm = true, viewAdmin = false } = overrides;
 
-  const canSendMessage = new BehaviorSubject<boolean>(false);
+  const canSendMessage = new BehaviorSubject<boolean>(viewAdmin);
   const notificationHistory = new BehaviorSubject<NotificationDataStatus[]>([]);
   const viewNotification = new Subject<Partial<NotificationDataStatus>>();
   const deleteNotification = new Subject<string>();
@@ -53,8 +60,16 @@ async function renderNotifications(
   const deleteViewNotifications = vi.fn(() => of(undefined));
 
   const rendered = await renderComponent(NotificationsComponent, {
+    imports: [
+      MatExpansionModule,
+      MatListModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatInputModule,
+      MatBadgeModule,
+      MatButtonModule,
+    ],
     declarations: [NotificationsComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     componentProperties: {
       viewGuid: 'v1',
       teamGuid: 't1',
@@ -118,16 +133,6 @@ async function renderNotifications(
 }
 
 describe('NotificationsComponent', () => {
-  /**
-   * Verifies: NotificationsComponent instantiates successfully.
-   * Interacts with: renderNotifications harness with Notification/Settings/Dialog/View/Title stubs.
-   * Data: default renderNotifications() (confirm true).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderNotifications();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: init connects to the notification server using the view/team/user guids and token inputs.
    * Interacts with: NotificationService.connectToNotificationServer spy.
@@ -337,7 +342,6 @@ describe('NotificationsComponent', () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
     fixture.componentInstance.openLink('https://example.test');
     expect(open).toHaveBeenCalledWith('https://example.test', '_blank');
-    open.mockRestore();
   });
 
   describe('playBeep()', () => {
@@ -354,7 +358,6 @@ describe('NotificationsComponent', () => {
       fixture.componentInstance.useBeep = true;
       fixture.componentInstance.playBeep();
       expect(play).toHaveBeenCalled();
-      play.mockRestore();
     });
 
     /**
@@ -370,20 +373,75 @@ describe('NotificationsComponent', () => {
       fixture.componentInstance.useBeep = false;
       fixture.componentInstance.playBeep();
       expect(play).not.toHaveBeenCalled();
-      play.mockRestore();
     });
   });
 
-  /**
-   * Verifies: onSubmit assigns the component's sendMessage handler onto userData.message.
-   * Interacts with: component onSubmit, userData object.
-   * Data: userData seeded as { message: '' }; expects message to equal the sendMessage function reference.
-   */
-  it('onSubmit copies the send-message handler onto the user data message', async () => {
-    const { fixture } = await renderNotifications();
-    const c = fixture.componentInstance;
-    c.userData = { message: '' };
-    c.onSubmit();
-    expect(c.userData.message).toBe(c.sendMessage);
+  describe('admin-only send message form', () => {
+    const SEND_BUTTON = 'button[aria-label="Send"]';
+
+    function messageInput(container: Element): HTMLInputElement {
+      const input = container.querySelector<HTMLInputElement>(
+        'input[name="messageToSend"]',
+      );
+      if (!input) {
+        throw new Error('The message input was not rendered');
+      }
+      return input;
+    }
+
+    function sendButton(container: Element): HTMLButtonElement {
+      const button = container.querySelector<HTMLButtonElement>(SEND_BUTTON);
+      if (!button) {
+        throw new Error('The Send button was not rendered');
+      }
+      return button;
+    }
+
+    /**
+     * Verifies: the send-message form stays out of the DOM for a user without view admin.
+     * Interacts with: the template's @if (hasViewAdmin) gate; NotificationService.canSendMessage.
+     * Data: default renderNotifications() — canSendMessage stays false.
+     * Why: the form broadcasts to everyone in the view, so the gate is what keeps non-admins out of it.
+     */
+    it('hides the form from a user without view admin', async () => {
+      const { container } = await renderNotifications();
+      expect(container.querySelector('form')).toBeNull();
+      expect(container.querySelector(SEND_BUTTON)).toBeNull();
+    });
+
+    /**
+     * Verifies: what the user types reaches messageToSend and submitting the form broadcasts it.
+     * Interacts with: the rendered message input ([(ngModel)]) and Send button; the form's
+     *   (ngSubmit) binding; NotificationService.sendNotification spy.
+     * Data: viewAdmin true; 'broadcast me' typed into the message box.
+     * Why: pins (ngSubmit)="sendMessage()" and the ngModel binding — every method-level sendMessage
+     *   test passes with both removed from the template.
+     */
+    it('submitting the form broadcasts the typed message', async () => {
+      const { container, fixture, sendNotification } =
+        await renderNotifications({ viewAdmin: true });
+      const input = messageInput(container);
+      input.value = 'broadcast me';
+      input.dispatchEvent(new Event('input'));
+      expect(fixture.componentInstance.messageToSend).toBe('broadcast me');
+      await fixture.whenStable();
+
+      sendButton(container).click();
+      await fixture.whenStable();
+      expect(sendNotification).toHaveBeenCalledWith('v1', 'broadcast me');
+    });
+
+    /**
+     * Verifies: the Send button is enabled while the form is valid.
+     * Interacts with: the Send button's [disabled]="!notificationForm.form.valid" binding.
+     * Data: viewAdmin true, empty message box.
+     * Why: the input carries no validators, so this binding only has two reachable states —
+     *   enabled (current behavior) and permanently disabled (inverted or hardcoded). This catches
+     *   the second, which would silently take the broadcast feature away from admins.
+     */
+    it('leaves the Send button enabled while the form is valid', async () => {
+      const { container } = await renderNotifications({ viewAdmin: true });
+      expect(sendButton(container).disabled).toBe(false);
+    });
   });
 });

@@ -4,7 +4,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
   User,
   Team,
@@ -20,6 +19,10 @@ import {
   RolesPermissionsSelectComponent,
 } from './roles-permissions-select.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 const permissionA: Permission = { id: 'p1', name: 'A' };
 const permissionB: Permission = { id: 'p2', name: 'B' };
@@ -34,51 +37,42 @@ async function renderSelect(
   const addToTeam = vi.fn(() => of({}));
   const removeFromTeam = vi.fn(() => of({}));
 
-  const rendered = await renderComponent(
-    RolesPermissionsSelectComponent,
-    {
-      declarations: [RolesPermissionsSelectComponent],
-      imports: [MatSelectModule, MatCheckboxModule],
-      componentProperties: { user, team },
-      providers: [
-        { provide: UserService, useValue: { updateUser } },
-        { provide: TeamService, useValue: { updateTeam } },
-        {
-          provide: TeamPermissionsService,
-          useValue: {
-            teamPermissions$: of([permissionA, permissionB]),
-            addToTeam,
-            removeFromTeam,
-          },
+  const rendered = await renderComponent(RolesPermissionsSelectComponent, {
+    declarations: [RolesPermissionsSelectComponent],
+    imports: [
+      MatFormFieldModule,
+      MatIconModule,
+      MatTooltipModule,
+      MatButtonModule,
+      MatSelectModule,
+    ],
+    componentProperties: { user, team },
+    providers: [
+      { provide: UserService, useValue: { updateUser } },
+      { provide: TeamService, useValue: { updateTeam } },
+      {
+        provide: TeamPermissionsService,
+        useValue: {
+          teamPermissions$: of([permissionA, permissionB]),
+          addToTeam,
+          removeFromTeam,
         },
-        {
-          provide: TeamRolesService,
-          useValue: { roles$: of([]) },
-        },
-        {
-          provide: RolesService,
-          useValue: { roles$: of([]) },
-        },
-      ],
-    },
-  );
+      },
+      {
+        provide: TeamRolesService,
+        useValue: { roles$: of([]) },
+      },
+      {
+        provide: RolesService,
+        useValue: { roles$: of([]) },
+      },
+    ],
+  });
 
   return { ...rendered, updateUser, updateTeam, addToTeam, removeFromTeam };
 }
 
 describe('RolesPermissionsSelectComponent', () => {
-  /**
-   * Verifies: the roles/permissions select component instantiates successfully.
-   * Interacts with: renderComponent with stubbed User/Team services, TeamPermissionsService, RolesService, TeamRolesService.
-   * Data: a user fixture (id 'u1') with no team.
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderSelect({
-      user: { id: 'u1', name: 'Alice' },
-    });
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   // Note: the "both supplied" / "neither supplied" paths are exercised
   // through ngOnInit()'s early return. Rendering those cases in a
   // template context crashes because other template bindings then
@@ -91,12 +85,12 @@ describe('RolesPermissionsSelectComponent', () => {
    * Data: team with roleId 'r1' and permission p1.
    */
   it('sets Team mode and seeds selectedPermissions from team.permissions', async () => {
-    const team = {
+    const team: Team = {
       id: 't1',
       name: 'Red',
       roleId: 'r1',
       permissions: [permissionA],
-    } as unknown as Team;
+    };
     const { fixture } = await renderSelect({ team });
     expect(fixture.componentInstance.subjectType).toBe(ObjectType.Team);
     expect(fixture.componentInstance.showPermissions).toBe(true);
@@ -124,11 +118,11 @@ describe('RolesPermissionsSelectComponent', () => {
    * Data: team with p1; adding p2 (checked=true).
    */
   it('updatePermissions(Team, checked=true) calls addToTeam', async () => {
-    const team = {
+    const team: Team = {
       id: 't1',
       name: 'Red',
       permissions: [permissionA],
-    } as unknown as Team;
+    };
     const { fixture, addToTeam, removeFromTeam } = await renderSelect({ team });
     fixture.componentInstance.updatePermissions(permissionB, true);
     expect(addToTeam).toHaveBeenCalledWith('t1', 'p2');
@@ -141,11 +135,11 @@ describe('RolesPermissionsSelectComponent', () => {
    * Data: team with p1; removing p1 (checked=false).
    */
   it('updatePermissions(Team, checked=false) calls removeFromTeam', async () => {
-    const team = {
+    const team: Team = {
       id: 't1',
       name: 'Red',
       permissions: [permissionA],
-    } as unknown as Team;
+    };
     const { fixture, addToTeam, removeFromTeam } = await renderSelect({ team });
     fixture.componentInstance.updatePermissions(permissionA, false);
     expect(removeFromTeam).toHaveBeenCalledWith('t1', 'p1');
@@ -153,9 +147,12 @@ describe('RolesPermissionsSelectComponent', () => {
   });
 
   /**
-   * Verifies: updateRole in User mode writes the new roleId onto the subject and persists via UserService.updateUser.
+   * Verifies: updateRole in User mode writes the new roleId onto the subject and persists that roleId via UserService.updateUser.
    * Interacts with: stubbed UserService.updateUser.
    * Data: user with roleId null; updateRole('new-role').
+   * Why: the payload is asserted against the literal roleId rather than against componentInstance.subject —
+   *   the subject is the very object the component mutates, so comparing it to itself would pass even if
+   *   the assignment were dropped.
    */
   it('updateRole(User) updates the user via UserService', async () => {
     const { fixture, updateUser } = await renderSelect({
@@ -163,11 +160,14 @@ describe('RolesPermissionsSelectComponent', () => {
     });
     fixture.componentInstance.updateRole('new-role');
     expect(fixture.componentInstance.subject.roleId).toBe('new-role');
-    expect(updateUser).toHaveBeenCalledWith('u1', fixture.componentInstance.subject);
+    expect(updateUser).toHaveBeenCalledWith(
+      'u1',
+      expect.objectContaining({ id: 'u1', roleId: 'new-role' }),
+    );
   });
 
   /**
-   * Verifies: updateRole with an empty string nulls the subject's roleId and still persists.
+   * Verifies: updateRole with an empty string nulls the subject's roleId and persists the null.
    * Interacts with: stubbed UserService.updateUser.
    * Data: user with roleId 'r2'; updateRole('').
    */
@@ -177,23 +177,33 @@ describe('RolesPermissionsSelectComponent', () => {
     });
     fixture.componentInstance.updateRole('');
     expect(fixture.componentInstance.subject.roleId).toBeNull();
-    expect(updateUser).toHaveBeenCalled();
+    expect(updateUser).toHaveBeenCalledWith(
+      'u1',
+      expect.objectContaining({ id: 'u1', roleId: null }),
+    );
   });
 
   /**
-   * Verifies: updateRole in Team mode persists the subject via TeamService.updateTeam.
+   * Verifies: updateRole in Team mode writes the new roleId onto the team and persists that roleId via TeamService.updateTeam.
    * Interacts with: stubbed TeamService.updateTeam.
    * Data: team with roleId null; updateRole('team-role').
+   * Why: the assignment in updateRole runs before the subjectType switch, so gating it to the User branch
+   *   leaves this path silently saving the old role. Asserting the literal roleId in the payload is what
+   *   catches that; asserting componentInstance.subject would compare the mutated object to itself.
    */
   it('updateRole(Team) updates the team via TeamService', async () => {
-    const team = {
+    const team: Team = {
       id: 't1',
       name: 'Red',
       roleId: null,
       permissions: [],
-    } as unknown as Team;
+    };
     const { fixture, updateTeam } = await renderSelect({ team });
     fixture.componentInstance.updateRole('team-role');
-    expect(updateTeam).toHaveBeenCalledWith('t1', fixture.componentInstance.subject);
+    expect(fixture.componentInstance.subject.roleId).toBe('team-role');
+    expect(updateTeam).toHaveBeenCalledWith(
+      't1',
+      expect.objectContaining({ id: 't1', roleId: 'team-role' }),
+    );
   });
 });

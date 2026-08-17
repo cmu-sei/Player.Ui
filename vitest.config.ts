@@ -19,6 +19,11 @@ import { defineConfig } from 'vitest/config';
 // the repo, so a `postinstall` that reads `patches/` breaks the image build.
 execFileSync('npx', ['patch-package'], { stdio: 'inherit' });
 
-// No test options — `angular.json` owns the test configuration. This file
-// exists solely as the hook the builder loads before running the suite.
-export default defineConfig({});
+// `angular.json` owns the test configuration. The mock lifecycle options live
+// here because the builder does not surface them.
+export default defineConfig({
+  test: {
+    clearMocks: true,
+    restoreMocks: true,
+  },
+});

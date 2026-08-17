@@ -2,11 +2,14 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs';
+import {
+  FormGroup,
+  FormGroupDirective,
+  UntypedFormControl,
+  Validators,
+} from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import {
   View,
@@ -19,6 +22,12 @@ import {
   ViewApplicationsSelectComponent,
 } from './view-applications-select.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 const view: View = { id: 'v1', name: 'Demo' };
 const makeApplication = (
@@ -60,8 +69,15 @@ async function renderSelect(
 
   const rendered = await renderComponent(ViewApplicationsSelectComponent, {
     declarations: [ViewApplicationsSelectComponent],
-    imports: [MatSelectModule, MatCheckboxModule, MatSlideToggleModule],
-    schemas: [NO_ERRORS_SCHEMA],
+    imports: [
+      MatExpansionModule,
+      MatCardModule,
+      MatFormFieldModule,
+      MatProgressSpinnerModule,
+      MatInputModule,
+      MatButtonModule,
+      MatSelectModule,
+    ],
     componentProperties: { view: v },
     providers: [
       {
@@ -89,16 +105,6 @@ async function renderSelect(
 }
 
 describe('ViewApplicationsSelectComponent', () => {
-  /**
-   * Verifies: the view-applications select component instantiates successfully.
-   * Interacts with: renderComponent with a stubbed ApplicationService and DialogService.
-   * Data: default view 'v1' with a single app (appA).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderSelect();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: ngOnInit fetches the view's applications, stores them, and clears isLoading.
    * Interacts with: stubbed ApplicationService.getViewApplications.
@@ -367,7 +373,8 @@ describe('ViewApplicationsSelectComponent', () => {
      * Data: control { invalid: true, dirty: true }, no form.
      */
     it('is an error when the control is invalid and dirty', () => {
-      const control = { invalid: true, dirty: true } as never;
+      const control = new UntypedFormControl('', Validators.required);
+      control.markAsDirty();
       expect(matcher.isErrorState(control, null)).toBe(true);
     });
 
@@ -377,8 +384,11 @@ describe('ViewApplicationsSelectComponent', () => {
      * Data: control { invalid: true, dirty: false }, form { submitted: true }.
      */
     it('is an error when the control is invalid and the form is submitted', () => {
-      const control = { invalid: true, dirty: false } as never;
-      const form = { submitted: true } as never;
+      const control = new UntypedFormControl('', Validators.required);
+      const form = new FormGroupDirective([], []);
+      form.form = new FormGroup({});
+      form.onSubmit(new Event('submit'));
+      expect(control.dirty).toBe(false);
       expect(matcher.isErrorState(control, form)).toBe(true);
     });
 
@@ -388,7 +398,8 @@ describe('ViewApplicationsSelectComponent', () => {
      * Data: control { invalid: false, dirty: true }, no form.
      */
     it('is not an error when the control is valid', () => {
-      const control = { invalid: false, dirty: true } as never;
+      const control = new UntypedFormControl('a value', Validators.required);
+      control.markAsDirty();
       expect(matcher.isErrorState(control, null)).toBe(false);
     });
 

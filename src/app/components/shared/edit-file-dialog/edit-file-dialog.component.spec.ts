@@ -4,9 +4,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { FileService } from '../../../generated/player-api';
 import { EditFileDialogComponent } from './edit-file-dialog.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { A11yModule } from '@angular/cdk/a11y';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 async function renderDialog(
   overrides: {
@@ -16,15 +21,18 @@ async function renderDialog(
 ) {
   const { oldName = 'doc.txt', oldTeams = ['team-a'] } = overrides;
 
-  const close = vi.fn();
-  const dialogRef = { close } as unknown as MatDialogRef<
-    EditFileDialogComponent
-  >;
+  const { dialogRef, close } = dialogRefStub<EditFileDialogComponent>();
 
   const updateFile = vi.fn(() => of(undefined));
 
   const rendered = await renderComponent(EditFileDialogComponent, {
     declarations: [EditFileDialogComponent],
+    imports: [
+      MatFormFieldModule,
+      MatInputModule,
+      A11yModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+    ],
     componentProperties: {
       fileId: 'f1',
       viewId: 'v1',
@@ -41,16 +49,6 @@ async function renderDialog(
 }
 
 describe('EditFileDialogComponent', () => {
-  /**
-   * Verifies: the component instantiates with the provided inputs and providers.
-   * Interacts with: FileService stub and MatDialogRef via renderDialog.
-   * Data: default render inputs (fileId, viewId, oldName, oldTeams).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderDialog();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: ngOnInit splits the original filename into a name control value
    *   and a retained extension.

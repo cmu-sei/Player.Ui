@@ -2,7 +2,6 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -10,11 +9,13 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  CrucibleDialogService,
+  CRUCIBLE_DIALOG_IMPORTS,
+} from '@cmusei/crucible-common';
 import {
   User,
   UserService,
-  TeamService,
   TeamMembershipService,
   TeamMembership,
 } from '../../../generated/player-api';
@@ -24,6 +25,17 @@ import {
   TeamUser,
 } from './add-remove-users-dialog.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { fileList } from '../../../test-utils/file-list';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 const alice: User = { id: 'u1', name: 'Alice' };
 const bob: User = { id: 'u2', name: 'Bob' };
@@ -49,11 +61,7 @@ async function renderDialog(
     confirmSelfRemoval = true,
   } = overrides;
 
-  const close = vi.fn();
-  const dialogRef = {
-    close,
-    disableClose: false,
-  } as unknown as MatDialogRef<AddRemoveUsersDialogComponent>;
+  const { dialogRef, close } = dialogRefStub<AddRemoveUsersDialogComponent>();
 
   const getUsers = vi.fn(() => of(users));
   const getTeamUsers = vi.fn(() => of(teamUsers));
@@ -74,20 +82,28 @@ async function renderDialog(
   const rendered = await renderComponent(AddRemoveUsersDialogComponent, {
     declarations: [AddRemoveUsersDialogComponent],
     imports: [
+      MatCardModule,
+      MatChipsModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatProgressSpinnerModule,
+      MatToolbarModule,
+      MatInputModule,
+      MatTooltipModule,
+      MatButtonModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
       FormsModule,
       MatTableModule,
       MatSortModule,
       MatPaginatorModule,
       MatSelectModule,
     ],
-    schemas: [NO_ERRORS_SCHEMA],
     providers: [
       { provide: MatDialogRef, useValue: dialogRef },
       {
         provide: UserService,
         useValue: { getUsers, getTeamUsers, addUserToTeam, removeUserFromTeam },
       },
-      { provide: TeamService, useValue: {} },
       {
         provide: TeamMembershipService,
         useValue: { getTeamMemberships, updateTeamMembership },
@@ -116,25 +132,7 @@ async function renderDialog(
 // loadTeam / add / remove all read this.team.id and this.team.viewId.
 const team = { id: 't1', name: 'Red', viewId: 'v1' };
 
-// add/remove success paths focus the searchBox ViewChild; under CUSTOM_ELEMENTS_
-// SCHEMA the #searchBox ref may be absent, so give the component a stub element.
-function stubSearchBox(component: AddRemoveUsersDialogComponent) {
-  component.searchBox = {
-    nativeElement: { focus: () => undefined },
-  } as never;
-}
-
 describe('AddRemoveUsersDialogComponent', () => {
-  /**
-   * Verifies: the component instantiates under the full provider set.
-   * Interacts with: UserService/TeamMembershipService/TeamRolesService stubs via renderDialog.
-   * Data: default render (alice+bob users, alice as team member).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderDialog();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: init prepends a sentinel "None" role (empty id) to the roles list.
    * Interacts with: TeamRolesService.getRoles (returns []) read on init.
@@ -266,17 +264,25 @@ describe('AddRemoveUsersDialogComponent', () => {
   });
 
   /**
-   * Verifies: applyTeamFilter keeps the raw string but pushes a trimmed,
-   *   lowercased value onto the team-users data source filter.
-   * Interacts with: component.teamUserDataSource.filter.
-   * Data: filter input '  ALICE  '.
+   * Verifies: applyTeamFilter keeps the raw string, pushes a trimmed lowercased
+   *   value onto the team-users data source filter, and sends the attached
+   *   paginator back to the first page.
+   * Interacts with: component.teamUserDataSource.filter and the real
+   *   #teamPaginator wired to that data source in ngOnInit.
+   * Data: filter input '  ALICE  '; paginator parked on page index 2.
+   * Why: the paginator reset is part of this method's contract but was named in
+   *   the test title without being asserted, so a filter that left the user on
+   *   an out-of-range page would still have passed.
    */
   it('applyTeamFilter trims/lowercases and resets the paginator', async () => {
     const { fixture } = await renderDialog();
     const c = fixture.componentInstance;
+    c.teamPaginator.pageIndex = 2;
     c.applyTeamFilter('  ALICE  ');
     expect(c.teamFilterString).toBe('  ALICE  ');
     expect(c.teamUserDataSource.filter).toBe('alice');
+    expect(c.teamUserDataSource.paginator).toBe(c.teamPaginator);
+    expect(c.teamPaginator.pageIndex).toBe(0);
   });
 
   /**
@@ -371,7 +377,6 @@ describe('AddRemoveUsersDialogComponent', () => {
         await renderDialog();
       const c = fixture.componentInstance;
       c.team = team;
-      stubSearchBox(c);
       c.teamUserDataSource.data = [];
       c.userDataSource.data = [bob];
       getTeamMemberships.mockReturnValueOnce(
@@ -410,7 +415,6 @@ describe('AddRemoveUsersDialogComponent', () => {
       const c = fixture.componentInstance;
       c.canManageRoles = false; // restricted (ManageTeam) mode
       c.team = team;
-      stubSearchBox(c);
       c.teamUserDataSource.data = [];
       c.userDataSource.data = [bob];
       c.addUserToTeam(bob);
@@ -432,7 +436,6 @@ describe('AddRemoveUsersDialogComponent', () => {
       const { fixture, removeUserFromTeam } = await renderDialog();
       const c = fixture.componentInstance;
       c.team = team;
-      stubSearchBox(c);
       const tUser = new TeamUser('Alice', alice, aliceMembership);
       c.teamUserDataSource.data = [tUser];
       c.userDataSource.data = [];
@@ -470,7 +473,7 @@ describe('AddRemoveUsersDialogComponent', () => {
       const { fixture, removeUserFromTeam } = await renderDialog({
         removeError: true,
       });
-      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'error').mockImplementation(() => {});
       const c = fixture.componentInstance;
       c.team = team;
       const tUser = new TeamUser('Alice', alice, aliceMembership);
@@ -481,14 +484,13 @@ describe('AddRemoveUsersDialogComponent', () => {
       // The error path leaves the team list untouched and resets isBusy.
       expect(c.teamUserDataSource.data).toEqual([tUser]);
       expect(c.isBusy).toBe(false);
-      errSpy.mockRestore();
     });
 
     describe('removing your own account', () => {
       /**
        * Verifies: removing one's own account opens a confirmation dialog first,
        *   then proceeds with the API removal once accepted.
-       * Interacts with: MatDialog.open (dialogOpen) and UserService.removeUserFromTeam.
+       * Interacts with: CrucibleDialogService.confirm (confirm) and UserService.removeUserFromTeam.
        * Data: currentUserId set to alice; confirmSelfRemoval true.
        */
       it('confirms first, then removes when the user accepts', async () => {
@@ -498,7 +500,6 @@ describe('AddRemoveUsersDialogComponent', () => {
         const c = fixture.componentInstance;
         c.team = team;
         c.currentUserId = 'u1'; // Alice is the logged-in user
-        stubSearchBox(c);
         const tUser = new TeamUser('Alice', alice, aliceMembership);
         c.teamUserDataSource.data = [tUser];
         c.userDataSource.data = [];
@@ -509,7 +510,7 @@ describe('AddRemoveUsersDialogComponent', () => {
 
       /**
        * Verifies: declining the self-removal confirmation aborts the API removal.
-       * Interacts with: MatDialog.open (dialogOpen); asserts removeUserFromTeam unused.
+       * Interacts with: CrucibleDialogService.confirm (confirm); asserts removeUserFromTeam unused.
        * Data: currentUserId set to alice; confirmSelfRemoval false.
        */
       it('does not remove when the confirmation is declined', async () => {
@@ -565,10 +566,9 @@ describe('AddRemoveUsersDialogComponent', () => {
       const { fixture, addUserToTeam } = await renderDialog();
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       const file = new File(['data'], 'users.txt', { type: 'text/plain' });
-      fixture.componentInstance.uploadUsers([file] as unknown as FileList);
+      fixture.componentInstance.uploadUsers(fileList(file));
       expect(alertSpy).toHaveBeenCalledWith('Please upload a csv file');
       expect(addUserToTeam).not.toHaveBeenCalled();
-      alertSpy.mockRestore();
     });
 
     /**
@@ -595,7 +595,7 @@ describe('AddRemoveUsersDialogComponent', () => {
 
       // FileReader is async; resolve when onload has fired.
       const file = new File(['u1\nu2\n'], 'users.csv', { type: 'text/csv' });
-      c.uploadUsers([file] as unknown as FileList);
+      c.uploadUsers(fileList(file));
       await vi.waitFor(() => expect(addUserToTeam).toHaveBeenCalledTimes(2));
       expect(addUserToTeam).toHaveBeenCalledWith('t1', 'u1');
       expect(addUserToTeam).toHaveBeenCalledWith('t1', 'u2');

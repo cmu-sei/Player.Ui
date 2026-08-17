@@ -5,25 +5,20 @@ import { describe, it, expect, vi } from 'vitest';
 import { of, BehaviorSubject } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { ViewListComponent } from './view-list.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { userPermissionsProvider } from 'src/app/test-utils/mock-user-permissions.service';
 import { ViewsService } from '../../../services/views/views.service';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { SystemPermission, View } from '../../../generated/player-api';
-
-function createMockPermissionsService(hasCreateViews: boolean) {
-  return {
-    permissions$: of(hasCreateViews ? [SystemPermission.CreateViews] : []),
-    teamPermissions$: of([]),
-    load: () => of(hasCreateViews ? [SystemPermission.CreateViews] : []),
-    loadTeamPermissions: () => of([]),
-    canViewAdminstration: () => of(false),
-    hasPermission: (p: string) =>
-      of(hasCreateViews && p === SystemPermission.CreateViews),
-    can: () => of(false),
-  };
-}
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 async function renderViewList(
   hasCreateViews = false,
@@ -32,10 +27,8 @@ async function renderViewList(
     nameResult?: { wasCancelled: boolean; nameValue?: string };
   } = {},
 ) {
-  const {
-    views = [],
-    nameResult = { wasCancelled: true, nameValue: '' },
-  } = overrides;
+  const { views = [], nameResult = { wasCancelled: true, nameValue: '' } } =
+    overrides;
 
   const stubs = {
     loadMyViews: vi.fn(() => of([])),
@@ -45,12 +38,22 @@ async function renderViewList(
 
   const rendered = await renderComponent(ViewListComponent, {
     declarations: [ViewListComponent],
-    imports: [MatTableModule, MatSortModule],
+    imports: [
+      MatCardModule,
+      MatFormFieldModule,
+      MatIconModule,
+      MatProgressSpinnerModule,
+      MatInputModule,
+      MatTooltipModule,
+      MatButtonModule,
+      MatTableModule,
+      MatSortModule,
+      MatPaginatorModule,
+    ],
     providers: [
-      {
-        provide: UserPermissionsService,
-        useValue: createMockPermissionsService(hasCreateViews),
-      },
+      userPermissionsProvider(
+        hasCreateViews ? [SystemPermission.CreateViews] : [],
+      ),
       {
         provide: ViewsService,
         useValue: {
@@ -70,16 +73,6 @@ async function renderViewList(
 }
 
 describe('ViewListComponent', () => {
-  /**
-   * Verifies: ViewListComponent instantiates without error.
-   * Interacts with: renderViewList harness with permissions/views/dialog stubs.
-   * Data: default renderViewList() (no CreateViews permission, empty views).
-   */
-  it('should create the component without error', async () => {
-    const { fixture } = await renderViewList();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: the "Add New View" button renders when CreateViews permission is present.
    * Interacts with: UserPermissionsService stub, rendered DOM tooltip query.

@@ -2,11 +2,13 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Team } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { TeamUserPresenceComponent } from './team-user-presence.component';
 import { renderComponent } from '../../../../test-utils/render-component';
+import { MatTableModule } from '@angular/material/table';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { TableVirtualScrollModule } from 'ng-table-virtual-scroll';
 
 const team: Team = { id: 't1', name: 'Red' };
 
@@ -24,23 +26,13 @@ async function renderPresence(
 ) {
   const { users: u = users, hideInactive = false } = overrides;
   return renderComponent(TeamUserPresenceComponent, {
+    imports: [MatTableModule, ScrollingModule, TableVirtualScrollModule],
     declarations: [TeamUserPresenceComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     componentProperties: { team, users: u, hideInactive },
   });
 }
 
 describe('TeamUserPresenceComponent', () => {
-  /**
-   * Verifies: TeamUserPresenceComponent instantiates successfully.
-   * Interacts with: renderPresence harness binding team/users/hideInactive inputs.
-   * Data: default renderPresence() (three users, hideInactive false).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderPresence();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: with hideInactive false the datasource keeps every user (online and offline).
    * Interacts with: component userDatasource populated from the users input.

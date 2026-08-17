@@ -6,10 +6,13 @@
     "types": ["node"]
   },
   "files": ["src/app/app.module.ts", "src/polyfills.ts"],
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "src/test-setup.ts"],
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "src/test-setup.ts",
+    "src/app/test-utils/**/*.ts"
+  ],
   "angularCompilerOptions": {
-    "strictInjectionParameters": false,
-    "strictInputAccessModifiers": false,
     "strictTemplates": false
   }
 }

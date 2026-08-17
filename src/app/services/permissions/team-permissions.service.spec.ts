@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, firstValueFrom } from 'rxjs';
+import { recordEmissions } from '../../test-utils/record-emissions';
 import { TeamPermissionsService } from './team-permissions.service';
 import {
   CreateTeamPermissionCommand,
@@ -74,7 +75,9 @@ describe('TeamPermissionsService', () => {
    * Data: an existing tp 'tp1' named 'Old' and an EditTeamPermissionCommand { name: 'New' }
    */
   it('editTeamPermission() calls the API and upserts', async () => {
-    const updateTeamPermission = vi.fn(() => of(tp({ id: 'tp1', name: 'New' })));
+    const updateTeamPermission = vi.fn(() =>
+      of(tp({ id: 'tp1', name: 'New' })),
+    );
     const svc = createService({
       getTeamPermissions: () => of([tp({ id: 'tp1', name: 'Old' })]),
       updateTeamPermission,
@@ -93,7 +96,9 @@ describe('TeamPermissionsService', () => {
    * Data: an empty initial cache and a CreateTeamPermissionCommand { name: 'New' }; API returns id 'new'
    */
   it('createTeamPermission() adds the new permission to the cache', async () => {
-    const createTeamPermission = vi.fn(() => of(tp({ id: 'new', name: 'New' })));
+    const createTeamPermission = vi.fn(() =>
+      of(tp({ id: 'new', name: 'New' })),
+    );
     const svc = createService({
       getTeamPermissions: () => of([]),
       createTeamPermission,
@@ -152,32 +157,41 @@ describe('TeamPermissionsService', () => {
 
   describe('upsert()', () => {
     /**
-     * Verifies: upsert() with an existing id updates that entry's fields without growing the list
-     * Interacts with: getTeamPermissions stub; service.upsert; service.teamPermissions$
-     * Data: a single cached tp 'tp1' named 'Old', upserted to name 'Updated'
+     * Verifies: upsert() with an existing id updates that entry's fields without growing the list, and
+     *   announces the change as a fresh teamPermissions$ emission.
+     * Interacts with: getTeamPermissions stub; service.upsert; service.teamPermissions$ via recordEmissions.
+     * Data: a single cached tp 'tp1' named 'Old', upserted to name 'Updated'.
+     * Why: upsert mutates the array it got from getValue() and re-next()s that same reference, so
+     *   reading teamPermissions$ after the call sees the new name whether or not next() ever ran.
+     *   Snapshotting each emission as it arrives is what pins the notification.
      */
-    it('mutates an existing entry in place', async () => {
+    it('mutates an existing entry in place and emits the updated cache', async () => {
       const svc = createService({
         getTeamPermissions: () => of([tp({ id: 'tp1', name: 'Old' })]),
       });
       await firstValueFrom(svc.load());
+      const seen = recordEmissions(svc.teamPermissions$);
       svc.upsert('tp1', { name: 'Updated' });
-      const cached = await firstValueFrom(svc.teamPermissions$);
-      expect(cached).toHaveLength(1);
-      expect(cached[0].name).toBe('Updated');
+      expect(seen).toHaveLength(2);
+      expect(seen[1]).toHaveLength(1);
+      expect(seen[1][0].name).toBe('Updated');
     });
 
     /**
-     * Verifies: upsert() with an unknown id appends a new cache entry rather than mutating an existing one
-     * Interacts with: getTeamPermissions stub; service.upsert; service.teamPermissions$
-     * Data: an empty cache, upserting id 'tp9' name 'Brand New'
+     * Verifies: upsert() with an unknown id appends a new cache entry rather than mutating an existing
+     *   one, and emits the grown cache.
+     * Interacts with: getTeamPermissions stub; service.upsert; service.teamPermissions$ via recordEmissions.
+     * Data: an empty cache, upserting id 'tp9' name 'Brand New'.
+     * Why: same in-place mutation as the update path — only a recorded emission proves the append was
+     *   published rather than merely applied to the cached array.
      */
-    it('appends a new entry when the id is absent', async () => {
+    it('appends a new entry when the id is absent and emits the new cache', async () => {
       const svc = createService({ getTeamPermissions: () => of([]) });
       await firstValueFrom(svc.load());
+      const seen = recordEmissions(svc.teamPermissions$);
       svc.upsert('tp9', { name: 'Brand New' });
-      const cached = await firstValueFrom(svc.teamPermissions$);
-      expect(cached.find((p) => p.id === 'tp9')?.name).toBe('Brand New');
+      expect(seen).toHaveLength(2);
+      expect(seen[1].find((p) => p.id === 'tp9')?.name).toBe('Brand New');
     });
   });
 });

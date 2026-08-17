@@ -2,30 +2,82 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { EMPTY, firstValueFrom, NEVER, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-import {
-  ComnAuthQuery,
-  ComnSettingsService,
-} from '@cmusei/crucible-common';
+import { ComnAuthQuery, ComnSettingsService } from '@cmusei/crucible-common';
 import { ViewService } from '../../generated/player-api/api/view.service';
-import { TeamMembershipService } from '../../generated/player-api';
+import {
+  TeamMembership,
+  TeamMembershipService,
+} from '../../generated/player-api';
 import { ViewsService } from '../../services/views/views.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { SystemMessageService } from '../../services/system-message/system-message.service';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 import { PlayerComponent, TeamUIState } from './player.component';
 import { renderComponent } from '../../test-utils/render-component';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { ResizableModule } from 'angular-resizable-element';
+import { TeamData } from '../../models/team-data';
+import { TopbarView } from '../shared/top-bar/topbar.models';
+
+@Component({ selector: 'app-application-list', template: '' })
+class ApplicationListStubComponent {
+  @Input() viewId!: string;
+  @Input() teams!: TeamData[];
+  @Input() mini!: boolean;
+}
+
+@Component({ selector: 'app-topbar', template: '' })
+class TopbarStubComponent {
+  @Input() sidenav?: unknown;
+  @Input() title?: string;
+  @Input() teams?: unknown;
+  @Input() team?: unknown;
+  @Input() topbarView?: TopbarView;
+  @Input() viewId!: string;
+  @Input() mini!: boolean;
+  @Output() sidenavToggle = new EventEmitter<boolean>();
+  @Output() setTeam = new EventEmitter<string>();
+  @Output() editView = new EventEmitter<unknown>();
+}
+
+@Component({ selector: 'app-focused-app', template: '' })
+class FocusedAppStubComponent {}
+
+@Component({ selector: 'app-notifications', template: '' })
+class NotificationsStubComponent {
+  @Input() viewGuid!: string;
+  @Input() teamGuid!: string;
+  @Input() userGuid!: string;
+  @Input() userToken!: string;
+  @Input() userName!: string;
+}
+
+// data$ only emits when the RouterQuery stub emits a state, so the @if block
+// holding <mat-sidenav #sidenav> never renders and the ViewChild stays unset.
+// The stand-in is typed off MatSidenav so it tracks the members the component uses.
+type SidenavStub = Pick<MatSidenav, 'opened' | 'mode'>;
+
+function sidenavStub(overrides: Partial<SidenavStub> = {}): MatSidenav {
+  const stub: SidenavStub = { opened: true, mode: 'side', ...overrides };
+  return stub as MatSidenav;
+}
 
 async function renderPlayer(
   overrides: {
     teamId?: string;
     routerState?: unknown;
     selectQueryParams?: unknown;
-    teams?: unknown[];
+    memberships?: TeamMembership[];
     view?: unknown;
     user?: unknown;
   } = {},
@@ -36,17 +88,7 @@ async function renderPlayer(
   const navigate = vi.fn();
   const setPrimaryTeamId = vi.fn(() => of({}));
   const getView = vi.fn(() => of(overrides.view ?? { id: 'view-1' }));
-  const getTeamMemberships = vi.fn(() =>
-    of(
-      (overrides.teams ?? [])
-        .filter((team: any) => team.isMember !== false)
-        .map((team: any) => ({
-          teamId: team.id,
-          teamName: team.name,
-          isPrimary: team.isPrimary,
-        })),
-    ),
-  );
+  const getTeamMemberships = vi.fn(() => of(overrides.memberships ?? []));
   const loadTeamPermissions = vi.fn(() => of([]));
   const user = overrides.user ?? { profile: { sub: 'u1' } };
 
@@ -61,8 +103,20 @@ async function renderPlayer(
   const dialog = { open: vi.fn() };
 
   const rendered = await renderComponent(PlayerComponent, {
+    imports: [
+      MatListModule,
+      MatDividerModule,
+      MatIconModule,
+      MatSidenavModule,
+      MatToolbarModule,
+      MatButtonModule,
+      ResizableModule,
+      ApplicationListStubComponent,
+      TopbarStubComponent,
+      FocusedAppStubComponent,
+      NotificationsStubComponent,
+    ],
     declarations: [PlayerComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     providers: [
       {
         provide: Router,
@@ -95,10 +149,7 @@ async function renderPlayer(
   });
 
   rendered.fixture.componentInstance.teamId = teamId;
-  rendered.fixture.componentInstance.sidenav = {
-    opened: true,
-    mode: 'side',
-  } as never;
+  rendered.fixture.componentInstance.sidenav = sidenavStub();
   return {
     ...rendered,
     displayMessage,
@@ -114,16 +165,6 @@ async function renderPlayer(
 describe('PlayerComponent', () => {
   beforeEach(() => {
     localStorage.clear();
-  });
-
-  /**
-   * Verifies: PlayerComponent instantiates successfully.
-   * Interacts with: renderPlayer harness with Router/RouterQuery/View/Team/Permissions stubs.
-   * Data: default renderPlayer() (teamId 'team-a', inert EMPTY router streams).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderPlayer();
-    expect(fixture.componentInstance).toBeTruthy();
   });
 
   /**
@@ -169,7 +210,7 @@ describe('PlayerComponent', () => {
   it('sidenavToggleFn reopens (fully) when the sidenav is closed', async () => {
     const { fixture } = await renderPlayer();
     const c = fixture.componentInstance;
-    c.sidenav = { opened: false, mode: 'side' } as never;
+    c.sidenav = sidenavStub({ opened: false });
     c.sidenavToggleFn();
     expect(c.openedSubject.getValue()).toBe(true);
     expect(c.miniSubject.getValue()).toBe(false);
@@ -184,7 +225,9 @@ describe('PlayerComponent', () => {
     const { fixture } = await renderPlayer({ teamId: 'team-42' });
     const c = fixture.componentInstance;
     c.updateUIState(300, true, false);
-    const persisted = JSON.parse(localStorage.getItem('team-42')) as TeamUIState;
+    const persisted = JSON.parse(
+      localStorage.getItem('team-42'),
+    ) as TeamUIState;
     expect(persisted).toEqual({ width: 300, opened: true, mini: false });
   });
 
@@ -201,7 +244,9 @@ describe('PlayerComponent', () => {
       JSON.stringify({ width: 500, opened: true, mini: true }),
     );
     c.updateUIState(undefined, false, undefined);
-    const persisted = JSON.parse(localStorage.getItem('team-42')) as TeamUIState;
+    const persisted = JSON.parse(
+      localStorage.getItem('team-42'),
+    ) as TeamUIState;
     expect(persisted.width).toBe(500);
     expect(persisted.opened).toBe(false);
     expect(persisted.mini).toBe(true);
@@ -278,7 +323,10 @@ describe('PlayerComponent', () => {
    */
   it('ngOnDestroy completes the unsubscribe subject', async () => {
     const { fixture } = await renderPlayer();
-    const complete = vi.spyOn(fixture.componentInstance.unsubscribe$, 'complete');
+    const complete = vi.spyOn(
+      fixture.componentInstance.unsubscribe$,
+      'complete',
+    );
     fixture.componentInstance.ngOnDestroy();
     expect(complete).toHaveBeenCalled();
   });
@@ -289,19 +337,24 @@ describe('PlayerComponent', () => {
     });
 
     /**
-     * Verifies: loadData fetches the view and teams, picks the primary team, keeps only member teams, and sets the title.
-     * Interacts with: ViewService.getView, TeamService.getMyViewTeams, RouterQuery.select stream.
-     * Data: routerState with view-1; teams where team-a is primary member, team-c is non-member.
+     * Verifies: loadData fetches the view and the user's memberships, maps each
+     *   membership to a Team, picks the primary one, and sets the title.
+     * Interacts with: ViewService.getView, TeamMembershipService.getTeamMemberships,
+     *   RouterQuery.select stream.
+     * Data: routerState with view-1; memberships for team-a (primary) and team-b.
+     * Why: getTeamMemberships only ever returns teams the user belongs to, so the
+     *   stub returns raw TeamMembership records and the component performs its own
+     *   mapping and filtering — previously the stub filtered, which meant the
+     *   assertion below passed regardless of what the component did.
      */
-    it('combines view + teams and derives primary team, members, and title', async () => {
-      const teams = [
-        { id: 'team-a', isMember: true, isPrimary: true },
-        { id: 'team-b', isMember: true, isPrimary: false },
-        { id: 'team-c', isMember: false, isPrimary: false },
+    it('combines view + memberships and derives primary team, members, and title', async () => {
+      const memberships: TeamMembership[] = [
+        { id: 'tm-a', teamId: 'team-a', teamName: 'Team A', isPrimary: true },
+        { id: 'tm-b', teamId: 'team-b', teamName: 'Team B', isPrimary: false },
       ];
       const { fixture, getView, getTeamMemberships } = await renderPlayer({
         routerState,
-        teams,
+        memberships,
         view: { id: 'view-1', name: 'Demo' },
       });
       const data = await firstValueFrom(fixture.componentInstance.loadData());
@@ -319,13 +372,13 @@ describe('PlayerComponent', () => {
     /**
      * Verifies: when the user is a member of no teams, loadData shows a "Not a Member" message and navigates home.
      * Interacts with: SystemMessageService.displayMessage spy, Router.navigate spy.
-     * Data: single team with isMember false.
+     * Data: no memberships returned for the view.
      * Why: this branch returns EMPTY rather than emitting, so the test subscribes and asserts side effects instead of awaiting a value.
      */
     it('shows a "Not a Member" message and redirects home when the user is on no teams', async () => {
       const { fixture, displayMessage, navigate } = await renderPlayer({
         routerState,
-        teams: [{ id: 'team-x', isMember: false, isPrimary: true }],
+        memberships: [],
       });
       // This branch returns EMPTY (no emission) after messaging + redirecting,
       // so subscribe and assert the side effects rather than awaiting a value.
@@ -340,12 +393,19 @@ describe('PlayerComponent', () => {
     /**
      * Verifies: when the user has member teams but none is primary, loadData shows a "No Primary Team" message and navigates home.
      * Interacts with: SystemMessageService.displayMessage spy, Router.navigate spy.
-     * Data: single team isMember true, isPrimary false.
+     * Data: single membership for team-a with isPrimary false.
      */
     it('shows a "No Primary Team" message and redirects home when no primary team is set', async () => {
       const { fixture, displayMessage, navigate } = await renderPlayer({
         routerState,
-        teams: [{ id: 'team-a', isMember: true, isPrimary: false }],
+        memberships: [
+          {
+            id: 'tm-a',
+            teamId: 'team-a',
+            teamName: 'Team A',
+            isPrimary: false,
+          },
+        ],
       });
       fixture.componentInstance.loadData().subscribe();
       expect(displayMessage).toHaveBeenCalledWith(
@@ -358,16 +418,23 @@ describe('PlayerComponent', () => {
     /**
      * Verifies: a failed view fetch makes loadData show a "View Not Found" message and navigate home.
      * Interacts with: ViewService.getView (errored once), SystemMessageService.displayMessage, Router.navigate.
-     * Data: getView mocked to throw a 404; a valid primary member team otherwise.
+     * Data: getView mocked to throw a 404; a valid primary membership otherwise.
      */
     it('shows a "View Not Found" message and redirects home when loading the view errors', async () => {
-      const { fixture, displayMessage, navigate, getView } = await renderPlayer({
-        routerState,
-        teams: [{ id: 'team-a', isMember: true, isPrimary: true }],
-      });
-      getView.mockReturnValueOnce(
-        throwError(() => new Error('404 not found')),
+      const { fixture, displayMessage, navigate, getView } = await renderPlayer(
+        {
+          routerState,
+          memberships: [
+            {
+              id: 'tm-a',
+              teamId: 'team-a',
+              teamName: 'Team A',
+              isPrimary: true,
+            },
+          ],
+        },
       );
+      getView.mockReturnValueOnce(throwError(() => new Error('404 not found')));
       fixture.componentInstance.loadData().subscribe();
       expect(displayMessage).toHaveBeenCalledWith(
         'View Not Found',
@@ -481,7 +548,6 @@ describe('PlayerComponent', () => {
       fixture.componentInstance.editViewFn({ isNewBrowserTab: true });
       expect(open).toHaveBeenCalledWith('url', '_blank');
       expect(dialog.open).not.toHaveBeenCalled();
-      open.mockRestore();
     });
   });
 
@@ -537,7 +603,7 @@ describe('PlayerComponent', () => {
   it('setSidenavMode applies the configured mode to the sidenav', async () => {
     const { fixture } = await renderPlayer();
     const c = fixture.componentInstance;
-    c.sidenav = { mode: 'push' } as never;
+    c.sidenav = sidenavStub({ mode: 'push' });
     c.sidenavMode = 'over';
     c.setSidenavMode();
     expect(c.sidenav.mode).toBe('over');

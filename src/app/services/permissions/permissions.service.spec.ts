@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, firstValueFrom } from 'rxjs';
+import { recordEmissions } from '../../test-utils/record-emissions';
 import { PermissionsService } from './permissions.service';
 import {
   CreatePermissionCommand,
@@ -132,30 +133,41 @@ describe('PermissionsService', () => {
 
   describe('upsert()', () => {
     /**
-     * Verifies: upsert() with an existing id updates that entry's fields without growing the list
-     * Interacts with: getPermissions stub; service.upsert; service.permissions$
-     * Data: a single cached perm 'p1' named 'Old', upserted to name 'Updated'
+     * Verifies: upsert() with an existing id updates that entry's fields without growing the list, and
+     *   announces the change as a fresh permissions$ emission.
+     * Interacts with: getPermissions stub; service.upsert; service.permissions$ via recordEmissions.
+     * Data: a single cached perm 'p1' named 'Old', upserted to name 'Updated'.
+     * Why: upsert mutates the array it got from getValue() and re-next()s that same reference, so
+     *   reading permissions$ after the call sees the new name whether or not next() ever ran.
+     *   Snapshotting each emission as it arrives is what pins the notification.
      */
-    it('mutates an existing entry in place', async () => {
-      const svc = createService({ getPermissions: () => of([perm({ id: 'p1', name: 'Old' })]) });
+    it('mutates an existing entry in place and emits the updated cache', async () => {
+      const svc = createService({
+        getPermissions: () => of([perm({ id: 'p1', name: 'Old' })]),
+      });
       await firstValueFrom(svc.load());
+      const seen = recordEmissions(svc.permissions$);
       svc.upsert('p1', { name: 'Updated' });
-      const cached = await firstValueFrom(svc.permissions$);
-      expect(cached).toHaveLength(1);
-      expect(cached[0].name).toBe('Updated');
+      expect(seen).toHaveLength(2);
+      expect(seen[1]).toHaveLength(1);
+      expect(seen[1][0].name).toBe('Updated');
     });
 
     /**
-     * Verifies: upsert() with an unknown id appends a new cache entry rather than mutating an existing one
-     * Interacts with: getPermissions stub; service.upsert; service.permissions$
-     * Data: an empty cache, upserting id 'p9' name 'Brand New'
+     * Verifies: upsert() with an unknown id appends a new cache entry rather than mutating an existing
+     *   one, and emits the grown cache.
+     * Interacts with: getPermissions stub; service.upsert; service.permissions$ via recordEmissions.
+     * Data: an empty cache, upserting id 'p9' name 'Brand New'.
+     * Why: same in-place mutation as the update path — only a recorded emission proves the append was
+     *   published rather than merely applied to the cached array.
      */
-    it('appends a new entry when the id is not present', async () => {
+    it('appends a new entry when the id is not present and emits the new cache', async () => {
       const svc = createService({ getPermissions: () => of([]) });
       await firstValueFrom(svc.load());
+      const seen = recordEmissions(svc.permissions$);
       svc.upsert('p9', { name: 'Brand New' });
-      const cached = await firstValueFrom(svc.permissions$);
-      expect(cached.find((p) => p.id === 'p9')?.name).toBe('Brand New');
+      expect(seen).toHaveLength(2);
+      expect(seen[1].find((p) => p.id === 'p9')?.name).toBe('Brand New');
     });
   });
 });
