@@ -6,11 +6,14 @@ import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { of } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
+import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { ArchiveType } from '../../../generated/player-api';
 import { ViewsService } from '../../../services/views/views.service';
 import FileDownloadUtils from '../../../utilities/file-download-utils';
 import { AdminAppViewExportComponent } from './admin-app-view-export.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
 
 type ExportResult = {
   blob: Blob;
@@ -38,7 +41,12 @@ async function renderExport(
 
   const rendered = await renderComponent(AdminAppViewExportComponent, {
     declarations: [AdminAppViewExportComponent],
-    imports: [MatSelectModule],
+    imports: [
+      MatFormFieldModule,
+      MatButtonModule,
+      MatSelectModule,
+      ...CRUCIBLE_DIALOG_IMPORTS,
+    ],
     componentProperties: { ids },
     providers: [
       {
@@ -53,16 +61,6 @@ async function renderExport(
 
 describe('AdminAppViewExportComponent', () => {
   /**
-   * Verifies: the component instantiates without error.
-   * Interacts with: ViewsService.export stub + FileDownloadUtils spy.
-   * Data: default render (one id, success result).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderExport();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  /**
    * Verifies: the form defaults its archiveType to the first ArchiveType key.
    * Interacts with: component.form.
    * Data: default render.
@@ -75,27 +73,26 @@ describe('AdminAppViewExportComponent', () => {
   });
 
   /**
-   * Verifies: the export button shows the selected count "Export (N)" when ids
-   *   are supplied.
+   * Verifies: the shared dialog renders the Export action when ids are supplied.
    * Interacts with: rendered DOM via screen.findByRole.
    * Data: ids of length 2.
    */
-  it('shows "Export (N)" label when ids are provided', async () => {
+  it('shows the Export action when ids are provided', async () => {
     await renderExport({ ids: ['a', 'b'] });
     expect(
-      await screen.findByRole('button', { name: /Export \(2\)/ }),
+      await screen.findByRole('button', { name: /^Export$/ }),
     ).toBeInTheDocument();
   });
 
   /**
-   * Verifies: the export button reads "Export All" when no ids are selected.
+   * Verifies: the shared dialog still renders the Export action when no ids are selected.
    * Interacts with: rendered DOM via screen.findByRole.
    * Data: empty ids array.
    */
-  it('shows "Export All" label when ids is empty', async () => {
+  it('shows the Export action when ids is empty', async () => {
     await renderExport({ ids: [] });
     expect(
-      await screen.findByRole('button', { name: /Export All/ }),
+      await screen.findByRole('button', { name: /^Export$/ }),
     ).toBeInTheDocument();
   });
 
@@ -123,9 +120,8 @@ describe('AdminAppViewExportComponent', () => {
     const user = userEvent.setup();
     const { exportFn } = await renderExport({ ids: ['view-1', 'view-2'] });
     await user.click(screen.getByRole('button', { name: /Export/ }));
-    const firstArchive = ArchiveType[
-      Object.keys(ArchiveType)[0] as keyof typeof ArchiveType
-    ];
+    const firstArchive =
+      ArchiveType[Object.keys(ArchiveType)[0] as keyof typeof ArchiveType];
     expect(exportFn).toHaveBeenCalledWith(['view-1', 'view-2'], firstArchive);
   });
 
@@ -171,7 +167,7 @@ describe('AdminAppViewExportComponent', () => {
       },
     });
     await user.click(screen.getByRole('button', { name: /Export/ }));
-    fixture.detectChanges();
+    await fixture.whenStable();
     expect(
       await screen.findByText(/Some errors occurred during export/),
     ).toBeInTheDocument();

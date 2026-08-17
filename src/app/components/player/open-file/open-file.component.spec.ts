@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { FileService } from '../../../generated/player-api';
 import { OpenFileComponent } from './open-file.component';
 import { renderComponent } from '../../../test-utils/render-component';
@@ -39,10 +39,10 @@ async function renderOpenFile(
         provide: ActivatedRoute,
         useValue: {
           snapshot: {
-            queryParamMap: {
-              get: (k: string) =>
-                k === 'id' ? fileId : k === 'name' ? fileName : null,
-            },
+            queryParamMap: convertToParamMap({
+              ...(fileId == null ? {} : { id: fileId }),
+              ...(fileName == null ? {} : { name: fileName }),
+            }),
           },
         },
       },
@@ -70,20 +70,16 @@ describe('OpenFileComponent', () => {
    * Why: replaces the created anchor with a stub exposing download setter/click spies to avoid real jsdom navigation.
    */
   it('downloads as attachment for non-image/pdf files', async () => {
-    const createUrl = vi
-      .spyOn(URL, 'createObjectURL')
-      .mockReturnValue('blob://x');
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://x');
     const { anchor, setDownload, click } = makeAnchorStub();
     const originalCreateEl = document.createElement.bind(document);
-    const createEl = vi
-      .spyOn(document, 'createElement')
-      .mockImplementation(((tag: string) =>
-        tag === 'a' ? anchor : originalCreateEl(tag)) as typeof document.createElement);
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) =>
+      tag === 'a'
+        ? anchor
+        : originalCreateEl(tag)) as typeof document.createElement);
     await renderOpenFile({ fileId: 'f1', fileName: 'doc.txt' });
     expect(setDownload).toHaveBeenCalledWith('doc.txt');
     expect(click).toHaveBeenCalled();
-    createEl.mockRestore();
-    createUrl.mockRestore();
   });
 
   /**
@@ -95,13 +91,12 @@ describe('OpenFileComponent', () => {
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://x');
     const { anchor, setDownload } = makeAnchorStub();
     const originalCreateEl = document.createElement.bind(document);
-    const createEl = vi
-      .spyOn(document, 'createElement')
-      .mockImplementation(((tag: string) =>
-        tag === 'a' ? anchor : originalCreateEl(tag)) as typeof document.createElement);
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) =>
+      tag === 'a'
+        ? anchor
+        : originalCreateEl(tag)) as typeof document.createElement);
     await renderOpenFile({ fileId: 'f1', fileName: 'image.png' });
     expect(setDownload).not.toHaveBeenCalled();
-    createEl.mockRestore();
   });
 
   /**
@@ -114,7 +109,7 @@ describe('OpenFileComponent', () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     // The component's error handler does console.log(err); silence it so the
     // deliberately-triggered error and its stack don't print to test output.
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     const download = vi.fn(() => {
       return new (class extends Object {
         subscribe(next: unknown, err?: (e: unknown) => void) {
@@ -131,16 +126,12 @@ describe('OpenFileComponent', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
-              queryParamMap: {
-                get: (k: string) => (k === 'id' ? 'f1' : 'doc.txt'),
-              },
+              queryParamMap: convertToParamMap({ id: 'f1', name: 'doc.txt' }),
             },
           },
         },
       ],
     });
     expect(alertSpy).toHaveBeenCalledWith('Error downloading file');
-    alertSpy.mockRestore();
-    logSpy.mockRestore();
   });
 });

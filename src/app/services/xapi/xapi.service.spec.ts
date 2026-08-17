@@ -1,7 +1,7 @@
 // Copyright 2026 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError, firstValueFrom } from 'rxjs';
 import { ComnSettingsService } from '@cmusei/crucible-common';
@@ -43,10 +43,6 @@ function createService(
 describe('XApiService', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
   });
 
   describe('when XApiEnabled is false', () => {

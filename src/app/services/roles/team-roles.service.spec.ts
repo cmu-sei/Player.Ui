@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, firstValueFrom } from 'rxjs';
+import { recordEmissions } from '../../test-utils/record-emissions';
 import { TeamRolesService } from './team-roles.service';
 import {
   CreateTeamRoleCommand,
@@ -139,30 +140,37 @@ describe('TeamRolesService', () => {
   });
 
   /**
-   * Verifies: addPermission calls addTeamPermissionToRole(roleId, permId) and appends the permission to the cached role.
-   * Interacts with: TeamPermissionService.addTeamPermissionToRole (vi.fn) and TeamRoleService.getTeamRoles stub, TeamRolesService.addPermission, roles$.
+   * Verifies: addPermission calls addTeamPermissionToRole(roleId, permId), appends the permission to the
+   *   cached role, and publishes the grown role on roles$.
+   * Interacts with: TeamPermissionService.addTeamPermissionToRole (vi.fn) and TeamRoleService.getTeamRoles stub, TeamRolesService.addPermission, roles$ via recordEmissions.
    * Data: role r1 with empty permissions; perm('p1') added.
+   * Why: the permission is pushed onto the role object already held in the cached array and upsert
+   *   re-next()s that same array reference, so a post-hoc read of roles$ sees the permission even if
+   *   the subject never re-emits. Recording emissions is what proves subscribers were told.
    */
-  it('addPermission() calls the API and appends the permission to the role', async () => {
+  it('addPermission() calls the API, appends the permission, and emits', async () => {
     const addTeamPermissionToRole = vi.fn(() => of(undefined));
     const svc = createService(
       { getTeamRoles: () => of([role({ id: 'r1', permissions: [] })]) },
       { addTeamPermissionToRole },
     );
     await firstValueFrom(svc.getRoles());
+    const seen = recordEmissions(svc.roles$);
     await firstValueFrom(svc.addPermission('r1', perm('p1')));
     expect(addTeamPermissionToRole).toHaveBeenCalledWith('r1', 'p1');
-    expect((await firstValueFrom(svc.roles$))[0].permissions.map((p) => p.id)).toEqual([
-      'p1',
-    ]);
+    expect(seen).toHaveLength(2);
+    expect(seen[1][0].permissions.map((p) => p.id)).toEqual(['p1']);
   });
 
   /**
-   * Verifies: removePermission calls removeTeamPermissionFromRole(roleId, permId) and drops that permission from the cached role.
-   * Interacts with: TeamPermissionService.removeTeamPermissionFromRole (vi.fn) and getTeamRoles stub, TeamRolesService.removePermission, roles$.
+   * Verifies: removePermission calls removeTeamPermissionFromRole(roleId, permId), drops that permission
+   *   from the cached role, and publishes the trimmed role on roles$.
+   * Interacts with: TeamPermissionService.removeTeamPermissionFromRole (vi.fn) and getTeamRoles stub, TeamRolesService.removePermission, roles$ via recordEmissions.
    * Data: role r1 holding p1 and p2; p1 removed, expecting only p2 to remain.
+   * Why: the filtered array is assigned onto the role object already held in the cache, so a post-hoc
+   *   read of roles$ sees the removal even if the subject never re-emits.
    */
-  it('removePermission() calls the API and drops the permission from the role', async () => {
+  it('removePermission() calls the API, drops the permission, and emits', async () => {
     const removeTeamPermissionFromRole = vi.fn(() => of(undefined));
     const svc = createService(
       {
@@ -172,10 +180,10 @@ describe('TeamRolesService', () => {
       { removeTeamPermissionFromRole },
     );
     await firstValueFrom(svc.getRoles());
+    const seen = recordEmissions(svc.roles$);
     await firstValueFrom(svc.removePermission('r1', 'p1'));
     expect(removeTeamPermissionFromRole).toHaveBeenCalledWith('r1', 'p1');
-    expect((await firstValueFrom(svc.roles$))[0].permissions.map((p) => p.id)).toEqual([
-      'p2',
-    ]);
+    expect(seen).toHaveLength(2);
+    expect(seen[1][0].permissions.map((p) => p.id)).toEqual(['p2']);
   });
 });

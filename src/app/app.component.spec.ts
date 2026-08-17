@@ -2,18 +2,28 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Provider } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 import {
   ComnAuthQuery,
   ComnAuthService,
+  ComnHeaderBarModule,
   ComnSettingsService,
 } from '@cmusei/crucible-common';
 import { AppComponent } from './app.component';
 import { renderComponent } from './test-utils/render-component';
 
 type Theme = 'light-theme' | 'dark-theme';
+
+async function renderApp(providers: Provider[]) {
+  return renderComponent(AppComponent, {
+    declarations: [AppComponent],
+    imports: [ComnHeaderBarModule],
+    providers,
+  });
+}
 
 function setup(
   overrides: {
@@ -61,16 +71,15 @@ function setup(
     {
       provide: ActivatedRoute,
       useValue: {
-        queryParamMap: of({
-          get: (key: string) => (key === 'theme' ? queryTheme : null),
-          has: (key: string) => key === 'theme' && queryTheme != null,
-        }),
+        queryParamMap: of(
+          convertToParamMap(queryTheme == null ? {} : { theme: queryTheme }),
+        ),
         params: of({}),
-        paramMap: of({ get: () => null, has: () => false }),
+        paramMap: of(convertToParamMap({})),
         queryParams: of({}),
         snapshot: {
           params: {},
-          paramMap: { get: () => null, has: () => false },
+          paramMap: convertToParamMap({}),
         },
       },
     },
@@ -87,30 +96,13 @@ describe('AppComponent', () => {
   });
 
   /**
-   * Verifies: AppComponent instantiates successfully under default settings.
-   * Interacts with: renderComponent harness with ComnAuth/Settings/Router/Title stubs.
-   * Data: default setup() overrides (light theme, "Player" title).
-   */
-  it('creates the component', async () => {
-    const { providers } = setup();
-    const { fixture } = await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers,
-    });
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  /**
    * Verifies: document title is set from the AppTitle config value during init.
    * Interacts with: Title.setTitle spy, ComnSettingsService stub.
    * Data: setup() override with appTitle 'My Player'.
    */
   it('sets the document title from AppTitle setting', async () => {
     const ctx = setup({ appTitle: 'My Player' });
-    await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    await renderApp(ctx.providers);
     expect(ctx.setTitle).toHaveBeenCalledWith('My Player');
   });
 
@@ -121,10 +113,7 @@ describe('AppComponent', () => {
    */
   it('applies darkMode body class when theme is dark', async () => {
     const ctx = setup({ initialTheme: 'dark-theme' });
-    await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    await renderApp(ctx.providers);
     expect(document.body.classList.contains('darkMode')).toBe(true);
   });
 
@@ -135,10 +124,7 @@ describe('AppComponent', () => {
    */
   it('does not apply darkMode body class when theme is light', async () => {
     const ctx = setup({ initialTheme: 'light-theme' });
-    await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    await renderApp(ctx.providers);
     expect(document.body.classList.contains('darkMode')).toBe(false);
   });
 
@@ -152,10 +138,7 @@ describe('AppComponent', () => {
       topBarColor: '#AB1234',
       topBarTextColor: '#EEEEEE',
     });
-    await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    await renderApp(ctx.providers);
     expect(document.body.style.getPropertyValue('--mat-sys-primary')).toBe(
       '#AB1234',
     );
@@ -171,10 +154,7 @@ describe('AppComponent', () => {
    */
   it('calls setUserTheme when ?theme=dark-theme is in the query params', async () => {
     const ctx = setup({ queryTheme: 'dark-theme' });
-    await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    await renderApp(ctx.providers);
     expect(ctx.setUserTheme).toHaveBeenCalledWith('dark-theme');
   });
 
@@ -185,10 +165,7 @@ describe('AppComponent', () => {
    */
   it('coerces unknown theme query param to light', async () => {
     const ctx = setup({ queryTheme: 'some-other-theme' });
-    await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    await renderApp(ctx.providers);
     expect(ctx.setUserTheme).toHaveBeenCalledWith('light-theme');
   });
 
@@ -201,10 +178,7 @@ describe('AppComponent', () => {
    */
   it('cleans up subscriptions on destroy', async () => {
     const ctx = setup();
-    const { fixture } = await renderComponent(AppComponent, {
-      declarations: [AppComponent],
-      providers: ctx.providers,
-    });
+    const { fixture } = await renderApp(ctx.providers);
     fixture.destroy();
     const callsBefore = ctx.setUserTheme.mock.calls.length;
     ctx.userTheme$.next('dark-theme');

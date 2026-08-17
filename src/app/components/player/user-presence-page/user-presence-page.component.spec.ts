@@ -2,16 +2,22 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { UserPresencePageComponent } from './user-presence-page.component';
 import { renderComponent } from '../../../test-utils/render-component';
 
+@Component({ selector: 'app-user-presence', template: '' })
+class UserPresenceStubComponent {
+  @Input() viewId!: string;
+}
+
 async function renderPage(overrides: { viewId?: string | null } = {}) {
   const { viewId = 'view-1' } = overrides;
   return renderComponent(UserPresencePageComponent, {
+    imports: [UserPresenceStubComponent],
     declarations: [UserPresencePageComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     providers: [
       {
         provide: RouterQuery,
@@ -25,23 +31,22 @@ async function renderPage(overrides: { viewId?: string | null } = {}) {
 
 describe('UserPresencePageComponent', () => {
   /**
-   * Verifies: UserPresencePageComponent instantiates successfully.
-   * Interacts with: renderPage harness with RouterQuery stub.
-   * Data: default renderPage() (viewId 'view-1').
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderPage();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  /**
-   * Verifies: init reads the 'id' route param into the component's viewId.
-   * Interacts with: RouterQuery.getParams stub, component viewId.
+   * Verifies: init reads the 'id' route param into the component's viewId and the template forwards it
+   *   to the presence child.
+   * Interacts with: RouterQuery.getParams stub, component viewId, the UserPresenceStubComponent standing
+   *   in for app-user-presence.
    * Data: renderPage override viewId 'my-view'.
+   * Why: the page's only job is to route the id through to the child, so the value that arrived at the
+   *   child is the behavior worth pinning — the [viewId] binding could be dropped entirely and a check of
+   *   the page's own field would still pass.
    */
-  it('reads the viewId from the router query on init', async () => {
+  it('reads the viewId from the router query and passes it to the presence child', async () => {
     const { fixture } = await renderPage({ viewId: 'my-view' });
     expect(fixture.componentInstance.viewId).toBe('my-view');
+    const presence = fixture.debugElement.query(
+      By.directive(UserPresenceStubComponent),
+    ).componentInstance as UserPresenceStubComponent;
+    expect(presence.viewId).toBe('my-view');
   });
 
   /**

@@ -2,6 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
+import { Component, EventEmitter, Output, input } from '@angular/core';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
@@ -14,6 +15,11 @@ import { ApplicationTemplate } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 import { AdminAppTemplateSearchComponent } from './admin-app-template-search.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 
 const sample: ApplicationTemplate[] = [
   {
@@ -34,6 +40,12 @@ const sample: ApplicationTemplate[] = [
   },
 ];
 
+@Component({ selector: 'app-admin-template-details', template: '' })
+class AdminTemplateDetailsStubComponent {
+  readonly appTemplate = input<ApplicationTemplate>();
+  @Output() refresh = new EventEmitter<boolean>();
+}
+
 async function renderSearch(
   overrides: { templates?: ApplicationTemplate[] } = {},
 ) {
@@ -47,12 +59,18 @@ async function renderSearch(
   const rendered = await renderComponent(AdminAppTemplateSearchComponent, {
     declarations: [AdminAppTemplateSearchComponent],
     imports: [
+      MatExpansionModule,
+      MatFormFieldModule,
+      MatInputModule,
+      MatTooltipModule,
+      MatButtonModule,
       MatTableModule,
       MatSortModule,
       MatPaginatorModule,
       MatCheckboxModule,
       MatIconModule,
       MatBadgeModule,
+      AdminTemplateDetailsStubComponent,
     ],
     providers: [
       {
@@ -66,16 +84,6 @@ async function renderSearch(
 }
 
 describe('AdminAppTemplateSearchComponent', () => {
-  /**
-   * Verifies: the component instantiates without error.
-   * Interacts with: ApplicationService get/create stubs.
-   * Data: default sample templates.
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderSearch();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: init calls getApplicationTemplates and loads them into the table
    *   data source.
@@ -104,18 +112,20 @@ describe('AdminAppTemplateSearchComponent', () => {
   });
 
   /**
-   * Verifies: applyFilter sets both the data source filter and the bound
-   *   filterString.
-   * Interacts with: component.applyFilter; appTemplateDataSource.filter.
-   * Data: filter term 'alpha'.
+   * Verifies: applyFilter lowercases the term for the data source while keeping the bound filterString
+   *   exactly as the user typed it.
+   * Interacts with: component.applyFilter; appTemplateDataSource.filter; component.filterString.
+   * Data: mixed-case filter term 'AlPhA'.
+   * Why: MatTableDataSource only matches lowercase, so the toLowerCase() call is real behavior — an
+   *   already-lowercase term satisfies both assertions with that call deleted.
    */
-  it('filters the data source when applyFilter is called', async () => {
+  it('filters the data source with a lowercased term and keeps the typed casing', async () => {
     const { fixture } = await renderSearch();
-    fixture.componentInstance.applyFilter('alpha');
+    fixture.componentInstance.applyFilter('AlPhA');
     expect(fixture.componentInstance.appTemplateDataSource.filter).toBe(
       'alpha',
     );
-    expect(fixture.componentInstance.filterString).toBe('alpha');
+    expect(fixture.componentInstance.filterString).toBe('AlPhA');
   });
 
   /**
@@ -175,9 +185,7 @@ describe('AdminAppTemplateSearchComponent', () => {
       expect.objectContaining({ name: 'New Template' }),
     );
     // Initial load + reload after create.
-    expect(getApplicationTemplates.mock.calls.length).toBeGreaterThanOrEqual(
-      2,
-    );
+    expect(getApplicationTemplates.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
   /**

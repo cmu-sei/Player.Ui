@@ -11,13 +11,13 @@ import { renderComponent } from '../../../test-utils/render-component';
 // Angular's DomSanitizer returns an opaque object for bypass calls;
 // to assert what the component emits, unwrap the known internal shape.
 function unwrap(safe: unknown): string {
-  const withChanged = safe as { changingThisBreaksApplicationSecurity?: string };
+  const withChanged = safe as {
+    changingThisBreaksApplicationSecurity?: string;
+  };
   return withChanged?.changingThisBreaksApplicationSecurity ?? String(safe);
 }
 
-async function renderFocused(
-  overrides: { url?: string; theme?: Theme } = {},
-) {
+async function renderFocused(overrides: { url?: string; theme?: Theme } = {}) {
   const { url = 'about:blank', theme = 'light-theme' as Theme } = overrides;
 
   const focusedAppUrl = new BehaviorSubject<string>(url);
@@ -35,16 +35,6 @@ async function renderFocused(
 }
 
 describe('FocusedAppComponent', () => {
-  /**
-   * Verifies: FocusedAppComponent instantiates successfully.
-   * Interacts with: renderFocused harness with FocusedAppService/ComnAuthQuery stubs.
-   * Data: default renderFocused() (about:blank URL, light theme).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderFocused();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: focusedAppUrl$ emits the source URL unchanged when it carries no theme query param.
    * Interacts with: focusedAppUrl$ stream combining FocusedAppService.focusedAppUrl and userTheme$.

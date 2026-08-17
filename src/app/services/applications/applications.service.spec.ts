@@ -44,7 +44,6 @@ describe('ApplicationsService', () => {
 
   afterEach(() => {
     httpMock?.verify();
-    vi.restoreAllMocks();
   });
 
   /**

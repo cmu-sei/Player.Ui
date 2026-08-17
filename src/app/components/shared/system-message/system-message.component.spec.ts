@@ -1,7 +1,7 @@
 // Copyright 2026 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import {
@@ -10,18 +10,20 @@ import {
 } from '@angular/material/bottom-sheet';
 import { SystemMessageComponent } from './system-message.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { bottomSheetRefStub } from '../../../test-utils/dialog-refs';
 
 async function renderMessage(
   overrides: { title?: string; message?: string } = {},
 ) {
   const { title = 'Heads up', message = 'Something happened' } = overrides;
 
-  const dismiss = vi.fn();
-  const messageSheet = { dismiss } as unknown as MatBottomSheetRef<
-    SystemMessageComponent
-  >;
+  const { sheetRef: messageSheet, dismiss } =
+    bottomSheetRefStub<SystemMessageComponent>();
 
   const rendered = await renderComponent(SystemMessageComponent, {
+    imports: [MatIconModule, MatButtonModule],
     declarations: [SystemMessageComponent],
     providers: [
       { provide: MatBottomSheetRef, useValue: messageSheet },
@@ -33,16 +35,6 @@ async function renderMessage(
 }
 
 describe('SystemMessageComponent', () => {
-  /**
-   * Verifies: the component instantiates under the bottom-sheet providers.
-   * Interacts with: MatBottomSheetRef and MAT_BOTTOM_SHEET_DATA via renderMessage.
-   * Data: default title/message overrides.
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderMessage();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: displayTitle/displayMessage are populated from the injected sheet data.
    * Interacts with: MAT_BOTTOM_SHEET_DATA read on init.

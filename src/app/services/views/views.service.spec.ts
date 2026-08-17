@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, firstValueFrom } from 'rxjs';
+import { recordEmissions } from '../../test-utils/record-emissions';
 import { HttpHeaders, HttpResponse } from '@angular/common/http';
 import { ViewsService } from './views.service';
 import {
@@ -71,33 +72,41 @@ describe('ViewsService', () => {
 
   describe('upsert()', () => {
     /**
-     * Verifies: upsert with a known id updates the existing view's fields without adding a duplicate entry.
-     * Interacts with: ViewService.getMyViews stub, ViewsService.upsert (synchronous), views$.
+     * Verifies: upsert with a known id updates the existing view's fields without adding a duplicate
+     *   entry, and announces the change as a fresh views$ emission.
+     * Interacts with: ViewService.getMyViews stub, ViewsService.upsert (synchronous), views$ via recordEmissions.
      * Data: cached view v1 'Old'; upsert('v1', { name: 'Updated' }).
+     * Why: upsert mutates the array it got from getValue() and re-next()s that same reference, so
+     *   reading views$ after the call sees the new name whether or not next() ever ran. Snapshotting
+     *   each emission as it arrives is what pins the notification.
      */
-    it('mutates an existing view in place', async () => {
+    it('mutates an existing view in place and emits the updated cache', async () => {
       const svc = createService({
         getMyViews: () => of([view({ id: 'v1', name: 'Old' })]),
       });
       await firstValueFrom(svc.loadMyViews());
+      const seen = recordEmissions(svc.views$);
       svc.upsert('v1', { name: 'Updated' });
-      const cached = await firstValueFrom(svc.views$);
-      expect(cached).toHaveLength(1);
-      expect(cached[0].name).toBe('Updated');
+      expect(seen).toHaveLength(2);
+      expect(seen[1]).toHaveLength(1);
+      expect(seen[1][0].name).toBe('Updated');
     });
 
     /**
-     * Verifies: upsert with an unknown id appends a new view carrying the supplied fields.
-     * Interacts with: ViewService.getMyViews stub, ViewsService.upsert (synchronous), views$.
+     * Verifies: upsert with an unknown id appends a new view carrying the supplied fields, and emits
+     *   the grown cache.
+     * Interacts with: ViewService.getMyViews stub, ViewsService.upsert (synchronous), views$ via recordEmissions.
      * Data: empty cache; upsert('v9', { name: 'Brand New' }).
+     * Why: same in-place mutation as the update path — only a recorded emission proves the append was
+     *   published rather than merely applied to the cached array.
      */
-    it('appends a new view when the id is absent', async () => {
+    it('appends a new view when the id is absent and emits the new cache', async () => {
       const svc = createService({ getMyViews: () => of([]) });
       await firstValueFrom(svc.loadMyViews());
+      const seen = recordEmissions(svc.views$);
       svc.upsert('v9', { name: 'Brand New' });
-      expect(
-        (await firstValueFrom(svc.views$)).find((v) => v.id === 'v9')?.name,
-      ).toBe('Brand New');
+      expect(seen).toHaveLength(2);
+      expect(seen[1].find((v) => v.id === 'v9')?.name).toBe('Brand New');
     });
   });
 

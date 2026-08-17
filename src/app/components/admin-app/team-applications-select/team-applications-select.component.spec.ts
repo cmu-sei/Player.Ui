@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { of } from 'rxjs';
 import {
   Team,
@@ -12,12 +12,16 @@ import {
   ApplicationTemplate,
 } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api';
-import { DialogService } from '../../../services/dialog/dialog.service';
 import {
   ObjectType,
   TeamApplicationsSelectComponent,
 } from './team-applications-select.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatButtonModule } from '@angular/material/button';
 
 const team: Team = { id: 't1', name: 'Red' };
 const view: View = { id: 'v1', name: 'Demo View' };
@@ -69,11 +73,19 @@ async function renderSelect(
   const moveDownApplicationInstance = vi.fn(() => of(instances));
   const deleteApplicationInstance = vi.fn(() => of(undefined));
   const updateApplicationInstance = vi.fn(() => of({} as ApplicationInstance));
-  const confirm = vi.fn(() => of({ confirm: confirmRemove }));
+  const confirm = vi.fn(() => ({
+    afterClosed: () => of(confirmRemove),
+  }));
 
   const rendered = await renderComponent(TeamApplicationsSelectComponent, {
+    imports: [
+      MatExpansionModule,
+      MatDividerModule,
+      MatIconModule,
+      MatMenuModule,
+      MatButtonModule,
+    ],
     declarations: [TeamApplicationsSelectComponent],
-    schemas: [NO_ERRORS_SCHEMA],
     componentProperties: { team: t, view: v },
     providers: [
       {
@@ -89,7 +101,7 @@ async function renderSelect(
           updateApplicationInstance,
         },
       },
-      { provide: DialogService, useValue: { confirm } },
+      { provide: CrucibleDialogService, useValue: { confirm } },
     ],
   });
 
@@ -107,16 +119,6 @@ async function renderSelect(
 }
 
 describe('TeamApplicationsSelectComponent', () => {
-  /**
-   * Verifies: the team-applications select component instantiates successfully.
-   * Interacts with: renderComponent with a stubbed ApplicationService and DialogService.
-   * Data: default team/view and two app instances (instA, instB).
-   */
-  it('creates the component', async () => {
-    const { fixture } = await renderSelect();
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
   /**
    * Verifies: ngOnInit sets subjectType=Team and loads the team's application instances.
    * Interacts with: stubbed ApplicationService.getTeamApplicationInstances.
