@@ -21,21 +21,6 @@ export class XApiService {
   }
 
   /**
-   * Logs xAPI viewed statement when user enters a view
-   */
-  viewViewed(viewId: string): Observable<any> {
-    if (!this.enabled) {
-      return of(null);
-    }
-    return this.generatedXApiService.viewViewed(viewId).pipe(
-      catchError((error) => {
-        console.error('xAPI tracking error:', error);
-        return of(null);
-      })
-    );
-  }
-
-  /**
    * Logs xAPI experienced statement when user switches to an application
    */
   applicationSwitched(
@@ -54,36 +39,4 @@ export class XApiService {
     );
   }
 
-  /**
-   * Logs xAPI switched statement when user switches their active team
-   */
-  teamSwitched(viewId: string, teamId: string): Observable<any> {
-    if (!this.enabled) {
-      return of(null);
-    }
-    return this.generatedXApiService.teamSwitched(viewId, teamId).pipe(
-      catchError((error) => {
-        console.error('xAPI tracking error:', error);
-        return of(null);
-      })
-    );
-  }
-
-  /**
-   * Logs xAPI terminated statement when user closes/leaves a view
-   */
-  viewTerminated(viewId: string, durationSeconds: number): Observable<any> {
-    if (!this.enabled) {
-      return of(null);
-    }
-    // Note: sendBeacon approach removed - using generated client for consistency
-    // If sendBeacon is needed for reliability on page unload, consider implementing
-    // at the component level before calling this service
-    return this.generatedXApiService.viewTerminated(viewId, durationSeconds).pipe(
-      catchError((error) => {
-        console.error('xAPI tracking error:', error);
-        return of(null);
-      })
-    );
-  }
 }
