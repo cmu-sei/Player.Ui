@@ -202,17 +202,4 @@ describe('EditSubscriptionComponent', () => {
     expect(close).toHaveBeenCalledWith(false);
   });
 
-  /**
-   * Verifies: onCancel closes with false and never calls the create/update services.
-   * Interacts with: MatDialogRef.close and WebhookService.createWebhookSubscription.
-   * Data: default renderEdit (currentSub null).
-   */
-  it('onCancel closes the dialog without saving', async () => {
-    const { fixture, close, createWebhookSubscription } = await renderEdit({
-      currentSub: null,
-    });
-    fixture.componentInstance.onCancel();
-    expect(close).toHaveBeenCalledWith(false);
-    expect(createWebhookSubscription).not.toHaveBeenCalled();
-  });
 });

@@ -86,22 +86,4 @@ describe('EditFileDialogComponent', () => {
     });
   });
 
-  /**
-   * Verifies: cancel() closes with the unchanged original name and teams and
-   *   does not persist anything.
-   * Interacts with: MatDialogRef.close; asserts FileService.updateFile unused.
-   * Data: oldName 'doc.txt'; oldTeams ['team-a','team-b'].
-   */
-  it('cancel() closes the dialog with the original name + teams', async () => {
-    const { fixture, close, updateFile } = await renderDialog({
-      oldName: 'doc.txt',
-      oldTeams: ['team-a', 'team-b'],
-    });
-    fixture.componentInstance.cancel();
-    expect(close).toHaveBeenCalledWith({
-      name: 'doc.txt',
-      teams: ['team-a', 'team-b'],
-    });
-    expect(updateFile).not.toHaveBeenCalled();
-  });
 });

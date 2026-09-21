@@ -58,13 +58,13 @@ const mockRoles = [
 async function renderRoles(
   hasManageRoles = false,
   overrides: {
-    nameResult?: { wasCancelled: boolean; nameValue?: string };
+    nameResult?: { nameValue?: string } | null;
     confirmResult?: boolean;
     roles?: typeof mockRoles;
   } = {},
 ) {
   const {
-    nameResult = { wasCancelled: true, nameValue: '' },
+    nameResult = null,
     confirmResult = false,
     roles = structuredClone(mockRoles),
   } = overrides;
@@ -398,11 +398,11 @@ describe('SystemRolesComponent', () => {
     /**
      * Verifies: a confirmed name dialog drives createRole with the entered name.
      * Interacts with: stubbed DialogService.name and RolesService.createRole.
-     * Data: nameResult override (not cancelled, nameValue 'New Role').
+     * Data: nameResult override (nameValue 'New Role').
      */
     it('creates a role when the dialog returns a name', async () => {
       const { fixture, stubs } = await renderRoles(true, {
-        nameResult: { wasCancelled: false, nameValue: 'New Role' },
+        nameResult: { nameValue: 'New Role' },
       });
       fixture.componentInstance.addRole();
       expect(stubs.createRole).toHaveBeenCalledWith({ name: 'New Role' });
@@ -411,11 +411,11 @@ describe('SystemRolesComponent', () => {
     /**
      * Verifies: a cancelled name dialog leaves createRole untouched.
      * Interacts with: stubbed DialogService.name and RolesService.createRole.
-     * Data: nameResult override (wasCancelled=true).
+     * Data: nameResult override null.
      */
     it('does nothing when the dialog is cancelled', async () => {
       const { fixture, stubs } = await renderRoles(true, {
-        nameResult: { wasCancelled: true },
+        nameResult: null,
       });
       fixture.componentInstance.addRole();
       expect(stubs.createRole).not.toHaveBeenCalled();
@@ -429,7 +429,7 @@ describe('SystemRolesComponent', () => {
    */
   it('addPermission() creates a permission from the dialog result', async () => {
     const { fixture, stubs } = await renderRoles(true, {
-      nameResult: { wasCancelled: false, nameValue: 'New Perm' },
+      nameResult: { nameValue: 'New Perm' },
     });
     fixture.componentInstance.addPermission();
     expect(stubs.createPermission).toHaveBeenCalledWith({ name: 'New Perm' });
@@ -442,7 +442,7 @@ describe('SystemRolesComponent', () => {
    */
   it('renameRole() edits the role with the new name', async () => {
     const { fixture, stubs } = await renderRoles(true, {
-      nameResult: { wasCancelled: false, nameValue: 'Renamed' },
+      nameResult: { nameValue: 'Renamed' },
     });
     const role: Role = { id: 'role-1', name: 'Old' };
     fixture.componentInstance.renameRole(role);

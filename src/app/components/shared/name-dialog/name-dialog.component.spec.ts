@@ -79,19 +79,18 @@ describe('NameDialogComponent', () => {
   });
 
   /**
-   * Verifies: onClick() mutates the shared data object (wasCancelled=false,
-   *   nameValue updated, removeArtifacts defaulted false) and closes with it.
+   * Verifies: onClick() updates the name, defaults removeArtifacts to false,
+   *   and closes with the shared data object.
    * Interacts with: MatDialogRef.close; mutates the injected MAT_DIALOG_DATA.
    * Data: dialog data { nameValue: 'A' } edited to 'B'; no artifacts present.
    */
-  it('onClick() closes with data.wasCancelled=false and the edited name', async () => {
+  it('onClick() closes with the edited name', async () => {
     const { fixture, close, data } = await renderDialog({
       data: { nameValue: 'A' },
     });
     fixture.componentInstance.form.get('name').setValue('B');
     fixture.componentInstance.onClick();
     expect(close).toHaveBeenCalledWith(data);
-    expect(data.wasCancelled).toBe(false);
     expect(data.nameValue).toBe('B');
     expect(data.removeArtifacts).toBe(false); // no artifacts provided
   });
@@ -117,18 +116,6 @@ describe('NameDialogComponent', () => {
     fixture.componentInstance.removeArtifacts = true;
     fixture.componentInstance.onClick();
     expect(data.removeArtifacts).toBe(true);
-  });
-
-  /**
-   * Verifies: onCancel() flags data.wasCancelled=true and closes with the data.
-   * Interacts with: MatDialogRef.close; mutates the injected MAT_DIALOG_DATA.
-   * Data: default dialog data.
-   */
-  it('onCancel() closes with data.wasCancelled=true', async () => {
-    const { fixture, close, data } = await renderDialog();
-    fixture.componentInstance.onCancel();
-    expect(close).toHaveBeenCalledWith(data);
-    expect(data.wasCancelled).toBe(true);
   });
 
   describe('description field (data.showDescription)', () => {

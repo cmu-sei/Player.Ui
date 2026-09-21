@@ -59,13 +59,13 @@ const mockTeamRoles = [
 async function renderTeamRoles(
   hasManageRoles = false,
   overrides: {
-    nameResult?: { wasCancelled: boolean; nameValue?: string };
+    nameResult?: { nameValue?: string } | null;
     confirmResult?: boolean;
     roles?: typeof mockTeamRoles;
   } = {},
 ) {
   const {
-    nameResult = { wasCancelled: true, nameValue: '' },
+    nameResult = null,
     confirmResult = false,
     roles = structuredClone(mockTeamRoles),
   } = overrides;
@@ -406,7 +406,7 @@ describe('TeamRolesComponent', () => {
      */
     it('creates a team role when the dialog returns a name', async () => {
       const { fixture, stubs } = await renderTeamRoles(true, {
-        nameResult: { wasCancelled: false, nameValue: 'New Team Role' },
+        nameResult: { nameValue: 'New Team Role' },
       });
       fixture.componentInstance.addRole();
       expect(stubs.createRole).toHaveBeenCalledWith({ name: 'New Team Role' });
@@ -415,11 +415,11 @@ describe('TeamRolesComponent', () => {
     /**
      * Verifies: a cancelled name dialog leaves createRole untouched.
      * Interacts with: stubbed DialogService.name and TeamRolesService.createRole.
-     * Data: nameResult override (wasCancelled=true).
+     * Data: nameResult override null.
      */
     it('does nothing when the dialog is cancelled', async () => {
       const { fixture, stubs } = await renderTeamRoles(true, {
-        nameResult: { wasCancelled: true },
+        nameResult: null,
       });
       fixture.componentInstance.addRole();
       expect(stubs.createRole).not.toHaveBeenCalled();
@@ -433,7 +433,7 @@ describe('TeamRolesComponent', () => {
    */
   it('addPermission() creates a team permission from the dialog result', async () => {
     const { fixture, stubs } = await renderTeamRoles(true, {
-      nameResult: { wasCancelled: false, nameValue: 'New Team Perm' },
+      nameResult: { nameValue: 'New Team Perm' },
     });
     fixture.componentInstance.addPermission();
     expect(stubs.createTeamPermission).toHaveBeenCalledWith({
@@ -448,7 +448,7 @@ describe('TeamRolesComponent', () => {
    */
   it('renameRole() edits the role with the new name', async () => {
     const { fixture, stubs } = await renderTeamRoles(true, {
-      nameResult: { wasCancelled: false, nameValue: 'Renamed' },
+      nameResult: { nameValue: 'Renamed' },
     });
     const role: TeamRole = { id: 'trole-1', name: 'Old' };
     fixture.componentInstance.renameRole(role);

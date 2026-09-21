@@ -24,11 +24,13 @@ async function renderViewList(
   hasCreateViews = false,
   overrides: {
     views?: View[];
-    nameResult?: { wasCancelled: boolean; nameValue?: string };
+    nameResult?: {
+      nameValue?: string;
+      descriptionValue?: string;
+    } | null;
   } = {},
 ) {
-  const { views = [], nameResult = { wasCancelled: true, nameValue: '' } } =
-    overrides;
+  const { views = [], nameResult = null } = overrides;
 
   const stubs = {
     loadMyViews: vi.fn(() => of([])),
@@ -158,11 +160,11 @@ describe('ViewListComponent', () => {
     /**
      * Verifies: create() calls ViewsService.createView with the dialog name and default description.
      * Interacts with: DialogService.name stub, ViewsService.createView spy.
-     * Data: renderViewList override nameResult { wasCancelled: false, nameValue: 'My New View' }.
+     * Data: renderViewList override nameResult { nameValue: 'My New View' }.
      */
     it('creates a view when the dialog returns a name', async () => {
       const { fixture, stubs } = await renderViewList(true, {
-        nameResult: { wasCancelled: false, nameValue: 'My New View' },
+        nameResult: { nameValue: 'My New View' },
       });
       fixture.componentInstance.create();
       expect(stubs.createView).toHaveBeenCalledWith({
@@ -174,11 +176,11 @@ describe('ViewListComponent', () => {
     /**
      * Verifies: create() does not call createView when the name dialog is cancelled.
      * Interacts with: DialogService.name stub, ViewsService.createView spy.
-     * Data: renderViewList override nameResult { wasCancelled: true }.
+     * Data: renderViewList override nameResult null.
      */
     it('does nothing when the dialog is cancelled', async () => {
       const { fixture, stubs } = await renderViewList(true, {
-        nameResult: { wasCancelled: true },
+        nameResult: null,
       });
       fixture.componentInstance.create();
       expect(stubs.createView).not.toHaveBeenCalled();
