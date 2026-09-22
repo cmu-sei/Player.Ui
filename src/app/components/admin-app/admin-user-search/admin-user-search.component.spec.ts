@@ -3,39 +3,49 @@
 
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { of } from 'rxjs';
-import { User, UserService } from '../../../generated/player-api';
+import {
+  AdminUser,
+  AdminUsers,
+  UserService,
+} from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
 import { AdminUserSearchComponent } from './admin-user-search.component';
 
 describe('AdminUserSearchComponent', () => {
-  const users: User[] = [
-    {
-      id: 'user-1',
-      name: 'Alice Smith',
-      identityAttributes: [
-        { name: 'Email', value: 'alice@example.test', displayOrder: 0 },
-        { name: 'Air Force Rank', value: 'Major', displayOrder: 1 },
-        { name: 'Unit', value: '42nd Wing', displayOrder: 2 },
-      ],
-    },
-    {
-      id: 'user-2',
-      name: 'Bob Jones',
-      identityAttributes: [
-        { name: 'Email', value: 'bob@example.test', displayOrder: 0 },
-        {
-          name: 'Air Force Rank',
-          value: 'Staff Sergeant',
-          displayOrder: 1,
-        },
-        { name: 'Unit', value: '17th Squadron', displayOrder: 2 },
-      ],
-    },
-  ];
+  const result: AdminUsers = {
+    attributeDefinitions: [
+      { key: 'department', name: 'Department' },
+      { key: 'organization', name: 'Organization' },
+      { key: 'location', name: 'Location' },
+    ],
+    users: [
+      {
+        id: 'user-1',
+        name: 'Alice Smith',
+        roleName: 'Administrator',
+        identityAttributes: [
+          { key: 'department', value: 'Logistics' },
+          { key: 'organization', value: 'Example One' },
+          { key: 'location', value: 'East' },
+        ],
+      },
+      {
+        id: 'user-2',
+        name: 'Bob Jones',
+        roleName: 'User',
+        identityAttributes: [
+          { key: 'department', value: 'Operations' },
+          { key: 'organization', value: 'Example Two' },
+          { key: 'location', value: 'West' },
+        ],
+      },
+    ],
+  };
+  const users = result.users as AdminUser[];
 
   let component: AdminUserSearchComponent;
   let userService: {
-    getUsers: jasmine.Spy;
+    getAdminUsers: jasmine.Spy;
     deleteUser: jasmine.Spy;
   };
   let rolesService: {
@@ -47,16 +57,13 @@ describe('AdminUserSearchComponent', () => {
 
   beforeEach(() => {
     userService = jasmine.createSpyObj('UserService', [
-      'getUsers',
+      'getAdminUsers',
       'deleteUser',
     ]);
     rolesService = jasmine.createSpyObj('RolesService', ['getRoles']);
-    dialogService = jasmine.createSpyObj(
-      'CrucibleDialogService',
-      ['confirm'],
-    );
+    dialogService = jasmine.createSpyObj('CrucibleDialogService', ['confirm']);
 
-    userService.getUsers.and.returnValue(of(users));
+    userService.getAdminUsers.and.returnValue(of(result));
     rolesService.getRoles.and.returnValue(of([]));
 
     component = new AdminUserSearchComponent(
@@ -69,9 +76,9 @@ describe('AdminUserSearchComponent', () => {
 
   it('creates ordered columns from configured identity attributes', () => {
     expect(component.attributeColumns.map((column) => column.name)).toEqual([
-      'Email',
-      'Air Force Rank',
-      'Unit',
+      'Department',
+      'Organization',
+      'Location',
     ]);
     expect(component.displayedColumns).toEqual([
       'id',
@@ -84,31 +91,58 @@ describe('AdminUserSearchComponent', () => {
   });
 
   it('returns the configured value for each user', () => {
-    expect(component.getAttributeValue(users[0], 'Email')).toBe(
-      'alice@example.test',
+    expect(component.getAttributeValue(users[0], 'department')).toBe(
+      'Logistics',
     );
-    expect(component.getAttributeValue(users[0], 'Unit')).toBe('42nd Wing');
-    expect(component.getAttributeValue(users[0], 'Missing')).toBe('');
+    expect(component.getAttributeValue(users[0], 'location')).toBe('East');
+    expect(component.getAttributeValue(users[0], 'missing')).toBe('');
   });
 
   it('filters users by identity attribute values', () => {
-    component.applyFilter('major');
+    component.applyFilter('logistics');
+
+    expect(component.userDataSource.filteredData).toEqual([users[0]]);
+  });
+
+  it('filters users by role name', () => {
+    component.applyFilter('administrator');
 
     expect(component.userDataSource.filteredData).toEqual([users[0]]);
   });
 
   it('sorts dynamic columns by their identity attribute values', () => {
-    const rankColumn = component.attributeColumns.find(
-      (column) => column.name === 'Air Force Rank',
+    const organizationColumn = component.attributeColumns.find(
+      (column) => column.key === 'organization',
     );
 
-    expect(rankColumn).toBeDefined();
-    if (!rankColumn) {
+    expect(organizationColumn).toBeDefined();
+    if (!organizationColumn) {
       return;
     }
 
     expect(
-      component.userDataSource.sortingDataAccessor(users[1], rankColumn.id),
-    ).toBe('Staff Sergeant');
+      component.userDataSource.sortingDataAccessor(
+        users[1],
+        organizationColumn.columnId,
+      ),
+    ).toBe('Example Two');
+  });
+
+  it('creates configured columns when no users have values yet', () => {
+    userService.getAdminUsers.and.returnValue(
+      of({
+        attributeDefinitions: result.attributeDefinitions,
+        users: [],
+      }),
+    );
+
+    component.refreshUsers();
+
+    expect(component.attributeColumns.map((column) => column.name)).toEqual([
+      'Department',
+      'Organization',
+      'Location',
+    ]);
+    expect(component.userDataSource.data).toEqual([]);
   });
 });

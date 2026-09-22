@@ -3,6 +3,8 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
+export * from './adminUser';
+export * from './adminUsers';
 export * from './application';
 export * from './applicationInstance';
 export * from './applicationTemplate';
@@ -55,6 +57,7 @@ export * from './teamPermissionsClaim';
 export * from './teamRole';
 export * from './user';
 export * from './userIdentityAttribute';
+export * from './userIdentityAttributeDefinition';
 export * from './view';
 export * from './viewCreated';
 export * from './viewDeleted';

@@ -12,13 +12,9 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { UserIdentityAttribute } from './userIdentityAttribute';
-
-
 export interface User { 
     id?: string;
     name?: string | null;
-    identityAttributes?: Array<UserIdentityAttribute> | null;
     roleId?: string | null;
     roleName?: string | null;
 }

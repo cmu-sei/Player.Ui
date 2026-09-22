@@ -12,9 +12,11 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { AdminUser } from './adminUser';
+import { UserIdentityAttributeDefinition } from './userIdentityAttributeDefinition';
 
 
-export interface UserIdentityAttribute {
-    key?: string | null;
-    value?: string | null;
+export interface AdminUsers {
+    attributeDefinitions?: Array<UserIdentityAttributeDefinition> | null;
+    users?: Array<AdminUser> | null;
 }

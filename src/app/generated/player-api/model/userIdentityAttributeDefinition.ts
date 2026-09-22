@@ -14,7 +14,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  */
 
 
-export interface UserIdentityAttribute {
+export interface UserIdentityAttributeDefinition {
     key?: string | null;
-    value?: string | null;
+    name?: string | null;
 }

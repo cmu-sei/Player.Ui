@@ -5,7 +5,11 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { User, UserService } from '../../../generated/player-api';
+import {
+  AdminUser,
+  UserIdentityAttributeDefinition,
+  UserService,
+} from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 
@@ -15,9 +19,9 @@ export interface Action {
 }
 
 interface UserAttributeColumn {
-  id: string;
+  columnId: string;
+  key: string;
   name: string;
-  displayOrder: number;
 }
 
 @Component({
@@ -31,7 +35,9 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public attributeColumns: UserAttributeColumn[] = [];
   public filterString = '';
 
-  public userDataSource = new MatTableDataSource<User>(new Array<User>());
+  public userDataSource = new MatTableDataSource<AdminUser>(
+    new Array<AdminUser>(),
+  );
   public isLoading: boolean;
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
@@ -54,10 +60,8 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
       [
         user.id,
         user.name,
-        ...(user.identityAttributes ?? []).flatMap((attribute) => [
-          attribute.name,
-          attribute.value,
-        ]),
+        user.roleName,
+        ...(user.identityAttributes ?? []).map((attribute) => attribute.value),
       ].some((value) => value?.toLowerCase().includes(filter));
     this.isLoading = false;
     this.refreshUsers();
@@ -85,9 +89,9 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    */
   refreshUsers() {
     this.isLoading = true;
-    this.userService.getUsers().subscribe((users) => {
-      this.configureAttributeColumns(users);
-      this.userDataSource.data = users;
+    this.userService.getAdminUsers().subscribe((result) => {
+      this.configureAttributeColumns(result.attributeDefinitions ?? []);
+      this.userDataSource.data = result.users ?? [];
       this.isLoading = false;
     });
   }
@@ -95,55 +99,40 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   /**
    * Gets a configured identity attribute value for a User.
    */
-  getAttributeValue(user: User, attributeName: string): string {
+  getAttributeValue(user: AdminUser, attributeKey: string): string {
     return (
       user.identityAttributes?.find(
-        (attribute) => attribute.name === attributeName,
+        (attribute) => attribute.key === attributeKey,
       )?.value ?? ''
     );
   }
 
-  private configureAttributeColumns(users: User[]): void {
-    const attributesByName = new Map<string, number>();
-
-    users.forEach((user) =>
-      user.identityAttributes?.forEach((attribute) => {
-        if (attribute.name && !attributesByName.has(attribute.name)) {
-          attributesByName.set(
-            attribute.name,
-            attribute.displayOrder ?? Number.MAX_SAFE_INTEGER,
-          );
-        }
-      }),
-    );
-
-    this.attributeColumns = [...attributesByName.entries()]
-      .map(([name, displayOrder], index) => ({
-        id: `identityAttribute-${index}`,
-        name,
-        displayOrder,
-      }))
-      .sort(
-        (left, right) =>
-          left.displayOrder - right.displayOrder ||
-          left.name.localeCompare(right.name),
-      );
+  private configureAttributeColumns(
+    definitions: UserIdentityAttributeDefinition[],
+  ): void {
+    this.attributeColumns = definitions
+      .filter((definition) => definition.key && definition.name)
+      .map((definition, index) => ({
+        columnId: `identityAttribute-${index}`,
+        key: definition.key,
+        name: definition.name,
+      }));
 
     this.displayedColumns = [
       'id',
       'name',
-      ...this.attributeColumns.map((column) => column.id),
+      ...this.attributeColumns.map((column) => column.columnId),
       'role',
     ];
   }
 
-  private getColumnValue(user: User, columnId: string): string {
+  private getColumnValue(user: AdminUser, columnId: string): string {
     const attributeColumn = this.attributeColumns.find(
-      (column) => column.id === columnId,
+      (column) => column.columnId === columnId,
     );
 
     if (attributeColumn) {
-      return this.getAttributeValue(user, attributeColumn.name);
+      return this.getAttributeValue(user, attributeColumn.key);
     }
 
     if (columnId === 'id') {
@@ -161,7 +150,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * Deletes a user after confirmation
    * @param user The user to delete
    */
-  deleteUser(user: User) {
+  deleteUser(user: AdminUser) {
     this.confirmDialogService
       .confirm({
         title: 'Delete User?',
