@@ -54,6 +54,7 @@ export * from './teamPermissionModel';
 export * from './teamPermissionsClaim';
 export * from './teamRole';
 export * from './user';
+export * from './userDirectoryEntry';
 export * from './userIdentityAttribute';
 export * from './view';
 export * from './viewCreated';

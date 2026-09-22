@@ -16,12 +16,12 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { User, UserService } from '../../../generated/player-api';
+import { UserDirectoryEntry, UserService } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
 import { renderComponent } from '../../../test-utils/render-component';
 import { AdminUserSearchComponent } from './admin-user-search.component';
 
-const mockUsers: User[] = [
+const mockUsers: UserDirectoryEntry[] = [
   {
     id: 'user-1',
     name: 'Alice Smith',
@@ -46,13 +46,13 @@ const mockUsers: User[] = [
 
 @Component({ selector: 'app-roles-permissions-select', template: '' })
 class RolesPermissionsSelectStubComponent {
-  readonly user = input<User>();
+  readonly user = input<UserDirectoryEntry>();
 }
 
 async function renderAdminUserSearch(
   overrides: {
     confirmResult?: boolean;
-    result?: User[];
+    result?: UserDirectoryEntry[];
   } = {},
 ) {
   const { confirmResult = false, result = mockUsers } = overrides;
@@ -148,7 +148,9 @@ describe('AdminUserSearchComponent', () => {
   it('refreshUsers reloads the user list into the datasource', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     const component = fixture.componentInstance;
-    const refreshedResult: User[] = [{ id: 'user-9', name: 'New' }];
+    const refreshedResult: UserDirectoryEntry[] = [
+      { id: 'user-9', name: 'New' },
+    ];
 
     stubs.getUsers.mockClear();
     stubs.getUsers.mockReturnValueOnce(of(refreshedResult));

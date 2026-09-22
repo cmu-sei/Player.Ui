@@ -6,7 +6,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import {
-  User,
+  UserDirectoryEntry,
   UserIdentityAttribute,
   UserService,
 } from '../../../generated/player-api';
@@ -35,7 +35,9 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public attributeColumns: UserAttributeColumn[] = [];
   public filterString = '';
 
-  public userDataSource = new MatTableDataSource<User>(new Array<User>());
+  public userDataSource = new MatTableDataSource<UserDirectoryEntry>(
+    new Array<UserDirectoryEntry>(),
+  );
   public isLoading: boolean;
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
@@ -100,7 +102,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   /**
    * Gets a configured identity attribute value for a User.
    */
-  getAttributeValue(user: User, attributeKey: string): string {
+  getAttributeValue(user: UserDirectoryEntry, attributeKey: string): string {
     return (
       user.identityAttributes?.find(
         (attribute) => attribute.key === attributeKey,
@@ -125,7 +127,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
     ];
   }
 
-  private getColumnValue(user: User, columnId: string): string {
+  private getColumnValue(user: UserDirectoryEntry, columnId: string): string {
     const attributeColumn = this.attributeColumns.find(
       (column) => column.columnId === columnId,
     );
@@ -149,7 +151,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * Deletes a user after confirmation
    * @param user The user to delete
    */
-  deleteUser(user: User) {
+  deleteUser(user: UserDirectoryEntry) {
     this.confirmDialogService
       .confirm({
         title: 'Delete User?',
