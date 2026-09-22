@@ -58,7 +58,6 @@ import { ClipboardModule } from 'ngx-clipboard';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AppService } from './app.service';
 import { AdminAppTemplateSearchComponent } from './components/admin-app/admin-app-template-search/admin-app-template-search.component';
 import { AdminTemplateDetailsComponent } from './components/admin-app/admin-app-template-search/admin-template-details/admin-template-details.component';
 import { AdminAppComponent } from './components/admin-app/admin-app.component';
@@ -218,7 +217,6 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         ...CRUCIBLE_DIALOG_IMPORTS,
         TableVirtualScrollModule,
         ResizableModule], providers: [
-        AppService,
         FocusedAppService,
         NotificationService,
         TeamsService,
