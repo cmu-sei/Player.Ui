@@ -126,6 +126,15 @@ _TeamCity*
 *.coverage
 *.coveragexml
 
+# Vitest / v8 coverage output
+/coverage
+
+# Vitest browser-mode screenshot artifacts
+**/__screenshots__/
+
+# Vitest browser-mode attachment artifacts (transient test output)
+.vitest-attachments/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
@@ -313,3 +322,10 @@ openapitools.json
 
 # Local static server config (for testing production builds)
 serve.json
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Git worktrees
+.worktrees/
