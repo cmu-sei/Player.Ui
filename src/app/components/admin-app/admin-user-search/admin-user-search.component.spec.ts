@@ -16,59 +16,49 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import {
-  AdminUser,
-  AdminUsers,
-  UserService,
-} from '../../../generated/player-api';
+import { User, UserService } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
 import { renderComponent } from '../../../test-utils/render-component';
 import { AdminUserSearchComponent } from './admin-user-search.component';
 
-const mockResult: AdminUsers = {
-  attributeDefinitions: [
-    { key: 'department', name: 'Department' },
-    { key: 'organization', name: 'Organization' },
-    { key: 'location', name: 'Location' },
-  ],
-  users: [
-    {
-      id: 'user-1',
-      name: 'Alice Smith',
-      roleName: 'Administrator',
-      identityAttributes: [
-        { key: 'department', value: 'Logistics' },
-        { key: 'organization', value: 'Example One' },
-        { key: 'location', value: 'East' },
-      ],
-    },
-    {
-      id: 'user-2',
-      name: 'Bob Jones',
-      roleName: 'User',
-      identityAttributes: [
-        { key: 'department', value: 'Operations' },
-        { key: 'organization', value: 'Example Two' },
-        { key: 'location', value: 'West' },
-      ],
-    },
-  ],
-};
-
-const mockUsers = mockResult.users as AdminUser[];
+const mockUsers: User[] = [
+  {
+    id: 'user-1',
+    name: 'Alice Smith',
+    roleName: 'Administrator',
+    identityAttributes: [
+      { key: 'department', name: 'Department', value: 'Logistics' },
+      { key: 'organization', name: 'Organization', value: 'Example One' },
+      { key: 'location', name: 'Location', value: 'East' },
+    ],
+  },
+  {
+    id: 'user-2',
+    name: 'Bob Jones',
+    roleName: 'User',
+    identityAttributes: [
+      { key: 'department', name: 'Department', value: 'Operations' },
+      { key: 'organization', name: 'Organization', value: 'Example Two' },
+      { key: 'location', name: 'Location', value: 'West' },
+    ],
+  },
+];
 
 @Component({ selector: 'app-roles-permissions-select', template: '' })
 class RolesPermissionsSelectStubComponent {
-  readonly user = input<AdminUser>();
+  readonly user = input<User>();
 }
 
 async function renderAdminUserSearch(
-  overrides: { confirmResult?: boolean; result?: AdminUsers } = {},
+  overrides: {
+    confirmResult?: boolean;
+    result?: User[];
+  } = {},
 ) {
-  const { confirmResult = false, result = mockResult } = overrides;
+  const { confirmResult = false, result = mockUsers } = overrides;
 
   const stubs = {
-    getAdminUsers: vi.fn(() => of(result)),
+    getUsers: vi.fn(() => of(result)),
     deleteUser: vi.fn(() => of(undefined)),
     getRoles: vi.fn(() => of([])),
     confirm: vi.fn(() => ({
@@ -95,7 +85,7 @@ async function renderAdminUserSearch(
       {
         provide: UserService,
         useValue: {
-          getAdminUsers: stubs.getAdminUsers,
+          getUsers: stubs.getUsers,
           deleteUser: stubs.deleteUser,
         },
       },
@@ -141,7 +131,7 @@ describe('AdminUserSearchComponent', () => {
 
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
-    expect(stubs.getAdminUsers).toHaveBeenCalled();
+    expect(stubs.getUsers).toHaveBeenCalled();
     expect(stubs.getRoles).toHaveBeenCalled();
     expect(fixture.componentInstance.isLoading).toBe(false);
     expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
@@ -158,17 +148,14 @@ describe('AdminUserSearchComponent', () => {
   it('refreshUsers reloads the user list into the datasource', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     const component = fixture.componentInstance;
-    const refreshedResult: AdminUsers = {
-      attributeDefinitions: mockResult.attributeDefinitions,
-      users: [{ id: 'user-9', name: 'New' }],
-    };
+    const refreshedResult: User[] = [{ id: 'user-9', name: 'New' }];
 
-    stubs.getAdminUsers.mockClear();
-    stubs.getAdminUsers.mockReturnValueOnce(of(refreshedResult));
+    stubs.getUsers.mockClear();
+    stubs.getUsers.mockReturnValueOnce(of(refreshedResult));
     component.refreshUsers();
 
-    expect(stubs.getAdminUsers).toHaveBeenCalled();
-    expect(component.userDataSource.data).toEqual(refreshedResult.users);
+    expect(stubs.getUsers).toHaveBeenCalled();
+    expect(component.userDataSource.data).toEqual(refreshedResult);
     expect(component.isLoading).toBe(false);
   });
 
@@ -239,20 +226,14 @@ describe('AdminUserSearchComponent', () => {
       ).toBe('Example Two');
     });
 
-    it('creates configured columns when no users have values yet', async () => {
+    it('keeps only static columns when no users are returned', async () => {
       const { fixture } = await renderAdminUserSearch({
-        result: {
-          attributeDefinitions: mockResult.attributeDefinitions,
-          users: [],
-        },
+        result: [],
       });
       const component = fixture.componentInstance;
 
-      expect(component.attributeColumns.map((column) => column.name)).toEqual([
-        'Department',
-        'Organization',
-        'Location',
-      ]);
+      expect(component.attributeColumns).toEqual([]);
+      expect(component.displayedColumns).toEqual(['id', 'name', 'role']);
       expect(component.userDataSource.data).toEqual([]);
     });
   });
@@ -262,7 +243,7 @@ describe('AdminUserSearchComponent', () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
       });
-      stubs.getAdminUsers.mockClear();
+      stubs.getUsers.mockClear();
       fixture.componentInstance.deleteUser(mockUsers[0]);
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -272,7 +253,7 @@ describe('AdminUserSearchComponent', () => {
         }),
       );
       expect(stubs.deleteUser).toHaveBeenCalledWith('user-1');
-      expect(stubs.getAdminUsers).toHaveBeenCalled();
+      expect(stubs.getUsers).toHaveBeenCalled();
     });
 
     it('falls back to the user id in the prompt when name is missing', async () => {

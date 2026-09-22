@@ -16,5 +16,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 export interface UserIdentityAttribute {
     key?: string | null;
+    name?: string | null;
     value?: string | null;
 }

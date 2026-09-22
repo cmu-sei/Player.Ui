@@ -6,8 +6,8 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import {
-  AdminUser,
-  UserIdentityAttributeDefinition,
+  User,
+  UserIdentityAttribute,
   UserService,
 } from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
@@ -35,9 +35,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public attributeColumns: UserAttributeColumn[] = [];
   public filterString = '';
 
-  public userDataSource = new MatTableDataSource<AdminUser>(
-    new Array<AdminUser>(),
-  );
+  public userDataSource = new MatTableDataSource<User>(new Array<User>());
   public isLoading: boolean;
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
@@ -89,9 +87,12 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    */
   refreshUsers() {
     this.isLoading = true;
-    this.userService.getAdminUsers().subscribe((result) => {
-      this.configureAttributeColumns(result.attributeDefinitions ?? []);
-      this.userDataSource.data = result.users ?? [];
+    this.userService.getUsers().subscribe((users) => {
+      const attributes =
+        users.find((user) => user.identityAttributes?.length)
+          ?.identityAttributes ?? [];
+      this.configureAttributeColumns(attributes);
+      this.userDataSource.data = users;
       this.isLoading = false;
     });
   }
@@ -99,7 +100,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   /**
    * Gets a configured identity attribute value for a User.
    */
-  getAttributeValue(user: AdminUser, attributeKey: string): string {
+  getAttributeValue(user: User, attributeKey: string): string {
     return (
       user.identityAttributes?.find(
         (attribute) => attribute.key === attributeKey,
@@ -107,15 +108,13 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
     );
   }
 
-  private configureAttributeColumns(
-    definitions: UserIdentityAttributeDefinition[],
-  ): void {
-    this.attributeColumns = definitions
-      .filter((definition) => definition.key && definition.name)
-      .map((definition, index) => ({
+  private configureAttributeColumns(attributes: UserIdentityAttribute[]): void {
+    this.attributeColumns = attributes
+      .filter((attribute) => attribute.key && attribute.name)
+      .map((attribute, index) => ({
         columnId: `identityAttribute-${index}`,
-        key: definition.key,
-        name: definition.name,
+        key: attribute.key,
+        name: attribute.name,
       }));
 
     this.displayedColumns = [
@@ -126,7 +125,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
     ];
   }
 
-  private getColumnValue(user: AdminUser, columnId: string): string {
+  private getColumnValue(user: User, columnId: string): string {
     const attributeColumn = this.attributeColumns.find(
       (column) => column.columnId === columnId,
     );
@@ -150,7 +149,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * Deletes a user after confirmation
    * @param user The user to delete
    */
-  deleteUser(user: AdminUser) {
+  deleteUser(user: User) {
     this.confirmDialogService
       .confirm({
         title: 'Delete User?',
