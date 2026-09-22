@@ -2,8 +2,9 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelect, MatSelectModule } from '@angular/material/select';
 import {
   User,
   Team,
@@ -28,9 +29,13 @@ const permissionA: Permission = { id: 'p1', name: 'A' };
 const permissionB: Permission = { id: 'p2', name: 'B' };
 
 async function renderSelect(
-  overrides: { user?: User | null; team?: Team | null } = {},
+  overrides: {
+    user?: User | null;
+    team?: Team | null;
+    canEdit?: boolean;
+  } = {},
 ) {
-  const { user = null, team = null } = overrides;
+  const { user = null, team = null, canEdit = true } = overrides;
 
   const updateUser = vi.fn(() => of({}));
   const updateTeam = vi.fn(() => of({}));
@@ -46,7 +51,7 @@ async function renderSelect(
       MatButtonModule,
       MatSelectModule,
     ],
-    componentProperties: { user, team },
+    componentProperties: { user, team, canEdit },
     providers: [
       { provide: UserService, useValue: { updateUser } },
       { provide: TeamService, useValue: { updateTeam } },
@@ -110,6 +115,39 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(fixture.componentInstance.subjectType).toBe(ObjectType.User);
     expect(fixture.componentInstance.showPermissions).toBe(false);
     expect(fixture.componentInstance.selectedRole).toBe('r2');
+  });
+
+  /**
+   * Verifies: the role select is disabled when the caller cannot edit.
+   * Interacts with: the Material MatSelect instance rendered by the component.
+   * Data: a user and canEdit=false.
+   */
+  it('disables the role select when editing is not allowed', async () => {
+    const { fixture } = await renderSelect({
+      user: { id: 'u1', name: 'Alice', roleId: 'r2' },
+      canEdit: false,
+    });
+    const roleSelect = fixture.debugElement.query(
+      By.directive(MatSelect),
+    ).componentInstance as MatSelect;
+
+    expect(roleSelect.disabled).toBe(true);
+  });
+
+  /**
+   * Verifies: existing consumers remain editable by default.
+   * Interacts with: the component's default canEdit input.
+   * Data: a user without an explicit canEdit override.
+   */
+  it('keeps the role select enabled by default', async () => {
+    const { fixture } = await renderSelect({
+      user: { id: 'u1', name: 'Alice', roleId: 'r2' },
+    });
+    const roleSelect = fixture.debugElement.query(
+      By.directive(MatSelect),
+    ).componentInstance as MatSelect;
+
+    expect(roleSelect.disabled).toBe(false);
   });
 
   /**

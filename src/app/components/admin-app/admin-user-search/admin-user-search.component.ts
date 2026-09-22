@@ -5,8 +5,13 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { User, UserService } from '../../../generated/player-api';
+import {
+  SystemPermission,
+  User,
+  UserService,
+} from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
+import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 export interface Action {
@@ -26,6 +31,9 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
 
   public userDataSource = new MatTableDataSource<User>(new Array<User>());
   public isLoading: boolean;
+  public canEdit$ = this.userPermissionsService.hasPermission(
+    SystemPermission.ManageUsers,
+  );
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -33,6 +41,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   constructor(
     private userService: UserService,
     private rolesService: RolesService,
+    private userPermissionsService: UserPermissionsService,
     private confirmDialogService: CrucibleDialogService,
   ) {}
 
