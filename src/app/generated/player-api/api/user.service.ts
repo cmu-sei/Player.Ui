@@ -31,6 +31,8 @@ import { ProblemDetails } from '../model/problemDetails';
 import { SendUserNotificationCommand } from '../model/sendUserNotificationCommand';
 // @ts-ignore
 import { User } from '../model/user';
+// @ts-ignore
+import { UserDirectoryEntry } from '../model/userDirectoryEntry';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -406,13 +408,13 @@ export class UserService extends BaseService {
 
     /**
      * Gets all Users in the system.
-     * Returns a list of all of the Users in the system.
+     * Returns all Users in the system. Includes configured identity attributes for callers with the ViewUsers permission.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getUsers(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<Array<User>>;
-    public getUsers(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<Array<User>>>;
-    public getUsers(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<Array<User>>>;
+    public getUsers(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<Array<UserDirectoryEntry>>;
+    public getUsers(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<Array<UserDirectoryEntry>>>;
+    public getUsers(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<Array<UserDirectoryEntry>>>;
     public getUsers(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
@@ -443,7 +445,7 @@ export class UserService extends BaseService {
 
         let localVarPath = `/api/users`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<Array<User>>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<Array<UserDirectoryEntry>>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,

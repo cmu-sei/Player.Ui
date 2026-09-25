@@ -1,43 +1,64 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi } from 'vitest';
 import { Component, input } from '@angular/core';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
-import { AdminUserSearchComponent } from './admin-user-search.component';
-import { renderComponent } from 'src/app/test-utils/render-component';
-import { User, UserService } from '../../../generated/player-api';
-import { RolesService } from '../../../services/roles/roles.service';
+import { describe, expect, it, vi } from 'vitest';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { ClipboardModule } from 'ngx-clipboard';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSortModule } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { UserDirectoryEntry, UserService } from '../../../generated/player-api';
+import { RolesService } from '../../../services/roles/roles.service';
+import { renderComponent } from '../../../test-utils/render-component';
+import { AdminUserSearchComponent } from './admin-user-search.component';
 
-const mockUsers: User[] = [
-  { id: 'user-1', name: 'Alice Smith' },
-  { id: 'user-2', name: 'Bob Jones' },
+const mockUsers: UserDirectoryEntry[] = [
+  {
+    id: 'user-1',
+    name: 'Alice Smith',
+    roleName: 'Administrator',
+    identityAttributes: [
+      { key: 'department', name: 'Department', value: 'Logistics' },
+      { key: 'organization', name: 'Organization', value: 'Example One' },
+      { key: 'location', name: 'Location', value: 'East' },
+    ],
+  },
+  {
+    id: 'user-2',
+    name: 'Bob Jones',
+    roleName: 'User',
+    identityAttributes: [
+      { key: 'department', name: 'Department', value: 'Operations' },
+      { key: 'organization', name: 'Organization', value: 'Example Two' },
+      { key: 'location', name: 'Location', value: 'West' },
+    ],
+  },
 ];
 
 @Component({ selector: 'app-roles-permissions-select', template: '' })
 class RolesPermissionsSelectStubComponent {
-  readonly user = input<User>();
+  readonly user = input<UserDirectoryEntry>();
 }
 
 async function renderAdminUserSearch(
-  overrides: { confirmResult?: boolean } = {},
+  overrides: {
+    confirmResult?: boolean;
+    result?: UserDirectoryEntry[];
+  } = {},
 ) {
-  const { confirmResult = false } = overrides;
+  const { confirmResult = false, result = mockUsers } = overrides;
 
   const stubs = {
-    getUsers: vi.fn(() => of(mockUsers)),
+    getUsers: vi.fn(() => of(result)),
     deleteUser: vi.fn(() => of(undefined)),
     getRoles: vi.fn(() => of([])),
     confirm: vi.fn(() => ({
@@ -63,7 +84,10 @@ async function renderAdminUserSearch(
     providers: [
       {
         provide: UserService,
-        useValue: { getUsers: stubs.getUsers, deleteUser: stubs.deleteUser },
+        useValue: {
+          getUsers: stubs.getUsers,
+          deleteUser: stubs.deleteUser,
+        },
       },
       {
         provide: RolesService,
@@ -80,53 +104,31 @@ async function renderAdminUserSearch(
 }
 
 describe('AdminUserSearchComponent', () => {
-  /**
-   * Verifies: the search input is rendered.
-   * Interacts with: the rendered DOM (queried by placeholder).
-   * Data: default overrides.
-   */
   it('should show search input', async () => {
     await renderAdminUserSearch();
     expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
   });
 
-  /**
-   * Verifies: each loaded user renders as a table row.
-   * Interacts with: the rendered DOM driven by the getUsers stub.
-   * Data: mockUsers (Alice Smith, Bob Jones).
-   */
   it('should display users table', async () => {
     await renderAdminUserSearch();
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
     expect(screen.getByText('Bob Jones')).toBeInTheDocument();
   });
 
-  /**
-   * Verifies: the "Name" column header is rendered.
-   * Interacts with: the rendered DOM (queried via Testing Library screen).
-   * Data: default overrides.
-   */
-  it('should show User Name column header', async () => {
+  it('should show static and configured column headers', async () => {
     await renderAdminUserSearch();
     expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('Department')).toBeInTheDocument();
+    expect(screen.getByText('Organization')).toBeInTheDocument();
+    expect(screen.getByText('Location')).toBeInTheDocument();
   });
 
-  /**
-   * Verifies: a per-row Delete User control is rendered for users.
-   * Interacts with: the rendered DOM (queried by title).
-   * Data: mockUsers.
-   */
   it('should show delete button for users', async () => {
     await renderAdminUserSearch();
     const deleteButtons = screen.getAllByTitle('Delete User');
     expect(deleteButtons.length).toBeGreaterThan(0);
   });
 
-  /**
-   * Verifies: ngOnInit fetches users and roles, fills the datasource, and clears isLoading.
-   * Interacts with: stubbed UserService.getUsers and RolesService.getRoles.
-   * Data: mockUsers.
-   */
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     expect(stubs.getUsers).toHaveBeenCalled();
@@ -135,42 +137,110 @@ describe('AdminUserSearchComponent', () => {
     expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
   });
 
-  /**
-   * Verifies: applyFilter lowercases the value (without trimming) and applies it to the datasource filter.
-   * Interacts with: component.applyFilter and the MatTableDataSource filter.
-   * Data: padded mixed-case input '  ALICE  '.
-   * Why: asserts surrounding whitespace is preserved (only case is changed), distinct from the view-search trim behavior.
-   */
   it('applyFilter lowercases the value and sets the datasource filter', async () => {
     const { fixture } = await renderAdminUserSearch();
-    const c = fixture.componentInstance;
-    c.applyFilter('  ALICE  ');
-    expect(c.filterString).toBe('  alice  ');
-    expect(c.userDataSource.filter).toBe('  alice  ');
+    const component = fixture.componentInstance;
+    component.applyFilter('  ALICE  ');
+    expect(component.filterString).toBe('  alice  ');
+    expect(component.userDataSource.filter).toBe('  alice  ');
   });
 
-  /**
-   * Verifies: refreshUsers re-fetches users into the datasource and clears isLoading.
-   * Interacts with: stubbed UserService.getUsers (re-stubbed for this call).
-   * Data: getUsers returns a fresh single-user list ('New') on the next call.
-   */
   it('refreshUsers reloads the user list into the datasource', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
-    const c = fixture.componentInstance;
+    const component = fixture.componentInstance;
+    const refreshedResult: UserDirectoryEntry[] = [
+      { id: 'user-9', name: 'New' },
+    ];
+
     stubs.getUsers.mockClear();
-    stubs.getUsers.mockReturnValueOnce(of([{ id: 'user-9', name: 'New' }]));
-    c.refreshUsers();
+    stubs.getUsers.mockReturnValueOnce(of(refreshedResult));
+    component.refreshUsers();
+
     expect(stubs.getUsers).toHaveBeenCalled();
-    expect(c.userDataSource.data).toEqual([{ id: 'user-9', name: 'New' }]);
-    expect(c.isLoading).toBe(false);
+    expect(component.userDataSource.data).toEqual(refreshedResult);
+    expect(component.isLoading).toBe(false);
+  });
+
+  describe('identity attribute columns', () => {
+    it('creates ordered columns from configured identity attributes', async () => {
+      const { fixture } = await renderAdminUserSearch();
+      const component = fixture.componentInstance;
+
+      expect(component.attributeColumns.map((column) => column.name)).toEqual([
+        'Department',
+        'Organization',
+        'Location',
+      ]);
+      expect(component.displayedColumns).toEqual([
+        'id',
+        'name',
+        'identityAttribute-0',
+        'identityAttribute-1',
+        'identityAttribute-2',
+        'role',
+      ]);
+    });
+
+    it('returns the configured value for each user', async () => {
+      const { fixture } = await renderAdminUserSearch();
+      const component = fixture.componentInstance;
+
+      expect(component.getAttributeValue(mockUsers[0], 'department')).toBe(
+        'Logistics',
+      );
+      expect(component.getAttributeValue(mockUsers[0], 'location')).toBe(
+        'East',
+      );
+      expect(component.getAttributeValue(mockUsers[0], 'missing')).toBe('');
+    });
+
+    it('filters users by identity attribute values', async () => {
+      const { fixture } = await renderAdminUserSearch();
+      const component = fixture.componentInstance;
+
+      component.applyFilter('logistics');
+
+      expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
+    });
+
+    it('filters users by role name', async () => {
+      const { fixture } = await renderAdminUserSearch();
+      const component = fixture.componentInstance;
+
+      component.applyFilter('administrator');
+
+      expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
+    });
+
+    it('sorts dynamic columns by their identity attribute values', async () => {
+      const { fixture } = await renderAdminUserSearch();
+      const component = fixture.componentInstance;
+      const organizationColumn = component.attributeColumns.find(
+        (column) => column.key === 'organization',
+      );
+
+      expect(organizationColumn).toBeDefined();
+      expect(
+        component.userDataSource.sortingDataAccessor(
+          mockUsers[1],
+          organizationColumn!.columnId,
+        ),
+      ).toBe('Example Two');
+    });
+
+    it('keeps only static columns when no users are returned', async () => {
+      const { fixture } = await renderAdminUserSearch({
+        result: [],
+      });
+      const component = fixture.componentInstance;
+
+      expect(component.attributeColumns).toEqual([]);
+      expect(component.displayedColumns).toEqual(['id', 'name', 'role']);
+      expect(component.userDataSource.data).toEqual([]);
+    });
   });
 
   describe('deleteUser()', () => {
-    /**
-     * Verifies: a confirmed prompt deletes the user by id and triggers a refresh.
-     * Interacts with: stubbed DialogService.confirm, UserService.deleteUser and getUsers.
-     * Data: confirmResult=true; deleting mockUsers[0] (Alice Smith).
-     */
     it('deletes and refreshes when the user confirms', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
@@ -185,20 +255,14 @@ describe('AdminUserSearchComponent', () => {
         }),
       );
       expect(stubs.deleteUser).toHaveBeenCalledWith('user-1');
-      // refreshUsers() runs after a successful delete
       expect(stubs.getUsers).toHaveBeenCalled();
     });
 
-    /**
-     * Verifies: the confirm message uses the user id when the user has no name.
-     * Interacts with: stubbed DialogService.confirm (message argument inspected).
-     * Data: a nameless user { id: 'user-3' }; confirmResult=true.
-     */
     it('falls back to the user id in the prompt when name is missing', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
       });
-      fixture.componentInstance.deleteUser({ id: 'user-3' } as User);
+      fixture.componentInstance.deleteUser({ id: 'user-3' });
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Delete User?',
@@ -207,11 +271,6 @@ describe('AdminUserSearchComponent', () => {
       );
     });
 
-    /**
-     * Verifies: a declined prompt leaves deleteUser untouched.
-     * Interacts with: stubbed DialogService.confirm and UserService.deleteUser.
-     * Data: confirmResult=false.
-     */
     it('does nothing when the user cancels', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: false,

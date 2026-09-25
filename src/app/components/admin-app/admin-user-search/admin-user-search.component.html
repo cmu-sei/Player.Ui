@@ -8,28 +8,49 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple"></mat-icon>
   </div>
   <mat-form-field style="width: 300px">
-    <input matInput [(ngModel)]="filterString" (keyup)="applyFilter($event.target.value)" placeholder="Search" />
+    <input
+      matInput
+      [(ngModel)]="filterString"
+      (keyup)="applyFilter($event.target.value)"
+      placeholder="Search"
+    />
     @if (filterString) {
-    <button mat-icon-button matSuffix color="primary" (click)="applyFilter('')" title="Clear Search">
-      <mat-icon style="transform: scale(0.85)" fontIcon="mdi-close-circle-outline"></mat-icon>
-    </button>
+      <button
+        mat-icon-button
+        matSuffix
+        color="primary"
+        (click)="applyFilter('')"
+        title="Clear Search"
+      >
+        <mat-icon
+          style="transform: scale(0.85)"
+          fontIcon="mdi-close-circle-outline"
+        ></mat-icon>
+      </button>
     }
   </mat-form-field>
   <div class="button-end">
-    <mat-paginator #paginator [pageIndex]="0" [pageSize]="20"
-      [pageSizeOptions]="[5, 10, 15, 20, 25, 50, 100, 200]"></mat-paginator>
+    <mat-paginator
+      #paginator
+      [pageIndex]="0"
+      [pageSize]="20"
+      [pageSizeOptions]="[5, 10, 15, 20, 25, 50, 100, 200]"
+    ></mat-paginator>
   </div>
 </div>
 
 <div class="table-container">
   <table mat-table [dataSource]="userDataSource" matSort>
     <ng-container matColumnDef="id">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>
-        ID
-      </th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
       <td mat-cell *matCellDef="let element">
-        <button mat-icon-button ngxClipboard [cbContent]="element.id" (click)="$event.stopPropagation()"
-          title="Copy:  {{ element.id }}">
+        <button
+          mat-icon-button
+          ngxClipboard
+          [cbContent]="element.id"
+          (click)="$event.stopPropagation()"
+          title="Copy:  {{ element.id }}"
+        >
           <mat-icon class="mdi-24px" fontIcon="mdi-content-copy"></mat-icon>
         </button>
         {{ element.id }}
@@ -41,13 +62,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <td mat-cell *matCellDef="let element">{{ element.name }}</td>
     </ng-container>
 
+    @for (column of attributeColumns; track column.columnId) {
+      <ng-container [matColumnDef]="column.columnId">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+          {{ column.name }}
+        </th>
+        <td mat-cell *matCellDef="let element">
+          {{ getAttributeValue(element, column.key) }}
+        </td>
+      </ng-container>
+    }
+
     <ng-container matColumnDef="role">
       <th mat-header-cell *matHeaderCellDef>Role</th>
       <td mat-cell *matCellDef="let element">
-        <app-roles-permissions-select [user]="element"></app-roles-permissions-select>
-        <button mat-icon-button (click)="deleteUser(element); $event.stopPropagation()"
-          title="Delete User">
-          <mat-icon class="mdi-24px" fontIcon="mdi-trash-can-outline"></mat-icon>
+        <app-roles-permissions-select
+          [user]="element"
+        ></app-roles-permissions-select>
+        <button
+          mat-icon-button
+          (click)="deleteUser(element); $event.stopPropagation()"
+          title="Delete User"
+        >
+          <mat-icon
+            class="mdi-24px"
+            fontIcon="mdi-trash-can-outline"
+          ></mat-icon>
         </button>
       </td>
     </ng-container>
@@ -57,7 +97,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   </table>
 
   @if (isLoading) {
-    <mat-card appearance="outlined" style="display: flex; justify-content: center; align-items: center">
+    <mat-card
+      appearance="outlined"
+      style="display: flex; justify-content: center; align-items: center"
+    >
       <mat-progress-spinner color="primary" mode="indeterminate">
       </mat-progress-spinner>
     </mat-card>

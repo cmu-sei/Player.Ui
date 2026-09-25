@@ -5,13 +5,23 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { User, UserService } from '../../../generated/player-api';
+import {
+  UserDirectoryEntry,
+  UserIdentityAttribute,
+  UserService,
+} from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 
 export interface Action {
   Value: string;
   Text: string;
+}
+
+interface UserAttributeColumn {
+  columnId: string;
+  key: string;
+  name: string;
 }
 
 @Component({
@@ -22,9 +32,12 @@ export interface Action {
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   public displayedColumns: string[] = ['id', 'name', 'role'];
+  public attributeColumns: UserAttributeColumn[] = [];
   public filterString = '';
 
-  public userDataSource = new MatTableDataSource<User>(new Array<User>());
+  public userDataSource = new MatTableDataSource<UserDirectoryEntry>(
+    new Array<UserDirectoryEntry>(),
+  );
   public isLoading: boolean;
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
@@ -41,6 +54,15 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    */
   ngOnInit() {
     this.userDataSource.sort = this.sort;
+    this.userDataSource.sortingDataAccessor = (user, columnId) =>
+      this.getColumnValue(user, columnId);
+    this.userDataSource.filterPredicate = (user, filter) =>
+      [
+        user.id,
+        user.name,
+        user.roleName,
+        ...(user.identityAttributes ?? []).map((attribute) => attribute.value),
+      ].some((value) => value?.toLowerCase().includes(filter));
     this.isLoading = false;
     this.refreshUsers();
     this.rolesService.getRoles().subscribe();
@@ -68,16 +90,68 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
   refreshUsers() {
     this.isLoading = true;
     this.userService.getUsers().subscribe((users) => {
+      const attributes =
+        users.find((user) => user.identityAttributes?.length)
+          ?.identityAttributes ?? [];
+      this.configureAttributeColumns(attributes);
       this.userDataSource.data = users;
       this.isLoading = false;
     });
   }
 
   /**
+   * Gets a configured identity attribute value for a User.
+   */
+  getAttributeValue(user: UserDirectoryEntry, attributeKey: string): string {
+    return (
+      user.identityAttributes?.find(
+        (attribute) => attribute.key === attributeKey,
+      )?.value ?? ''
+    );
+  }
+
+  private configureAttributeColumns(attributes: UserIdentityAttribute[]): void {
+    this.attributeColumns = attributes
+      .filter((attribute) => attribute.key && attribute.name)
+      .map((attribute, index) => ({
+        columnId: `identityAttribute-${index}`,
+        key: attribute.key,
+        name: attribute.name,
+      }));
+
+    this.displayedColumns = [
+      'id',
+      'name',
+      ...this.attributeColumns.map((column) => column.columnId),
+      'role',
+    ];
+  }
+
+  private getColumnValue(user: UserDirectoryEntry, columnId: string): string {
+    const attributeColumn = this.attributeColumns.find(
+      (column) => column.columnId === columnId,
+    );
+
+    if (attributeColumn) {
+      return this.getAttributeValue(user, attributeColumn.key);
+    }
+
+    if (columnId === 'id') {
+      return user.id ?? '';
+    }
+
+    if (columnId === 'name') {
+      return user.name ?? '';
+    }
+
+    return '';
+  }
+
+  /**
    * Deletes a user after confirmation
    * @param user The user to delete
    */
-  deleteUser(user: User) {
+  deleteUser(user: UserDirectoryEntry) {
     this.confirmDialogService
       .confirm({
         title: 'Delete User?',
