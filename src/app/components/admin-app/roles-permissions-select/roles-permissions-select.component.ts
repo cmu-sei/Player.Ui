@@ -36,6 +36,7 @@ export enum ObjectType {
 export class RolesPermissionsSelectComponent implements OnInit {
   @Input() user: User;
   @Input() team: Team;
+  @Input() canEdit = true;
   // Other Teams in the View, used to scope this Team's permissions onto them.
   @Input() allTeams: Team[] = [];
 

@@ -44,11 +44,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <ng-container matColumnDef="role">
       <th mat-header-cell *matHeaderCellDef>Role</th>
       <td mat-cell *matCellDef="let element">
-        <app-roles-permissions-select [user]="element"></app-roles-permissions-select>
-        <button mat-icon-button (click)="deleteUser(element); $event.stopPropagation()"
-          title="Delete User">
-          <mat-icon class="mdi-24px" fontIcon="mdi-trash-can-outline"></mat-icon>
-        </button>
+        <app-roles-permissions-select
+          [user]="element"
+          [canEdit]="canEdit$ | async"
+        ></app-roles-permissions-select>
+        @if (canEdit$ | async) {
+          <button
+            mat-icon-button
+            (click)="deleteUser(element); $event.stopPropagation()"
+            title="Delete User"
+          >
+            <mat-icon
+              class="mdi-24px"
+              fontIcon="mdi-trash-can-outline"
+            ></mat-icon>
+          </button>
+        }
       </td>
     </ng-container>
 

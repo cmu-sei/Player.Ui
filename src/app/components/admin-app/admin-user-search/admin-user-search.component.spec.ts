@@ -3,12 +3,18 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { Component, input } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
 import { AdminUserSearchComponent } from './admin-user-search.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { User, UserService } from '../../../generated/player-api';
+import {
+  SystemPermission,
+  User,
+  UserService,
+} from '../../../generated/player-api';
 import { RolesService } from '../../../services/roles/roles.service';
+import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
@@ -29,12 +35,14 @@ const mockUsers: User[] = [
 @Component({ selector: 'app-roles-permissions-select', template: '' })
 class RolesPermissionsSelectStubComponent {
   readonly user = input<User>();
+  readonly canEdit = input<boolean>();
 }
 
 async function renderAdminUserSearch(
-  overrides: { confirmResult?: boolean } = {},
+  overrides: { confirmResult?: boolean; permissions?: string[] } = {},
 ) {
   const { confirmResult = false } = overrides;
+  const { permissions = [] } = overrides;
 
   const stubs = {
     getUsers: vi.fn(() => of(mockUsers)),
@@ -68,6 +76,14 @@ async function renderAdminUserSearch(
       {
         provide: RolesService,
         useValue: { getRoles: stubs.getRoles },
+      },
+      {
+        provide: UserPermissionsService,
+        useValue: {
+          hasPermission: vi.fn((permission: string) =>
+            of(permissions.includes(permission)),
+          ),
+        },
       },
       {
         provide: CrucibleDialogService,
@@ -114,12 +130,58 @@ describe('AdminUserSearchComponent', () => {
   /**
    * Verifies: a per-row Delete User control is rendered for users.
    * Interacts with: the rendered DOM (queried by title).
-   * Data: mockUsers.
+   * Data: mockUsers and ManageUsers permission.
    */
   it('should show delete button for users', async () => {
-    await renderAdminUserSearch();
+    await renderAdminUserSearch({
+      permissions: [SystemPermission.ManageUsers],
+    });
     const deleteButtons = screen.getAllByTitle('Delete User');
     expect(deleteButtons.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Verifies: users without ManageUsers cannot see per-row delete controls.
+   * Interacts with: the UserPermissionsService stub and rendered DOM.
+   * Data: ViewUsers without ManageUsers.
+   */
+  it('should hide delete buttons without ManageUsers permission', async () => {
+    await renderAdminUserSearch({
+      permissions: [SystemPermission.ViewUsers],
+    });
+    expect(screen.queryByTitle('Delete User')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Verifies: users without ManageUsers receive a read-only role selector.
+   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Data: ViewUsers without ManageUsers.
+   */
+  it('disables role selectors without ManageUsers permission', async () => {
+    const { fixture } = await renderAdminUserSearch({
+      permissions: [SystemPermission.ViewUsers],
+    });
+    const selector = fixture.debugElement.query(
+      By.directive(RolesPermissionsSelectStubComponent),
+    ).componentInstance as RolesPermissionsSelectStubComponent;
+
+    expect(selector.canEdit()).toBe(false);
+  });
+
+  /**
+   * Verifies: users with ManageUsers retain role-editing access.
+   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Data: ViewUsers and ManageUsers.
+   */
+  it('enables role selectors with ManageUsers permission', async () => {
+    const { fixture } = await renderAdminUserSearch({
+      permissions: [SystemPermission.ViewUsers, SystemPermission.ManageUsers],
+    });
+    const selector = fixture.debugElement.query(
+      By.directive(RolesPermissionsSelectStubComponent),
+    ).componentInstance as RolesPermissionsSelectStubComponent;
+
+    expect(selector.canEdit()).toBe(true);
   });
 
   /**
