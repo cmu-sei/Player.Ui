@@ -78,17 +78,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <td mat-cell *matCellDef="let element">
         <app-roles-permissions-select
           [user]="element"
+          [canEdit]="canEdit$ | async"
         ></app-roles-permissions-select>
-        <button
-          mat-icon-button
-          (click)="deleteUser(element); $event.stopPropagation()"
-          title="Delete User"
-        >
-          <mat-icon
-            class="mdi-24px"
-            fontIcon="mdi-trash-can-outline"
-          ></mat-icon>
-        </button>
+        @if (canEdit$ | async) {
+          <button
+            mat-icon-button
+            (click)="deleteUser(element); $event.stopPropagation()"
+            title="Delete User"
+          >
+            <mat-icon
+              class="mdi-24px"
+              fontIcon="mdi-trash-can-outline"
+            ></mat-icon>
+          </button>
+        }
       </td>
     </ng-container>
 

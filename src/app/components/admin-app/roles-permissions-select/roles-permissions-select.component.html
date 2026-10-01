@@ -20,6 +20,7 @@ to use this component, add one of the following lines to the html of your edit p
     <mat-label>Role</mat-label>
     <mat-select
       [value]="subject.roleId ?? ''"
+      [disabled]="!canEdit"
       name="userRole"
       (selectionChange)="updateRole($event.value)"
     >

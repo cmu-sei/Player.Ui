@@ -257,6 +257,28 @@ describe('NotificationService', () => {
       service.sendNotification('v1', 'hello');
       expect(view.invoke).toHaveBeenCalledWith('Post', 'v1', 'hello');
     });
+
+    /**
+     * Verifies: a rejected 'Post' is caught and logged rather than left as an unhandled rejection
+     * Interacts with: FakeHubConnection.invoke spy (made to reject); the console.log spy from beforeEach
+     * Data: a rejection standing in for the hub refusing the post; flush() lets the rejection reach the handler
+     * Why: the API now refuses a post from a caller without ManageView, so the invoke can reject; the logged
+     *      message is the only observable trace of the catch, so asserting it is what makes this test fail
+     *      if the catch is dropped
+     */
+    it('catches a rejected "Post" instead of leaving it unhandled', async () => {
+      const service = createService();
+      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      const [view] = connections;
+      view.invoke.mockRejectedValueOnce(new Error('Forbidden'));
+
+      service.sendNotification('v1', 'hello');
+      await flush();
+
+      expect(vi.mocked(console.log)).toHaveBeenCalledWith(
+        'Error while sending Notification',
+      );
+    });
   });
 
   describe('joinPresence()', () => {

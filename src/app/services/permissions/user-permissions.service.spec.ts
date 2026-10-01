@@ -377,11 +377,11 @@ describe('UserPermissionsService', () => {
     /**
      * Verifies: can() falls back to a matching team permission to return true when the system permission is absent.
      * Interacts with: getMyPermissions + getMyTeamPermissions (stubs), load + loadTeamPermissions + can.
-     * Data: empty myPermissions; team-1 claim with EditTeam; can(ManageViews, undefined, EditTeam).
+     * Data: empty myPermissions; team-1 claim with ManageTeam; can(ManageViews, undefined, ManageTeam).
      */
     it('should return true when system permission absent but teamPermission is present', async () => {
       const teamPerms: TeamPermissionsClaim[] = [
-        { teamId: 'team-1', permissionValues: [TeamPermission.EditTeam] },
+        { teamId: 'team-1', permissionValues: [TeamPermission.ManageTeam] },
       ];
       const service = createService({
         myPermissions: [],
@@ -393,7 +393,7 @@ describe('UserPermissionsService', () => {
         service.can(
           SystemPermission.ManageViews,
           undefined,
-          TeamPermission.EditTeam,
+          TeamPermission.ManageTeam,
         ),
       );
       expect(result).toBe(true);
@@ -428,7 +428,7 @@ describe('UserPermissionsService', () => {
     /**
      * Verifies: can() returns false when none of the system, team, or view permissions are present.
      * Interacts with: getMyPermissions + getMyTeamPermissions (empty stubs), load + loadTeamPermissions + can.
-     * Data: empty permissions and claims; can(ManageViews, undefined, ManageTeam, EditView).
+     * Data: empty permissions and claims; can(ManageViews, undefined, ManageTeam, ManageView).
      */
     it('should return false when nothing is present', async () => {
       const service = createService({
@@ -442,7 +442,7 @@ describe('UserPermissionsService', () => {
           SystemPermission.ManageViews,
           undefined,
           TeamPermission.ManageTeam,
-          ViewPermission.EditView,
+          ViewPermission.ManageView,
         ),
       );
       expect(result).toBe(false);

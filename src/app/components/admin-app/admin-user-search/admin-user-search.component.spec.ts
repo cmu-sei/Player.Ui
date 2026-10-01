@@ -2,6 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, input } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
@@ -16,7 +17,12 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { UserDirectoryEntry, UserService } from '../../../generated/player-api';
+import {
+  SystemPermission,
+  UserDirectoryEntry,
+  UserService,
+} from '../../../generated/player-api';
+import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { RolesService } from '../../../services/roles/roles.service';
 import { renderComponent } from '../../../test-utils/render-component';
 import { AdminUserSearchComponent } from './admin-user-search.component';
@@ -47,15 +53,21 @@ const mockUsers: UserDirectoryEntry[] = [
 @Component({ selector: 'app-roles-permissions-select', template: '' })
 class RolesPermissionsSelectStubComponent {
   readonly user = input<UserDirectoryEntry>();
+  readonly canEdit = input<boolean>();
 }
 
 async function renderAdminUserSearch(
   overrides: {
     confirmResult?: boolean;
+    permissions?: string[];
     result?: UserDirectoryEntry[];
   } = {},
 ) {
-  const { confirmResult = false, result = mockUsers } = overrides;
+  const {
+    confirmResult = false,
+    permissions = [],
+    result = mockUsers,
+  } = overrides;
 
   const stubs = {
     getUsers: vi.fn(() => of(result)),
@@ -94,6 +106,14 @@ async function renderAdminUserSearch(
         useValue: { getRoles: stubs.getRoles },
       },
       {
+        provide: UserPermissionsService,
+        useValue: {
+          hasPermission: vi.fn((permission: string) =>
+            of(permissions.includes(permission)),
+          ),
+        },
+      },
+      {
         provide: CrucibleDialogService,
         useValue: { confirm: stubs.confirm },
       },
@@ -123,12 +143,68 @@ describe('AdminUserSearchComponent', () => {
     expect(screen.getByText('Location')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: a per-row Delete User control is rendered for users.
+   * Interacts with: the rendered DOM (queried by title).
+   * Data: mockUsers and ManageUsers permission.
+   */
   it('should show delete button for users', async () => {
-    await renderAdminUserSearch();
+    await renderAdminUserSearch({
+      permissions: [SystemPermission.ManageUsers],
+    });
     const deleteButtons = screen.getAllByTitle('Delete User');
     expect(deleteButtons.length).toBeGreaterThan(0);
   });
 
+  /**
+   * Verifies: users without ManageUsers cannot see per-row delete controls.
+   * Interacts with: the UserPermissionsService stub and rendered DOM.
+   * Data: ViewUsers without ManageUsers.
+   */
+  it('should hide delete buttons without ManageUsers permission', async () => {
+    await renderAdminUserSearch({
+      permissions: [SystemPermission.ViewUsers],
+    });
+    expect(screen.queryByTitle('Delete User')).not.toBeInTheDocument();
+  });
+
+  /**
+   * Verifies: users without ManageUsers receive a read-only role selector.
+   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Data: ViewUsers without ManageUsers.
+   */
+  it('disables role selectors without ManageUsers permission', async () => {
+    const { fixture } = await renderAdminUserSearch({
+      permissions: [SystemPermission.ViewUsers],
+    });
+    const selector = fixture.debugElement.query(
+      By.directive(RolesPermissionsSelectStubComponent),
+    ).componentInstance as RolesPermissionsSelectStubComponent;
+
+    expect(selector.canEdit()).toBe(false);
+  });
+
+  /**
+   * Verifies: users with ManageUsers retain role-editing access.
+   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Data: ViewUsers and ManageUsers.
+   */
+  it('enables role selectors with ManageUsers permission', async () => {
+    const { fixture } = await renderAdminUserSearch({
+      permissions: [SystemPermission.ViewUsers, SystemPermission.ManageUsers],
+    });
+    const selector = fixture.debugElement.query(
+      By.directive(RolesPermissionsSelectStubComponent),
+    ).componentInstance as RolesPermissionsSelectStubComponent;
+
+    expect(selector.canEdit()).toBe(true);
+  });
+
+  /**
+   * Verifies: ngOnInit fetches users and roles, fills the datasource, and clears isLoading.
+   * Interacts with: stubbed UserService.getUsers and RolesService.getRoles.
+   * Data: mockUsers.
+   */
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     expect(stubs.getUsers).toHaveBeenCalled();

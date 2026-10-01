@@ -40,8 +40,8 @@ const mockTeamPermissions = [
   },
   {
     id: 'tp-2',
-    name: 'EditTeam',
-    description: 'Can edit team',
+    name: 'ManageTeam',
+    description: 'Can manage team',
     immutable: false,
   },
 ];
@@ -292,7 +292,7 @@ describe('TeamRolesComponent', () => {
     it('adds a permission when checked and not already present', async () => {
       const { fixture, stubs } = await renderTeamRoles();
       const role: TeamRole = { id: 'trole-1', permissions: [] };
-      const perm: TeamPermissionModel = { id: 'tp-2', name: 'EditTeam' };
+      const perm: TeamPermissionModel = { id: 'tp-2', name: 'ManageTeam' };
       fixture.componentInstance.setPermission(
         perm,
         role,
@@ -309,7 +309,7 @@ describe('TeamRolesComponent', () => {
     it('removes a permission when unchecked', async () => {
       const { fixture, stubs } = await renderTeamRoles();
       const role: TeamRole = { id: 'trole-1', permissions: [{ id: 'tp-2' }] };
-      const perm: TeamPermissionModel = { id: 'tp-2', name: 'EditTeam' };
+      const perm: TeamPermissionModel = { id: 'tp-2', name: 'ManageTeam' };
       fixture.componentInstance.setPermission(
         perm,
         role,
@@ -323,32 +323,32 @@ describe('TeamRolesComponent', () => {
     /**
      * Verifies: each rendered checkbox reports the team role's current state.
      * Interacts with: the rendered matrix through MatCheckboxHarness.
-     * Data: renderTeamRoles(true); rows are All (allPermissions false), ViewTeam (held), EditTeam (not held).
+     * Data: renderTeamRoles(true); rows are All (allPermissions false), ViewTeam (held), ManageTeam (not held).
      * Why: pins the [checked]="hasPermission(permission, role)" binding — the calls-only tests below pass
      *   with that binding dropped.
      */
     it('reflects the team role state in the rendered checkboxes', async () => {
       const { fixture } = await renderTeamRoles(true);
-      const [all, viewTeam, editTeam] = await matrixCheckboxes(fixture);
+      const [all, viewTeam, manageTeam] = await matrixCheckboxes(fixture);
       expect(await all.isChecked()).toBe(false);
       expect(await viewTeam.isChecked()).toBe(true);
-      expect(await editTeam.isChecked()).toBe(false);
+      expect(await manageTeam.isChecked()).toBe(false);
     });
 
     /**
      * Verifies: checking a permission the team role lacks adds it to that role.
-     * Interacts with: the EditTeam checkbox via MatCheckboxHarness; stubbed TeamRolesService.addPermission.
+     * Interacts with: the ManageTeam checkbox via MatCheckboxHarness; stubbed TeamRolesService.addPermission.
      * Data: renderTeamRoles(true); mockTeamRoles holds tp-1 only, so tp-2 is the unheld row.
      * Why: drives the (change)="setPermission(permission, role, $event)" binding rather than calling the
      *   method directly — deleting that binding leaves every method-level test green.
      */
     it('checking a permission the role lacks calls addPermission', async () => {
       const { fixture, stubs } = await renderTeamRoles(true);
-      const [, , editTeam] = await matrixCheckboxes(fixture);
-      await editTeam.check();
+      const [, , manageTeam] = await matrixCheckboxes(fixture);
+      await manageTeam.check();
       expect(stubs.addPermission).toHaveBeenCalledWith(
         'trole-1',
-        expect.objectContaining({ id: 'tp-2', name: 'EditTeam' }),
+        expect.objectContaining({ id: 'tp-2', name: 'ManageTeam' }),
       );
       expect(stubs.removePermission).not.toHaveBeenCalled();
     });

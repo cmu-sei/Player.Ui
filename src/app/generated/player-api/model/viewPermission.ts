@@ -16,7 +16,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 export const ViewPermission = {
     ViewView: 'ViewView',
-    EditView: 'EditView',
     ManageView: 'ManageView'
 } as const;
 export type ViewPermission = typeof ViewPermission[keyof typeof ViewPermission];

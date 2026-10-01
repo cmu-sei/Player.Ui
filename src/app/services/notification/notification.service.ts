@@ -153,7 +153,9 @@ export class NotificationService {
   sendNotification(guid: string, msg: string) {
     console.log('Sending Notification  ' + msg);
 
-    this.viewConnection.invoke('Post', guid, msg);
+    this.viewConnection.invoke('Post', guid, msg).catch(() => {
+      console.log('Error while sending Notification');
+    });
   }
 
   validateNotificationData(data: NotificationData): NotificationData {

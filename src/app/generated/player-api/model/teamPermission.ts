@@ -16,7 +16,6 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 export const TeamPermission = {
     ViewTeam: 'ViewTeam',
-    EditTeam: 'EditTeam',
     ManageTeam: 'ManageTeam'
 } as const;
 export type TeamPermission = typeof TeamPermission[keyof typeof TeamPermission];
