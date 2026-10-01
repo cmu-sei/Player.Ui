@@ -124,17 +124,32 @@ async function renderAdminUserSearch(
 }
 
 describe('AdminUserSearchComponent', () => {
+  /**
+   * Verifies: the search input is rendered.
+   * Interacts with: the rendered DOM (queried by placeholder).
+   * Data: default overrides.
+   */
   it('should show search input', async () => {
     await renderAdminUserSearch();
     expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: each loaded user renders as a table row.
+   * Interacts with: the rendered DOM driven by the getUsers stub.
+   * Data: mockUsers (Alice Smith, Bob Jones).
+   */
   it('should display users table', async () => {
     await renderAdminUserSearch();
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
     expect(screen.getByText('Bob Jones')).toBeInTheDocument();
   });
 
+  /**
+   * Verifies: the "Name" header and a header for each configured identity attribute are rendered.
+   * Interacts with: the rendered DOM (queried via Testing Library screen).
+   * Data: mockUsers identity attributes (Department, Organization, Location).
+   */
   it('should show static and configured column headers', async () => {
     await renderAdminUserSearch();
     expect(screen.getByText('Name')).toBeInTheDocument();
@@ -213,6 +228,11 @@ describe('AdminUserSearchComponent', () => {
     expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
   });
 
+  /**
+   * Verifies: applyFilter lowercases the value (without trimming) and applies it to the datasource filter.
+   * Interacts with: component.applyFilter and the MatTableDataSource filter.
+   * Data: padded mixed-case input '  ALICE  '.
+   */
   it('applyFilter lowercases the value and sets the datasource filter', async () => {
     const { fixture } = await renderAdminUserSearch();
     const component = fixture.componentInstance;
@@ -221,6 +241,11 @@ describe('AdminUserSearchComponent', () => {
     expect(component.userDataSource.filter).toBe('  alice  ');
   });
 
+  /**
+   * Verifies: refreshUsers re-fetches users into the datasource and clears isLoading.
+   * Interacts with: stubbed UserService.getUsers (re-stubbed for this call).
+   * Data: getUsers returns a fresh single-user list ('New') on the next call.
+   */
   it('refreshUsers reloads the user list into the datasource', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     const component = fixture.componentInstance;
@@ -238,6 +263,11 @@ describe('AdminUserSearchComponent', () => {
   });
 
   describe('identity attribute columns', () => {
+    /**
+     * Verifies: identity attributes become columns, in response order, between the name and role columns.
+     * Interacts with: component.attributeColumns and component.displayedColumns.
+     * Data: mockUsers identity attributes (Department, Organization, Location).
+     */
     it('creates ordered columns from configured identity attributes', async () => {
       const { fixture } = await renderAdminUserSearch();
       const component = fixture.componentInstance;
@@ -257,6 +287,11 @@ describe('AdminUserSearchComponent', () => {
       ]);
     });
 
+    /**
+     * Verifies: getAttributeValue returns the user's value for a key, or '' when the key is missing.
+     * Interacts with: component.getAttributeValue.
+     * Data: mockUsers[0] (Alice Smith) with keys 'department', 'location' and 'missing'.
+     */
     it('returns the configured value for each user', async () => {
       const { fixture } = await renderAdminUserSearch();
       const component = fixture.componentInstance;
@@ -270,6 +305,11 @@ describe('AdminUserSearchComponent', () => {
       expect(component.getAttributeValue(mockUsers[0], 'missing')).toBe('');
     });
 
+    /**
+     * Verifies: the datasource filter matches identity attribute values.
+     * Interacts with: component.applyFilter and the MatTableDataSource filterPredicate.
+     * Data: filter 'logistics', matching Alice Smith's Department.
+     */
     it('filters users by identity attribute values', async () => {
       const { fixture } = await renderAdminUserSearch();
       const component = fixture.componentInstance;
@@ -279,6 +319,11 @@ describe('AdminUserSearchComponent', () => {
       expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
     });
 
+    /**
+     * Verifies: the datasource filter matches the role name.
+     * Interacts with: component.applyFilter and the MatTableDataSource filterPredicate.
+     * Data: filter 'administrator', matching Alice Smith's roleName.
+     */
     it('filters users by role name', async () => {
       const { fixture } = await renderAdminUserSearch();
       const component = fixture.componentInstance;
@@ -288,6 +333,11 @@ describe('AdminUserSearchComponent', () => {
       expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
     });
 
+    /**
+     * Verifies: the sorting accessor returns the identity attribute value for a dynamic column.
+     * Interacts with: the MatTableDataSource sortingDataAccessor.
+     * Data: mockUsers[1] (Bob Jones) and the Organization column.
+     */
     it('sorts dynamic columns by their identity attribute values', async () => {
       const { fixture } = await renderAdminUserSearch();
       const component = fixture.componentInstance;
@@ -304,6 +354,11 @@ describe('AdminUserSearchComponent', () => {
       ).toBe('Example Two');
     });
 
+    /**
+     * Verifies: with no users, no attribute columns are added and only the static columns display.
+     * Interacts with: stubbed UserService.getUsers, component.attributeColumns and displayedColumns.
+     * Data: getUsers returns an empty list (result=[]).
+     */
     it('keeps only static columns when no users are returned', async () => {
       const { fixture } = await renderAdminUserSearch({
         result: [],
@@ -317,6 +372,11 @@ describe('AdminUserSearchComponent', () => {
   });
 
   describe('deleteUser()', () => {
+    /**
+     * Verifies: a confirmed prompt deletes the user by id and triggers a refresh.
+     * Interacts with: stubbed DialogService.confirm, UserService.deleteUser and getUsers.
+     * Data: confirmResult=true; deleting mockUsers[0] (Alice Smith).
+     */
     it('deletes and refreshes when the user confirms', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
@@ -334,6 +394,11 @@ describe('AdminUserSearchComponent', () => {
       expect(stubs.getUsers).toHaveBeenCalled();
     });
 
+    /**
+     * Verifies: the confirm message uses the user id when the user has no name.
+     * Interacts with: stubbed DialogService.confirm (message argument inspected).
+     * Data: a nameless user { id: 'user-3' }; confirmResult=true.
+     */
     it('falls back to the user id in the prompt when name is missing', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: true,
@@ -347,6 +412,11 @@ describe('AdminUserSearchComponent', () => {
       );
     });
 
+    /**
+     * Verifies: a declined prompt leaves deleteUser untouched.
+     * Interacts with: stubbed DialogService.confirm and UserService.deleteUser.
+     * Data: confirmResult=false.
+     */
     it('does nothing when the user cancels', async () => {
       const { fixture, stubs } = await renderAdminUserSearch({
         confirmResult: false,
