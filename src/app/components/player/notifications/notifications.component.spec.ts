@@ -3,14 +3,19 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { Title } from '@angular/platform-browser';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { BehaviorSubject, of } from 'rxjs';
 import {
   ComnSettingsService,
   CrucibleDialogService,
 } from '@cmusei/crucible-common';
 import { NotificationService } from '../../../services/notification/notification.service';
 import { ViewService } from '../../../generated/player-api/api/view.service';
-import { NotificationDataStatus } from '../../../models/notification-data';
+import {
+  NotificationData,
+  NotificationDataStatus,
+} from '../../../models/notification-data';
 import { NotificationsComponent } from './notifications.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -20,6 +25,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 function makeNotification(
   overrides: Partial<NotificationDataStatus> = {},
@@ -46,15 +53,19 @@ async function renderNotifications(
 
   const canSendMessage = new BehaviorSubject<boolean>(viewAdmin);
   const notificationHistory = new BehaviorSubject<NotificationDataStatus[]>([]);
-  const viewNotification = new Subject<Partial<NotificationDataStatus>>();
-  const deleteNotification = new Subject<string>();
+  // Seeded like the real NotificationService: an empty notification and an
+  // empty key, both of which the component ignores.
+  const viewNotification = new BehaviorSubject<NotificationData>(
+    {} as NotificationData,
+  );
+  const deleteNotification = new BehaviorSubject<string>('');
   const connectToNotificationServer = vi.fn();
   const sendNotification = vi.fn();
 
   const setTitle = vi.fn();
-  const confirmDialog = vi.fn(() => ({
-    afterClosed: () => of(confirm),
-  }));
+  const confirmDialog = vi.fn(
+    () => dialogRefStub<unknown, boolean>(confirm).dialogRef,
+  );
 
   const deleteViewNotification = vi.fn(() => of(undefined));
   const deleteViewNotifications = vi.fn(() => of(undefined));
@@ -87,7 +98,15 @@ async function renderNotifications(
           deleteNotification,
           connectToNotificationServer,
           sendNotification,
-        },
+        } satisfies Pick<
+          NotificationService,
+          | 'canSendMessage'
+          | 'notificationHistory'
+          | 'viewNotification'
+          | 'deleteNotification'
+          | 'connectToNotificationServer'
+          | 'sendNotification'
+        >,
       },
       {
         provide: ComnSettingsService,
@@ -104,16 +123,22 @@ async function renderNotifications(
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: confirmDialog },
+        useValue: { confirm: confirmDialog } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
       },
       {
         provide: ViewService,
         useValue: {
           deleteNotification: deleteViewNotification,
           deleteViewNotifications,
-        },
+        } satisfies ApiStub<ViewService>,
       },
-      { provide: Title, useValue: { setTitle } },
+      {
+        provide: Title,
+        useValue: { setTitle } satisfies Pick<Title, 'setTitle'>,
+      },
     ],
   });
 
@@ -203,7 +228,8 @@ describe('NotificationsComponent', () => {
   /**
    * Verifies: a SignalR deleteNotification with a key removes only the matching entry.
    * Interacts with: NotificationService.deleteNotification subject, notificationsHistory.
-   * Data: seed keys 1 and 2, emit '1'; expects [2] remaining.
+   * Data: seed keys 1 and 2, emit the int key 1 as the API sends it
+   *   (player.api Features/Views/Requests/DeleteNotification.cs:61); expects [2] remaining.
    */
   it('deleteNotification SignalR by key removes that entry', async () => {
     const { fixture, notificationHistory, deleteNotification } =
@@ -212,26 +238,31 @@ describe('NotificationsComponent', () => {
       makeNotification({ key: 1 }),
       makeNotification({ key: 2 }),
     ]);
-    deleteNotification.next('1');
+    // NotificationService.deleteNotification is typed string, but the hub
+    // forwards the API's int key unchanged; the component compares with +key.
+    deleteNotification.next(1 as unknown as string);
     expect(
       fixture.componentInstance.notificationsHistory.map((n) => n.key),
     ).toEqual([2]);
   });
 
   /**
-   * Verifies: setNewNotificationCount updates the browser title and pluralizes Alert/Alerts by count.
+   * Verifies: setNewNotificationCount sets the browser title, with no suffix at 0 and Alert/Alerts by count.
    * Interacts with: Title.setTitle spy, component setNewNotificationCount.
-   * Data: counts 0 (no suffix), 1 (singular), 3 (plural) against AppTitle 'Player'.
+   * Data: one row per count against AppTitle 'Player'.
    */
-  it('setNewNotificationCount updates the browser title', async () => {
-    const { fixture, setTitle } = await renderNotifications();
-    fixture.componentInstance.setNewNotificationCount(0);
-    expect(setTitle).toHaveBeenLastCalledWith('Player');
-    fixture.componentInstance.setNewNotificationCount(1);
-    expect(setTitle).toHaveBeenLastCalledWith('Player (1 Alert)');
-    fixture.componentInstance.setNewNotificationCount(3);
-    expect(setTitle).toHaveBeenLastCalledWith('Player (3 Alerts)');
-  });
+  it.each([
+    [0, 'Player'],
+    [1, 'Player (1 Alert)'],
+    [3, 'Player (3 Alerts)'],
+  ])(
+    'setNewNotificationCount(%i) sets the title to "%s"',
+    async (count, title) => {
+      const { fixture, setTitle } = await renderNotifications();
+      fixture.componentInstance.setNewNotificationCount(count);
+      expect(setTitle).toHaveBeenLastCalledWith(title);
+    },
+  );
 
   /**
    * Verifies: closing the panel hides it, marks every notification seen, and resets the count to zero.
@@ -274,62 +305,101 @@ describe('NotificationsComponent', () => {
     expect(fixture.componentInstance.notificationDisplayClass()).toBe('');
   });
 
-  /**
-   * Verifies: sendMessage sends only after dialog confirm, truncates to 225 chars, and clears the input.
-   * Interacts with: DialogService.confirm stub, NotificationService.sendNotification spy.
-   * Data: confirm true; messageToSend of 250 'x' chars; expects sent 225 chars and cleared field.
-   */
-  it('sendMessage only sends after confirm and trims long messages', async () => {
-    const { fixture, sendNotification } = await renderNotifications({
-      confirm: true,
-    });
-    fixture.componentInstance.messageToSend = 'x'.repeat(250);
-    fixture.componentInstance.sendMessage();
-    expect(sendNotification).toHaveBeenCalledWith('v1', 'x'.repeat(225));
-    expect(fixture.componentInstance.messageToSend).toBe('');
-  });
+  describe('admin actions in the open panel', () => {
+    /**
+     * Renders, seeds the history through the NotificationService stream, and
+     * opens the panel by clicking its header, as the user does.
+     */
+    async function renderOpenPanel(
+      overrides: { viewAdmin: boolean; confirm?: boolean },
+      history: NotificationDataStatus[] = [],
+    ) {
+      const rendered = await renderNotifications(overrides);
+      rendered.notificationHistory.next(history);
+      rendered.fixture.detectChanges();
+      const user = userEvent.setup();
+      await user.click(screen.getByText('Notifications'));
+      return { ...rendered, user };
+    }
 
-  /**
-   * Verifies: sendMessage does nothing when the message is only whitespace.
-   * Interacts with: NotificationService.sendNotification spy.
-   * Data: messageToSend '   '.
-   */
-  it('sendMessage is a no-op on empty input', async () => {
-    const { fixture, sendNotification } = await renderNotifications();
-    fixture.componentInstance.messageToSend = '   ';
-    fixture.componentInstance.sendMessage();
-    expect(sendNotification).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: deleting a single notification calls ViewService.deleteNotification with the view id and key after confirm.
-   * Interacts with: DialogService.confirm stub, ViewService.deleteNotification spy.
-   * Data: confirm true; seeded notification key 7; expects call ('v1', 7).
-   */
-  it('deleteNotification(n) calls ViewService.deleteNotification after confirm', async () => {
-    const { fixture, deleteViewNotification } = await renderNotifications({
-      confirm: true,
+    /**
+     * Verifies: sending from the form asks for confirmation, sends at most 225 characters, and clears the input.
+     * Interacts with: the rendered message input and Send button; CrucibleDialogService.confirm stub;
+     *   NotificationService.sendNotification spy.
+     * Data: viewAdmin true; confirm true; 250 'x' characters pasted into the message box.
+     */
+    it('sends a confirmed message trimmed to 225 characters', async () => {
+      const { fixture, user, sendNotification, confirmDialog } =
+        await renderOpenPanel({ viewAdmin: true, confirm: true });
+      await user.click(screen.getByPlaceholderText(/send system wide/i));
+      await user.paste('x'.repeat(250));
+      await user.click(screen.getByRole('button', { name: 'Send' }));
+      expect(confirmDialog).toHaveBeenCalled();
+      expect(sendNotification).toHaveBeenCalledWith('v1', 'x'.repeat(225));
+      expect(fixture.componentInstance.messageToSend).toBe('');
     });
-    fixture.componentInstance.notificationsHistory = [
-      makeNotification({ key: 7 }),
-    ];
-    fixture.componentInstance.deleteNotification(makeNotification({ key: 7 }));
-    expect(deleteViewNotification).toHaveBeenCalledWith('v1', 7);
-  });
 
-  /**
-   * Verifies: deleting all notifications calls ViewService.deleteViewNotifications and empties local history after confirm.
-   * Interacts with: DialogService.confirm stub, ViewService.deleteViewNotifications spy.
-   * Data: confirm true; seeded one notification; expects call ('v1') and cleared history.
-   */
-  it('deleteViewNotifications clears history after confirm', async () => {
-    const { fixture, deleteViewNotifications } = await renderNotifications({
-      confirm: true,
+    /**
+     * Verifies: sending a whitespace-only message from the form does nothing.
+     * Interacts with: the rendered message input and Send button; NotificationService.sendNotification spy.
+     * Data: viewAdmin true; '   ' pasted into the message box.
+     */
+    it('does not send a whitespace-only message', async () => {
+      const { user, sendNotification } = await renderOpenPanel({
+        viewAdmin: true,
+      });
+      await user.click(screen.getByPlaceholderText(/send system wide/i));
+      await user.paste('   ');
+      await user.click(screen.getByRole('button', { name: 'Send' }));
+      expect(sendNotification).not.toHaveBeenCalled();
     });
-    fixture.componentInstance.notificationsHistory = [makeNotification()];
-    fixture.componentInstance.deleteViewNotifications();
-    expect(deleteViewNotifications).toHaveBeenCalledWith('v1');
-    expect(fixture.componentInstance.notificationsHistory).toEqual([]);
+
+    /**
+     * Verifies: a notification's trash icon deletes it through ViewService.deleteNotification after confirm.
+     * Interacts with: the rendered "Delete notification" icon; CrucibleDialogService.confirm stub;
+     *   ViewService.deleteNotification spy.
+     * Data: viewAdmin true; confirm true; history holds notification key 7.
+     */
+    it('deletes a notification from its trash icon after confirm', async () => {
+      const { user, deleteViewNotification } = await renderOpenPanel(
+        { viewAdmin: true, confirm: true },
+        [makeNotification({ key: 7 })],
+      );
+      await user.click(screen.getByTitle('Delete notification'));
+      expect(deleteViewNotification).toHaveBeenCalledWith('v1', 7);
+    });
+
+    /**
+     * Verifies: the Delete ALL icon clears the view's notifications after confirm and empties the list.
+     * Interacts with: the rendered "Delete ALL notifications" icon; CrucibleDialogService.confirm stub;
+     *   ViewService.deleteViewNotifications spy.
+     * Data: viewAdmin true; confirm true; history holds one notification ('hello').
+     */
+    it('clears the history from the Delete ALL icon after confirm', async () => {
+      const { user, deleteViewNotifications } = await renderOpenPanel(
+        { viewAdmin: true, confirm: true },
+        [makeNotification()],
+      );
+      await user.click(screen.getByTitle('Delete ALL notifications'));
+      expect(deleteViewNotifications).toHaveBeenCalledWith('v1');
+      expect(screen.queryByText('hello')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: a user without view admin sees the history but neither delete icon.
+     * Interacts with: the template's @if (hasViewAdmin) gates; NotificationService.canSendMessage.
+     * Data: viewAdmin false (canSendMessage false, what the hub sends a non-admin); history holds one notification.
+     */
+    it('shows no delete icons to a user without view admin', async () => {
+      await renderOpenPanel({ viewAdmin: false }, [makeNotification()]);
+      expect(screen.getByText('hello')).toBeInTheDocument();
+      expect(
+        screen.queryByTitle('Delete notification'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTitle('Delete ALL notifications'),
+      ).not.toBeInTheDocument();
+    });
   });
 
   /**

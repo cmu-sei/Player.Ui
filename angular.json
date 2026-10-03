@@ -16,7 +16,7 @@
             },
             "index": "src/index.html",
             "tsConfig": "src/tsconfig.app.json",
-            "polyfills": ["src/polyfills.ts"],
+            "polyfills": ["zone.js", "@angular/localize/init"],
             "allowedCommonJsDependencies": [
               "crypto-js/core.js",
               "crypto-js/enc-base64.js",
@@ -111,6 +111,7 @@
             "runnerConfig": "vitest.config.ts",
             "tsConfig": "tsconfig.spec.json",
             "setupFiles": ["src/test-setup.ts"],
+            "coverageInclude": ["src/app/**/*.ts"],
             "coverageExclude": [
               "**/generated/**",
               "**/*.spec.ts",
@@ -118,16 +119,13 @@
             ],
             "coverageReporters": ["text", "json", "html"],
             "coverageThresholds": {
-              "statements": 78,
-              "branches": 74,
-              "functions": 74,
-              "lines": 81
+              "statements": 91,
+              "branches": 83,
+              "functions": 90,
+              "lines": 91
             }
           },
           "configurations": {
-            "browser": {
-              "browsers": ["chromium"]
-            },
             "coverage": {
               "coverage": true
             }

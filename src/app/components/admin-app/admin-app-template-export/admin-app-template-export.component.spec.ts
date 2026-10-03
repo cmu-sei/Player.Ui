@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 function makeResponse(hasErrors: boolean): HttpResponse<Blob> {
   return new HttpResponse<Blob>({
@@ -63,7 +64,9 @@ async function renderExport(
     providers: [
       {
         provide: ApplicationService,
-        useValue: { exportApplicationTemplates },
+        useValue: {
+          exportApplicationTemplates,
+        } satisfies ApiStub<ApplicationService>,
       },
     ],
   });

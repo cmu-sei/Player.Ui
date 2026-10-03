@@ -21,6 +21,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { A11yModule } from '@angular/cdk/a11y';
 import { dialogRefStub } from '../../../../test-utils/dialog-refs';
+import { ApiStub } from '../../../../test-utils/api-stub';
 
 const existingSub: WebhookSubscription = {
   id: 's1',
@@ -72,7 +73,7 @@ async function renderEdit(
         useValue: {
           createWebhookSubscription,
           partialUpdateWebhookSubscription,
-        },
+        } satisfies ApiStub<WebhookService>,
       },
     ],
   });
@@ -201,5 +202,4 @@ describe('EditSubscriptionComponent', () => {
     });
     expect(close).toHaveBeenCalledWith(false);
   });
-
 });

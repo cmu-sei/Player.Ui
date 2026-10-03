@@ -7,6 +7,7 @@ import { of, throwError, firstValueFrom } from 'rxjs';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { XApiService as GeneratedXApiService } from '../../generated/player-api';
 import { XApiService } from './xapi.service';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function createService(
   overrides: {
@@ -24,7 +25,7 @@ function createService(
     applicationSwitched: vi.fn(result),
     teamSwitched: vi.fn(result),
     viewTerminated: vi.fn(result),
-  };
+  } satisfies ApiStub<GeneratedXApiService>;
 
   TestBed.configureTestingModule({
     providers: [
@@ -103,7 +104,9 @@ describe('XApiService', () => {
         providers: [
           {
             provide: GeneratedXApiService,
-            useValue: { viewViewed: vi.fn(() => of({})) },
+            useValue: {
+              viewViewed: vi.fn(() => of({})),
+            } satisfies ApiStub<GeneratedXApiService>,
           },
           { provide: ComnSettingsService, useValue: { settings: {} } },
           XApiService,

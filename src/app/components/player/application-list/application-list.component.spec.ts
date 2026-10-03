@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { SecurityContext } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -11,6 +11,7 @@ import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
+import { XApiService } from '../../../services/xapi/xapi.service';
 import { ApplicationListComponent } from './application-list.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
@@ -42,7 +43,9 @@ async function renderList(
 
   const getApplicationsByTeam = vi.fn(() => of(apps));
   const isAuth = vi.fn(() => Promise.resolve(isAuthenticated));
-  const focusedAppUrl = new BehaviorSubject<string>('about:blank');
+  const xapi = {
+    applicationSwitched: vi.fn(() => of(null)),
+  } satisfies Pick<XApiService, 'applicationSwitched'>;
 
   const rendered = await renderComponent(ApplicationListComponent, {
     imports: [MatListModule, MatButtonModule],
@@ -51,20 +54,25 @@ async function renderList(
     providers: [
       {
         provide: ApplicationsService,
-        useValue: { getApplicationsByTeam },
-      },
-      {
-        provide: FocusedAppService,
-        useValue: { focusedAppUrl },
+        // ApplicationsService holds no state and builds its own HttpClient
+        // request, so it is stubbed at its own boundary.
+        useValue: { getApplicationsByTeam } satisfies Pick<
+          ApplicationsService,
+          'getApplicationsByTeam'
+        >,
       },
       {
         provide: ComnAuthService,
-        useValue: { isAuthenticated: isAuth },
+        useValue: { isAuthenticated: isAuth } satisfies Pick<
+          ComnAuthService,
+          'isAuthenticated'
+        >,
       },
       {
         provide: ComnAuthQuery,
         useValue: { userTheme$: of(theme) },
       },
+      { provide: XApiService, useValue: xapi },
     ],
   });
 
@@ -72,7 +80,11 @@ async function renderList(
     ...rendered,
     getApplicationsByTeam,
     isAuth,
-    focusedAppUrl,
+    // The real FocusedAppService from the default providers.
+    focusedAppUrl:
+      rendered.fixture.debugElement.injector.get(FocusedAppService)
+        .focusedAppUrl,
+    applicationSwitched: xapi.applicationSwitched,
   };
 }
 
@@ -137,14 +149,16 @@ describe('ApplicationListComponent', () => {
   });
 
   /**
-   * Verifies: a plain click on an embeddable app is prevented and pushed into the focused-app URL stream.
-   * Interacts with: openApplication, MouseEvent.preventDefault spy, FocusedAppService.focusedAppUrl subject.
+   * Verifies: a plain click on an embeddable app is prevented, pushed into the focused-app URL stream
+   *   and recorded as an xAPI application switch.
+   * Interacts with: openApplication, MouseEvent.preventDefault spy, FocusedAppService.focusedAppUrl subject,
+   *   XApiService.applicationSwitched spy.
    * Data: default renderList(); a real non-ctrl MouseEvent and an app with a themedUrl.
    * Why: awaits fixture.whenStable() to flush the isAuthenticated() promise that openInFocusedApp awaits
    *       before the focusedAppUrl is updated.
    */
   it('openApplication intercepts non-ctrl clicks on embeddable apps', async () => {
-    const { fixture, focusedAppUrl } = await renderList();
+    const { fixture, focusedAppUrl, applicationSwitched } = await renderList();
     // Let the stream run so currentApp gets seeded.
     await firstValueFrom(fixture.componentInstance.applications$);
     const event = new MouseEvent('click', { ctrlKey: false });
@@ -156,6 +170,11 @@ describe('ApplicationListComponent', () => {
     // Flush the isAuthenticated() promise that openInFocusedApp awaits.
     await fixture.whenStable();
     expect(focusedAppUrl.value).toBe('https://a2.test/app');
+    expect(applicationSwitched).toHaveBeenCalledWith(
+      'v1',
+      'app-a2',
+      'https://a2.test/app',
+    );
   });
 
   /**

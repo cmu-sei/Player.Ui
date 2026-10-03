@@ -14,6 +14,7 @@ import {
   TeamRole,
   TeamRoleService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function role(overrides: Partial<TeamRole> = {}): TeamRole {
   return {
@@ -30,8 +31,8 @@ function perm(id: string): TeamPermissionModel {
 }
 
 function createService(
-  roleApi: Partial<Record<keyof TeamRoleService, unknown>> = {},
-  permApi: Partial<Record<keyof TeamPermissionService, unknown>> = {},
+  roleApi: ApiStub<TeamRoleService> = {},
+  permApi: ApiStub<TeamPermissionService> = {},
 ) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({

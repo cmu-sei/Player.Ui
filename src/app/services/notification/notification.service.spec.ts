@@ -8,50 +8,15 @@ import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
 import { NotificationService } from './notification.service';
 import { NotificationData } from '../../models/notification-data';
 import { ViewPresence } from '../../models/view-presence';
-import * as signalR from '@microsoft/signalr';
-
-const connections: FakeHubConnection[] = [];
-
-class FakeHubConnection {
-  handlers: Record<string, (data: unknown) => void> = {};
-  reconnectedCallbacks: Array<() => void> = [];
-  invokeResult: unknown = undefined;
-  invoke = vi.fn(() => Promise.resolve(this.invokeResult));
-  start = vi.fn(() => Promise.resolve());
-
-  on(event: string, cb: (data: unknown) => void) {
-    this.handlers[event] = cb;
-  }
-  onreconnected(cb: () => void) {
-    this.reconnectedCallbacks.push(cb);
-  }
-  // Test helper: simulate the hub pushing an event to this connection.
-  trigger(event: string, data: unknown) {
-    return this.handlers[event]?.(data);
-  }
-}
-
-function mockSignalRBuilder() {
-  vi.spyOn(signalR.HubConnectionBuilder.prototype, 'withUrl').mockReturnThis();
-  vi.spyOn(
-    signalR.HubConnectionBuilder.prototype,
-    'withAutomaticReconnect',
-  ).mockReturnThis();
-  vi.spyOn(
-    signalR.HubConnectionBuilder.prototype,
-    'withStatefulReconnect',
-  ).mockReturnThis();
-  vi.spyOn(signalR.HubConnectionBuilder.prototype, 'build').mockImplementation(
-    () => {
-      const connection = new FakeHubConnection();
-      connections.push(connection);
-      return connection as unknown as signalR.HubConnection;
-    },
-  );
-}
-
-// Flush pending microtasks so the start().then(...) chains run.
-const flush = () => new Promise((r) => setTimeout(r));
+import {
+  FakeHubConnection,
+  mockHubConnectionBuilder,
+  rejectInvokes,
+} from '../../test-utils/fake-hub-connection';
+import {
+  captureUnhandledRejections,
+  flush,
+} from '../../test-utils/unhandled-rx-errors';
 
 function createService(overrides: { token?: string } = {}) {
   const { token = 'auth-token' } = overrides;
@@ -66,7 +31,10 @@ function createService(overrides: { token?: string } = {}) {
       },
       {
         provide: ComnAuthService,
-        useValue: { getAuthorizationToken: () => token },
+        useValue: { getAuthorizationToken: () => token } satisfies Pick<
+          ComnAuthService,
+          'getAuthorizationToken'
+        >,
       },
       NotificationService,
     ],
@@ -89,9 +57,11 @@ function makeData(overrides: Partial<NotificationData> = {}): NotificationData {
 }
 
 describe('NotificationService', () => {
+  let connections: FakeHubConnection[];
+  let withUrl: ReturnType<typeof mockHubConnectionBuilder>['withUrl'];
+
   beforeEach(() => {
-    connections.length = 0;
-    mockSignalRBuilder();
+    ({ connections, withUrl } = mockHubConnectionBuilder());
     // The service logs connection lifecycle to the console; keep test output clean.
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
     TestBed.resetTestingModule();
@@ -99,15 +69,21 @@ describe('NotificationService', () => {
 
   describe('connectToNotificationServer()', () => {
     /**
-     * Verifies: connecting builds exactly three hub connections (view/team/user), starts each, and stores them on the service
-     * Interacts with: the mocked @microsoft/signalr HubConnectionBuilder producing FakeHubConnections; service.connectToNotificationServer
-     * Data: view/team/user/token identifiers ('v1','t1','u1','tok')
-     * Why: the signalr module is mocked so build() records FakeHubConnections in the shared connections array instead of opening real WebSockets
+     * Verifies: connecting builds exactly three hub connections (view/team/user) on the view, team and user hub URLs
+     *   with the bearer token, starts each, and stores them on the service
+     * Interacts with: mockHubConnectionBuilder (FakeHubConnections, withUrl spy); service.connectToNotificationServer
+     * Data: view/team/user/token identifiers ('v1','t1','u1','tok'); NotificationsSettings.url 'https://notify.test'
+     * Why: build() returns FakeHubConnections recorded in `connections` instead of opening real WebSockets
      */
     it('builds view, team, and user connections and starts each', async () => {
       const service = createService();
       service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
       expect(connections).toHaveLength(3);
+      expect(withUrl.mock.calls.map(([url]) => url)).toEqual([
+        'https://notify.test/view?bearer=tok',
+        'https://notify.test/team?bearer=tok',
+        'https://notify.test/user?bearer=tok',
+      ]);
       const [view, team, user] = connections;
       expect(view.start).toHaveBeenCalled();
       expect(team.start).toHaveBeenCalled();
@@ -161,21 +137,28 @@ describe('NotificationService', () => {
     });
 
     /**
-     * Verifies: a 'Delete' event forwards the deleted key to the deleteNotification stream
+     * Verifies: a 'Delete' event forwards the payload the API sends, unchanged, to the deleteNotification stream.
      * Interacts with: FakeHubConnection.trigger; service.deleteNotification
-     * Data: a deleted key string 'key-7'
+     * Data: one row per API payload: the int key 7 (player.api Features/Views/Requests/DeleteNotification.cs:61)
+     *   and 'all' (DeleteAllNotifications.cs:58). The stream is typed string; the component compares with +key.
      */
-    it('routes a "Delete" event to deleteNotification', async () => {
-      const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
-      const [view] = connections;
-      view.trigger('Delete', 'key-7');
-      expect(await firstValueFrom(service.deleteNotification)).toBe('key-7');
-    });
+    it.each<[string, number | string]>([
+      ['the int key', 7],
+      ['"all"', 'all'],
+    ])(
+      'routes a "Delete" event with %s to deleteNotification',
+      async (_label, payload) => {
+        const service = createService();
+        service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+        const [view] = connections;
+        view.trigger('Delete', payload);
+        expect(await firstValueFrom(service.deleteNotification)).toBe(payload);
+      },
+    );
 
     /**
      * Verifies: firing the connection's onreconnected callbacks re-invokes 'Join' with the view id
-     * Interacts with: FakeHubConnection.reconnectedCallbacks and invoke spy; service.connectToNotificationServer
+     * Interacts with: FakeHubConnection.reconnect() and invoke spy; service.connectToNotificationServer
      * Data: view id 'v1'; invoke spy cleared before triggering reconnect to isolate the rejoin call
      * Why: invoke.mockClear() drops the initial Join/GetHistory so only the reconnect-driven Join is asserted
      */
@@ -184,8 +167,40 @@ describe('NotificationService', () => {
       service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
       const [view] = connections;
       view.invoke.mockClear();
-      view.reconnectedCallbacks.forEach((cb) => cb());
+      view.reconnect();
       expect(view.invoke).toHaveBeenCalledWith('Join', 'v1');
+    });
+
+    /**
+     * Verifies: the team connection's reconnect re-invokes 'Join' with the team id
+     * Interacts with: the team FakeHubConnection's reconnect() and invoke spy; service.connectToNotificationServer
+     * Data: team id 't1'; invoke cleared before the reconnect to isolate the rejoin call
+     */
+    it('rejoins the team group on team reconnect', async () => {
+      const service = createService();
+      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      const [, team] = connections;
+      await flush();
+      team.invoke.mockClear();
+      team.reconnect();
+      expect(team.invoke).toHaveBeenCalledTimes(1);
+      expect(team.invoke).toHaveBeenCalledWith('Join', 't1');
+    });
+
+    /**
+     * Verifies: the user connection's reconnect re-invokes 'Join' with the view and user ids
+     * Interacts with: the user FakeHubConnection's reconnect() and invoke spy; service.connectToNotificationServer
+     * Data: view id 'v1', user id 'u1'; invoke cleared before the reconnect to isolate the rejoin call
+     */
+    it('rejoins the user group on user reconnect', async () => {
+      const service = createService();
+      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      const [, , user] = connections;
+      await flush();
+      user.invoke.mockClear();
+      user.reconnect();
+      expect(user.invoke).toHaveBeenCalledTimes(1);
+      expect(user.invoke).toHaveBeenCalledWith('Join', 'v1', 'u1');
     });
   });
 
@@ -284,9 +299,9 @@ describe('NotificationService', () => {
   describe('joinPresence()', () => {
     /**
      * Verifies: with no prior connection, joinPresence builds one, invokes 'JoinPresence', and emits the returned presence list on userPresence$
-     * Interacts with: mocked HubConnectionBuilder; FakeHubConnection.invoke (invokeResult seeded); service.userPresence$
-     * Data: a single-entry ViewPresence[] returned via the fake's invokeResult
-     * Why: invokeResult is set so invoke() resolves to the presence list, and flush() drains the JoinPresence().then chain
+     * Interacts with: mockHubConnectionBuilder; FakeHubConnection.invoke (resolves to the list); service.userPresence$
+     * Data: a single-entry ViewPresence[] returned by invoke
+     * Why: invoke resolves to the presence list, and flush() drains the start().then and JoinPresence().then chains
      */
     it('builds a presence connection when none exists and emits the presence list', async () => {
       const service = createService();
@@ -303,7 +318,7 @@ describe('NotificationService', () => {
       service.joinPresence('v1');
       expect(connections).toHaveLength(1);
       const [view] = connections;
-      view.invokeResult = presence;
+      view.invoke.mockResolvedValue(presence);
       await flush();
       expect(view.invoke).toHaveBeenCalledWith('JoinPresence', 'v1');
       expect(await firstValueFrom(service.userPresence$)).toEqual(presence);
@@ -326,6 +341,30 @@ describe('NotificationService', () => {
     });
 
     /**
+     * Verifies: each joinPresence call on an existing connection adds another onreconnected handler,
+     *   so one reconnect sends JoinPresence once per earlier call (current behavior)
+     * Interacts with: the presence FakeHubConnection's reconnectedCallbacks, reconnect() and invoke spy
+     * Data: joinPresence('v1') three times on one service (one build, then two reuses); one reconnect
+     * Why: a view page that re-enters presence (team switch, route reuse) piles up handlers
+     */
+    it('registers a new onreconnected handler on every joinPresence call', async () => {
+      const service = createService();
+      service.joinPresence('v1');
+      service.joinPresence('v1');
+      service.joinPresence('v1');
+      const [view] = connections;
+      await flush();
+      expect(connections).toHaveLength(1);
+      view.invoke.mockClear();
+      view.reconnect();
+      const joins = view.invoke.mock.calls.filter(
+        ([method]) => method === 'JoinPresence',
+      );
+      expect(view.reconnectedCallbacks).toHaveLength(3);
+      expect(joins).toHaveLength(3);
+    });
+
+    /**
      * Verifies: a 'PresenceUpdate' event for an existing user mutates that entry's fields (online flips to true) and re-emits the list
      * Interacts with: FakeHubConnection.invoke (initial list) and trigger (the update); service.userPresence$
      * Data: an initial presence entry with online false, then a PresenceUpdate copy with online true
@@ -344,7 +383,7 @@ describe('NotificationService', () => {
       ];
       service.joinPresence('v1');
       const [view] = connections;
-      view.invokeResult = presence;
+      view.invoke.mockResolvedValue(presence);
       await flush();
 
       view.trigger('PresenceUpdate', { ...presence[0], online: true });
@@ -377,5 +416,107 @@ describe('NotificationService', () => {
       const service = createService();
       expect(() => service.leavePresence('v1')).not.toThrow();
     });
+  });
+
+  describe('hub calls without a .catch', () => {
+    type Arrange = (service: NotificationService) => Promise<void> | void;
+    type Act = (
+      service: NotificationService,
+      connection: FakeHubConnection,
+    ) => void;
+    const connect: Arrange = (service) =>
+      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+    const connected: Arrange = async (service) => {
+      connect(service);
+      await flush();
+    };
+    const reconnect: Act = (_service, connection) => connection.reconnect();
+    const nothing: Act = () => undefined;
+
+    /**
+     * Verifies: a hub method that rejects at each call site escapes as an unhandled rejection (current behavior).
+     * Interacts with: the FakeHubConnection at `connection` (0 view, 1 team, 2 user; 0 is also the presence
+     *   connection), whose invoke is replaced by rejectInvokes; captureUnhandledRejections.
+     * Data: view 'v1', team 't1', user 'u1'; `arrange` builds and (where needed) starts the connections,
+     *   then every invoke on the chosen connection rejects with `<method> failed` before `act` runs.
+     */
+    it.each<[string, Arrange, number, Act, Array<[string, ...unknown[]]>]>([
+      [
+        'view Join and GetHistory after start',
+        connect,
+        0,
+        nothing,
+        [
+          ['Join', 'v1'],
+          ['GetHistory', 'v1'],
+        ],
+      ],
+      [
+        'team Join and GetHistory after start',
+        connect,
+        1,
+        nothing,
+        [
+          ['Join', 't1'],
+          ['GetHistory', 't1'],
+        ],
+      ],
+      [
+        'user Join and GetHistory after start',
+        connect,
+        2,
+        nothing,
+        [
+          ['Join', 'v1', 'u1'],
+          ['GetHistory', 'v1', 'u1'],
+        ],
+      ],
+      ['view rejoin on reconnect', connected, 0, reconnect, [['Join', 'v1']]],
+      ['team rejoin on reconnect', connected, 1, reconnect, [['Join', 't1']]],
+      [
+        'user rejoin on reconnect',
+        connected,
+        2,
+        reconnect,
+        [['Join', 'v1', 'u1']],
+      ],
+      [
+        'JoinPresence from joinPresence',
+        (service) => service.joinPresence('v1'),
+        0,
+        nothing,
+        [['JoinPresence', 'v1']],
+      ],
+      [
+        'LeavePresence from leavePresence',
+        connected,
+        0,
+        (service) => service.leavePresence('v1'),
+        [['LeavePresence', 'v1']],
+      ],
+    ])(
+      'leaves a rejected %s unhandled',
+      async (_label, arrange, index, act, expectedCalls) => {
+        const service = createService();
+        // Await only an async arrange: an extra microtask after a synchronous
+        // connect would run the start().then callback before rejectInvokes.
+        const arranged = arrange(service);
+        if (arranged) await arranged;
+        const rejections = captureUnhandledRejections();
+        const connection = connections[index];
+        const invoked = rejectInvokes(
+          connection,
+          (method: string) => new Error(`${method} failed`),
+        );
+
+        act(service, connection);
+        await flush();
+
+        expect(invoked).toEqual(expectedCalls);
+        expect(rejections.map((e) => (e as Error).message)).toEqual(
+          expectedCalls.map(([method]) => `${method} failed`),
+        );
+      },
+    );
   });
 });

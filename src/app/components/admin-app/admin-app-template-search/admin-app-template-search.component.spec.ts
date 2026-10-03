@@ -20,6 +20,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 const sample: ApplicationTemplate[] = [
   {
@@ -75,7 +76,10 @@ async function renderSearch(
     providers: [
       {
         provide: ApplicationService,
-        useValue: { getApplicationTemplates, createApplicationTemplate },
+        useValue: {
+          getApplicationTemplates,
+          createApplicationTemplate,
+        } satisfies ApiStub<ApplicationService>,
       },
     ],
   });

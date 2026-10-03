@@ -3,34 +3,39 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
-import { of, BehaviorSubject } from 'rxjs';
+import userEvent from '@testing-library/user-event';
+import { of } from 'rxjs';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatCheckboxHarness } from '@angular/material/checkbox/testing';
 import { MatTableModule } from '@angular/material/table';
-import {
-  MatCheckbox,
-  MatCheckboxChange,
-  MatCheckboxModule,
-} from '@angular/material/checkbox';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SystemRolesComponent } from './roles.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { userPermissionsProvider } from 'src/app/test-utils/mock-user-permissions.service';
-import { PermissionsService } from '../../../../services/permissions/permissions.service';
-import { RolesService } from '../../../../services/roles/roles.service';
+import {
+  permissionApiStubs,
+  permissionDataProviders,
+} from 'src/app/test-utils/mock-permission-data.service';
+import { ApiStub } from 'src/app/test-utils/api-stub';
 import { DialogService } from '../../../../services/dialog/dialog.service';
 import {
+  CreatePermissionCommand,
+  CreateRoleCommand,
+  EditRoleCommand,
   Permission,
+  PermissionService,
   Role,
+  RoleService,
   SystemPermission,
 } from '../../../../generated/player-api';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { dialogRefStub } from '../../../../test-utils/dialog-refs';
 
-const mockPermissions = [
+const mockPermissions: Permission[] = [
   {
     id: 'perm-1',
     name: 'ViewViews',
@@ -45,7 +50,7 @@ const mockPermissions = [
   },
 ];
 
-const mockRoles = [
+const mockRoles: Role[] = [
   {
     id: 'role-1',
     name: 'TestRole',
@@ -55,33 +60,66 @@ const mockRoles = [
   },
 ];
 
+// The component runs over the REAL RolesService and PermissionsService (the
+// state under test); only the generated RoleService and PermissionService
+// endpoints are stubbed. Each call returns a fresh object, because the
+// services mutate what they store (Object.assign, push, in-place sort).
 async function renderRoles(
   hasManageRoles = false,
   overrides: {
     nameResult?: { nameValue?: string } | null;
     confirmResult?: boolean;
-    roles?: typeof mockRoles;
+    roles?: Role[];
   } = {},
 ) {
   const {
     nameResult = null,
     confirmResult = false,
-    roles = structuredClone(mockRoles),
+    roles = mockRoles,
   } = overrides;
 
-  const stubs = {
-    getRoles: vi.fn(() => of(roles)),
-    editRole: vi.fn(() => of(mockRoles[0])),
-    createRole: vi.fn(() => of(mockRoles[0])),
-    deleteRole: vi.fn(() => of(undefined)),
-    addPermission: vi.fn(() => of(undefined)),
-    removePermission: vi.fn(() => of(undefined)),
-    load: vi.fn(() => of(mockPermissions)),
-    createPermission: vi.fn(() => of(mockPermissions[0])),
+  const roleApi = {
+    getRoles: vi.fn(() => of(structuredClone(roles))),
+    updateRole: vi.fn((id: string, command?: EditRoleCommand) =>
+      of<Role>({ ...structuredClone(command), id }),
+    ),
+    createRole: vi.fn((command?: CreateRoleCommand) =>
+      of<Role>({
+        id: 'role-new',
+        name: command?.name,
+        allPermissions: false,
+        immutable: false,
+        permissions: [],
+      }),
+    ),
+    deleteRole: vi.fn((_id: string) => of(null)),
+  } satisfies ApiStub<RoleService>;
+
+  const permissionApi = {
+    // getMyPermissions feeds the real UserPermissionsService (the gate).
+    ...permissionApiStubs({
+      // Denied is a near miss: read access to roles, not ManageRoles.
+      system: hasManageRoles
+        ? [SystemPermission.ManageRoles]
+        : [SystemPermission.ViewRoles],
+    }).permissions,
+    getPermissions: vi.fn(() => of(structuredClone(mockPermissions))),
+    createPermission: vi.fn((command?: CreatePermissionCommand) =>
+      of<Permission>({ id: 'perm-new', name: command?.name, immutable: false }),
+    ),
+    addPermissionToRole: vi.fn((_roleId: string, _permissionId: string) =>
+      of(null),
+    ),
+    removePermissionFromRole: vi.fn((_roleId: string, _permissionId: string) =>
+      of(null),
+    ),
+  } satisfies ApiStub<PermissionService>;
+
+  const dialogs = {
     name: vi.fn(() => of(nameResult)),
-    confirm: vi.fn(() => ({
-      afterClosed: () => of(confirmResult),
-    })),
+    confirm: vi.fn(
+      () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
+    ),
   };
 
   const rendered = await renderComponent(SystemRolesComponent, {
@@ -94,41 +132,32 @@ async function renderRoles(
       MatCheckboxModule,
     ],
     providers: [
-      userPermissionsProvider(
-        hasManageRoles ? [SystemPermission.ManageRoles] : [],
-      ),
-      {
-        provide: PermissionsService,
-        useValue: {
-          permissions$: new BehaviorSubject(mockPermissions).asObservable(),
-          load: stubs.load,
-          createPermission: stubs.createPermission,
-        },
-      },
-      {
-        provide: RolesService,
-        useValue: {
-          roles$: new BehaviorSubject(roles).asObservable(),
-          getRoles: stubs.getRoles,
-          editRole: stubs.editRole,
-          createRole: stubs.createRole,
-          deleteRole: stubs.deleteRole,
-          addPermission: stubs.addPermission,
-          removePermission: stubs.removePermission,
-        },
-      },
+      ...permissionDataProviders(),
+      { provide: PermissionService, useValue: permissionApi },
+      { provide: RoleService, useValue: roleApi },
       {
         provide: DialogService,
-        useValue: { name: stubs.name },
+        useValue: { name: dialogs.name } satisfies Pick<DialogService, 'name'>,
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: stubs.confirm },
+        useValue: { confirm: dialogs.confirm } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
       },
     ],
   });
 
-  return { ...rendered, stubs, roles };
+  return { ...rendered, roleApi, permissionApi, dialogs };
+}
+
+/** Column header names, in render order, excluding the Permissions column. */
+function roleHeaders(): string[] {
+  return screen
+    .getAllByRole('columnheader')
+    .map((th) => th.querySelector('p')?.textContent?.trim())
+    .filter((name): name is string => !!name);
 }
 
 // The Add button carries [matTooltip]="adding ? 'Cancel' : 'Add'", so it is
@@ -144,16 +173,6 @@ function getAddButton(
     throw new Error('No button with an "Add" tooltip was rendered');
   }
   return button.nativeElement as HTMLButtonElement;
-}
-
-function checkboxChange(
-  fixture: ComponentFixture<SystemRolesComponent>,
-  checked: boolean,
-): MatCheckboxChange {
-  const source = fixture.debugElement
-    .query(By.directive(MatCheckbox))
-    .injector.get(MatCheckbox);
-  return { source, checked };
 }
 
 // Matrix cell checkboxes in row order: All, then one per loaded permission.
@@ -175,18 +194,24 @@ describe('SystemRolesComponent', () => {
   });
 
   /**
-   * Verifies: a role from the roles stream renders as a column header.
-   * Interacts with: the rendered DOM driven by the RolesService.roles$ stub.
-   * Data: mockRoles (single 'TestRole').
+   * Verifies: the roles and permissions loaded on init render as columns and rows.
+   * Interacts with: the real RolesService.getRoles and PermissionsService.load over RoleService.getRoles and PermissionService.getPermissions stubs.
+   * Data: mockRoles (single 'TestRole'); mockPermissions (ViewViews, ManageUsers).
    */
-  it('should display the role column header', async () => {
-    await renderRoles();
-    expect(screen.getByText('TestRole')).toBeInTheDocument();
+  it('should display the loaded role column and permission rows', async () => {
+    const { roleApi, permissionApi } = await renderRoles();
+    expect(roleApi.getRoles).toHaveBeenCalledTimes(1);
+    expect(permissionApi.getPermissions).toHaveBeenCalledTimes(1);
+    expect(roleHeaders()).toEqual(['TestRole']);
+    expect(screen.getByRole('cell', { name: /ViewViews/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole('cell', { name: /ManageUsers/ }),
+    ).toBeInTheDocument();
   });
 
   /**
    * Verifies: the Add button is enabled when the user holds ManageRoles.
-   * Interacts with: the rendered header button; UserPermissionsService permission stub.
+   * Interacts with: the rendered header button; real UserPermissionsService over stubbed permission endpoints.
    * Data: renderRoles(true) — ManageRoles granted.
    */
   it('should enable Add button when user has ManageRoles permission', async () => {
@@ -196,8 +221,8 @@ describe('SystemRolesComponent', () => {
 
   /**
    * Verifies: the Add button is disabled when the user lacks ManageRoles.
-   * Interacts with: the rendered header button; UserPermissionsService permission stub.
-   * Data: renderRoles(false) — ManageRoles denied.
+   * Interacts with: the rendered header button; real UserPermissionsService over stubbed permission endpoints.
+   * Data: renderRoles(false) — ViewRoles granted, ManageRoles not (near miss).
    */
   it('should disable Add button when user lacks ManageRoles permission', async () => {
     const { fixture } = await renderRoles(false);
@@ -263,59 +288,6 @@ describe('SystemRolesComponent', () => {
     });
   });
 
-  describe('setPermission()', () => {
-    /**
-     * Verifies: toggling the "All" permission flips role.allPermissions and persists via editRole.
-     * Interacts with: stubbed RolesService.editRole.
-     * Data: role with allPermissions=false; "All" permission checked=true.
-     */
-    it('edits the role when toggling the "All" permission', async () => {
-      const { fixture, stubs } = await renderRoles();
-      const role: Role = { id: 'role-1', allPermissions: false };
-      fixture.componentInstance.setPermission(
-        { name: 'All' },
-        role,
-        checkboxChange(fixture, true),
-      );
-      expect(role.allPermissions).toBe(true);
-      expect(stubs.editRole).toHaveBeenCalledWith(role);
-    });
-
-    /**
-     * Verifies: checking a normal permission not yet on the role calls addPermission with the full permission.
-     * Interacts with: stubbed RolesService.addPermission.
-     * Data: role with empty permissions; perm-2 checked=true.
-     */
-    it('adds a permission when checked and not already present', async () => {
-      const { fixture, stubs } = await renderRoles();
-      const role: Role = { id: 'role-1', permissions: [] };
-      const perm: Permission = { id: 'perm-2', name: 'ManageUsers' };
-      fixture.componentInstance.setPermission(
-        perm,
-        role,
-        checkboxChange(fixture, true),
-      );
-      expect(stubs.addPermission).toHaveBeenCalledWith('role-1', perm);
-    });
-
-    /**
-     * Verifies: unchecking a permission calls removePermission with the role id and permission id.
-     * Interacts with: stubbed RolesService.removePermission.
-     * Data: role already holding perm-2; perm-2 checked=false.
-     */
-    it('removes a permission when unchecked', async () => {
-      const { fixture, stubs } = await renderRoles();
-      const role: Role = { id: 'role-1', permissions: [{ id: 'perm-2' }] };
-      const perm: Permission = { id: 'perm-2', name: 'ManageUsers' };
-      fixture.componentInstance.setPermission(
-        perm,
-        role,
-        checkboxChange(fixture, false),
-      );
-      expect(stubs.removePermission).toHaveBeenCalledWith('role-1', 'perm-2');
-    });
-  });
-
   describe('permission matrix checkboxes', () => {
     /**
      * Verifies: each rendered checkbox reports the role's current state.
@@ -333,54 +305,67 @@ describe('SystemRolesComponent', () => {
     });
 
     /**
-     * Verifies: checking a permission the role lacks adds it to that role.
-     * Interacts with: the ManageUsers checkbox via MatCheckboxHarness; stubbed RolesService.addPermission.
+     * Verifies: checking a permission the role lacks adds it to that role, and the box stays checked.
+     * Interacts with: the ManageUsers checkbox via MatCheckboxHarness; the real RolesService over PermissionService.addPermissionToRole.
      * Data: renderRoles(true); mockRoles holds perm-1 only, so perm-2 is the unheld row.
      * Why: drives the (change)="setPermission(permission, role, $event)" binding rather than calling the
      *   method directly — deleting that binding leaves every method-level test green.
      */
-    it('checking a permission the role lacks calls addPermission', async () => {
-      const { fixture, stubs } = await renderRoles(true);
+    it('checking a permission the role lacks adds it to the role', async () => {
+      const { fixture, permissionApi } = await renderRoles(true);
       const [, , manageUsers] = await matrixCheckboxes(fixture);
       await manageUsers.check();
-      expect(stubs.addPermission).toHaveBeenCalledWith(
+      expect(permissionApi.addPermissionToRole).toHaveBeenCalledWith(
         'role-1',
-        expect.objectContaining({ id: 'perm-2', name: 'ManageUsers' }),
+        'perm-2',
       );
-      expect(stubs.removePermission).not.toHaveBeenCalled();
+      expect(permissionApi.removePermissionFromRole).not.toHaveBeenCalled();
+      const [, viewViews, manageUsersAfter] = await matrixCheckboxes(fixture);
+      expect(await viewViews.isChecked()).toBe(true);
+      expect(await manageUsersAfter.isChecked()).toBe(true);
     });
 
     /**
-     * Verifies: unchecking a permission the role holds removes it from that role.
-     * Interacts with: the ViewViews checkbox via MatCheckboxHarness; stubbed RolesService.removePermission.
+     * Verifies: unchecking a permission the role holds removes it from that role, and the box stays unchecked.
+     * Interacts with: the ViewViews checkbox via MatCheckboxHarness; the real RolesService over PermissionService.removePermissionFromRole.
      * Data: renderRoles(true); mockRoles holds perm-1, the checked row.
      */
-    it('unchecking a permission the role holds calls removePermission', async () => {
-      const { fixture, stubs } = await renderRoles(true);
+    it('unchecking a permission the role holds removes it from the role', async () => {
+      const { fixture, permissionApi } = await renderRoles(true);
       const [, viewViews] = await matrixCheckboxes(fixture);
       await viewViews.uncheck();
-      expect(stubs.removePermission).toHaveBeenCalledWith('role-1', 'perm-1');
-      expect(stubs.addPermission).not.toHaveBeenCalled();
+      expect(permissionApi.removePermissionFromRole).toHaveBeenCalledWith(
+        'role-1',
+        'perm-1',
+      );
+      expect(permissionApi.addPermissionToRole).not.toHaveBeenCalled();
+      const [, viewViewsAfter] = await matrixCheckboxes(fixture);
+      expect(await viewViewsAfter.isChecked()).toBe(false);
     });
 
     /**
-     * Verifies: checking the synthetic All row flips allPermissions on the role and saves it.
-     * Interacts with: the All checkbox via MatCheckboxHarness; stubbed RolesService.editRole.
+     * Verifies: checking the synthetic All row saves the role with allPermissions set, and the
+     *   per-permission boxes for that role disappear.
+     * Interacts with: the All checkbox via MatCheckboxHarness; the real RolesService over RoleService.updateRole.
      * Data: renderRoles(true); the rendered role starts with allPermissions false.
      */
     it('checking the All row edits the role with allPermissions set', async () => {
-      const { fixture, stubs, roles } = await renderRoles(true);
+      const { fixture, roleApi } = await renderRoles(true);
       const [all] = await matrixCheckboxes(fixture);
       await all.check();
-      expect(roles[0].allPermissions).toBe(true);
-      expect(stubs.editRole).toHaveBeenCalledWith(
+      expect(roleApi.updateRole).toHaveBeenCalledWith(
+        'role-1',
         expect.objectContaining({ id: 'role-1', allPermissions: true }),
       );
+      // With allPermissions on, the template renders only the All box.
+      const boxes = await matrixCheckboxes(fixture);
+      expect(boxes).toHaveLength(1);
+      expect(await boxes[0].isChecked()).toBe(true);
     });
 
     /**
      * Verifies: without ManageRoles every matrix checkbox renders disabled.
-     * Interacts with: the rendered matrix through MatCheckboxHarness; UserPermissionsService stub.
+     * Interacts with: the rendered matrix through MatCheckboxHarness; real UserPermissionsService over stubbed permission endpoints.
      * Data: renderRoles(false) — three rows (All plus the two permissions).
      * Why: pins the [disabled] binding, the only thing keeping a read-only user from editing the matrix.
      */
@@ -396,85 +381,124 @@ describe('SystemRolesComponent', () => {
 
   describe('addRole()', () => {
     /**
-     * Verifies: a confirmed name dialog drives createRole with the entered name.
-     * Interacts with: stubbed DialogService.name and RolesService.createRole.
-     * Data: nameResult override (nameValue 'New Role').
+     * Verifies: clicking Add and naming the role creates it, and the new role column renders.
+     * Interacts with: stubbed DialogService.name; the real RolesService.createRole over RoleService.createRole.
+     * Data: nameResult override (nameValue 'New Role'); the API echoes it back as role-new.
      */
     it('creates a role when the dialog returns a name', async () => {
-      const { fixture, stubs } = await renderRoles(true, {
+      const user = userEvent.setup();
+      const { fixture, roleApi, dialogs } = await renderRoles(true, {
         nameResult: { nameValue: 'New Role' },
       });
-      fixture.componentInstance.addRole();
-      expect(stubs.createRole).toHaveBeenCalledWith({ name: 'New Role' });
+      await user.click(getAddButton(fixture));
+      expect(dialogs.name).toHaveBeenCalled();
+      expect(roleApi.createRole).toHaveBeenCalledWith({ name: 'New Role' });
+      expect(roleHeaders()).toEqual(['New Role', 'TestRole']);
     });
 
     /**
-     * Verifies: a cancelled name dialog leaves createRole untouched.
-     * Interacts with: stubbed DialogService.name and RolesService.createRole.
+     * Verifies: a cancelled name dialog creates nothing and the columns stay as they were.
+     * Interacts with: stubbed DialogService.name; RoleService.createRole stub (asserted not called).
      * Data: nameResult override null.
      */
     it('does nothing when the dialog is cancelled', async () => {
-      const { fixture, stubs } = await renderRoles(true, {
+      const user = userEvent.setup();
+      const { fixture, roleApi } = await renderRoles(true, {
         nameResult: null,
       });
-      fixture.componentInstance.addRole();
-      expect(stubs.createRole).not.toHaveBeenCalled();
+      await user.click(getAddButton(fixture));
+      expect(roleApi.createRole).not.toHaveBeenCalled();
+      expect(roleHeaders()).toEqual(['TestRole']);
     });
   });
 
   /**
-   * Verifies: addPermission() feeds the dialog's entered name into PermissionsService.createPermission.
-   * Interacts with: stubbed DialogService.name and PermissionsService.createPermission.
+   * Verifies: clicking Add goes straight to the role-name dialog, so the Add Permission button never renders (current behavior).
+   * Interacts with: the rendered Add button; stubbed DialogService.name.
+   * Data: renderRoles(true); nameResult null (the dialog is cancelled).
+   */
+  it('never offers Add Permission, because the Add button skips the adding menu', async () => {
+    const user = userEvent.setup();
+    const { fixture, dialogs } = await renderRoles(true, { nameResult: null });
+    await user.click(getAddButton(fixture));
+    expect(dialogs.name).toHaveBeenCalledWith('Create New Role?', '', {
+      nameValue: '',
+    });
+    expect(
+      screen.queryByRole('button', { name: 'Add Permission' }),
+    ).not.toBeInTheDocument();
+  });
+
+  /**
+   * Verifies: addPermission() creates a permission from the dialog's name, and its row renders.
+   * Interacts with: stubbed DialogService.name; the real PermissionsService.createPermission over PermissionService.createPermission.
    * Data: nameResult override (nameValue 'New Perm').
+   * Why: called directly, because the UI cannot reach it: the Add button opens the role dialog
+   *   (see 'never offers Add Permission, because the Add button skips the adding menu').
    */
   it('addPermission() creates a permission from the dialog result', async () => {
-    const { fixture, stubs } = await renderRoles(true, {
+    const { fixture, permissionApi } = await renderRoles(true, {
       nameResult: { nameValue: 'New Perm' },
     });
     fixture.componentInstance.addPermission();
-    expect(stubs.createPermission).toHaveBeenCalledWith({ name: 'New Perm' });
+    fixture.detectChanges();
+    expect(permissionApi.createPermission).toHaveBeenCalledWith({
+      name: 'New Perm',
+    });
+    expect(screen.getByRole('cell', { name: /New Perm/ })).toBeInTheDocument();
   });
 
   /**
-   * Verifies: renameRole() applies the dialog name onto the role and persists via editRole.
-   * Interacts with: stubbed DialogService.name and RolesService.editRole.
-   * Data: nameResult override (nameValue 'Renamed'); role starting name 'Old'.
+   * Verifies: Rename Role saves the dialog's name, and the column header shows it.
+   * Interacts with: stubbed DialogService.name; the real RolesService.editRole over RoleService.updateRole.
+   * Data: nameResult override (nameValue 'Renamed'); role-1 starts as 'TestRole'.
    */
-  it('renameRole() edits the role with the new name', async () => {
-    const { fixture, stubs } = await renderRoles(true, {
+  it('renames the role from the dialog result', async () => {
+    const user = userEvent.setup();
+    const { roleApi } = await renderRoles(true, {
       nameResult: { nameValue: 'Renamed' },
     });
-    const role: Role = { id: 'role-1', name: 'Old' };
-    fixture.componentInstance.renameRole(role);
-    expect(role.name).toBe('Renamed');
-    expect(stubs.editRole).toHaveBeenCalledWith(role);
+    await user.click(screen.getByTitle('Rename Role'));
+    expect(roleApi.updateRole).toHaveBeenCalledWith(
+      'role-1',
+      expect.objectContaining({ id: 'role-1', name: 'Renamed' }),
+    );
+    expect(roleHeaders()).toEqual(['Renamed']);
   });
 
   describe('deleteRole()', () => {
     /**
-     * Verifies: a confirmed delete dialog drives deleteRole with the role id.
-     * Interacts with: stubbed DialogService.confirm and RolesService.deleteRole.
-     * Data: confirmResult override { confirm: true }.
+     * Verifies: confirming Delete Role deletes it through the API and its column disappears.
+     * Interacts with: stubbed CrucibleDialogService.confirm; the real RolesService.deleteRole over RoleService.deleteRole.
+     * Data: confirmResult override true.
      */
     it('deletes when confirmed', async () => {
-      const { fixture, stubs } = await renderRoles(true, {
+      const user = userEvent.setup();
+      const { roleApi, dialogs } = await renderRoles(true, {
         confirmResult: true,
       });
-      fixture.componentInstance.deleteRole({ id: 'role-1', name: 'X' });
-      expect(stubs.deleteRole).toHaveBeenCalledWith('role-1');
+      await user.click(screen.getByTitle('Delete Role'));
+      expect(dialogs.confirm).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Delete Role?' }),
+      );
+      expect(roleApi.deleteRole).toHaveBeenCalledWith('role-1');
+      expect(roleHeaders()).toEqual([]);
+      expect(screen.queryByText('TestRole')).not.toBeInTheDocument();
     });
 
     /**
-     * Verifies: a declined confirm dialog leaves deleteRole untouched.
-     * Interacts with: stubbed DialogService.confirm and RolesService.deleteRole.
-     * Data: confirmResult override { confirm: false }.
+     * Verifies: a declined confirm dialog deletes nothing and the role column stays.
+     * Interacts with: stubbed CrucibleDialogService.confirm; RoleService.deleteRole stub (asserted not called).
+     * Data: confirmResult override false.
      */
     it('is a no-op when cancelled', async () => {
-      const { fixture, stubs } = await renderRoles(true, {
+      const user = userEvent.setup();
+      const { roleApi } = await renderRoles(true, {
         confirmResult: false,
       });
-      fixture.componentInstance.deleteRole({ id: 'role-1', name: 'X' });
-      expect(stubs.deleteRole).not.toHaveBeenCalled();
+      await user.click(screen.getByTitle('Delete Role'));
+      expect(roleApi.deleteRole).not.toHaveBeenCalled();
+      expect(roleHeaders()).toEqual(['TestRole']);
     });
   });
 

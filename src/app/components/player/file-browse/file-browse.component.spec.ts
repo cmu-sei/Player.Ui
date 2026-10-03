@@ -11,6 +11,8 @@ import { renderComponent } from '../../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { activatedRouteStub } from '../../../test-utils/activated-route';
 
 const files: FileModel[] = [
   { id: 'f1', name: 'doc.txt', teamIds: ['team-a'] },
@@ -65,19 +67,15 @@ async function renderBrowse(
     providers: [
       {
         provide: FileService,
-        useValue: { getViewFiles, download },
+        useValue: { getViewFiles, download } satisfies ApiStub<FileService>,
       },
       {
         provide: TeamService,
-        useValue: { getMyViewTeams },
+        useValue: { getMyViewTeams } satisfies ApiStub<TeamService>,
       },
       {
         provide: ActivatedRoute,
-        useValue: {
-          snapshot: {
-            paramMap: convertToParamMap({ id: viewId }),
-          },
-        },
+        useValue: activatedRouteStub({}, { id: viewId }).route,
       },
     ],
   });

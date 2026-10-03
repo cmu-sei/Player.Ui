@@ -2,8 +2,11 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { of } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
+import { Component, input } from '@angular/core';
+import { EMPTY, firstValueFrom, Observable, of, throwError } from 'rxjs';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { HttpEvent, HttpResponse } from '@angular/common/http';
 import {
   FormGroup,
   FormGroupDirective,
@@ -17,6 +20,10 @@ import {
 } from '@cmusei/crucible-common';
 import {
   Team,
+  TeamPermissionModel,
+  TeamPermissionService,
+  TeamRole,
+  TeamRoleService,
   TeamService,
   View,
   ViewService,
@@ -24,10 +31,12 @@ import {
   FileService,
   FileModel,
 } from '../../../../generated/player-api';
-import { ApplicationService } from '../../../../generated/player-api';
+import {
+  Application,
+  ApplicationService,
+} from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
-import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
-import { TeamRolesService } from '../../../../services/roles/team-roles.service';
+import type { TeamUser } from '../../../shared/add-remove-users-dialog/add-remove-users-dialog.component';
 import {
   AdminViewEditComponent,
   TeamUserApp,
@@ -37,6 +46,7 @@ import { renderComponent } from '../../../../test-utils/render-component';
 import { fileList } from '../../../../test-utils/file-list';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { ClipboardModule } from 'ngx-clipboard';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -51,32 +61,31 @@ import { MatInputModule } from '@angular/material/input';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../../test-utils/dialog-refs';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../../test-utils/unhandled-rx-errors';
 
-type ServiceStubs = {
-  updateView: ReturnType<typeof vi.fn>;
-  deleteView: ReturnType<typeof vi.fn>;
-  getViewTeams: ReturnType<typeof vi.fn>;
-  deleteTeam: ReturnType<typeof vi.fn>;
-  getTeam: ReturnType<typeof vi.fn>;
-  updateTeam: ReturnType<typeof vi.fn>;
-  createTeam: ReturnType<typeof vi.fn>;
-  getTeamUsers: ReturnType<typeof vi.fn>;
-  uploadMultipleFiles: ReturnType<typeof vi.fn>;
-  deleteFile: ReturnType<typeof vi.fn>;
-  updateFile: ReturnType<typeof vi.fn>;
-  getViewFiles: ReturnType<typeof vi.fn>;
-  download: ReturnType<typeof vi.fn>;
-  getApplicationTemplates: ReturnType<typeof vi.fn>;
-  createApplication: ReturnType<typeof vi.fn>;
-  getViewApplications: ReturnType<typeof vi.fn>;
-  confirm: ReturnType<typeof vi.fn>;
-  addRemoveUsersToTeam: ReturnType<typeof vi.fn>;
-  editFile: ReturnType<typeof vi.fn>;
-  createApplicationDialog: ReturnType<typeof vi.fn>;
-  clipboardCopy: ReturnType<typeof vi.fn>;
-  loadTeamPermissions: ReturnType<typeof vi.fn>;
-  getTeamRoles: ReturnType<typeof vi.fn>;
-};
+// Children of the stepper's step contents, which render only after a second
+// change-detection pass (the empty-teams test triggers one).
+@Component({ selector: 'app-view-applications-select', template: '' })
+class ViewApplicationsSelectStubComponent {
+  readonly view = input<View>();
+}
+
+@Component({ selector: 'app-roles-permissions-select', template: '' })
+class RolesPermissionsSelectStubComponent {
+  readonly team = input<Team>();
+  readonly allTeams = input<Team[]>();
+}
+
+@Component({ selector: 'app-team-applications-select', template: '' })
+class TeamApplicationsSelectStubComponent {
+  readonly view = input<View>();
+  readonly team = input<Team>();
+}
 
 // The parent only ever touches these three members of the applications-select
 // child, so the stand-in is typed off the real component: renaming any of them
@@ -114,7 +123,7 @@ async function renderEdit(
     },
   } = overrides;
 
-  const stubs: ServiceStubs = {
+  const stubs = {
     updateView: vi.fn((_id: string, v: View) => of({ ...v, id: 'v1' })),
     deleteView: vi.fn(() => of(undefined)),
     getViewTeams: vi.fn(() => of([])),
@@ -125,23 +134,38 @@ async function renderEdit(
       of({ ...t, id: 'new-team' }),
     ),
     getTeamUsers: vi.fn(() => of([])),
-    uploadMultipleFiles: vi.fn(() => of(undefined)),
+    // The component calls the 'events' overload. EMPTY keeps it inert; the
+    // upload test supplies its own HttpResponse.
+    uploadMultipleFiles: vi.fn((): Observable<HttpEvent<FileModel[]>> => EMPTY),
     deleteFile: vi.fn(() => of(null)),
     updateFile: vi.fn(() => of(undefined)),
     getViewFiles: vi.fn(() => of([])),
     download: vi.fn(() => of(new Blob(['x']))),
     getApplicationTemplates: vi.fn(() => of([])),
-    createApplication: vi.fn(() => of({ id: 'app-1', name: 'App' })),
+    createApplication: vi.fn((viewId: string) =>
+      of<Application>({ id: 'app-1', name: 'App', viewId }),
+    ),
     getViewApplications: vi.fn(() => of([])),
-    confirm: vi.fn(() => ({
-      afterClosed: () => of(confirmResult),
-    })),
-    addRemoveUsersToTeam: vi.fn(() => of({ teamUsers: [] })),
-    editFile: vi.fn(() => of({ name: 'renamed.txt' })),
-    createApplicationDialog: vi.fn(() => of(undefined)),
+    confirm: vi.fn(
+      () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
+    ),
+    // Typed to what the dialogs close ({ teamUsers }, { name, teams },
+    // { teams }). DialogService declares Observable<boolean> for these three
+    // methods, so the DialogService provider below is not checked against
+    // Pick<DialogService, ...>.
+    addRemoveUsersToTeam: vi.fn(() =>
+      of<{ teamUsers: TeamUser[] }>({ teamUsers: [] }),
+    ),
+    editFile: vi.fn(() =>
+      of<{ name: string; teams: string[] }>({ name: 'renamed.txt', teams: [] }),
+    ),
+    // Dismissed: afterClosed() emits undefined.
+    createApplicationDialog: vi.fn(() => of<{ teams: unknown[] }>(undefined)),
     clipboardCopy: vi.fn(),
-    loadTeamPermissions: vi.fn(() => of([])),
-    getTeamRoles: vi.fn(() => of([])),
+    getTeamPermissions: vi.fn(() =>
+      of<TeamPermissionModel[]>([{ id: 'tp-1', name: 'ViewTeam' }]),
+    ),
+    getTeamRoles: vi.fn(() => of<TeamRole[]>([{ id: 'tr-1', name: 'Member' }])),
   };
 
   const rendered = await renderComponent(AdminViewEditComponent, {
@@ -162,6 +186,10 @@ async function renderEdit(
       MatTooltipModule,
       MatButtonModule,
       ...CRUCIBLE_DIALOG_IMPORTS,
+      ClipboardModule,
+      ViewApplicationsSelectStubComponent,
+      RolesPermissionsSelectStubComponent,
+      TeamApplicationsSelectStubComponent,
     ],
     declarations: [AdminViewEditComponent],
     providers: [
@@ -170,7 +198,7 @@ async function renderEdit(
         useValue: {
           updateView: stubs.updateView,
           deleteView: stubs.deleteView,
-        },
+        } satisfies ApiStub<ViewService>,
       },
       {
         provide: TeamService,
@@ -180,9 +208,14 @@ async function renderEdit(
           getTeam: stubs.getTeam,
           updateTeam: stubs.updateTeam,
           createTeam: stubs.createTeam,
-        },
+        } satisfies ApiStub<TeamService>,
       },
-      { provide: UserService, useValue: { getTeamUsers: stubs.getTeamUsers } },
+      {
+        provide: UserService,
+        useValue: {
+          getTeamUsers: stubs.getTeamUsers,
+        } satisfies ApiStub<UserService>,
+      },
       {
         provide: FileService,
         useValue: {
@@ -191,7 +224,7 @@ async function renderEdit(
           updateFile: stubs.updateFile,
           getViewFiles: stubs.getViewFiles,
           download: stubs.download,
-        },
+        } satisfies ApiStub<FileService>,
       },
       {
         provide: ApplicationService,
@@ -199,7 +232,7 @@ async function renderEdit(
           getApplicationTemplates: stubs.getApplicationTemplates,
           createApplication: stubs.createApplication,
           getViewApplications: stubs.getViewApplications,
-        },
+        } satisfies ApiStub<ApplicationService>,
       },
       {
         provide: DialogService,
@@ -211,19 +244,30 @@ async function renderEdit(
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: stubs.confirm },
+        useValue: { confirm: stubs.confirm } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
+      },
+      // The real TeamPermissionsService and TeamRolesService load over these.
+      {
+        provide: TeamPermissionService,
+        useValue: {
+          getTeamPermissions: stubs.getTeamPermissions,
+        } satisfies ApiStub<TeamPermissionService>,
       },
       {
-        provide: TeamPermissionsService,
-        useValue: { load: stubs.loadTeamPermissions },
-      },
-      {
-        provide: TeamRolesService,
-        useValue: { getRoles: stubs.getTeamRoles },
+        provide: TeamRoleService,
+        useValue: {
+          getTeamRoles: stubs.getTeamRoles,
+        } satisfies ApiStub<TeamRoleService>,
       },
       {
         provide: Clipboard,
-        useValue: { copy: stubs.clipboardCopy },
+        useValue: { copy: stubs.clipboardCopy } satisfies Pick<
+          Clipboard,
+          'copy'
+        >,
       },
     ],
   });
@@ -234,17 +278,25 @@ async function renderEdit(
 
 describe('AdminViewEditComponent', () => {
   /**
-   * Verifies: ngOnInit loads the team permission and team role catalogs.
-   * Interacts with: TeamPermissionsService.load and TeamRolesService.getRoles stubs.
-   * Data: default renderEdit; both stubs return of([]).
-   * Why: the component forkJoins these two calls, so the assertion is that both
-   *   were issued — the previous test carried this name but only checked that two
-   *   collections were empty, which the empty stubs guaranteed on their own.
+   * Verifies: ngOnInit loads the team permission and team role catalogs into their services.
+   * Interacts with: the real TeamPermissionsService.load and TeamRolesService.getRoles over the
+   *   TeamPermissionService.getTeamPermissions and TeamRoleService.getTeamRoles stubs.
+   * Data: default renderEdit; one team permission (ViewTeam) and one team role (Member).
+   * Why: the child selects read these services' streams, so the catalogs must land there.
    */
   it('ngOnInit loads team permissions and roles', async () => {
-    const { stubs } = await renderEdit();
-    expect(stubs.loadTeamPermissions).toHaveBeenCalled();
-    expect(stubs.getTeamRoles).toHaveBeenCalled();
+    const { fixture, stubs } = await renderEdit();
+    const c = fixture.componentInstance;
+    expect(stubs.getTeamPermissions).toHaveBeenCalledTimes(1);
+    expect(stubs.getTeamRoles).toHaveBeenCalledTimes(1);
+    expect(
+      (await firstValueFrom(c.teamPermissionsService.teamPermissions$)).map(
+        (p) => p.name,
+      ),
+    ).toEqual(['ViewTeam']);
+    expect(
+      (await firstValueFrom(c.teamRolesService.roles$)).map((r) => r.name),
+    ).toEqual(['Member']);
   });
 
   /**
@@ -349,7 +401,7 @@ describe('AdminViewEditComponent', () => {
 
   /**
    * Verifies: a confirmed delete calls deleteView('v1') and emits null on editComplete (not the view id).
-   * Interacts with: stubbed DialogService.confirm, ViewService.deleteView, editComplete output.
+   * Interacts with: stubbed CrucibleDialogService.confirm, ViewService.deleteView, editComplete output.
    * Data: confirmResult=true.
    * Why: emitting null (rather than the deleted view's id) keeps the parent search from re-selecting it.
    */
@@ -366,7 +418,7 @@ describe('AdminViewEditComponent', () => {
 
   /**
    * Verifies: a declined confirm leaves deleteView untouched.
-   * Interacts with: stubbed DialogService.confirm and ViewService.deleteView.
+   * Interacts with: stubbed CrucibleDialogService.confirm and ViewService.deleteView.
    * Data: confirmResult=false.
    */
   it('deleteView is a no-op when cancelled', async () => {
@@ -388,8 +440,32 @@ describe('AdminViewEditComponent', () => {
   });
 
   /**
+   * Verifies: deleting the view's last team leaves the Teams step on its spinner, with Add New Team hidden (current behavior).
+   * Interacts with: the rendered Delete Team and Add New Team buttons; stubbed CrucibleDialogService.confirm,
+   *   TeamService.deleteTeam and TeamService.getViewTeams (which then returns no teams).
+   * Data: confirmResult=true; view v1 with one team, Red (t1).
+   */
+  it('leaves the Teams step on a spinner after the last team is deleted', async () => {
+    const user = userEvent.setup();
+    const { fixture, stubs } = await renderEdit({ confirmResult: true });
+    const c = fixture.componentInstance;
+    c.view = { id: 'v1', name: 'Demo View' };
+    stubs.getViewTeams.mockReturnValueOnce(of([{ id: 't1', name: 'Red' }]));
+    c.updateViewTeams();
+    fixture.detectChanges();
+    expect(screen.getByText('Add New Team')).toBeInTheDocument();
+
+    // After the delete, getViewTeams returns the default empty list.
+    await user.click(screen.getByText('Delete Team'));
+
+    expect(stubs.deleteTeam).toHaveBeenCalledWith('t1');
+    expect(c.isLoadingTeams).toBe(true);
+    expect(screen.queryByText('Add New Team')).not.toBeInTheDocument();
+  });
+
+  /**
    * Verifies: deleteTeam calls TeamService.deleteTeam with the team id once the user confirms.
-   * Interacts with: stubbed DialogService.confirm and TeamService.deleteTeam.
+   * Interacts with: stubbed CrucibleDialogService.confirm and TeamService.deleteTeam.
    * Data: confirmResult=true; team { id: 't1' }.
    */
   it('deleteTeam only deletes when user confirms', async () => {
@@ -493,6 +569,50 @@ describe('AdminViewEditComponent', () => {
     expect(stubs.getViewTeams).toHaveBeenCalledWith('v1');
     expect(c.teams.map((t) => t.name)).toEqual(['Alpha', 'Zebra']);
     expect(c.isLoadingTeams).toBe(false);
+  });
+
+  describe('progress flags after a failed request', () => {
+    type Rendered = Awaited<ReturnType<typeof renderEdit>>;
+    type Act = (r: Rendered, failure: Error) => void;
+    const loadTeams: Act = ({ fixture, stubs }, failure) => {
+      stubs.getViewTeams.mockReturnValueOnce(throwError(() => failure));
+      fixture.componentInstance.view = { id: 'v1' };
+      fixture.componentInstance.updateViewTeams();
+    };
+    const loadTeamUsers: Act = ({ fixture, stubs }, failure) => {
+      stubs.getViewTeams.mockReturnValueOnce(of([{ id: 't1', name: 'Red' }]));
+      stubs.getTeamUsers.mockReturnValueOnce(throwError(() => failure));
+      fixture.componentInstance.view = { id: 'v1' };
+      fixture.componentInstance.updateViewTeams();
+    };
+    const upload: Act = ({ fixture, stubs }, failure) => {
+      const c = fixture.componentInstance;
+      c.view = { id: 'v1' };
+      c.teamsForFile = ['t1'];
+      c.selectFile(fileList(new File(['x'], 'up.txt')));
+      stubs.uploadMultipleFiles.mockReturnValueOnce(throwError(() => failure));
+      c.uploadFile();
+    };
+
+    /**
+     * Verifies: a failed request leaves its progress flag set (the teams spinner or the upload bar) and lets the error escape (current behavior).
+     * Interacts with: the failing endpoint (TeamService.getViewTeams, UserService.getTeamUsers or
+     *   FileService.uploadMultipleFiles); the component's progress flag; captureUnhandledRxErrors.
+     * Data: view v1; the row's endpoint fails with a 500 on its next call.
+     */
+    it.each<[string, Act, 'isLoadingTeams' | 'uploading']>([
+      ['getViewTeams in updateViewTeams', loadTeams, 'isLoadingTeams'],
+      ['getTeamUsers in updateViewTeams', loadTeamUsers, 'isLoadingTeams'],
+      ['uploadMultipleFiles in uploadFile', upload, 'uploading'],
+    ])('leaves %s stuck when it fails', async (_label, act, flag) => {
+      const errors = captureUnhandledRxErrors();
+      const failure = new Error('500');
+      const rendered = await renderEdit();
+      act(rendered, failure);
+      await flush();
+      expect(rendered.fixture.componentInstance[flag]).toBe(true);
+      expect(errors).toEqual([failure]);
+    });
   });
 
   /**
@@ -605,12 +725,19 @@ describe('AdminViewEditComponent', () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
     c.teams = [new TeamUserApp('Red', { id: 't1', name: 'Red' } as Team, [])];
-    stubs.addRemoveUsersToTeam.mockReturnValueOnce(
-      of({ teamUsers: [{ id: 'u1', name: 'Alice' }] }),
-    );
+    // What AddRemoveUsersDialogComponent.done() closes with.
+    const alice: TeamUser = {
+      name: 'Alice',
+      user: { id: 'u1', name: 'Alice' },
+      teamMembership: { id: 'm1', userId: 'u1', teamId: 't1' },
+    };
+    stubs.addRemoveUsersToTeam.mockReturnValueOnce(of({ teamUsers: [alice] }));
     c.openUsersDialog({ id: 't1', name: 'Red' });
     expect(stubs.addRemoveUsersToTeam).toHaveBeenCalled();
-    expect(c.teams[0].users).toEqual([{ id: 'u1', name: 'Alice' }]);
+    // TeamUserApp.users is typed User[] but receives the TeamUser rows; only
+    // its length is rendered (the member badge). The addRemoveUsersToTeam stub
+    // in renderEdit() is typed to the { teamUsers } close value.
+    expect(c.teams[0].users).toEqual([alice]);
   });
 
   /**
@@ -706,7 +833,7 @@ describe('AdminViewEditComponent', () => {
 
   /**
    * Verifies: a confirmed deleteFile calls FileService.deleteFile and removes the file from viewFiles.
-   * Interacts with: stubbed DialogService.confirm and FileService.deleteFile.
+   * Interacts with: stubbed CrucibleDialogService.confirm and FileService.deleteFile.
    * Data: confirmResult=true; viewFiles [f1 a.txt, f2 b.txt]; delete f1.
    */
   it('deleteFile removes the file from viewFiles when confirmed and delete succeeds', async () => {
@@ -723,7 +850,7 @@ describe('AdminViewEditComponent', () => {
 
   /**
    * Verifies: a declined confirm leaves FileService.deleteFile uncalled.
-   * Interacts with: stubbed DialogService.confirm and FileService.deleteFile.
+   * Interacts with: stubbed CrucibleDialogService.confirm and FileService.deleteFile.
    * Data: confirmResult=false.
    */
   it('deleteFile is a no-op when cancelled', async () => {
@@ -742,7 +869,7 @@ describe('AdminViewEditComponent', () => {
     const c = fixture.componentInstance;
     c.view = { id: 'v1' };
     c.viewFiles = [{ id: 'f1', name: 'old.txt' }];
-    stubs.editFile.mockReturnValueOnce(of({ name: 'new.txt' }));
+    stubs.editFile.mockReturnValueOnce(of({ name: 'new.txt', teams: ['t1'] }));
     c.editFile('f1', 'old.txt', ['t1']);
     expect(stubs.editFile).toHaveBeenCalledWith('f1', 'v1', 'old.txt', ['t1']);
     expect(c.viewFiles[0].name).toBe('new.txt');
@@ -759,7 +886,7 @@ describe('AdminViewEditComponent', () => {
     c.view = { id: 'v1', name: 'Demo View' };
     c.appNames = [];
     stubs.createApplication.mockReturnValueOnce(
-      of({ id: 'app-7', name: 'doc.txt' }),
+      of({ id: 'app-7', name: 'doc.txt', viewId: 'v1' }),
     );
     c.createApplication({ id: 'f1', name: 'doc.txt' });
     expect(stubs.createApplication).toHaveBeenCalledWith(

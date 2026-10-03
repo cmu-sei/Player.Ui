@@ -12,6 +12,7 @@ import {
   Role,
   RoleService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function role(overrides: Partial<Role> = {}): Role {
   return {
@@ -28,8 +29,8 @@ function perm(id: string): Permission {
 }
 
 function createService(
-  roleApi: Partial<Record<keyof RoleService, unknown>> = {},
-  permApi: Partial<Record<keyof PermissionService, unknown>> = {},
+  roleApi: ApiStub<RoleService> = {},
+  permApi: ApiStub<PermissionService> = {},
 ) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({

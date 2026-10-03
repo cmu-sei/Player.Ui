@@ -6,9 +6,10 @@ import { Component, input } from '@angular/core';
 import { screen } from '@testing-library/angular';
 import { of } from 'rxjs';
 import { Router } from '@angular/router';
+import { By } from '@angular/platform-browser';
 import { AdminAppComponent, Section } from './admin-app.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
+import { permissionDataProviders } from 'src/app/test-utils/mock-permission-data.service';
 import { SystemPermission } from '../../generated/player-api';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { MatListModule } from '@angular/material/list';
@@ -39,7 +40,7 @@ class AdminRolesStubComponent {}
 class AdminSubscriptionSearchStubComponent {}
 
 async function renderAdmin(
-  overrides: { permissions?: string[]; section?: string | null } = {},
+  overrides: { permissions?: SystemPermission[]; section?: string | null } = {},
 ) {
   const { permissions = [], section = null } = overrides;
 
@@ -59,14 +60,7 @@ async function renderAdmin(
       AdminSubscriptionSearchStubComponent,
     ],
     providers: [
-      {
-        provide: UserPermissionsService,
-        useValue: {
-          permissions$: of(permissions),
-          teamPermissions$: of([]),
-          loadPermissions: () => of([]),
-        },
-      },
+      ...permissionDataProviders({ system: permissions }),
       {
         provide: RouterQuery,
         useValue: {
@@ -96,166 +90,47 @@ describe('AdminAppComponent', () => {
     expect(screen.getByText('Administration')).toBeInTheDocument();
   });
 
-  /**
-   * Verifies: the "Views" nav item appears only when ViewViews is granted.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewViews].
-   */
-  it('should show Views nav item when user has ViewViews permission', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewViews] });
-    expect(screen.getByText('Views')).toBeInTheDocument();
-  });
+  const navItems: Array<[string, SystemPermission]> = [
+    ['Views', SystemPermission.ViewViews],
+    ['Application Templates', SystemPermission.ViewApplications],
+    ['Subscriptions', SystemPermission.ViewWebhookSubscriptions],
+    ['Users', SystemPermission.ViewUsers],
+    ['Roles', SystemPermission.ViewRoles],
+  ];
 
   /**
-   * Verifies: the "Users" nav item appears only when ViewUsers is granted.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewUsers].
+   * Verifies: a nav item renders when its View permission is the only one granted, and no other nav item does.
+   * Interacts with: real UserPermissionsService (over stubbed permission endpoints) gating the nav.
+   * Data: one row per nav item; permissions = [that item's View permission].
    */
-  it('should show Users nav item when user has ViewUsers permission', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewUsers] });
-    expect(screen.getByText('Users')).toBeInTheDocument();
-  });
+  it.each(navItems)(
+    'shows only the %s nav item when %s is granted',
+    async (name, permission) => {
+      await renderAdmin({ permissions: [permission] });
+      expect(screen.getByText(name)).toBeInTheDocument();
+      for (const [other] of navItems.filter(([n]) => n !== name)) {
+        expect(screen.queryByText(other)).not.toBeInTheDocument();
+      }
+    },
+  );
 
   /**
-   * Verifies: with zero permissions every gated nav item (Views, Users,
-   *   Application Templates, Roles) is suppressed.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [] (empty).
+   * Verifies: a nav item is hidden when every system permission except its View permission is granted (near miss: the Manage permission on the same resource and every other View permission).
+   * Interacts with: real UserPermissionsService (over stubbed permission endpoints) gating the nav.
+   * Data: one row per nav item; permissions = every SystemPermission but that item's View permission.
+   *   The API also requires the View permission itself (for example Views/Requests/GetAll.cs:50).
    */
-  it('should hide nav items when user has no permissions', async () => {
-    await renderAdmin({ permissions: [] });
-    expect(screen.queryByText('Views')).not.toBeInTheDocument();
-    expect(screen.queryByText('Users')).not.toBeInTheDocument();
-    expect(screen.queryByText('Application Templates')).not.toBeInTheDocument();
-    expect(screen.queryByText('Roles')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: granting the full view-permission set renders all five nav items
-   *   (Views, Users, Application Templates, Roles, Subscriptions).
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = all five View* permissions.
-   */
-  it('should show all nav items when user has all permissions', async () => {
-    await renderAdmin({
-      permissions: [
-        SystemPermission.ViewViews,
-        SystemPermission.ViewUsers,
-        SystemPermission.ViewApplications,
-        SystemPermission.ViewRoles,
-        SystemPermission.ViewWebhookSubscriptions,
-      ],
-    });
-    expect(screen.getByText('Views')).toBeInTheDocument();
-    expect(screen.getByText('Users')).toBeInTheDocument();
-    expect(screen.getByText('Application Templates')).toBeInTheDocument();
-    expect(screen.getByText('Roles')).toBeInTheDocument();
-    expect(screen.getByText('Subscriptions')).toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: "Subscriptions" nav shows when ViewWebhookSubscriptions is granted.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewWebhookSubscriptions].
-   */
-  it('should show Webhook Subscriptions nav when ViewWebhookSubscriptions permission present', async () => {
-    await renderAdmin({
-      permissions: [SystemPermission.ViewWebhookSubscriptions],
-    });
-    expect(screen.getByText('Subscriptions')).toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: "Subscriptions" nav is absent without ViewWebhookSubscriptions.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [] (empty).
-   */
-  it('should hide Webhook Subscriptions nav when ViewWebhookSubscriptions permission absent', async () => {
-    await renderAdmin({ permissions: [] });
-    expect(screen.queryByText('Subscriptions')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: "Application Templates" nav shows when ViewApplications is granted.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewApplications].
-   */
-  it('should show Applications nav when ViewApplications permission present', async () => {
-    await renderAdmin({
-      permissions: [SystemPermission.ViewApplications],
-    });
-    expect(screen.getByText('Application Templates')).toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: "Application Templates" nav is absent without ViewApplications.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [] (empty).
-   */
-  it('should hide Applications nav when ViewApplications permission absent', async () => {
-    await renderAdmin({ permissions: [] });
-    expect(screen.queryByText('Application Templates')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: ViewApplications alone does not unlock the unrelated Users nav.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewApplications].
-   */
-  it('should hide Users nav when only ViewApplications permission present', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewApplications] });
-    expect(screen.queryByText('Users')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: ViewApplications alone does not unlock the unrelated Roles nav.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewApplications].
-   */
-  it('should hide Roles nav when only ViewApplications permission present', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewApplications] });
-    expect(screen.queryByText('Roles')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: ViewUsers alone does not unlock the unrelated Views nav.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewUsers].
-   */
-  it('should hide Views nav when only ViewUsers permission present', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewUsers] });
-    expect(screen.queryByText('Views')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: ViewUsers alone does not unlock the unrelated Subscriptions nav.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewUsers].
-   */
-  it('should hide Subscriptions nav when only ViewUsers permission present', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewUsers] });
-    expect(screen.queryByText('Subscriptions')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: ViewRoles alone does not unlock the unrelated Views nav.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewRoles].
-   */
-  it('should hide Views nav when only ViewRoles permission present', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewRoles] });
-    expect(screen.queryByText('Views')).not.toBeInTheDocument();
-  });
-
-  /**
-   * Verifies: ViewRoles alone does not unlock the unrelated Users nav.
-   * Interacts with: UserPermissionsService.permissions$ stub gating the nav.
-   * Data: permissions = [ViewRoles].
-   */
-  it('should hide Users nav when only ViewRoles permission present', async () => {
-    await renderAdmin({ permissions: [SystemPermission.ViewRoles] });
-    expect(screen.queryByText('Users')).not.toBeInTheDocument();
-  });
+  it.each(navItems)(
+    'hides the %s nav item when everything but %s is granted',
+    async (name, permission) => {
+      await renderAdmin({
+        permissions: Object.values(SystemPermission).filter(
+          (p) => p !== permission,
+        ),
+      });
+      expect(screen.queryByText(name)).not.toBeInTheDocument();
+    },
+  );
 
   describe('addParam()', () => {
     /**
@@ -307,8 +182,9 @@ describe('AdminAppComponent', () => {
      * Interacts with: spied Router.navigate (mocked to resolve true).
      * Data: cases table mapping each Section enum to its display title.
      */
-    for (const [section, title] of cases) {
-      it(`sets the title to "${title}" and adds the section param`, async () => {
+    it.each(cases)(
+      'sets the title for section %s to "%s" and adds the section param',
+      async (section, title) => {
         const { fixture, navigate } = await renderAdmin();
         navigate.mockClear();
         fixture.componentInstance.sectionChangedFn(section);
@@ -317,8 +193,8 @@ describe('AdminAppComponent', () => {
           [],
           expect.objectContaining({ queryParams: { section } }),
         );
-      });
-    }
+      },
+    );
   });
 
   /**
@@ -335,27 +211,27 @@ describe('AdminAppComponent', () => {
   });
 
   /**
-   * Verifies: section$ emits the query-param value when it is a recognized
-   *   Section, taking precedence over the permission fallback.
-   * Interacts with: RouterQuery.selectQueryParams + UserPermissionsService stubs.
-   * Data: section = ADMIN_ROLE_PERM with only ViewViews permission granted.
-   * Why: subscribes via a Promise to capture the single emitted value.
+   * Verifies: a valid section query param renders that section even when the user lacks its View permission (current behavior).
+   * Interacts with: RouterQuery.selectQueryParams stub; real UserPermissionsService over stubbed permission endpoints; the section child stubs.
+   * Data: section = ADMIN_ROLE_PERM with ViewViews granted and ViewRoles not.
    */
-  it('section$ emits the query-param section when it is a valid Section', async () => {
+  it('renders a section from the query param without checking its permission', async () => {
     const { fixture } = await renderAdmin({
       section: Section.ADMIN_ROLE_PERM,
       permissions: [SystemPermission.ViewViews],
     });
-    const emitted = await new Promise<Section | undefined>((resolve) =>
-      fixture.componentInstance.section$.subscribe(resolve),
-    );
-    expect(emitted).toBe(Section.ADMIN_ROLE_PERM);
+    expect(
+      fixture.debugElement.query(By.directive(AdminRolesStubComponent)),
+    ).not.toBeNull();
+    expect(
+      fixture.debugElement.query(By.directive(AdminViewSearchStubComponent)),
+    ).toBeNull();
   });
 
   /**
    * Verifies: with no section query param, section$ falls back to the first
    *   section the user's permissions allow.
-   * Interacts with: RouterQuery.selectQueryParams + UserPermissionsService stubs.
+   * Interacts with: RouterQuery.selectQueryParams stub; real UserPermissionsService over stubbed permission endpoints.
    * Data: section = null with only ViewUsers permission granted.
    * Why: subscribes via a Promise to capture the single emitted value.
    */

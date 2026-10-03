@@ -2,13 +2,14 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { of, throwError } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
+import { screen } from '@testing-library/angular';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import {
   CrucibleDialogService,
   CRUCIBLE_DIALOG_IMPORTS,
@@ -18,8 +19,11 @@ import {
   UserService,
   TeamMembershipService,
   TeamMembership,
+  TeamRole,
+  TeamRoleService,
 } from '../../../generated/player-api';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
+import { TestBed } from '@angular/core/testing';
 import {
   AddRemoveUsersDialogComponent,
   TeamUser,
@@ -36,6 +40,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import { ApiStub } from '../../../test-utils/api-stub';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 const alice: User = { id: 'u1', name: 'Alice' };
 const bob: User = { id: 'u2', name: 'Bob' };
@@ -73,11 +82,14 @@ async function renderDialog(
     of([aliceMembership]),
   );
   const updateTeamMembership = vi.fn(() => of(undefined));
-  const getRoles = vi.fn(() => of([]));
+  // The real TeamRolesService loads over this endpoint.
+  const getTeamRoles = vi.fn(() =>
+    of<TeamRole[]>([{ id: 'tr-1', name: 'Member', permissions: [] }]),
+  );
 
-  const confirm = vi.fn(() => ({
-    afterClosed: () => of(confirmSelfRemoval),
-  }));
+  const confirm = vi.fn(
+    () => dialogRefStub<unknown, boolean>(confirmSelfRemoval).dialogRef,
+  );
 
   const rendered = await renderComponent(AddRemoveUsersDialogComponent, {
     declarations: [AddRemoveUsersDialogComponent],
@@ -102,15 +114,28 @@ async function renderDialog(
       { provide: MatDialogRef, useValue: dialogRef },
       {
         provide: UserService,
-        useValue: { getUsers, getTeamUsers, addUserToTeam, removeUserFromTeam },
+        useValue: {
+          getUsers,
+          getTeamUsers,
+          addUserToTeam,
+          removeUserFromTeam,
+        } satisfies ApiStub<UserService>,
       },
       {
         provide: TeamMembershipService,
-        useValue: { getTeamMemberships, updateTeamMembership },
+        useValue: {
+          getTeamMemberships,
+          updateTeamMembership,
+        } satisfies ApiStub<TeamMembershipService>,
       },
-      { provide: TeamRolesService, useValue: { getRoles } },
-      { provide: MatDialog, useValue: { open: vi.fn() } },
-      { provide: CrucibleDialogService, useValue: { confirm } },
+      {
+        provide: TeamRoleService,
+        useValue: { getTeamRoles } satisfies ApiStub<TeamRoleService>,
+      },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm } satisfies Pick<CrucibleDialogService, 'confirm'>,
+      },
     ],
   });
 
@@ -125,7 +150,7 @@ async function renderDialog(
     removeUserFromTeam,
     getTeamMemberships,
     updateTeamMembership,
-    getRoles,
+    getTeamRoles,
   };
 }
 
@@ -134,14 +159,32 @@ const team = { id: 't1', name: 'Red', viewId: 'v1' };
 
 describe('AddRemoveUsersDialogComponent', () => {
   /**
-   * Verifies: init prepends a sentinel "None" role (empty id) to the roles list.
-   * Interacts with: TeamRolesService.getRoles (returns []) read on init.
-   * Data: default render with empty roles list.
+   * Verifies: init prepends a sentinel "None" role (empty id) to the loaded team roles.
+   * Interacts with: the real TeamRolesService.getRoles over the TeamRoleService.getTeamRoles stub.
+   * Data: one team role, Member.
    */
   it('prepends a "None" role entry on init', async () => {
-    const { fixture } = await renderDialog();
-    expect(fixture.componentInstance.roles[0].name).toBe('None');
+    const { fixture, getTeamRoles } = await renderDialog();
+    expect(getTeamRoles).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.roles.map((r) => r.name)).toEqual([
+      'None',
+      'Member',
+    ]);
     expect(fixture.componentInstance.roles[0].id).toBe('');
+  });
+
+  /**
+   * Verifies: the "None" sentinel leaks into the shared TeamRolesService.roles$ stream (current behavior).
+   * Interacts with: the real TeamRolesService (rolesSubject) over the TeamRoleService.getTeamRoles stub.
+   * Data: one team role, Member.
+   * Why: ngOnInit calls unshift on the array getRoles() emits, which is the array the service
+   *   stores, so every other roles$ consumer (team-roles admin, role selects) sees a fake role.
+   */
+  it('leaks the "None" sentinel into TeamRolesService.roles$', async () => {
+    await renderDialog();
+    const roles = await firstValueFrom(TestBed.inject(TeamRolesService).roles$);
+    expect(roles.map((r) => r.name)).toContain('None');
+    expect(roles.map((r) => r.name)).toContain('Member');
   });
 
   /**
@@ -360,6 +403,77 @@ describe('AddRemoveUsersDialogComponent', () => {
       expect(c.userDataSource.data.map((u) => u.id)).toEqual(['u2']);
       expect(getTeamMemberships).not.toHaveBeenCalled();
       expect(c.isLoading).toBe(false);
+    });
+  });
+
+  describe('the Role column and CSV import in the rendered dialog', () => {
+    /**
+     * Verifies: the team table's Role column and the CSV import button render when canManageRoles is true and are absent in restricted (ManageTeam) mode.
+     * Interacts with: the template's displayedTeamColumns and @if (canManageRoles); the real TeamRolesService.
+     * Data: alice on the team; canManageRoles set before loadTeam, as DialogService.addRemoveUsersToTeam does
+     *   (ManageTeamsComponent opens the dialog with false, AdminViewEditComponent with the default true).
+     */
+    it.each([
+      [true, 1],
+      [false, 0],
+    ])(
+      'with canManageRoles %s renders %i Role column(s) and the matching CSV import',
+      async (canManageRoles, roleHeaders) => {
+        const { fixture } = await renderDialog({ teamUsers: [alice] });
+        const c = fixture.componentInstance;
+        c.canManageRoles = canManageRoles;
+        c.loadTeam(team);
+        fixture.detectChanges();
+        expect(
+          screen.queryAllByText('Role', { selector: 'mat-header-cell' }),
+        ).toHaveLength(roleHeaders);
+        expect(screen.queryAllByTitle(/^Import users from a CSV/)).toHaveLength(
+          roleHeaders,
+        );
+      },
+    );
+  });
+
+  describe('loadTeam() failures', () => {
+    type Stubs = Awaited<ReturnType<typeof renderDialog>>;
+    type Fail = (stubs: Stubs, failure: Error) => void;
+
+    /**
+     * Verifies: a failed request while loading the team leaves both loading spinners up and lets the error escape (current behavior).
+     * Interacts with: the failing endpoint (UserService.getUsers, UserService.getTeamUsers or
+     *   TeamMembershipService.getTeamMemberships); the rendered spinners; captureUnhandledRxErrors.
+     * Data: alice on the team; the row's endpoint fails with a 500 on its next call; loadTeam(team) as
+     *   DialogService.addRemoveUsersToTeam calls it.
+     */
+    it.each<[string, Fail]>([
+      [
+        'getUsers',
+        (stubs, failure) =>
+          stubs.getUsers.mockReturnValueOnce(throwError(() => failure)),
+      ],
+      [
+        'getTeamUsers',
+        (stubs, failure) =>
+          stubs.getTeamUsers.mockReturnValueOnce(throwError(() => failure)),
+      ],
+      [
+        'getTeamMemberships',
+        (stubs, failure) =>
+          stubs.getTeamMemberships.mockReturnValueOnce(
+            throwError(() => failure),
+          ),
+      ],
+    ])('leaves the spinners up when %s fails', async (_endpoint, fail) => {
+      const errors = captureUnhandledRxErrors();
+      const failure = new Error('500');
+      const stubs = await renderDialog({ teamUsers: [alice] });
+      fail(stubs, failure);
+      stubs.fixture.componentInstance.loadTeam(team);
+      stubs.fixture.detectChanges();
+      await flush();
+      expect(stubs.fixture.componentInstance.isLoading).toBe(true);
+      expect(screen.getAllByRole('progressbar')).toHaveLength(2);
+      expect(errors).toEqual([failure]);
     });
   });
 

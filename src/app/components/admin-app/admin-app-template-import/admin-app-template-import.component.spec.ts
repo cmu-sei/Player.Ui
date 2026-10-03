@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
-import userEvent from '@testing-library/user-event';
+import userEvent, { UserEvent } from '@testing-library/user-event';
 import { of } from 'rxjs';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import {
@@ -16,7 +16,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ComponentFixture } from '@angular/core/testing';
-import { fileList } from '../../../test-utils/file-list';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 async function renderImport(
   overrides: {
@@ -39,7 +39,9 @@ async function renderImport(
     providers: [
       {
         provide: ApplicationService,
-        useValue: { importApplicationTemplates },
+        useValue: {
+          importApplicationTemplates,
+        } satisfies ApiStub<ApplicationService>,
       },
     ],
   });
@@ -58,6 +60,21 @@ function fileInput(
   return input;
 }
 
+// The archive reaches the form through the file input's (change) handler, as
+// it does in the app. user-event dispatches through Testing Library, which runs
+// change detection afterwards; patching the form from the test body would not
+// re-render this OnPush dialog.
+async function chooseArchive(
+  user: UserEvent,
+  fixture: ComponentFixture<AdminAppTemplateImportComponent>,
+  file: File,
+) {
+  await user.upload(fileInput(fixture), file);
+}
+
+const archiveFile = () =>
+  new File(['x'], 'templates.zip', { type: 'application/zip' });
+
 describe('AdminAppTemplateImportComponent', () => {
   /**
    * Verifies: the Import button is disabled until a file is chosen.
@@ -71,15 +88,14 @@ describe('AdminAppTemplateImportComponent', () => {
   });
 
   /**
-   * Verifies: patching an archive into the form enables the Import button.
-   * Interacts with: component.form patchValue; rendered DOM.
-   * Data: a zip Blob set as the archive control.
+   * Verifies: choosing a file through the file input enables the Import button.
+   * Interacts with: the file input's (change) handler; rendered DOM.
+   * Data: a templates.zip File.
    */
-  it('enables the Import button once an archive is set', async () => {
+  it('enables the Import button once an archive is chosen', async () => {
+    const user = userEvent.setup();
     const { fixture } = await renderImport();
-    const archive = new Blob(['x'], { type: 'application/zip' });
-    fixture.componentInstance.form.patchValue({ archive });
-    await fixture.whenStable();
+    await chooseArchive(user, fixture, archiveFile());
     const importBtn = screen.getByRole('button', { name: /^Import$/ });
     expect(importBtn).not.toBeDisabled();
   });
@@ -101,18 +117,18 @@ describe('AdminAppTemplateImportComponent', () => {
   /**
    * Verifies: submitting forwards the overwrite flag and archive (in that order)
    *   to the service.
-   * Interacts with: ApplicationService.importApplicationTemplates spy.
-   * Data: archive Blob with overwriteExisting = true.
+   * Interacts with: ApplicationService.importApplicationTemplates spy; the
+   *   Overwrite Existing toggle; userEvent clicks.
+   * Data: a templates.zip File with Overwrite Existing switched on.
    */
   it('calls importApplicationTemplates with archive and overwrite flag on submit', async () => {
     const user = userEvent.setup();
     const { fixture, importApplicationTemplates } = await renderImport();
-    const archive = new Blob(['x'], { type: 'application/zip' });
-    fixture.componentInstance.form.patchValue({
-      archive,
-      overwriteExisting: true,
-    });
-    await fixture.whenStable();
+    const archive = archiveFile();
+    await chooseArchive(user, fixture, archive);
+    await user.click(
+      screen.getByRole('switch', { name: 'Overwrite Existing' }),
+    );
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(importApplicationTemplates).toHaveBeenCalledWith(true, archive);
   });
@@ -125,9 +141,7 @@ describe('AdminAppTemplateImportComponent', () => {
   it('shows "Import Successful" when the import result has no failures', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderImport({ result: { failures: [] } });
-    const archive = new Blob(['x'], { type: 'application/zip' });
-    fixture.componentInstance.form.patchValue({ archive });
-    await fixture.whenStable();
+    await chooseArchive(user, fixture, archiveFile());
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(await screen.findByText(/Import Successful/)).toBeInTheDocument();
   });
@@ -143,9 +157,7 @@ describe('AdminAppTemplateImportComponent', () => {
     const { fixture } = await renderImport({
       result: { failures: ['app-alpha', 'app-beta'] },
     });
-    const archive = new Blob(['x'], { type: 'application/zip' });
-    fixture.componentInstance.form.patchValue({ archive });
-    await fixture.whenStable();
+    await chooseArchive(user, fixture, archiveFile());
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(
       await screen.findByText(/Application Templates already exist/),
@@ -155,18 +167,18 @@ describe('AdminAppTemplateImportComponent', () => {
   });
 
   /**
-   * Verifies: a change event on the rendered file input stores the chosen File as the form's archive.
+   * Verifies: a change event on the rendered file input stores the chosen File
+   *   as the form's archive and shows its name.
    * Interacts with: the template's (change)="onFileSelected($event)" binding on the hidden file input.
    * Data: a templates.zip File exposed through the input's files list.
-   * Why: jsdom cannot populate a file input, so files is defined on the element and a real change event dispatched.
+   * Why: user.upload builds the FileList jsdom cannot, then fires input and change on the element.
    */
   it('captures the file name from the file input change event', async () => {
+    const user = userEvent.setup();
     const { fixture } = await renderImport();
-    const file = new File(['x'], 'templates.zip', { type: 'application/zip' });
-    const input = fileInput(fixture);
-    Object.defineProperty(input, 'files', { value: fileList(file) });
-    input.dispatchEvent(new Event('change'));
-    await fixture.whenStable();
+    const file = archiveFile();
+    await chooseArchive(user, fixture, file);
     expect(fixture.componentInstance.form.value.archive).toBe(file);
+    expect(screen.getByText('templates.zip')).toBeInTheDocument();
   });
 });

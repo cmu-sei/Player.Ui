@@ -12,14 +12,13 @@ import {
   Permission,
   PermissionService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function perm(overrides: Partial<Permission> = {}): Permission {
   return { id: 'p1', name: 'Alpha', immutable: false, ...overrides };
 }
 
-function createService(
-  api: Partial<Record<keyof PermissionService, unknown>> = {},
-) {
+function createService(api: ApiStub<PermissionService> = {}) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [

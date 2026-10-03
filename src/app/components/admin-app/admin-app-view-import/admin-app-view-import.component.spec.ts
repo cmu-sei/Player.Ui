@@ -3,23 +3,26 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
-import userEvent from '@testing-library/user-event';
+import userEvent, { UserEvent } from '@testing-library/user-event';
 import { of } from 'rxjs';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
-import { ImportViewsResult } from '../../../generated/player-api';
-import { ViewsService } from '../../../services/views/views.service';
+import { ImportViewsResult, ViewService } from '../../../generated/player-api';
+import { ApiStub } from '../../../test-utils/api-stub';
 import { AdminAppViewImportComponent } from './admin-app-view-import.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ComponentFixture } from '@angular/core/testing';
-import { fileList } from '../../../test-utils/file-list';
 
 async function renderImport(overrides: { result?: ImportViewsResult } = {}) {
   const { result = { failures: [] } as ImportViewsResult } = overrides;
 
-  const importFn = vi.fn(() => of(result));
+  // The real ViewsService.import (a default provider) forwards to this.
+  const importFn = vi.fn(
+    (_byName: boolean, _rolesByName: boolean, _archive?: Blob) =>
+      of(structuredClone(result)),
+  );
 
   const rendered = await renderComponent(AdminAppViewImportComponent, {
     declarations: [AdminAppViewImportComponent],
@@ -29,7 +32,12 @@ async function renderImport(overrides: { result?: ImportViewsResult } = {}) {
       MatButtonModule,
       ...CRUCIBLE_DIALOG_IMPORTS,
     ],
-    providers: [{ provide: ViewsService, useValue: { import: importFn } }],
+    providers: [
+      {
+        provide: ViewService,
+        useValue: { importViews: importFn } satisfies ApiStub<ViewService>,
+      },
+    ],
   });
 
   return { ...rendered, importFn };
@@ -46,6 +54,21 @@ function fileInput(
   return input;
 }
 
+// The archive reaches the form through the file input's (change) handler, as
+// it does in the app. user-event dispatches through Testing Library, which runs
+// change detection afterwards. Patching the form from the test body would skip
+// the handler the app relies on, and nothing would re-render the dialog until
+// the test called fixture.detectChanges().
+async function chooseArchive(
+  user: UserEvent,
+  fixture: ComponentFixture<AdminAppViewImportComponent>,
+  file: File,
+) {
+  await user.upload(fileInput(fixture), file);
+}
+
+const archiveFile = () => new File(['x'], 'views.zip');
+
 describe('AdminAppViewImportComponent', () => {
   /**
    * Verifies: the Import button is disabled until a file is chosen.
@@ -58,16 +81,14 @@ describe('AdminAppViewImportComponent', () => {
   });
 
   /**
-   * Verifies: patching an archive into the form enables the Import button.
-   * Interacts with: component.form patchValue; rendered DOM.
-   * Data: a zip Blob set as the archive control.
+   * Verifies: choosing a file through the file input enables the Import button.
+   * Interacts with: the file input's (change) handler; rendered DOM.
+   * Data: a views.zip File.
    */
-  it('enables Import once an archive is set', async () => {
+  it('enables Import once an archive is chosen', async () => {
+    const user = userEvent.setup();
     const { fixture } = await renderImport();
-    fixture.componentInstance.form.patchValue({
-      archive: new Blob(['x'], { type: 'application/zip' }),
-    });
-    await fixture.whenStable();
+    await chooseArchive(user, fixture, archiveFile());
     expect(screen.getByRole('button', { name: /^Import$/ })).not.toBeDisabled();
   });
 
@@ -88,19 +109,18 @@ describe('AdminAppViewImportComponent', () => {
   /**
    * Verifies: submitting forwards the two match-by-name flags and the archive
    *   (in that order) to the service.
-   * Interacts with: ViewsService.import spy; userEvent click.
-   * Data: archive Blob with matchApplicationTemplatesByName and matchRolesByName true.
+   * Interacts with: ViewsService.import spy; the two match toggles; userEvent clicks.
+   * Data: a views.zip File with both match-by-name toggles switched on.
    */
   it('calls ViewsService.import with the form values', async () => {
     const user = userEvent.setup();
     const { fixture, importFn } = await renderImport();
-    const archive = new Blob(['x'], { type: 'application/zip' });
-    fixture.componentInstance.form.patchValue({
-      archive,
-      matchApplicationTemplatesByName: true,
-      matchRolesByName: true,
-    });
-    await fixture.whenStable();
+    const archive = archiveFile();
+    await chooseArchive(user, fixture, archive);
+    await user.click(
+      screen.getByRole('switch', { name: 'Match Templates By Name' }),
+    );
+    await user.click(screen.getByRole('switch', { name: 'Match By Name' }));
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(importFn).toHaveBeenCalledWith(true, true, archive);
   });
@@ -113,10 +133,7 @@ describe('AdminAppViewImportComponent', () => {
   it('shows "Import Successful" on a clean result', async () => {
     const user = userEvent.setup();
     const { fixture } = await renderImport({ result: { failures: [] } });
-    fixture.componentInstance.form.patchValue({
-      archive: new Blob(['x']),
-    });
-    await fixture.whenStable();
+    await chooseArchive(user, fixture, archiveFile());
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(await screen.findByText(/Import Successful/)).toBeInTheDocument();
   });
@@ -137,10 +154,7 @@ describe('AdminAppViewImportComponent', () => {
         ],
       },
     });
-    fixture.componentInstance.form.patchValue({
-      archive: new Blob(['x']),
-    });
-    await fixture.whenStable();
+    await chooseArchive(user, fixture, archiveFile());
     await user.click(screen.getByRole('button', { name: /^Import$/ }));
     expect(
       await screen.findByText(/The following errors occurred/),
@@ -152,18 +166,18 @@ describe('AdminAppViewImportComponent', () => {
   });
 
   /**
-   * Verifies: a change event on the rendered file input stores the chosen File as the form's archive.
+   * Verifies: a change event on the rendered file input stores the chosen File
+   *   as the form's archive and shows its name.
    * Interacts with: the template's (change)="onFileSelected($event)" binding on the hidden file input.
    * Data: a views.zip File exposed through the input's files list.
-   * Why: jsdom cannot populate a file input, so files is defined on the element and a real change event dispatched.
+   * Why: user.upload builds the FileList jsdom cannot, then fires input and change on the element.
    */
   it('captures the file from the file input change event', async () => {
+    const user = userEvent.setup();
     const { fixture } = await renderImport();
-    const file = new File(['x'], 'views.zip');
-    const input = fileInput(fixture);
-    Object.defineProperty(input, 'files', { value: fileList(file) });
-    input.dispatchEvent(new Event('change'));
-    await fixture.whenStable();
+    const file = archiveFile();
+    await chooseArchive(user, fixture, file);
     expect(fixture.componentInstance.form.value.archive).toBe(file);
+    expect(screen.getByText('views.zip')).toBeInTheDocument();
   });
 });

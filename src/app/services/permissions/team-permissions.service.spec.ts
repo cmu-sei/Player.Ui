@@ -12,14 +12,13 @@ import {
   TeamPermissionModel,
   TeamPermissionService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function tp(overrides: Partial<TeamPermissionModel> = {}): TeamPermissionModel {
   return { id: 'tp1', name: 'Alpha', immutable: false, ...overrides };
 }
 
-function createService(
-  api: Partial<Record<keyof TeamPermissionService, unknown>> = {},
-) {
+function createService(api: ApiStub<TeamPermissionService> = {}) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [

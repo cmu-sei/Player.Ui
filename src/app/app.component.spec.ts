@@ -14,6 +14,7 @@ import {
 } from '@cmusei/crucible-common';
 import { AppComponent } from './app.component';
 import { renderComponent } from './test-utils/render-component';
+import { activatedRouteStub } from './test-utils/activated-route';
 
 type Theme = 'light-theme' | 'dark-theme';
 
@@ -54,7 +55,10 @@ function setup(
     },
     {
       provide: ComnAuthService,
-      useValue: { setUserTheme },
+      useValue: { setUserTheme } satisfies Pick<
+        ComnAuthService,
+        'setUserTheme'
+      >,
     },
     {
       provide: ComnSettingsService,
@@ -66,22 +70,19 @@ function setup(
         },
       },
     },
-    { provide: Router, useValue: { navigate } },
-    { provide: Title, useValue: { setTitle } },
+    {
+      provide: Router,
+      useValue: { navigate } satisfies Pick<Router, 'navigate'>,
+    },
+    {
+      provide: Title,
+      useValue: { setTitle } satisfies Pick<Title, 'setTitle'>,
+    },
     {
       provide: ActivatedRoute,
-      useValue: {
-        queryParamMap: of(
-          convertToParamMap(queryTheme == null ? {} : { theme: queryTheme }),
-        ),
-        params: of({}),
-        paramMap: of(convertToParamMap({})),
-        queryParams: of({}),
-        snapshot: {
-          params: {},
-          paramMap: convertToParamMap({}),
-        },
-      },
+      useValue: activatedRouteStub(
+        queryTheme == null ? {} : { theme: queryTheme },
+      ).route,
     },
   ];
 
