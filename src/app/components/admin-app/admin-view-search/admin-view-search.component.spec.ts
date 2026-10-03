@@ -6,7 +6,7 @@ import { Component, EventEmitter, Output, TemplateRef } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
-import { NEVER, of, Subject } from 'rxjs';
+import { NEVER, Observable, of, Subject } from 'rxjs';
 import { AdminViewSearchComponent } from './admin-view-search.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
@@ -28,6 +28,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import type { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import { activatedRouteStub } from '../../../test-utils/activated-route';
+import { unstubbed } from '../../../test-utils/unstubbed';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 const mockViews: View[] = [
   {
@@ -88,30 +96,32 @@ function tooltipButton(
 async function renderAdminViewSearch(
   overrides: {
     confirmResult?: boolean;
-    getView?: (id: string) => unknown;
+    getView?: (id: string) => Observable<View>;
     queryParamView?: string | null;
+    viewsError?: Error;
   } = {},
 ) {
   const {
     confirmResult = false,
-    getView = () => of(null),
+    getView = () => of<View>(null),
     queryParamView = null,
+    viewsError,
   } = overrides;
 
   // Use a Subject so getViews() does not emit synchronously during ngOnInit
   // (the component calls refreshViews() before initializing viewDataSource).
   const viewsSubject = new Subject<View[]>();
-  const dialogClose = vi.fn();
+  const { dialogRef, close: dialogClose } = dialogRefStub();
 
   const stubs = {
     getViews: vi.fn(() => viewsSubject.asObservable()),
     getView: vi.fn(getView),
     createView: vi.fn((v: View) => of({ ...v, id: 'created-view' })),
     updateView: vi.fn((_id: string, v: View) => of(v)),
-    confirm: vi.fn(() => ({
-      afterClosed: () => of(confirmResult),
-    })),
-    dialogOpen: vi.fn(() => ({ close: dialogClose })),
+    confirm: vi.fn(
+      () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
+    ),
+    dialogOpen: vi.fn(() => dialogRef),
     dialogClose,
   };
 
@@ -141,54 +151,66 @@ async function renderAdminViewSearch(
           getView: stubs.getView,
           createView: stubs.createView,
           updateView: stubs.updateView,
-        },
+        } satisfies ApiStub<ViewService>,
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: stubs.confirm },
+        useValue: { confirm: stubs.confirm } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
       },
-      {
-        provide: LoggedInUserService,
-        useValue: {
-          loggedInUser$: of({ name: '', id: '' }),
-          setLoggedInUser: () => {},
-        },
-      },
+      // Injected, but the component only reads it in commented-out code.
+      unstubbed(LoggedInUserService),
       {
         provide: MatDialog,
-        useValue: { open: stubs.dialogOpen },
+        useValue: { open: stubs.dialogOpen } satisfies Pick<MatDialog, 'open'>,
       },
       {
         provide: ActivatedRoute,
-        useValue: {
-          params: of({}),
-          paramMap: of(convertToParamMap({})),
-          queryParams: of({}),
-          queryParamMap: of(convertToParamMap({})),
-          snapshot: {
-            params: {},
-            paramMap: convertToParamMap({}),
-            queryParamMap: convertToParamMap(
-              queryParamView == null ? {} : { view: queryParamView },
-            ),
-          },
-        },
+        useValue: activatedRouteStub(
+          queryParamView == null ? {} : { view: queryParamView },
+        ).route,
       },
       {
         provide: Router,
-        useValue: { navigate: () => {} },
+        useValue: {
+          navigate: vi.fn(() => Promise.resolve(true)),
+        } satisfies Pick<Router, 'navigate'>,
       },
     ],
   });
 
   // Now that ngOnInit has run and viewDataSource is initialized, emit the views.
-  viewsSubject.next(mockViews);
+  // The emission comes from the test body, outside NgZone (an HTTP response
+  // would arrive inside it), so nothing schedules change detection for it.
+  if (viewsError) {
+    viewsSubject.error(viewsError);
+  } else {
+    viewsSubject.next(mockViews);
+  }
+  result.fixture.detectChanges();
   await result.fixture.whenStable();
 
   return { ...result, stubs, viewsSubject };
 }
 
 describe('AdminViewSearchComponent', () => {
+  /**
+   * Verifies: a failed views request leaves the loading spinner up and lets the error escape (current behavior).
+   * Interacts with: ViewService.getViews (errors); the rendered spinner; captureUnhandledRxErrors.
+   * Data: getViews fails with a 500.
+   */
+  it('leaves the spinner up when the views request fails', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new Error('500');
+    const { fixture } = await renderAdminViewSearch({ viewsError: failure });
+    await flush();
+    expect(fixture.componentInstance.isLoading).toBe(true);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(errors).toEqual([failure]);
+  });
+
   /**
    * Verifies: the search input is rendered.
    * Interacts with: the rendered DOM (queried by placeholder).
@@ -290,7 +312,7 @@ describe('AdminViewSearchComponent', () => {
 
   /**
    * Verifies: activating an inactive view confirms then updates status to Active.
-   * Interacts with: stubbed ViewService.getView/updateView and DialogService.confirm.
+   * Interacts with: stubbed ViewService.getView/updateView and CrucibleDialogService.confirm.
    * Data: inactive mockViews[1]; confirmResult=true.
    */
   it("executeViewAction('activate') activates an inactive view after confirmation", async () => {
@@ -314,7 +336,7 @@ describe('AdminViewSearchComponent', () => {
 
   /**
    * Verifies: the same 'activate' action on an active view prompts a Deactivate confirm and updates status to Inactive.
-   * Interacts with: stubbed ViewService.getView/updateView and DialogService.confirm.
+   * Interacts with: stubbed ViewService.getView/updateView and CrucibleDialogService.confirm.
    * Data: active mockViews[0]; confirmResult=true.
    */
   it("executeViewAction('activate') deactivates an active view after confirmation", async () => {
@@ -338,7 +360,7 @@ describe('AdminViewSearchComponent', () => {
 
   /**
    * Verifies: declining the confirm skips the status update.
-   * Interacts with: stubbed DialogService.confirm and ViewService.updateView.
+   * Interacts with: stubbed CrucibleDialogService.confirm and ViewService.updateView.
    * Data: confirmResult=false.
    */
   it("executeViewAction('activate') does not update when confirmation is declined", async () => {

@@ -10,18 +10,20 @@ import { ViewsService } from './views.service';
 import {
   ArchiveType,
   CreateViewCommand,
+  ImportViewsResult,
   TeamService,
   View,
   ViewService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function view(overrides: Partial<View> = {}): View {
   return { id: 'v1', name: 'View One', ...overrides };
 }
 
 function createService(
-  viewApi: Partial<Record<keyof ViewService, unknown>> = {},
-  teamApi: Partial<Record<keyof TeamService, unknown>> = {},
+  viewApi: ApiStub<ViewService> = {},
+  teamApi: ApiStub<TeamService> = {},
 ) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -170,7 +172,7 @@ describe('ViewsService', () => {
    * Data: (true, false, archive Blob).
    */
   it('import() forwards its arguments to ViewService.importViews', async () => {
-    const importViews = vi.fn(() => of(view()));
+    const importViews = vi.fn(() => of<ImportViewsResult>({ failures: [] }));
     const svc = createService({ importViews });
     const archive = new Blob(['archive']);
     await firstValueFrom(svc.import(true, false, archive));

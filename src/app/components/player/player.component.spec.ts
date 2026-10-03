@@ -3,20 +3,32 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { EMPTY, firstValueFrom, NEVER, of, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  EMPTY,
+  firstValueFrom,
+  NEVER,
+  of,
+  throwError,
+} from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { ComnAuthQuery, ComnSettingsService } from '@cmusei/crucible-common';
 import { ViewService } from '../../generated/player-api/api/view.service';
 import {
+  Team,
   TeamMembership,
   TeamMembershipService,
+  TeamPermissionService,
+  TeamService,
 } from '../../generated/player-api';
-import { ViewsService } from '../../services/views/views.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { SystemMessageService } from '../../services/system-message/system-message.service';
-import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
+import {
+  permissionApiStubs,
+  permissionDataProviders,
+} from '../../test-utils/mock-permission-data.service';
 import { PlayerComponent, TeamUIState } from './player.component';
 import { renderComponent } from '../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
@@ -28,6 +40,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { ResizableModule } from 'angular-resizable-element';
 import { TeamData } from '../../models/team-data';
 import { TopbarView } from '../shared/top-bar/topbar.models';
+import { ApiStub } from '../../test-utils/api-stub';
+import type { User as AuthUser } from 'oidc-client-ts';
+import { dialogRefStub } from '../../test-utils/dialog-refs';
 
 @Component({ selector: 'app-application-list', template: '' })
 class ApplicationListStubComponent {
@@ -79,18 +94,22 @@ async function renderPlayer(
     selectQueryParams?: unknown;
     memberships?: TeamMembership[];
     view?: unknown;
-    user?: unknown;
+    user?: AuthUser;
   } = {},
 ) {
   const { teamId = 'team-a' } = overrides;
 
   const displayMessage = vi.fn();
   const navigate = vi.fn();
-  const setPrimaryTeamId = vi.fn(() => of({}));
+  // The real ViewsService (a default provider) calls this endpoint.
+  const setUserPrimaryTeam = vi.fn((_userId: string, teamId: string) =>
+    of<Team>({ id: teamId }),
+  );
   const getView = vi.fn(() => of(overrides.view ?? { id: 'view-1' }));
   const getTeamMemberships = vi.fn(() => of(overrides.memberships ?? []));
-  const loadTeamPermissions = vi.fn(() => of([]));
-  const user = overrides.user ?? { profile: { sub: 'u1' } };
+  // The real UserPermissionsService loads team claims over this stub.
+  const permissionStubs = permissionApiStubs();
+  const user = overrides.user ?? ({ profile: { sub: 'u1' } } as AuthUser);
 
   // EMPTY by default so loadData()'s subscription stays inert; tests that
   // exercise loadData/checkParam pass an explicit state/query observable.
@@ -100,7 +119,7 @@ async function renderPlayer(
     select: () => overrides.routerState ?? EMPTY,
   };
 
-  const dialog = { open: vi.fn() };
+  const dialog = { open: vi.fn() } satisfies Pick<MatDialog, 'open'>;
 
   const rendered = await renderComponent(PlayerComponent, {
     imports: [
@@ -124,26 +143,47 @@ async function renderPlayer(
           serializeUrl: vi.fn(() => 'url'),
           createUrlTree: vi.fn(),
           navigate,
-        },
+        } satisfies Pick<Router, 'serializeUrl' | 'createUrlTree' | 'navigate'>,
       },
       { provide: RouterQuery, useValue: routerQuery },
-      { provide: ViewsService, useValue: { setPrimaryTeamId } },
-      { provide: ViewService, useValue: { getView } },
-      { provide: LoggedInUserService, useValue: { loggedInUser$: of(user) } },
+      {
+        provide: TeamService,
+        useValue: { setUserPrimaryTeam } satisfies ApiStub<TeamService>,
+      },
+      {
+        provide: ViewService,
+        useValue: { getView } satisfies ApiStub<ViewService>,
+      },
+      {
+        provide: LoggedInUserService,
+        useValue: { loggedInUser$: new BehaviorSubject(user) } satisfies Pick<
+          LoggedInUserService,
+          'loggedInUser$'
+        >,
+      },
       {
         provide: TeamMembershipService,
-        useValue: { getTeamMemberships },
+        useValue: {
+          getTeamMemberships,
+        } satisfies ApiStub<TeamMembershipService>,
       },
       {
         provide: ComnSettingsService,
         useValue: { settings: { AppTitle: 'Player' } },
       },
       { provide: MatDialog, useValue: dialog },
-      { provide: SystemMessageService, useValue: { displayMessage } },
-      { provide: ComnAuthQuery, useValue: { userTheme$: of('light-theme') } },
       {
-        provide: UserPermissionsService,
-        useValue: { loadTeamPermissions },
+        provide: SystemMessageService,
+        useValue: { displayMessage } satisfies Pick<
+          SystemMessageService,
+          'displayMessage'
+        >,
+      },
+      { provide: ComnAuthQuery, useValue: { userTheme$: of('light-theme') } },
+      ...permissionDataProviders(),
+      {
+        provide: TeamPermissionService,
+        useValue: permissionStubs.teamPermissions,
       },
     ],
   });
@@ -155,10 +195,10 @@ async function renderPlayer(
     displayMessage,
     navigate,
     dialog,
-    setPrimaryTeamId,
+    setUserPrimaryTeam,
     getView,
     getTeamMemberships,
-    loadTeamPermissions,
+    getMyTeamPermissions: permissionStubs.teamPermissions.getMyTeamPermissions,
   };
 }
 
@@ -370,6 +410,23 @@ describe('PlayerComponent', () => {
     });
 
     /**
+     * Verifies: entering a view loads the user's team claims for the primary team, across all view teams.
+     * Interacts with: the real UserPermissionsService.loadTeamPermissions over the
+     *   TeamPermissionService.getMyTeamPermissions stub; data$ from ngOnInit.
+     * Data: routerState with view-1; one primary membership in team-a.
+     * Why: the topbar's Edit View and Manage Teams gates read these claims.
+     */
+    it('loads team permissions for the primary team on init', async () => {
+      const { getMyTeamPermissions } = await renderPlayer({
+        routerState,
+        memberships: [
+          { id: 'tm-a', teamId: 'team-a', teamName: 'Team A', isPrimary: true },
+        ],
+      });
+      expect(getMyTeamPermissions).toHaveBeenCalledWith(null, 'team-a', true);
+    });
+
+    /**
      * Verifies: when the user is a member of no teams, loadData shows a "Not a Member" message and navigates home.
      * Interacts with: SystemMessageService.displayMessage spy, Router.navigate spy.
      * Data: no memberships returned for the view.
@@ -476,42 +533,42 @@ describe('PlayerComponent', () => {
 
   describe('setPrimaryTeam()', () => {
     /**
-     * Verifies: setPrimaryTeam calls ViewsService.setPrimaryTeamId with the user sub and new team when it differs from current.
-     * Interacts with: ViewsService.setPrimaryTeamId spy, data$ holding the current team.
+     * Verifies: setPrimaryTeam sets the user's primary team through the API when it differs from the current one.
+     * Interacts with: the real ViewsService.setPrimaryTeamId over the TeamService.setUserPrimaryTeam stub, data$ holding the current team.
      * Data: user sub 'user-9', current team 'team-a', chosen 'team-b'.
-     * Why: setPrimaryTeamId is mocked to NEVER so the success tap's window.location.reload (non-configurable in jsdom) never fires.
+     * Why: setUserPrimaryTeam is mocked to NEVER so the success tap's window.location.reload (non-configurable in jsdom) never fires.
      */
     it('sets the new primary team when it differs from the current one', async () => {
-      // setPrimaryTeamId returns NEVER so the success tap (window.location.reload,
-      // non-configurable in jsdom) never fires — we only assert the API call.
-      const { fixture, setPrimaryTeamId } = await renderPlayer({
-        user: { profile: { sub: 'user-9' } },
+      // NEVER so the success tap (window.location.reload, non-configurable in
+      // jsdom) never fires; only the API call is asserted.
+      const { fixture, setUserPrimaryTeam } = await renderPlayer({
+        user: { profile: { sub: 'user-9' } } as AuthUser,
       });
-      setPrimaryTeamId.mockReturnValueOnce(NEVER);
+      setUserPrimaryTeam.mockReturnValueOnce(NEVER);
       const c = fixture.componentInstance;
       c.data$ = of({ team: { id: 'team-a' } });
       c.setPrimaryTeam('team-b');
-      expect(setPrimaryTeamId).toHaveBeenCalledWith('user-9', 'team-b');
+      expect(setUserPrimaryTeam).toHaveBeenCalledWith('user-9', 'team-b');
     });
 
     /**
      * Verifies: setPrimaryTeam is a no-op when the chosen team already matches the current primary.
-     * Interacts with: ViewsService.setPrimaryTeamId spy, data$ holding the current team.
+     * Interacts with: the real ViewsService over the TeamService.setUserPrimaryTeam stub (asserted not called), data$ holding the current team.
      * Data: current team 'team-a', chosen 'team-a'.
      */
     it('does nothing when the chosen team is already primary', async () => {
-      const { fixture, setPrimaryTeamId } = await renderPlayer();
+      const { fixture, setUserPrimaryTeam } = await renderPlayer();
       const c = fixture.componentInstance;
       c.data$ = of({ team: { id: 'team-a' } });
       c.setPrimaryTeam('team-a');
-      expect(setPrimaryTeamId).not.toHaveBeenCalled();
+      expect(setUserPrimaryTeam).not.toHaveBeenCalled();
     });
   });
 
   describe('editViewFn()', () => {
     /**
      * Verifies: in-app editViewFn opens the dialog, resets the stepper, seeds it from data$ view, and closes when editComplete fires.
-     * Interacts with: MatDialog.open stub returning a fake dialog ref with componentInstance spies and editComplete observable.
+     * Interacts with: MatDialog.open stub returning a dialogRefStub with componentInstance spies and an editComplete observable.
      * Data: data$ view { id: 'view-1', name: 'Demo' }; editViewFn({ isNewBrowserTab: false }).
      */
     it('opens the edit-view dialog and seeds it from data$ for in-app editing', async () => {
@@ -524,8 +581,11 @@ describe('PlayerComponent', () => {
         setView: vi.fn(),
         editComplete: of('done'),
       };
-      const close = vi.fn();
-      dialog.open.mockReturnValue({ componentInstance, close });
+      const { dialogRef, close } = dialogRefStub<typeof componentInstance>();
+      // dialogRefStub has no componentInstance; editViewFn drives the dialog
+      // component through it.
+      Object.assign(dialogRef, { componentInstance });
+      dialog.open.mockReturnValue(dialogRef);
       c.data$ = of({ view: { id: 'view-1', name: 'Demo' } });
       c.editViewFn({ isNewBrowserTab: false });
       expect(dialog.open).toHaveBeenCalled();

@@ -9,6 +9,7 @@ import { User, UserService, Role } from '../../../../generated/player-api';
 import { AdminUserEditComponent } from './admin-user-edit.component';
 import { renderComponent } from '../../../../test-utils/render-component';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../../test-utils/api-stub';
 
 const user: User = {
   id: 'u1',
@@ -35,7 +36,12 @@ async function renderEdit(overrides: { user?: User; roles?: Role[] } = {}) {
     declarations: [AdminUserEditComponent],
     imports: [MatButtonModule, RolesPermissionsSelectStubComponent],
     componentProperties: { user: u, roles: rs },
-    providers: [{ provide: UserService, useValue: { updateUser } }],
+    providers: [
+      {
+        provide: UserService,
+        useValue: { updateUser } satisfies ApiStub<UserService>,
+      },
+    ],
   });
 
   return { ...rendered, updateUser };

@@ -22,6 +22,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 const team: Team = { id: 't1', name: 'Red' };
 const view: View = { id: 'v1', name: 'Demo View' };
@@ -73,9 +75,9 @@ async function renderSelect(
   const moveDownApplicationInstance = vi.fn(() => of(instances));
   const deleteApplicationInstance = vi.fn(() => of(undefined));
   const updateApplicationInstance = vi.fn(() => of({} as ApplicationInstance));
-  const confirm = vi.fn(() => ({
-    afterClosed: () => of(confirmRemove),
-  }));
+  const confirm = vi.fn(
+    () => dialogRefStub<unknown, boolean>(confirmRemove).dialogRef,
+  );
 
   const rendered = await renderComponent(TeamApplicationsSelectComponent, {
     imports: [
@@ -99,9 +101,12 @@ async function renderSelect(
           moveDownApplicationInstance,
           deleteApplicationInstance,
           updateApplicationInstance,
-        },
+        } satisfies ApiStub<ApplicationService>,
       },
-      { provide: CrucibleDialogService, useValue: { confirm } },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm } satisfies Pick<CrucibleDialogService, 'confirm'>,
+      },
     ],
   });
 
@@ -201,7 +206,7 @@ describe('TeamApplicationsSelectComponent', () => {
 
   /**
    * Verifies: removeApplicationInstanceFromTeam deletes the instance once the user confirms.
-   * Interacts with: stubbed DialogService.confirm and ApplicationService.deleteApplicationInstance.
+   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplicationInstance.
    * Data: confirmRemove=true; instA (id 'i1').
    */
   it('removeApplicationInstanceFromTeam only deletes after confirm', async () => {
@@ -214,7 +219,7 @@ describe('TeamApplicationsSelectComponent', () => {
 
   /**
    * Verifies: a declined confirm leaves deleteApplicationInstance uncalled.
-   * Interacts with: stubbed DialogService.confirm and ApplicationService.deleteApplicationInstance.
+   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplicationInstance.
    * Data: confirmRemove=false.
    */
   it('removeApplicationInstanceFromTeam is a no-op when confirm returns false', async () => {

@@ -16,6 +16,7 @@ import { renderComponent } from '../../../test-utils/render-component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 const file: FileModel = {
   id: 'f1',
@@ -46,7 +47,10 @@ async function renderDialog() {
       { provide: MatDialogRef, useValue: dialogRef },
       {
         provide: ApplicationService,
-        useValue: { getTeamApplicationInstances, createApplicationInstance },
+        useValue: {
+          getTeamApplicationInstances,
+          createApplicationInstance,
+        } satisfies ApiStub<ApplicationService>,
       },
     ],
   });

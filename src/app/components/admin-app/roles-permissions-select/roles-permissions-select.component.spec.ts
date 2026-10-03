@@ -3,7 +3,12 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { of } from 'rxjs';
+import { defer, of } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
+import { ComponentFixture } from '@angular/core/testing';
+import { TeamPermissionScopesService } from '../../../services/permissions/team-permission-scopes.service';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
 import {
   User,
@@ -11,10 +16,9 @@ import {
   UserService,
   TeamService,
   Permission,
+  TeamPermissionService,
+  TeamPermissionScopeService,
 } from '../../../generated/player-api';
-import { RolesService } from '../../../services/roles/roles.service';
-import { TeamRolesService } from '../../../services/roles/team-roles.service';
-import { TeamPermissionsService } from '../../../services/permissions/team-permissions.service';
 import {
   ObjectType,
   RolesPermissionsSelectComponent,
@@ -24,6 +28,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 const permissionA: Permission = { id: 'p1', name: 'A' };
 const permissionB: Permission = { id: 'p2', name: 'B' };
@@ -33,14 +38,39 @@ async function renderSelect(
     user?: User | null;
     team?: Team | null;
     canEdit?: boolean;
+    allTeams?: Team[];
+    scopeError?: boolean;
   } = {},
 ) {
-  const { user = null, team = null, canEdit = true } = overrides;
+  const {
+    user = null,
+    team = null,
+    canEdit = true,
+    allTeams = [],
+    scopeError = false,
+  } = overrides;
 
   const updateUser = vi.fn(() => of({}));
   const updateTeam = vi.fn(() => of({}));
-  const addToTeam = vi.fn(() => of({}));
-  const removeFromTeam = vi.fn(() => of({}));
+  // The real TeamPermissionsService.addToTeam/removeFromTeam call these. The
+  // real role and permission services start with empty streams, which is all
+  // these tests need.
+  const addToTeam = vi.fn((_teamId: string, _permissionId: string) => of({}));
+  const removeFromTeam = vi.fn((_teamId: string, _permissionId: string) =>
+    of({}),
+  );
+
+  // The real TeamPermissionScopesService calls these. A failure arrives
+  // asynchronously, as an HTTP error does, after the select has applied the
+  // user's change to its model.
+  const scopeResult = () =>
+    scopeError ? defer(() => Promise.reject(new Error('403'))) : of(undefined);
+  const addScope = vi.fn((_teamId: string, _targetTeamId: string) =>
+    scopeResult(),
+  );
+  const removeScope = vi.fn((_teamId: string, _targetTeamId: string) =>
+    scopeResult(),
+  );
 
   const rendered = await renderComponent(RolesPermissionsSelectComponent, {
     declarations: [RolesPermissionsSelectComponent],
@@ -50,39 +80,62 @@ async function renderSelect(
       MatTooltipModule,
       MatButtonModule,
       MatSelectModule,
+      FormsModule,
     ],
-    componentProperties: { user, team, canEdit },
+    componentProperties: { user, team, canEdit, allTeams },
     providers: [
-      { provide: UserService, useValue: { updateUser } },
-      { provide: TeamService, useValue: { updateTeam } },
       {
-        provide: TeamPermissionsService,
+        provide: UserService,
+        useValue: { updateUser } satisfies ApiStub<UserService>,
+      },
+      {
+        provide: TeamService,
+        useValue: { updateTeam } satisfies ApiStub<TeamService>,
+      },
+      {
+        provide: TeamPermissionService,
         useValue: {
-          teamPermissions$: of([permissionA, permissionB]),
-          addToTeam,
-          removeFromTeam,
-        },
+          addTeamPermissionToTeam: addToTeam,
+          removeTeamPermissionFromTeam: removeFromTeam,
+        } satisfies ApiStub<TeamPermissionService>,
       },
       {
-        provide: TeamRolesService,
-        useValue: { roles$: of([]) },
+        provide: TeamPermissionScopeService,
+        useValue: {
+          addTeamPermissionScope: addScope,
+          removeTeamPermissionScope: removeScope,
+        } satisfies ApiStub<TeamPermissionScopeService>,
       },
-      {
-        provide: RolesService,
-        useValue: { roles$: of([]) },
-      },
+      // Real: a thin wrapper over the endpoints above (a placeholder in the
+      // default providers).
+      TeamPermissionScopesService,
     ],
   });
 
-  return { ...rendered, updateUser, updateTeam, addToTeam, removeFromTeam };
+  return {
+    ...rendered,
+    updateUser,
+    updateTeam,
+    addToTeam,
+    removeFromTeam,
+    addScope,
+    removeScope,
+  };
 }
 
 describe('RolesPermissionsSelectComponent', () => {
-  // Note: the "both supplied" / "neither supplied" paths are exercised
-  // through ngOnInit()'s early return. Rendering those cases in a
-  // template context crashes because other template bindings then
-  // dereference the unset subject — that's a real bug in the component
-  // but is out of scope for this coverage task.
+  /**
+   * Verifies: rendering with both a user and a team, or with neither, throws a TypeError from the template instead of showing inert dropdowns (current behavior).
+   * Interacts with: ngOnInit's early return (it logs and leaves `subject` unset) and the template's subject.roleId binding.
+   * Data: one row with a user and a team, one with neither.
+   */
+  it.each<[string, { user?: User; team?: Team }]>([
+    ['both a user and a team', { user: { id: 'u1' }, team: { id: 't1' } }],
+    ['neither a user nor a team', {}],
+  ])('throws while rendering with %s', async (_label, inputs) => {
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    await expect(renderSelect(inputs)).rejects.toThrow(TypeError);
+  });
 
   /**
    * Verifies: passing a team puts the component in Team mode, shows permissions, and seeds selection from team.permissions/roleId.
@@ -127,9 +180,8 @@ describe('RolesPermissionsSelectComponent', () => {
       user: { id: 'u1', name: 'Alice', roleId: 'r2' },
       canEdit: false,
     });
-    const roleSelect = fixture.debugElement.query(
-      By.directive(MatSelect),
-    ).componentInstance as MatSelect;
+    const roleSelect = fixture.debugElement.query(By.directive(MatSelect))
+      .componentInstance as MatSelect;
 
     expect(roleSelect.disabled).toBe(true);
   });
@@ -143,16 +195,15 @@ describe('RolesPermissionsSelectComponent', () => {
     const { fixture } = await renderSelect({
       user: { id: 'u1', name: 'Alice', roleId: 'r2' },
     });
-    const roleSelect = fixture.debugElement.query(
-      By.directive(MatSelect),
-    ).componentInstance as MatSelect;
+    const roleSelect = fixture.debugElement.query(By.directive(MatSelect))
+      .componentInstance as MatSelect;
 
     expect(roleSelect.disabled).toBe(false);
   });
 
   /**
    * Verifies: checking a permission in Team mode calls addToTeam and not removeFromTeam.
-   * Interacts with: stubbed TeamPermissionsService.addToTeam / removeFromTeam.
+   * Interacts with: the real TeamPermissionsService.addToTeam / removeFromTeam over the TeamPermissionService.addTeamPermissionToTeam / removeTeamPermissionFromTeam stubs.
    * Data: team with p1; adding p2 (checked=true).
    */
   it('updatePermissions(Team, checked=true) calls addToTeam', async () => {
@@ -169,7 +220,7 @@ describe('RolesPermissionsSelectComponent', () => {
 
   /**
    * Verifies: unchecking a permission in Team mode calls removeFromTeam and not addToTeam.
-   * Interacts with: stubbed TeamPermissionsService.addToTeam / removeFromTeam.
+   * Interacts with: the real TeamPermissionsService.addToTeam / removeFromTeam over the TeamPermissionService.addTeamPermissionToTeam / removeTeamPermissionFromTeam stubs.
    * Data: team with p1; removing p1 (checked=false).
    */
   it('updatePermissions(Team, checked=false) calls removeFromTeam', async () => {
@@ -242,6 +293,87 @@ describe('RolesPermissionsSelectComponent', () => {
     expect(updateTeam).toHaveBeenCalledWith(
       't1',
       expect.objectContaining({ id: 't1', roleId: 'team-role' }),
+    );
+  });
+
+  describe('scoped teams', () => {
+    const red: Team = { id: 't1', name: 'Red' };
+    const blue: Team = { id: 't2', name: 'Blue' };
+
+    /** Clicks the Blue option in the rendered Scoped Teams select. */
+    async function toggleBlue(
+      fixture: ComponentFixture<RolesPermissionsSelectComponent>,
+    ) {
+      const select = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+        MatSelectHarness.with({ selector: '[name="scopedTeams"]' }),
+      );
+      await select.open();
+      const [option] = await select.getOptions({ text: 'Blue' });
+      await option.click();
+      return option;
+    }
+
+    /**
+     * Verifies: selecting another team in Scoped Teams scopes this team's permissions onto it and records the id on the team.
+     * Interacts with: the rendered Scoped Teams select (MatSelectHarness); the real TeamPermissionScopesService.addScope
+     *   over TeamPermissionScopeService.addTeamPermissionScope.
+     * Data: team Red (t1) with no scoped teams; allTeams [Red, Blue]; Blue selected.
+     */
+    it('adds a scope when a team is selected', async () => {
+      const team: Team = { ...red, scopedTeamIds: [] };
+      const { fixture, addScope } = await renderSelect({
+        team,
+        allTeams: [red, blue],
+      });
+      const option = await toggleBlue(fixture);
+      expect(addScope).toHaveBeenCalledWith('t1', 't2');
+      expect(team.scopedTeamIds).toEqual(['t2']);
+      expect(await option.isSelected()).toBe(true);
+    });
+
+    /**
+     * Verifies: deselecting a scoped team removes the scope and drops the id from the team.
+     * Interacts with: the rendered Scoped Teams select (MatSelectHarness); the real TeamPermissionScopesService.removeScope
+     *   over TeamPermissionScopeService.removeTeamPermissionScope.
+     * Data: team Red (t1) already scoped onto Blue (t2); Blue deselected.
+     */
+    it('removes a scope when a team is deselected', async () => {
+      const team: Team = { ...red, scopedTeamIds: ['t2'] };
+      const { fixture, removeScope } = await renderSelect({
+        team,
+        allTeams: [red, blue],
+      });
+      const option = await toggleBlue(fixture);
+      expect(removeScope).toHaveBeenCalledWith('t1', 't2');
+      expect(team.scopedTeamIds).toEqual([]);
+      expect(await option.isSelected()).toBe(false);
+    });
+
+    /**
+     * Verifies: when the scope request fails, the selection reverts to the team's saved scoped teams.
+     * Interacts with: the rendered Scoped Teams select (MatSelectHarness); the real TeamPermissionScopesService over
+     *   failing TeamPermissionScopeService endpoints.
+     * Data: one row per direction: adding Blue to [] and removing Blue from ['t2'], each failing with a 403.
+     */
+    it.each<[string, string[]]>([
+      ['adding', []],
+      ['removing', ['t2']],
+    ])(
+      'reverts the selection when %s a scope fails',
+      async (_direction, saved) => {
+        const team: Team = { ...red, scopedTeamIds: [...saved] };
+        const { fixture } = await renderSelect({
+          team,
+          allTeams: [red, blue],
+          scopeError: true,
+        });
+        const option = await toggleBlue(fixture);
+        await fixture.whenStable();
+        fixture.detectChanges();
+        expect(fixture.componentInstance.selectedScopedTeams).toEqual(saved);
+        expect(team.scopedTeamIds).toEqual(saved);
+        expect(await option.isSelected()).toBe(saved.includes('t2'));
+      },
     );
   });
 });

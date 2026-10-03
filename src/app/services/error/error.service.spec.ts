@@ -12,7 +12,13 @@ function createService() {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
-      { provide: SystemMessageService, useValue: { displayMessage } },
+      {
+        provide: SystemMessageService,
+        useValue: { displayMessage } satisfies Pick<
+          SystemMessageService,
+          'displayMessage'
+        >,
+      },
       ErrorService,
     ],
   });

@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { A11yModule } from '@angular/cdk/a11y';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 async function renderDialog(
   overrides: {
@@ -41,7 +42,10 @@ async function renderDialog(
     },
     providers: [
       { provide: MatDialogRef, useValue: dialogRef },
-      { provide: FileService, useValue: { updateFile } },
+      {
+        provide: FileService,
+        useValue: { updateFile } satisfies ApiStub<FileService>,
+      },
     ],
   });
 
@@ -85,5 +89,4 @@ describe('EditFileDialogComponent', () => {
       teams: ['team-a'],
     });
   });
-
 });

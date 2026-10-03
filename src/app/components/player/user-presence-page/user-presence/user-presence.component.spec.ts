@@ -22,6 +22,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../../test-utils/api-stub';
 
 const teams: Team[] = [
   { id: 't2', name: 'Beta' },
@@ -83,12 +84,20 @@ async function renderPresence() {
     providers: [
       {
         provide: NotificationService,
-        useValue: { userPresence$, joinPresence, leavePresence },
+        useValue: { userPresence$, joinPresence, leavePresence } satisfies Pick<
+          NotificationService,
+          'userPresence$' | 'joinPresence' | 'leavePresence'
+        >,
       },
-      { provide: TeamService, useValue: { getMyViewTeams } },
+      {
+        provide: TeamService,
+        useValue: { getMyViewTeams } satisfies ApiStub<TeamService>,
+      },
       {
         provide: TeamPermissionService,
-        useValue: { getMyTeamPermissions },
+        useValue: {
+          getMyTeamPermissions,
+        } satisfies ApiStub<TeamPermissionService>,
       },
     ],
   });

@@ -14,6 +14,8 @@ import { renderComponent } from '../../../../test-utils/render-component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../../test-utils/dialog-refs';
 
 const template: ApplicationTemplate = {
   id: 't1',
@@ -36,9 +38,9 @@ async function renderDetails(
     (_id: string, t: ApplicationTemplate) => of(t),
   );
   const deleteApplicationTemplate = vi.fn(() => of(undefined));
-  const confirmDialog = vi.fn(() => ({
-    afterClosed: () => of(confirm),
-  }));
+  const confirmDialog = vi.fn(
+    () => dialogRefStub<unknown, boolean>(confirm).dialogRef,
+  );
 
   const rendered = await renderComponent(AdminTemplateDetailsComponent, {
     declarations: [AdminTemplateDetailsComponent],
@@ -55,11 +57,14 @@ async function renderDetails(
         useValue: {
           updateApplicationTemplate,
           deleteApplicationTemplate,
-        },
+        } satisfies ApiStub<ApplicationService>,
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: confirmDialog },
+        useValue: { confirm: confirmDialog } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
       },
     ],
   });
@@ -114,13 +119,13 @@ describe('AdminTemplateDetailsComponent', () => {
           useValue: {
             updateApplicationTemplate,
             deleteApplicationTemplate: vi.fn(),
-          },
+          } satisfies ApiStub<ApplicationService>,
         },
         {
           provide: CrucibleDialogService,
           useValue: {
-            confirm: () => ({ afterClosed: () => of(false) }),
-          },
+            confirm: () => dialogRefStub<unknown, boolean>(false).dialogRef,
+          } satisfies Pick<CrucibleDialogService, 'confirm'>,
         },
       ],
     });
@@ -131,7 +136,7 @@ describe('AdminTemplateDetailsComponent', () => {
   /**
    * Verifies: confirming the delete dialog deletes the template and emits
    *   refresh(true).
-   * Interacts with: DialogService.confirm + ApplicationService.deleteApplicationTemplate;
+   * Interacts with: CrucibleDialogService.confirm + ApplicationService.deleteApplicationTemplate;
    *   component.refresh output.
    * Data: confirm = true; template id 't1'.
    */
@@ -148,7 +153,7 @@ describe('AdminTemplateDetailsComponent', () => {
 
   /**
    * Verifies: cancelling the delete dialog neither deletes nor emits refresh.
-   * Interacts with: DialogService.confirm + ApplicationService.deleteApplicationTemplate;
+   * Interacts with: CrucibleDialogService.confirm + ApplicationService.deleteApplicationTemplate;
    *   component.refresh output.
    * Data: confirm = false.
    */
@@ -180,7 +185,7 @@ describe('AdminTemplateDetailsComponent', () => {
   /**
    * Verifies: clicking Delete opens the confirm dialog with a title and a body
    *   referencing the template name.
-   * Interacts with: DialogService.confirm spy; userEvent click.
+   * Interacts with: CrucibleDialogService.confirm spy; userEvent click.
    * Data: confirm = false; template named 'Alpha'.
    */
   it('clicking the delete button triggers the confirmation dialog', async () => {

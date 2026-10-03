@@ -3,8 +3,10 @@
 
 import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { screen } from '@testing-library/angular';
-import { of } from 'rxjs';
+import { screen, within } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { firstValueFrom, of, throwError } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { ClipboardModule } from 'ngx-clipboard';
@@ -21,11 +23,19 @@ import {
   SystemPermission,
   UserDirectoryEntry,
   UserService,
+  Role,
+  RoleService,
 } from '../../../generated/player-api';
-import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { permissionDataProviders } from '../../../test-utils/mock-permission-data.service';
 import { RolesService } from '../../../services/roles/roles.service';
 import { renderComponent } from '../../../test-utils/render-component';
 import { AdminUserSearchComponent } from './admin-user-search.component';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 const mockUsers: UserDirectoryEntry[] = [
   {
@@ -59,23 +69,28 @@ class RolesPermissionsSelectStubComponent {
 async function renderAdminUserSearch(
   overrides: {
     confirmResult?: boolean;
-    permissions?: string[];
+    permissions?: SystemPermission[];
     result?: UserDirectoryEntry[];
+    usersError?: Error;
   } = {},
 ) {
   const {
     confirmResult = false,
     permissions = [],
     result = mockUsers,
+    usersError,
   } = overrides;
 
   const stubs = {
-    getUsers: vi.fn(() => of(result)),
+    getUsers: vi.fn(() =>
+      usersError ? throwError(() => usersError) : of(result),
+    ),
     deleteUser: vi.fn(() => of(undefined)),
-    getRoles: vi.fn(() => of([])),
-    confirm: vi.fn(() => ({
-      afterClosed: () => of(confirmResult),
-    })),
+    // The real RolesService loads the role catalog over this endpoint.
+    getRoles: vi.fn(() => of<Role[]>([{ id: 'r1', name: 'Admin' }])),
+    confirm: vi.fn(
+      () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
+    ),
   };
 
   const rendered = await renderComponent(AdminUserSearchComponent, {
@@ -99,23 +114,19 @@ async function renderAdminUserSearch(
         useValue: {
           getUsers: stubs.getUsers,
           deleteUser: stubs.deleteUser,
-        },
+        } satisfies ApiStub<UserService>,
       },
       {
-        provide: RolesService,
-        useValue: { getRoles: stubs.getRoles },
+        provide: RoleService,
+        useValue: { getRoles: stubs.getRoles } satisfies ApiStub<RoleService>,
       },
-      {
-        provide: UserPermissionsService,
-        useValue: {
-          hasPermission: vi.fn((permission: string) =>
-            of(permissions.includes(permission)),
-          ),
-        },
-      },
+      ...permissionDataProviders({ system: permissions }),
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: stubs.confirm },
+        useValue: { confirm: stubs.confirm } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
       },
     ],
   });
@@ -173,7 +184,7 @@ describe('AdminUserSearchComponent', () => {
 
   /**
    * Verifies: users without ManageUsers cannot see per-row delete controls.
-   * Interacts with: the UserPermissionsService stub and rendered DOM.
+   * Interacts with: the real UserPermissionsService over stubbed permission endpoints and rendered DOM.
    * Data: ViewUsers without ManageUsers.
    */
   it('should hide delete buttons without ManageUsers permission', async () => {
@@ -185,7 +196,7 @@ describe('AdminUserSearchComponent', () => {
 
   /**
    * Verifies: users without ManageUsers receive a read-only role selector.
-   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Interacts with: the real UserPermissionsService over stubbed permission endpoints and child input binding.
    * Data: ViewUsers without ManageUsers.
    */
   it('disables role selectors without ManageUsers permission', async () => {
@@ -201,7 +212,7 @@ describe('AdminUserSearchComponent', () => {
 
   /**
    * Verifies: users with ManageUsers retain role-editing access.
-   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Interacts with: the real UserPermissionsService over stubbed permission endpoints and child input binding.
    * Data: ViewUsers and ManageUsers.
    */
   it('enables role selectors with ManageUsers permission', async () => {
@@ -216,16 +227,34 @@ describe('AdminUserSearchComponent', () => {
   });
 
   /**
-   * Verifies: ngOnInit fetches users and roles, fills the datasource, and clears isLoading.
-   * Interacts with: stubbed UserService.getUsers and RolesService.getRoles.
-   * Data: mockUsers.
+   * Verifies: ngOnInit fetches users and loads the role catalog into RolesService, fills the datasource, and clears isLoading.
+   * Interacts with: stubbed UserService.getUsers; the real RolesService.getRoles over the RoleService.getRoles stub.
+   * Data: mockUsers; one role, Admin.
    */
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
     const { fixture, stubs } = await renderAdminUserSearch();
     expect(stubs.getUsers).toHaveBeenCalled();
-    expect(stubs.getRoles).toHaveBeenCalled();
+    expect(stubs.getRoles).toHaveBeenCalledTimes(1);
+    // The roles select in each row reads this stream.
+    const roles = await firstValueFrom(TestBed.inject(RolesService).roles$);
+    expect(roles.map((r) => r.name)).toEqual(['Admin']);
     expect(fixture.componentInstance.isLoading).toBe(false);
     expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
+  });
+
+  /**
+   * Verifies: a failed users request leaves the loading spinner up and lets the error escape (current behavior).
+   * Interacts with: UserService.getUsers (throws); the rendered spinner; captureUnhandledRxErrors.
+   * Data: getUsers fails with a 500.
+   */
+  it('leaves the spinner up when the users request fails', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new Error('500');
+    const { fixture } = await renderAdminUserSearch({ usersError: failure });
+    await flush();
+    expect(fixture.componentInstance.isLoading).toBe(true);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(errors).toEqual([failure]);
   });
 
   /**
@@ -371,18 +400,28 @@ describe('AdminUserSearchComponent', () => {
     });
   });
 
-  describe('deleteUser()', () => {
+  describe('deleting a user', () => {
+    /** Clicks the Delete User button in the table row that shows `rowText`. */
+    async function clickDeleteInRow(rowText: string) {
+      const row = screen.getByText(rowText).closest('tr');
+      if (!row) {
+        throw new Error(`No table row shows '${rowText}'`);
+      }
+      await userEvent.setup().click(within(row).getByTitle('Delete User'));
+    }
+
     /**
-     * Verifies: a confirmed prompt deletes the user by id and triggers a refresh.
-     * Interacts with: stubbed DialogService.confirm, UserService.deleteUser and getUsers.
-     * Data: confirmResult=true; deleting mockUsers[0] (Alice Smith).
+     * Verifies: clicking Delete User and confirming deletes the user by id and refreshes the list.
+     * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm, UserService.deleteUser and getUsers.
+     * Data: ManageUsers granted; confirmResult=true; Alice Smith's row (user-1).
      */
     it('deletes and refreshes when the user confirms', async () => {
-      const { fixture, stubs } = await renderAdminUserSearch({
+      const { stubs } = await renderAdminUserSearch({
         confirmResult: true,
+        permissions: [SystemPermission.ManageUsers],
       });
       stubs.getUsers.mockClear();
-      fixture.componentInstance.deleteUser(mockUsers[0]);
+      await clickDeleteInRow('Alice Smith');
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Delete User?',
@@ -396,14 +435,16 @@ describe('AdminUserSearchComponent', () => {
 
     /**
      * Verifies: the confirm message uses the user id when the user has no name.
-     * Interacts with: stubbed DialogService.confirm (message argument inspected).
-     * Data: a nameless user { id: 'user-3' }; confirmResult=true.
+     * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm (message argument inspected).
+     * Data: ManageUsers granted; getUsers returns a nameless user { id: 'user-3' }; confirmResult=true.
      */
     it('falls back to the user id in the prompt when name is missing', async () => {
-      const { fixture, stubs } = await renderAdminUserSearch({
+      const { stubs } = await renderAdminUserSearch({
         confirmResult: true,
+        permissions: [SystemPermission.ManageUsers],
+        result: [{ id: 'user-3' }],
       });
-      fixture.componentInstance.deleteUser({ id: 'user-3' });
+      await clickDeleteInRow('user-3');
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Delete User?',
@@ -414,14 +455,16 @@ describe('AdminUserSearchComponent', () => {
 
     /**
      * Verifies: a declined prompt leaves deleteUser untouched.
-     * Interacts with: stubbed DialogService.confirm and UserService.deleteUser.
-     * Data: confirmResult=false.
+     * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm and UserService.deleteUser.
+     * Data: ManageUsers granted; confirmResult=false.
      */
     it('does nothing when the user cancels', async () => {
-      const { fixture, stubs } = await renderAdminUserSearch({
+      const { stubs } = await renderAdminUserSearch({
         confirmResult: false,
+        permissions: [SystemPermission.ManageUsers],
       });
-      fixture.componentInstance.deleteUser(mockUsers[0]);
+      await clickDeleteInRow('Alice Smith');
+      expect(stubs.confirm).toHaveBeenCalled();
       expect(stubs.deleteUser).not.toHaveBeenCalled();
     });
   });

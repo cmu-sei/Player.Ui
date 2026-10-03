@@ -6,12 +6,18 @@ import { of, throwError } from 'rxjs';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {
   Team,
+  TeamPermission,
+  TeamPermissionService,
   TeamService,
   UserService,
   ViewService,
 } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
-import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import {
+  permissionApiStubs,
+  permissionDataProviders,
+} from '../../../test-utils/mock-permission-data.service';
+import { ApiStub } from '../../../test-utils/api-stub';
 import { ManageTeamsComponent } from './manage-teams.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
@@ -20,6 +26,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
+import type { TeamUser } from '../../shared/add-remove-users-dialog/add-remove-users-dialog.component';
 
 const red: Team = { id: 't1', name: 'Red', isMember: true } as Team;
 const blue: Team = { id: 't2', name: 'Blue', isMember: true } as Team;
@@ -33,7 +40,6 @@ async function renderManageTeams(
     teams?: Team[];
     manageableIds?: string[];
     teamUserCounts?: Record<string, number | 'error'>;
-    addRemoveResult?: unknown;
   } = {},
 ) {
   const {
@@ -43,7 +49,6 @@ async function renderManageTeams(
     teams = [red, blue],
     manageableIds = ['t1', 't2'],
     teamUserCounts = { t1: 3, t2: 5 },
-    addRemoveResult = true,
   } = overrides;
 
   const getView = vi.fn(() =>
@@ -57,9 +62,25 @@ async function renderManageTeams(
     }
     return of(new Array(count ?? 0).fill({ id: 'u' }));
   });
-  const loadTeamPermissions = vi.fn(() => of([{ teamId: 't1' }]));
-  const getManageableTeamIds = vi.fn(() => manageableIds);
-  const addRemoveUsersToTeam = vi.fn(() => of(addRemoveResult));
+  // The dialog closes with { teamUsers }, while DialogService declares
+  // Observable<boolean>, so this stub is not checked against
+  // Pick<DialogService, ...>.
+  const addRemoveUsersToTeam = vi.fn(() =>
+    of<{ teamUsers: TeamUser[] }>({ teamUsers: [] }),
+  );
+
+  // A ManageTeam claim per manageable team and a ViewTeam-only claim for every
+  // other listed team, so the real getManageableTeamIds filter (not the claim
+  // list) decides which teams the dialog shows.
+  const grants = {
+    teams: teams.map((team) => ({
+      teamId: team.id,
+      permissionValues: manageableIds.includes(team.id)
+        ? [TeamPermission.ManageTeam]
+        : [TeamPermission.ViewTeam],
+    })),
+  };
+  const permissionStubs = permissionApiStubs(grants);
 
   const rendered = await renderComponent(ManageTeamsComponent, {
     imports: [
@@ -73,14 +94,28 @@ async function renderManageTeams(
     ],
     providers: [
       { provide: MAT_DIALOG_DATA, useValue: { viewId } },
-      { provide: ViewService, useValue: { getView } },
-      { provide: TeamService, useValue: { getMyViewTeams } },
-      { provide: UserService, useValue: { getTeamUsers } },
       {
-        provide: UserPermissionsService,
-        useValue: { loadTeamPermissions, getManageableTeamIds },
+        provide: ViewService,
+        useValue: { getView } satisfies ApiStub<ViewService>,
       },
-      { provide: DialogService, useValue: { addRemoveUsersToTeam } },
+      {
+        provide: TeamService,
+        useValue: { getMyViewTeams } satisfies ApiStub<TeamService>,
+      },
+      {
+        provide: UserService,
+        useValue: { getTeamUsers } satisfies ApiStub<UserService>,
+      },
+      ...permissionDataProviders(grants),
+      // Same grants, exposed so a test can assert how the dialog loads claims.
+      {
+        provide: TeamPermissionService,
+        useValue: permissionStubs.teamPermissions,
+      },
+      {
+        provide: DialogService,
+        useValue: { addRemoveUsersToTeam },
+      },
     ],
   });
 
@@ -89,9 +124,8 @@ async function renderManageTeams(
     getView,
     getMyViewTeams,
     getTeamUsers,
-    loadTeamPermissions,
-    getManageableTeamIds,
     addRemoveUsersToTeam,
+    getMyTeamPermissions: permissionStubs.teamPermissions.getMyTeamPermissions,
   };
 }
 
@@ -120,7 +154,7 @@ describe('ManageTeamsComponent', () => {
 
   /**
    * Verifies: teams signal lists manageable member teams alphabetically with per-team user counts.
-   * Interacts with: TeamService.getMyViewTeams, UserService.getTeamUsers, Permissions.getManageableTeamIds.
+   * Interacts with: TeamService.getMyViewTeams, UserService.getTeamUsers, the real UserPermissionsService.getManageableTeamIds over ManageTeam claims.
    * Data: default Red+Blue; asserts Blue sorts before Red and counts 3/5.
    */
   it('loads manageable teams with member counts, sorted by name', async () => {
@@ -153,18 +187,32 @@ describe('ManageTeamsComponent', () => {
   });
 
   /**
-   * Verifies: teams whose id is absent from the manageable id set are excluded.
-   * Interacts with: Permissions.getManageableTeamIds, component teams signal.
-   * Data: override Red+Blue but manageableIds ['t1']; expects only t1.
+   * Verifies: a team whose claim lacks ManageTeam is excluded, and its users are never fetched.
+   * Interacts with: the real UserPermissionsService.getManageableTeamIds over the claims, UserService.getTeamUsers spy.
+   * Data: Red (t1) with a ManageTeam claim, Blue (t2) with a ViewTeam-only claim; expects only t1.
+   * Why: Blue still has a claim, so dropping the ManageTeam filter would list it.
    */
-  it('excludes teams not present in the manageable id set', async () => {
-    const { fixture } = await renderManageTeams({
+  it('excludes a team whose claim lacks ManageTeam', async () => {
+    const { fixture, getTeamUsers } = await renderManageTeams({
       teams: [red, blue],
       manageableIds: ['t1'],
     });
     await fixture.whenStable();
     const teams = fixture.componentInstance['teams']();
     expect(teams.map((t) => t.team.id)).toEqual(['t1']);
+    expect(getTeamUsers).not.toHaveBeenCalledWith('t2');
+  });
+
+  /**
+   * Verifies: the dialog loads the user's claims for every team in the view, not just their own team.
+   * Interacts with: the real UserPermissionsService.loadTeamPermissions, TeamPermissionService.getMyTeamPermissions stub.
+   * Data: viewId 'v1'.
+   * Why: scoped teams are only manageable when includeAllViewTeams is true.
+   */
+  it('loads team claims for all teams in the view', async () => {
+    const { fixture, getMyTeamPermissions } = await renderManageTeams();
+    await fixture.whenStable();
+    expect(getMyTeamPermissions).toHaveBeenCalledWith('v1', undefined, true);
   });
 
   /**
@@ -184,7 +232,7 @@ describe('ManageTeamsComponent', () => {
 
   /**
    * Verifies: an empty manageable id set yields an empty teams list with no user fetches.
-   * Interacts with: Permissions.getManageableTeamIds, UserService.getTeamUsers spy.
+   * Interacts with: the real UserPermissionsService.getManageableTeamIds over ManageTeam claims, UserService.getTeamUsers spy.
    * Data: override manageableIds []; expects [] and getTeamUsers never called.
    */
   it('produces an empty list when no teams are manageable', async () => {

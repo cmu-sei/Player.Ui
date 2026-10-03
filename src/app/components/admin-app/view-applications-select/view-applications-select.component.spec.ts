@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import {
   FormGroup,
   FormGroupDirective,
@@ -28,6 +28,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
+import { screen } from '@testing-library/angular';
 
 const view: View = { id: 'v1', name: 'Demo' };
 const makeApplication = (
@@ -47,6 +54,7 @@ async function renderSelect(
     apps?: Application[];
     templates?: ApplicationTemplate[];
     confirmDelete?: boolean;
+    appsError?: Error;
   } = {},
 ) {
   const {
@@ -54,18 +62,21 @@ async function renderSelect(
     apps = [appA],
     templates = [],
     confirmDelete = true,
+    appsError,
   } = overrides;
 
-  const getViewApplications = vi.fn(() => of(apps));
+  const getViewApplications = vi.fn(() =>
+    appsError ? throwError(() => appsError) : of(apps),
+  );
   const getApplicationTemplates = vi.fn(() => of(templates));
   const getApplication = vi.fn((id: string) =>
     of({ ...apps.find((a) => a.id === id) } as Application),
   );
   const updateApplication = vi.fn(() => of({} as Application));
   const deleteApplication = vi.fn(() => of(undefined));
-  const confirm = vi.fn(() => ({
-    afterClosed: () => of(confirmDelete),
-  }));
+  const confirm = vi.fn(
+    () => dialogRefStub<unknown, boolean>(confirmDelete).dialogRef,
+  );
 
   const rendered = await renderComponent(ViewApplicationsSelectComponent, {
     declarations: [ViewApplicationsSelectComponent],
@@ -88,9 +99,12 @@ async function renderSelect(
           getApplication,
           updateApplication,
           deleteApplication,
-        },
+        } satisfies ApiStub<ApplicationService>,
       },
-      { provide: CrucibleDialogService, useValue: { confirm } },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm } satisfies Pick<CrucibleDialogService, 'confirm'>,
+      },
     ],
   });
 
@@ -105,6 +119,21 @@ async function renderSelect(
 }
 
 describe('ViewApplicationsSelectComponent', () => {
+  /**
+   * Verifies: a failed applications request leaves the loading spinner up and lets the error escape (current behavior).
+   * Interacts with: ApplicationService.getViewApplications (throws); the rendered spinner; captureUnhandledRxErrors.
+   * Data: getViewApplications fails with a 500 for view v1.
+   */
+  it('leaves the spinner up when the applications request fails', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new Error('500');
+    const { fixture } = await renderSelect({ appsError: failure });
+    await flush();
+    expect(fixture.componentInstance.isLoading).toBe(true);
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(errors).toEqual([failure]);
+  });
+
   /**
    * Verifies: ngOnInit fetches the view's applications, stores them, and clears isLoading.
    * Interacts with: stubbed ApplicationService.getViewApplications.
@@ -189,7 +218,7 @@ describe('ViewApplicationsSelectComponent', () => {
 
   /**
    * Verifies: deleteViewApplication deletes the app once the user confirms.
-   * Interacts with: stubbed DialogService.confirm and ApplicationService.deleteApplication.
+   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplication.
    * Data: confirmDelete=true; appA (id 'a1').
    */
   it('deleteViewApplication only deletes after confirm', async () => {
@@ -202,7 +231,7 @@ describe('ViewApplicationsSelectComponent', () => {
 
   /**
    * Verifies: a declined confirm leaves deleteApplication uncalled.
-   * Interacts with: stubbed DialogService.confirm and ApplicationService.deleteApplication.
+   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplication.
    * Data: confirmDelete=false.
    */
   it('deleteViewApplication is a no-op when confirm returns false', async () => {

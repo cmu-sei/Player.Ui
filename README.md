@@ -33,27 +33,36 @@ In a production environment, `settings.env.json` should contain only the setting
 
 ## Running unit tests
 
-Player UI uses Angular's `@angular/build:unit-test` builder with **Vitest** and
-`@testing-library/angular`. Testing Library is an intentional test-authoring layer on top of
-Angular's TestBed. Test files use the standard `.spec.ts` extension.
+Player UI runs its unit tests with Angular's `@angular/build:unit-test` builder, **Vitest** in jsdom and
+`@testing-library/angular`, with zone change detection as the app uses. The setup follows the shared
+Crucible UI test standard (`agent-docs/ui-testing/` in the Crucible workspace).
 
 ```bash
-npm test             # Run all tests once through ng test
-npm run test:watch   # Run tests in watch mode
-npm test -- --coverage  # Run once with v8 coverage
-ng test              # Run tests directly with the Angular CLI
+npm test               # run every spec once (ng test --watch=false)
+npm run test:watch     # re-run specs on change (ng test)
+npm run test:coverage  # run once with v8 coverage and enforce the thresholds in angular.json (what CI runs)
 ```
+
+Test helpers live in `src/app/test-utils/`: `renderComponent` with the app's default providers
+(`default-test-providers.ts`), typed API stubs (`api-stub.ts`), a SignalR hub fake
+(`fake-hub-connection.ts`), and `permissionDataProviders(grants)` (`mock-permission-data.service.ts`),
+which runs the real `UserPermissionsService` over stubbed "my permissions" endpoints.
 
 ### Permission Tests
 
-Comprehensive permission tests cover the three-tier permission system (System, Team, View):
+The three-tier permission system (System, Team, View) is tested against the real `UserPermissionsService`:
 
-| File                                                                | Coverage                                                                                            |
-| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `src/app/test-utils/mock-user-permissions.service.ts`               | `userPermissionsProvider(systemPerms, teamPermClaims)` factory                                      |
-| `src/app/services/permissions/user-permissions.service.spec.ts`     | All 12 `SystemPermission` values, `canViewAdminstration()`, `can()` with team/view permission paths |
-| `src/app/components/shared/top-bar/topbar.component.spec.ts`        | Administration link, Edit View, Exit Administration visibility                                      |
-| `src/app/components/home-app/view-list/view-list.component.spec.ts` | `CreateViews` permission gates the "Add New View" button                                            |
+| File                                                                                 | Coverage                                                                                                                |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `src/app/test-utils/mock-permission-data.service.ts`                                 | `permissionDataProviders({ system, teams })`: the real service over stubbed `getMyPermissions` / `getMyTeamPermissions` |
+| `src/app/services/permissions/user-permissions.service.spec.ts`                      | All 12 `SystemPermission` values, `canViewAdminstration()`, `can()` with team/view permission paths                     |
+| `src/app/components/shared/top-bar/topbar.component.spec.ts`                         | Administration link, Edit View, Manage Teams, Exit Administration visibility                                            |
+| `src/app/components/home-app/view-list/view-list.component.spec.ts`                  | `CreateViews` permission gates the "Add New View" button                                                                |
+| `src/app/components/admin-app/admin-app.component.spec.ts`                           | `View*` permissions gate the administration sections                                                                    |
+| `src/app/components/admin-app/admin-user-search/admin-user-search.component.spec.ts` | `ManageUsers` gates user deletion and the role selectors                                                                |
+| `src/app/components/admin-app/admin-roles/roles/roles.component.spec.ts`             | `ManageRoles` gates adding, renaming and deleting roles                                                                 |
+| `src/app/components/admin-app/admin-roles/team-roles/team-roles.component.spec.ts`   | `ManageRoles` gates team role editing                                                                                   |
+| `src/app/components/player/manage-teams/manage-teams.component.spec.ts`              | `ManageTeam` claims decide which teams the Manage Teams dialog lists                                                    |
 
 Key patterns tested:
 

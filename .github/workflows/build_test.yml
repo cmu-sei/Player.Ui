@@ -19,6 +19,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v6
         with:
+          # Match the major version of the node image in this repo's Dockerfile.
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
 

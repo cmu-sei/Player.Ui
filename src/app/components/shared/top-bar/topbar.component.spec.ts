@@ -4,10 +4,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { TopbarComponent } from './topbar.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { userPermissionsProvider } from 'src/app/test-utils/mock-user-permissions.service';
+import { permissionDataProviders } from 'src/app/test-utils/mock-permission-data.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { TopbarView } from './topbar.models';
 import {
@@ -34,6 +34,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import type { User as AuthUser } from 'oidc-client-ts';
 
 const mockLogout = vi.fn();
 
@@ -77,9 +79,11 @@ async function renderTopbar(
   const dialogOpen = vi.fn();
   const dialogCloseAll = vi.fn();
   const snackbarOpen = vi.fn();
-  const confirm = vi.fn(() => ({
-    afterClosed: () => of(overrides.confirmResult ?? false),
-  }));
+  const confirm = vi.fn(
+    () =>
+      dialogRefStub<unknown, boolean>(overrides.confirmResult ?? false)
+        .dialogRef,
+  );
 
   const rendered = await renderComponent(TopbarComponent, {
     imports: [
@@ -95,22 +99,29 @@ async function renderTopbar(
     ],
     declarations: [TopbarComponent],
     providers: [
-      userPermissionsProvider(systemPermissions, teamClaims),
+      ...permissionDataProviders({
+        system: systemPermissions,
+        teams: teamClaims,
+      }),
       {
         provide: LoggedInUserService,
         useValue: {
-          loggedInUser$: of({ profile: { name: 'Test User' } }),
+          loggedInUser$: new BehaviorSubject({
+            profile: { name: 'Test User' },
+          } as AuthUser),
           setLoggedInUser: () => {},
-        },
+        } satisfies Pick<
+          LoggedInUserService,
+          'loggedInUser$' | 'setLoggedInUser'
+        >,
       },
       {
         provide: ComnAuthService,
+        // TopbarComponent calls only these two.
         useValue: {
-          isAuthenticated$: of(true),
-          user$: of({}),
           logout: mockLogout,
           setUserTheme,
-        },
+        } satisfies Pick<ComnAuthService, 'logout' | 'setUserTheme'>,
       },
       {
         provide: ComnAuthQuery,
@@ -121,15 +132,18 @@ async function renderTopbar(
       },
       {
         provide: MatDialog,
-        useValue: { open: dialogOpen, closeAll: dialogCloseAll },
+        useValue: { open: dialogOpen, closeAll: dialogCloseAll } satisfies Pick<
+          MatDialog,
+          'open' | 'closeAll'
+        >,
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm },
+        useValue: { confirm } satisfies Pick<CrucibleDialogService, 'confirm'>,
       },
       {
         provide: MatSnackBar,
-        useValue: { open: snackbarOpen },
+        useValue: { open: snackbarOpen } satisfies Pick<MatSnackBar, 'open'>,
       },
     ],
     componentProperties: {
@@ -323,17 +337,34 @@ describe('TopbarComponent', () => {
     });
 
     /**
-     * Verifies: Edit View is hidden when the user holds neither ManageViews nor ManageView.
+     * Verifies: Edit View is hidden when the user holds only the neighbours of ManageViews and ManageView (near miss).
      * Interacts with: UserPermissionsService.can() + team input; opens the menu via click.
-     * Data: systemPermissions []; no team claims; team 'Team 1'; PLAYER_PLAYER view.
+     * Data: systemPermissions [ViewViews, CreateViews, EditViews]; team claim { team-1, [ViewView, ManageTeam] };
+     *   team 'Team 1'; PLAYER_PLAYER view. The API edits a view only for ManageViews or ManageView
+     *   (player.api Features/Views/Requests/Edit.cs:60).
      */
     it('should hide Edit View when user lacks ManageViews/ManageView permission', async () => {
       await renderTopbar({
-        systemPermissions: [],
+        systemPermissions: [
+          SystemPermission.ViewViews,
+          SystemPermission.CreateViews,
+          SystemPermission.EditViews,
+        ],
+        teamClaims: [
+          {
+            teamId: 'team-1',
+            permissionValues: [
+              ViewPermission.ViewView,
+              TeamPermission.ManageTeam,
+            ],
+          },
+        ],
         team: TEAM_1,
         topbarView: TopbarView.PLAYER_PLAYER,
       });
       await openUserMenu();
+      // The menu is open (Reset UI renders), so the absence below is the gate.
+      expect(screen.getByText('Reset UI')).toBeInTheDocument();
       expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
     });
 
@@ -354,20 +385,6 @@ describe('TopbarComponent', () => {
   });
 
   describe('Manage Teams entry', () => {
-    /**
-     * Verifies: the Reset UI item is available in the menu while in the player view.
-     * Interacts with: topbarView input + team input; opens the menu via click.
-     * Data: PLAYER_PLAYER view; team 'Team 1'.
-     */
-    it('should show Reset UI option in menu when in player view', async () => {
-      await renderTopbar({
-        topbarView: TopbarView.PLAYER_PLAYER,
-        team: TEAM_1,
-      });
-      await openUserMenu();
-      expect(screen.getByText('Reset UI')).toBeInTheDocument();
-    });
-
     /**
      * Verifies: Manage Teams shows (and Edit View does not) when the user can
      *   manage a team but cannot edit the view.
@@ -406,6 +423,28 @@ describe('TopbarComponent', () => {
     });
 
     /**
+     * Verifies: Manage Teams is hidden for a user whose only team claim lacks ManageTeam.
+     * Interacts with: the real canManageAnyTeam$ (getManageableTeamIds over the claims) + can(); opens the menu.
+     * Data: team claim { team-1, [ViewTeam] }; no system permissions; team 'Team 1'; PLAYER_PLAYER view.
+     * Why: with no claims at all the entry would be hidden even if the ManageTeam filter
+     *   were gone, so a claim for a different team permission is what pins the filter.
+     */
+    it('should hide Manage Teams when the team claim lacks ManageTeam', async () => {
+      await renderTopbar({
+        systemPermissions: [],
+        teamClaims: [
+          { teamId: 'team-1', permissionValues: [TeamPermission.ViewTeam] },
+        ],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      // The menu is open (Reset UI renders), so the absence below is the gate.
+      expect(screen.getByText('Reset UI')).toBeInTheDocument();
+      expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
+    });
+
+    /**
      * Verifies: Manage Teams is hidden when no team is set, despite team-manage rights.
      * Interacts with: canManageAnyTeam$; opens the menu via click.
      * Data: team claim { team-1, [ManageTeam] }; team undefined; PLAYER_PLAYER view.
@@ -421,13 +460,19 @@ describe('TopbarComponent', () => {
     });
 
     /**
-     * Verifies: openManageTeams opens a dialog passing the current view id as data.
-     * Interacts with: MatDialog.open (dialogOpen spy).
-     * Data: viewId 'view-42'; asserts data { viewId: 'view-42' }.
+     * Verifies: choosing Manage Teams in the user menu opens the manage teams dialog with the current view id.
+     * Interacts with: the rendered user menu (canManageAnyTeam$ gate); MatDialog.open (dialogOpen spy).
+     * Data: team claim { team-1, [ManageTeam] }; team 'Team 1'; viewId 'view-42'; PLAYER_PLAYER view.
      */
-    it('openManageTeams opens the manage teams dialog with the view id', async () => {
-      const { fixture, dialogOpen } = await renderTopbar({ viewId: 'view-42' });
-      fixture.componentInstance.openManageTeams();
+    it('opens the manage teams dialog with the view id from the menu', async () => {
+      const { dialogOpen } = await renderTopbar({
+        teamClaims: [manageTeamClaim()],
+        team: TEAM_1,
+        viewId: 'view-42',
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      const user = await openUserMenu();
+      await user.click(screen.getByRole('menuitem', { name: 'Manage Teams' }));
       expect(dialogOpen).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ data: { viewId: 'view-42' } }),
@@ -571,21 +616,34 @@ describe('TopbarComponent', () => {
 
   describe('resetUI()', () => {
     /**
+     * Verifies: the Reset UI item is available in the menu while in the player view.
+     * Interacts with: topbarView input + team input; opens the menu via click.
+     * Data: PLAYER_PLAYER view; team 'Team 1'.
+     */
+    it('should show Reset UI option in menu when in player view', async () => {
+      await renderTopbar({
+        topbarView: TopbarView.PLAYER_PLAYER,
+        team: TEAM_1,
+      });
+      await openUserMenu();
+      expect(screen.getByText('Reset UI')).toBeInTheDocument();
+    });
+
+    /**
      * Verifies: resetUI opens a confirm dialog whose message names the team.
-     * Interacts with: DialogService.confirm (confirm spy).
+     * Interacts with: CrucibleDialogService.confirm (confirm spy).
      * Data: team 'Team 7'; confirmResult false.
-     * Why: the confirmed branch calls window.location.reload(), which under
-     *      real-browser mode reloads the runner and is non-configurable, so only
-     *      the prompt is asserted (confirmResult left false).
+     * Why: the confirmed branch calls window.location.reload(), which jsdom does not
+     *      implement and which cannot be stubbed, so only the prompt is asserted.
      */
     it('prompts for confirmation with the team name', async () => {
-      // We intentionally do not exercise the confirmed branch here: on a
-      // positive confirm resetUI() calls window.location.reload(), which under
-      // real-browser test mode reloads the runner page and kills the Vitest
-      // connection (and Location.reload is non-configurable, so it can't be
-      // stubbed either). With confirmResult left false the confirm observable
-      // still emits, so we assert resetUI() opens the confirm dialog with the
-      // team-specific prompt. The cancelled-state behavior is covered below.
+      // The confirmed branch is not exercised: on a positive confirm resetUI()
+      // calls window.location.reload(). jsdom reports that as "Not implemented:
+      // navigation to another Document" (a console error, which fails the
+      // test), and Location.reload is non-configurable and non-writable, so it
+      // cannot be stubbed. With confirmResult false the confirm observable
+      // still emits, so this asserts the team-specific prompt; the cancelled
+      // state is covered below.
       const { fixture, confirm } = await renderTopbar({
         team: { id: 'team-7', name: 'Team 7' },
         confirmResult: false,
@@ -602,7 +660,7 @@ describe('TopbarComponent', () => {
 
     /**
      * Verifies: a cancelled confirm leaves persisted team UI state untouched.
-     * Interacts with: DialogService.confirm (emits cancel) and localStorage.
+     * Interacts with: CrucibleDialogService.confirm (emits cancel) and localStorage.
      * Data: team 'Team 7'; confirmResult false; localStorage seeded under 'team-7'.
      */
     it('does nothing when the reset is cancelled', async () => {

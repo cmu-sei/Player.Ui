@@ -20,16 +20,18 @@ function unwrap(safe: unknown): string {
 async function renderFocused(overrides: { url?: string; theme?: Theme } = {}) {
   const { url = 'about:blank', theme = 'light-theme' as Theme } = overrides;
 
-  const focusedAppUrl = new BehaviorSubject<string>(url);
   const userTheme$ = new BehaviorSubject<Theme>(theme);
 
   const rendered = await renderComponent(FocusedAppComponent, {
     declarations: [FocusedAppComponent],
-    providers: [
-      { provide: FocusedAppService, useValue: { focusedAppUrl } },
-      { provide: ComnAuthQuery, useValue: { userTheme$ } },
-    ],
+    providers: [{ provide: ComnAuthQuery, useValue: { userTheme$ } }],
   });
+
+  // The real FocusedAppService from the default providers, set to the URL the
+  // test wants, as ApplicationListComponent does when an app is opened.
+  const { focusedAppUrl } =
+    rendered.fixture.debugElement.injector.get(FocusedAppService);
+  focusedAppUrl.next(url);
 
   return { ...rendered, focusedAppUrl, userTheme$ };
 }

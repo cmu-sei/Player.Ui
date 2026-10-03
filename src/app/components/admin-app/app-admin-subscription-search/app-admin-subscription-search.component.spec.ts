@@ -18,6 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
 
 const subs: WebhookSubscription[] = [
   { id: 's1', name: 'Alpha', eventTypes: [] },
@@ -27,7 +29,7 @@ const subs: WebhookSubscription[] = [
 async function renderSearch(
   overrides: {
     list?: WebhookSubscription[];
-    editResult?: unknown;
+    editResult?: boolean;
     confirmDelete?: boolean;
   } = {},
 ) {
@@ -39,9 +41,9 @@ async function renderSearch(
   const getAllWebhooks = vi.fn(() => of(list));
   const deleteWebhookSubscription = vi.fn(() => of(undefined));
   const editSubscription = vi.fn(() => of(editResult));
-  const confirm = vi.fn(() => ({
-    afterClosed: () => of(confirmDelete),
-  }));
+  const confirm = vi.fn(
+    () => dialogRefStub<unknown, boolean>(confirmDelete).dialogRef,
+  );
 
   const rendered = await renderComponent(AppAdminSubscriptionSearchComponent, {
     declarations: [AppAdminSubscriptionSearchComponent],
@@ -57,10 +59,22 @@ async function renderSearch(
     providers: [
       {
         provide: WebhookService,
-        useValue: { getAllWebhooks, deleteWebhookSubscription },
+        useValue: {
+          getAllWebhooks,
+          deleteWebhookSubscription,
+        } satisfies ApiStub<WebhookService>,
       },
-      { provide: DialogService, useValue: { editSubscription } },
-      { provide: CrucibleDialogService, useValue: { confirm } },
+      {
+        provide: DialogService,
+        useValue: { editSubscription } satisfies Pick<
+          DialogService,
+          'editSubscription'
+        >,
+      },
+      {
+        provide: CrucibleDialogService,
+        useValue: { confirm } satisfies Pick<CrucibleDialogService, 'confirm'>,
+      },
     ],
   });
 
@@ -154,7 +168,7 @@ describe('AppAdminSubscriptionSearchComponent', () => {
   describe('deleteSubscription()', () => {
     /**
      * Verifies: a confirmed delete prompts (message naming the sub), deletes by id, and reloads.
-     * Interacts with: stubbed DialogService.confirm, WebhookService.deleteWebhookSubscription, getAllWebhooks.
+     * Interacts with: stubbed CrucibleDialogService.confirm, WebhookService.deleteWebhookSubscription, getAllWebhooks.
      * Data: confirmDelete=true; deleting subs[0] (Alpha, id s1).
      */
     it('deletes and reloads when the user confirms', async () => {
@@ -173,7 +187,7 @@ describe('AppAdminSubscriptionSearchComponent', () => {
 
     /**
      * Verifies: a declined confirm leaves the delete call untouched.
-     * Interacts with: stubbed DialogService.confirm and WebhookService.deleteWebhookSubscription.
+     * Interacts with: stubbed CrucibleDialogService.confirm and WebhookService.deleteWebhookSubscription.
      * Data: confirmDelete=false.
      */
     it('does nothing when the user cancels', async () => {
