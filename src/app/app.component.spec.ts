@@ -2,15 +2,19 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Provider } from '@angular/core';
+import { EnvironmentProviders, Provider } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Title } from '@angular/platform-browser';
-import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import {
   ComnAuthQuery,
   ComnAuthService,
   ComnHeaderBarModule,
   ComnSettingsService,
+  CrucibleThemeService,
+  provideCrucibleTheme,
 } from '@cmusei/crucible-common';
 import { AppComponent } from './app.component';
 import { renderComponent } from './test-utils/render-component';
@@ -18,7 +22,7 @@ import { activatedRouteStub } from './test-utils/activated-route';
 
 type Theme = 'light-theme' | 'dark-theme';
 
-async function renderApp(providers: Provider[]) {
+async function renderApp(providers: (Provider | EnvironmentProviders)[]) {
   return renderComponent(AppComponent, {
     declarations: [AppComponent],
     imports: [ComnHeaderBarModule],
@@ -31,16 +35,14 @@ function setup(
     initialTheme?: Theme;
     queryTheme?: string | null;
     appTitle?: string;
-    topBarColor?: string;
-    topBarTextColor?: string;
+    colorSettings?: Record<string, string>;
   } = {},
 ) {
   const {
     initialTheme = 'light-theme',
     queryTheme = null,
     appTitle = 'Player',
-    topBarColor = '#0F1D47',
-    topBarTextColor = '#FFFFFF',
+    colorSettings = {},
   } = overrides;
 
   const userTheme$ = new BehaviorSubject<Theme>(initialTheme);
@@ -48,7 +50,10 @@ function setup(
   const setTitle = vi.fn();
   const navigate = vi.fn();
 
-  const providers = [
+  const providers: (Provider | EnvironmentProviders)[] = [
+    provideHttpClient(),
+    provideHttpClientTesting(),
+    provideCrucibleTheme({ brand: { color: '#3B62A5', text: '#FFFFFF' } }),
     {
       provide: ComnAuthQuery,
       useValue: { userTheme$: userTheme$.asObservable() },
@@ -65,8 +70,7 @@ function setup(
       useValue: {
         settings: {
           AppTitle: appTitle,
-          AppTopBarHexColor: topBarColor,
-          AppTopBarHexTextColor: topBarTextColor,
+          ...colorSettings,
         },
       },
     },
@@ -89,11 +93,34 @@ function setup(
   return { userTheme$, setUserTheme, setTitle, navigate, providers };
 }
 
+const THEME_PROPERTIES = [
+  '--crucible-topbar-background',
+  '--crucible-topbar-text',
+  '--mat-sys-primary',
+  '--mat-sys-on-primary',
+];
+
+const COLOR_SETTINGS = {
+  AppTopBarHexColor: '#112233',
+  AppTopBarHexTextColor: '#EEEEEE',
+  AppLightModePrimaryHexColor: '#AB1234',
+  AppLightModePrimaryHexTextColor: '#FFFFFF',
+  AppDarkModePrimaryHexColor: '#CD5678',
+  AppDarkModePrimaryHexTextColor: '#000000',
+};
+
+function bodyStyle(prop: string): string {
+  return document.body.style.getPropertyValue(prop);
+}
+
 describe('AppComponent', () => {
   beforeEach(() => {
     document.body.classList.remove('darkMode');
-    document.body.style.removeProperty('--mat-sys-primary');
-    document.body.style.removeProperty('--mat-sys-on-primary');
+    for (const el of [document.documentElement, document.body]) {
+      for (const prop of THEME_PROPERTIES) {
+        el.style.removeProperty(prop);
+      }
+    }
   });
 
   /**
@@ -130,22 +157,65 @@ describe('AppComponent', () => {
   });
 
   /**
-   * Verifies: --mat-sys-primary and --mat-sys-on-primary body styles are written from top-bar color settings.
-   * Interacts with: ComnSettingsService stub, document.body inline style.
-   * Data: setup() overrides topBarColor '#AB1234' and topBarTextColor '#EEEEEE'.
+   * Verifies: each emitted user theme is handed to CrucibleThemeService.applyTheme.
+   * Interacts with: ComnAuthQuery.userTheme$ subject, CrucibleThemeService spy.
+   * Data: default setup(); emits 'dark-theme' after the initial 'light-theme'.
    */
-  it('writes primary color CSS variables from settings', async () => {
+  it('delegates theme changes to CrucibleThemeService', async () => {
+    const applyTheme = vi.spyOn(CrucibleThemeService.prototype, 'applyTheme');
+    const ctx = setup();
+    await renderApp(ctx.providers);
+    expect(applyTheme).toHaveBeenCalledWith('light-theme');
+    ctx.userTheme$.next('dark-theme');
+    expect(applyTheme).toHaveBeenLastCalledWith('dark-theme');
+  });
+
+  /**
+   * Verifies: light mode paints the top bar from the AppTopBar* keys and primary
+   *           from the AppLightModePrimary* keys, independently of each other.
+   * Interacts with: real CrucibleThemeService, ComnSettingsService stub, document.body inline style.
+   * Data: COLOR_SETTINGS with distinct top-bar and primary pairs.
+   */
+  it('writes separate top-bar and light primary colors from settings', async () => {
+    const ctx = setup({ colorSettings: COLOR_SETTINGS });
+    await renderApp(ctx.providers);
+    expect(bodyStyle('--crucible-topbar-background')).toBe('#112233');
+    expect(bodyStyle('--crucible-topbar-text')).toBe('#EEEEEE');
+    expect(bodyStyle('--mat-sys-primary')).toBe('#AB1234');
+    expect(bodyStyle('--mat-sys-on-primary')).toBe('#FFFFFF');
+  });
+
+  /**
+   * Verifies: dark mode switches primary to the AppDarkModePrimary* keys while the
+   *           top bar keeps its colors.
+   * Interacts with: real CrucibleThemeService, ComnSettingsService stub, document.body inline style.
+   * Data: COLOR_SETTINGS; initialTheme 'dark-theme'.
+   */
+  it('writes the dark primary and keeps the top bar in dark mode', async () => {
     const ctx = setup({
-      topBarColor: '#AB1234',
-      topBarTextColor: '#EEEEEE',
+      initialTheme: 'dark-theme',
+      colorSettings: COLOR_SETTINGS,
     });
     await renderApp(ctx.providers);
-    expect(document.body.style.getPropertyValue('--mat-sys-primary')).toBe(
-      '#AB1234',
-    );
-    expect(document.body.style.getPropertyValue('--mat-sys-on-primary')).toBe(
-      '#EEEEEE',
-    );
+    expect(bodyStyle('--crucible-topbar-background')).toBe('#112233');
+    expect(bodyStyle('--crucible-topbar-text')).toBe('#EEEEEE');
+    expect(bodyStyle('--mat-sys-primary')).toBe('#CD5678');
+    expect(bodyStyle('--mat-sys-on-primary')).toBe('#000000');
+  });
+
+  /**
+   * Verifies: with no color settings, the top bar and primary fall back to Player's
+   *           brand pair rather than an unrelated hard-coded color.
+   * Interacts with: real CrucibleThemeService, ComnSettingsService stub.
+   * Data: default setup() with no color keys.
+   */
+  it('falls back to the Player brand color when color settings are missing', async () => {
+    const ctx = setup();
+    await renderApp(ctx.providers);
+    expect(bodyStyle('--crucible-topbar-background').toUpperCase()).toBe('#3B62A5');
+    expect(bodyStyle('--crucible-topbar-text').toUpperCase()).toBe('#FFFFFF');
+    expect(bodyStyle('--mat-sys-primary').toUpperCase()).toBe('#3B62A5');
+    expect(bodyStyle('--mat-sys-on-primary').toUpperCase()).toBe('#FFFFFF');
   });
 
   /**
