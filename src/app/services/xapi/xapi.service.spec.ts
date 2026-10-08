@@ -97,7 +97,6 @@ describe('XApiService', () => {
      * Verifies: a missing XApiEnabled setting is treated as disabled, so viewViewed returns null.
      * Interacts with: ComnSettingsService (empty settings), GeneratedXApiService.viewViewed, XApiService.viewViewed.
      * Data: hand-rolled TestBed with settings:{} rather than the createService helper.
-     * Why: builds its own module to exercise the absent-setting branch the helper can't express.
      */
     it('defaults to disabled when XApiEnabled setting is absent', async () => {
       TestBed.configureTestingModule({
@@ -174,7 +173,6 @@ describe('XApiService', () => {
      * Verifies: a failing generated call is caught so viewViewed emits null and logs the error.
      * Interacts with: GeneratedXApiService.viewViewed (throwError), XApiService.viewViewed, console.error spy.
      * Data: createService with enabled:true and fail:true (client emits an Error).
-     * Why: fail flag swaps the stub to throwError to drive the catchError path; console.error is spied/silenced in beforeEach.
      */
     it('viewViewed swallows errors and returns null', async () => {
       const { service } = createService({ enabled: true, fail: true });

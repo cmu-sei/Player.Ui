@@ -35,6 +35,11 @@ import {
   flush,
 } from '../../../test-utils/unhandled-rx-errors';
 import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { ComponentFixture } from '@angular/core/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
+import { MatFormFieldHarness } from '@angular/material/form-field/testing';
 
 const view: View = { id: 'v1', name: 'Demo' };
 const makeApplication = (
@@ -66,7 +71,7 @@ async function renderSelect(
   } = overrides;
 
   const getViewApplications = vi.fn(() =>
-    appsError ? throwError(() => appsError) : of(apps),
+    appsError ? throwError(() => appsError) : of(structuredClone(apps)),
   );
   const getApplicationTemplates = vi.fn(() => of(templates));
   const getApplication = vi.fn((id: string) =>
@@ -118,6 +123,36 @@ async function renderSelect(
   };
 }
 
+/** Titles of the rendered application panels, in render order. */
+function appTitles(container: Element): string[] {
+  return Array.from(container.querySelectorAll('mat-panel-title')).map(
+    (title) => title.textContent?.trim() ?? '',
+  );
+}
+
+/** Opens the application panel at the index, as the user does. */
+async function openPanel(
+  r: Awaited<ReturnType<typeof renderSelect>>,
+  index = 0,
+) {
+  const user = userEvent.setup();
+  await user.click(
+    r.container.querySelectorAll('mat-expansion-panel-header')[index],
+  );
+  return user;
+}
+
+/** The select of the form field with the label, inside the opened panel. */
+async function selectOf(
+  fixture: ComponentFixture<ViewApplicationsSelectComponent>,
+  label: string,
+) {
+  const field = await TestbedHarnessEnvironment.loader(fixture).getHarness(
+    MatFormFieldHarness.with({ floatingLabelText: label }),
+  );
+  return (await field.getControl(MatSelectHarness))!;
+}
+
 describe('ViewApplicationsSelectComponent', () => {
   /**
    * Verifies: a failed applications request leaves the loading spinner up and lets the error escape (current behavior).
@@ -127,270 +162,168 @@ describe('ViewApplicationsSelectComponent', () => {
   it('leaves the spinner up when the applications request fails', async () => {
     const errors = captureUnhandledRxErrors();
     const failure = new Error('500');
-    const { fixture } = await renderSelect({ appsError: failure });
+    await renderSelect({ appsError: failure });
     await flush();
-    expect(fixture.componentInstance.isLoading).toBe(true);
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(errors).toEqual([failure]);
   });
 
   /**
-   * Verifies: ngOnInit fetches the view's applications, stores them, and clears isLoading.
-   * Interacts with: stubbed ApplicationService.getViewApplications.
-   * Data: default view 'v1'; apps [appA].
+   * Verifies: the view's applications are listed with their name and icon, falling back to the template's, then to
+   *   "Application" and the dashboard icon; the spinner is gone.
+   * Interacts with: ApplicationService.getViewApplications and getApplicationTemplates; the panel titles and icons.
+   * Data: one app with its own name and icon, one from template Chat, one with no name or template, one whose
+   *   template is missing.
    */
-  it('loads view applications and templates on init when view is provided', async () => {
-    const { fixture, getViewApplications } = await renderSelect();
-    expect(getViewApplications).toHaveBeenCalledWith('v1');
-    expect(fixture.componentInstance.applications).toEqual([appA]);
-    expect(fixture.componentInstance.isLoading).toBe(false);
-  });
-
-  /**
-   * Verifies: without a view, ngOnInit skips the fetch and leaves applications undefined.
-   * Interacts with: stubbed ApplicationService.getViewApplications.
-   * Data: view override null.
-   */
-  it('is a no-op on init when view is missing', async () => {
-    const { fixture, getViewApplications } = await renderSelect({ view: null });
-    expect(getViewApplications).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.applications).toBeUndefined();
-  });
-
-  /**
-   * Verifies: saveApplicationName converts an empty string to null before persisting via updateApplication.
-   * Interacts with: stubbed ApplicationService.updateApplication.
-   * Data: empty name for app 'a1'.
-   */
-  it('saveApplicationName coerces empty string to null and persists', async () => {
-    const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationName('', 'a1');
-    expect(updateApplication).toHaveBeenCalledWith(
-      'a1',
-      expect.objectContaining({ name: null }),
-    );
-  });
-
-  /**
-   * Verifies: saveApplicationUrl converts an empty string to null before persisting.
-   * Interacts with: stubbed ApplicationService.updateApplication.
-   * Data: empty url for app 'a1'.
-   */
-  it('saveApplicationUrl coerces empty string to null and persists', async () => {
-    const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationUrl('', 'a1');
-    expect(updateApplication).toHaveBeenCalledWith(
-      'a1',
-      expect.objectContaining({ url: null }),
-    );
-  });
-
-  /**
-   * Verifies: saveApplicationIcon converts an empty string to null before persisting.
-   * Interacts with: stubbed ApplicationService.updateApplication.
-   * Data: empty icon for app 'a1'.
-   */
-  it('saveApplicationIcon coerces empty string to null and persists', async () => {
-    const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationIcon('', 'a1');
-    expect(updateApplication).toHaveBeenCalledWith(
-      'a1',
-      expect.objectContaining({ icon: null }),
-    );
-  });
-
-  /**
-   * Verifies: saveApplicationEmbeddable persists the application as-is (no coercion).
-   * Interacts with: stubbed ApplicationService.updateApplication.
-   * Data: appA with embeddable=true.
-   */
-  it('saveApplicationEmbeddable persists the application directly', async () => {
-    const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationEmbeddable({
-      ...appA,
-      embeddable: true,
-    });
-    expect(updateApplication).toHaveBeenCalledWith(
-      'a1',
-      expect.objectContaining({ embeddable: true }),
-    );
-  });
-
-  /**
-   * Verifies: deleteViewApplication deletes the app once the user confirms.
-   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplication.
-   * Data: confirmDelete=true; appA (id 'a1').
-   */
-  it('deleteViewApplication only deletes after confirm', async () => {
-    const { fixture, deleteApplication } = await renderSelect({
-      confirmDelete: true,
-    });
-    fixture.componentInstance.deleteViewApplication(appA);
-    expect(deleteApplication).toHaveBeenCalledWith('a1');
-  });
-
-  /**
-   * Verifies: a declined confirm leaves deleteApplication uncalled.
-   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplication.
-   * Data: confirmDelete=false.
-   */
-  it('deleteViewApplication is a no-op when confirm returns false', async () => {
-    const { fixture, deleteApplication } = await renderSelect({
-      confirmDelete: false,
-    });
-    fixture.componentInstance.deleteViewApplication(appA);
-    expect(deleteApplication).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: getAppName returns the app's own name when present.
-   * Interacts with: component.getAppName (pure method).
-   * Data: app { name: 'N' }.
-   */
-  it('getAppName returns the app name when set', async () => {
-    const { fixture } = await renderSelect();
-    expect(
-      fixture.componentInstance.getAppName(
-        makeApplication({ id: 'x', name: 'N' }),
-      ),
-    ).toBe('N');
-  });
-
-  /**
-   * Verifies: getAppName resolves to the matching template's name when the app has none.
-   * Interacts with: component.getAppName against loaded templates.
-   * Data: app with applicationTemplateId 'tmpl-1'; template named 'Templ'.
-   */
-  it('getAppName falls back to template name', async () => {
-    const template: ApplicationTemplate = { id: 'tmpl-1', name: 'Templ' };
-    const { fixture } = await renderSelect({ templates: [template] });
-    expect(
-      fixture.componentInstance.getAppName(
-        makeApplication({
-          id: 'x',
-          applicationTemplateId: 'tmpl-1',
-        }),
-      ),
-    ).toBe('Templ');
-  });
-
-  /**
-   * Verifies: getAppName falls back to the literal 'Application' when no name or template resolves.
-   * Interacts with: component.getAppName (no templates).
-   * Data: app { id: 'x' } only.
-   */
-  it('getAppName returns "Application" when no name or template', async () => {
-    const { fixture } = await renderSelect();
-    expect(
-      fixture.componentInstance.getAppName(makeApplication({ id: 'x' })),
-    ).toBe('Application');
-  });
-
-  /**
-   * Verifies: getAppIcon returns the app's own icon when present.
-   * Interacts with: component.getAppIcon (pure method).
-   * Data: app { icon: 'i.png' }.
-   */
-  it('getAppIcon returns the app icon when set', async () => {
-    const { fixture } = await renderSelect();
-    expect(
-      fixture.componentInstance.getAppIcon(
-        makeApplication({ id: 'x', icon: 'i.png' }),
-      ),
-    ).toBe('i.png');
-  });
-
-  /**
-   * Verifies: getAppIcon resolves to the matching template's icon when the app has none.
-   * Interacts with: component.getAppIcon against loaded templates.
-   * Data: app with applicationTemplateId 'tmpl-1'; template icon 'tmpl.png'.
-   */
-  it('getAppIcon falls back to template icon', async () => {
-    const template: ApplicationTemplate = {
-      id: 'tmpl-1',
-      name: 'Templ',
-      icon: 'tmpl.png',
+  it('lists the applications with their names and icons', async () => {
+    const chat: ApplicationTemplate = {
+      id: 'tm1',
+      name: 'Chat',
+      icon: 'chat.png',
     };
-    const { fixture } = await renderSelect({ templates: [template] });
+    const { container, getViewApplications } = await renderSelect({
+      apps: [
+        appA,
+        makeApplication({ id: 'a2', applicationTemplateId: 'tm1' }),
+        makeApplication({ id: 'a3' }),
+        makeApplication({ id: 'a4', applicationTemplateId: 'gone' }),
+      ],
+      templates: [chat],
+    });
+    expect(getViewApplications).toHaveBeenCalledExactlyOnceWith('v1');
+    expect(appTitles(container)).toEqual([
+      'Alpha',
+      'Chat',
+      'Application',
+      'Application',
+    ]);
     expect(
-      fixture.componentInstance.getAppIcon(
-        makeApplication({
-          id: 'x',
-          applicationTemplateId: 'tmpl-1',
-        }),
+      Array.from(container.querySelectorAll('img.app-icon')).map((img) =>
+        img.getAttribute('src'),
       ),
-    ).toBe('tmpl.png');
+    ).toEqual([
+      'icon-a.png',
+      'chat.png',
+      'assets/img/SP_Icon_Dashboard.png',
+      'assets/img/SP_Icon_Dashboard.png',
+    ]);
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   /**
-   * Verifies: getAppIcon falls back to the default dashboard asset when neither app nor template supplies an icon.
-   * Interacts with: component.getAppIcon (no templates).
-   * Data: app { id: 'x' } only.
+   * Verifies: without a view the select logs, requests nothing and lists nothing.
+   * Interacts with: ngOnInit's view guard; console.log; ApplicationService.getViewApplications.
+   * Data: view null.
    */
-  it('getAppIcon returns the default dashboard image when nothing is set', async () => {
-    const { fixture } = await renderSelect();
-    expect(
-      fixture.componentInstance.getAppIcon(makeApplication({ id: 'x' })),
-    ).toBe('assets/img/SP_Icon_Dashboard.png');
-  });
-
-  /**
-   * Verifies: saveApplicationLoadInBackground persists the application carrying its loadInBackground flag.
-   * Interacts with: stubbed ApplicationService.updateApplication.
-   * Data: appA with loadInBackground=true.
-   */
-  it('saveApplicationLoadInBackground persists the application', async () => {
-    const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationLoadInBackground({
-      ...appA,
-      loadInBackground: true,
+  it('requests nothing without a view', async () => {
+    const logged = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { container, getViewApplications } = await renderSelect({
+      view: null,
     });
-    expect(updateApplication).toHaveBeenCalledWith(
+    expect(getViewApplications).not.toHaveBeenCalled();
+    expect(appTitles(container)).toEqual([]);
+    expect(logged).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Verifies: changing a text field of an application saves the application with the new value, and an emptied field
+   *   saves null.
+   * Interacts with: the opened panel's field (change on blur); ApplicationService.getApplication and updateApplication.
+   * Data: one row per field and value; Alpha (a1).
+   */
+  it.each<[string, keyof Application, string, string | null]>([
+    ['Application Name', 'name', 'Renamed', 'Renamed'],
+    ['Application URL', 'url', 'https://b.test', 'https://b.test'],
+    ['Icon Path', 'icon', 'icon-b.png', 'icon-b.png'],
+    ['Application Name', 'name', '', null],
+    ['Application URL', 'url', '', null],
+    ['Icon Path', 'icon', '', null],
+  ])('saves %s set to "%s" as %s', async (label, field, typed, saved) => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const r = await renderSelect();
+    const user = await openPanel(r);
+    const input = screen.getByLabelText(label);
+    await user.clear(input);
+    if (typed) {
+      await user.type(input, typed, { skipClick: true });
+    }
+    await user.tab();
+    expect(r.getApplication).toHaveBeenCalledExactlyOnceWith('a1');
+    expect(r.updateApplication).toHaveBeenCalledExactlyOnceWith('a1', {
+      ...appA,
+      [field]: saved,
+    });
+  });
+
+  /**
+   * Verifies: choosing an option in a flag or template select saves the application with that value.
+   * Interacts with: the opened panel's select (MatSelectHarness); ApplicationService.updateApplication.
+   * Data: one row per select; Alpha (a1); template Chat (tm1).
+   */
+  it.each<[string, string, keyof Application, unknown]>([
+    ['Embeddable', 'False', 'embeddable', false],
+    ['Load in Background', 'True', 'loadInBackground', true],
+    ['Application Template', 'Chat', 'applicationTemplateId', 'tm1'],
+  ])('saves the %s choice %s', async (label, option, field, value) => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const r = await renderSelect({ templates: [{ id: 'tm1', name: 'Chat' }] });
+    await openPanel(r);
+    const select = await selectOf(r.fixture, label);
+    await select.open();
+    await select.clickOptions({ text: option });
+    expect(r.updateApplication).toHaveBeenCalledExactlyOnceWith(
       'a1',
-      expect.objectContaining({ loadInBackground: true }),
+      expect.objectContaining({ id: 'a1', [field]: value }),
     );
   });
 
   /**
-   * Verifies: saveApplicationTemplateId persists the application carrying its applicationTemplateId.
-   * Interacts with: stubbed ApplicationService.updateApplication.
-   * Data: appA with applicationTemplateId 'tmpl-1'.
+   * Verifies: an application made from a template shows the template's fields read-only below its own.
+   * Interacts with: the opened panel's template section.
+   * Data: an application from template Chat (chat.test, chat.png).
    */
-  it('saveApplicationTemplateId persists the application', async () => {
-    const { fixture, updateApplication } = await renderSelect();
-    fixture.componentInstance.saveApplicationTemplateId({
-      ...appA,
-      applicationTemplateId: 'tmpl-1',
+  it('shows the template fields read-only', async () => {
+    const r = await renderSelect({
+      apps: [makeApplication({ id: 'a2', applicationTemplateId: 'tm1' })],
+      templates: [
+        { id: 'tm1', name: 'Chat', url: 'https://chat.test', icon: 'chat.png' },
+      ],
     });
-    expect(updateApplication).toHaveBeenCalledWith(
-      'a1',
-      expect.objectContaining({ applicationTemplateId: 'tmpl-1' }),
+    await openPanel(r);
+    const name = screen.getByLabelText(
+      'Template Application Name',
+    ) as HTMLInputElement;
+    expect(name).toHaveValue('Chat');
+    expect(name.disabled).toBe(true);
+    expect(screen.getByLabelText('Template Application URL')).toHaveValue(
+      'https://chat.test',
     );
   });
 
-  describe('getTemplate()', () => {
-    /**
-     * Verifies: getTemplate returns the template whose id matches.
-     * Interacts with: component.getTemplate against loaded templates.
-     * Data: single template 'tmpl-1'; looked up by 'tmpl-1'.
-     */
-    it('returns the matching template by id', async () => {
-      const template: ApplicationTemplate = { id: 'tmpl-1', name: 'Templ' };
-      const { fixture } = await renderSelect({ templates: [template] });
-      expect(fixture.componentInstance.getTemplate('tmpl-1')).toEqual(template);
-    });
-
-    /**
-     * Verifies: getTemplate returns undefined when no template id matches.
-     * Interacts with: component.getTemplate against loaded templates.
-     * Data: template 'tmpl-1'; looked up by 'missing'.
-     */
-    it('returns undefined when no template matches', async () => {
-      const { fixture } = await renderSelect({
-        templates: [{ id: 'tmpl-1', name: 'Templ' }],
-      });
-      expect(fixture.componentInstance.getTemplate('missing')).toBeUndefined();
-    });
+  /**
+   * Verifies: a confirmed Delete Application deletes it and reloads the list; a declined one deletes nothing.
+   * Interacts with: the opened panel's Delete Application button; CrucibleDialogService.confirm;
+   *   ApplicationService.deleteApplication and getViewApplications.
+   * Data: one row per answer; Alpha; the reload returns no applications.
+   */
+  it.each<[string, boolean, string[]]>([
+    ['deletes the application when confirmed', true, []],
+    ['keeps the application when declined', false, ['Alpha']],
+  ])('%s', async (_case, confirmDelete, remaining) => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const r = await renderSelect({ confirmDelete });
+    const user = await openPanel(r);
+    r.getViewApplications.mockReturnValue(of([]));
+    await user.click(screen.getByText('Delete Application'));
+    expect(r.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Delete Application',
+        message: 'Are you sure that you want to remove the application Alpha?',
+      }),
+    );
+    expect(r.deleteApplication).toHaveBeenCalledTimes(confirmDelete ? 1 : 0);
+    expect(appTitles(r.container)).toEqual(remaining);
   });
 
   describe('AppErrorStateMatcher', () => {

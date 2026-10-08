@@ -160,9 +160,6 @@ describe('TeamPermissionsService', () => {
      *   announces the change as a fresh teamPermissions$ emission.
      * Interacts with: getTeamPermissions stub; service.upsert; service.teamPermissions$ via recordEmissions.
      * Data: a single cached tp 'tp1' named 'Old', upserted to name 'Updated'.
-     * Why: upsert mutates the array it got from getValue() and re-next()s that same reference, so
-     *   reading teamPermissions$ after the call sees the new name whether or not next() ever ran.
-     *   Snapshotting each emission as it arrives is what pins the notification.
      */
     it('mutates an existing entry in place and emits the updated cache', async () => {
       const svc = createService({
@@ -181,8 +178,6 @@ describe('TeamPermissionsService', () => {
      *   one, and emits the grown cache.
      * Interacts with: getTeamPermissions stub; service.upsert; service.teamPermissions$ via recordEmissions.
      * Data: an empty cache, upserting id 'tp9' name 'Brand New'.
-     * Why: same in-place mutation as the update path — only a recorded emission proves the append was
-     *   published rather than merely applied to the cached array.
      */
     it('appends a new entry when the id is absent and emits the new cache', async () => {
       const svc = createService({ getTeamPermissions: () => of([]) });

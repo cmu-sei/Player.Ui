@@ -47,9 +47,10 @@ async function renderNotifications(
   overrides: {
     confirm?: boolean;
     viewAdmin?: boolean;
+    useBeep?: boolean;
   } = {},
 ) {
-  const { confirm = true, viewAdmin = false } = overrides;
+  const { confirm = true, viewAdmin = false, useBeep = false } = overrides;
 
   const canSendMessage = new BehaviorSubject<boolean>(viewAdmin);
   const notificationHistory = new BehaviorSubject<NotificationDataStatus[]>([]);
@@ -116,7 +117,7 @@ async function renderNotifications(
             NotificationsSettings: {
               useBadge: true,
               useBlink: true,
-              useBeep: false,
+              useBeep,
             },
           },
         },
@@ -157,6 +158,13 @@ async function renderNotifications(
   };
 }
 
+/** Texts of the rendered notifications, in render order. */
+function renderedMessages(container: Element): string[] {
+  return Array.from(container.querySelectorAll('#message')).map(
+    (message) => message.textContent?.trim() ?? '',
+  );
+}
+
 describe('NotificationsComponent', () => {
   /**
    * Verifies: init connects to the notification server using the view/team/user guids and token inputs.
@@ -174,136 +182,164 @@ describe('NotificationsComponent', () => {
   });
 
   /**
-   * Verifies: hasViewAdmin reflects the latest NotificationService.canSendMessage emission.
-   * Interacts with: NotificationService.canSendMessage subject, component hasViewAdmin field.
-   * Data: canSendMessage emits true.
+   * Verifies: the history arrives newest first in the rendered list.
+   * Interacts with: NotificationService.notificationHistory; the rendered messages.
+   * Data: 'older' (Jan 1) and 'newer' (Jan 2), sent oldest first.
    */
-  it('hasViewAdmin tracks canSendMessage emissions', async () => {
-    const { fixture, canSendMessage } = await renderNotifications();
-    canSendMessage.next(true);
-    expect(fixture.componentInstance.hasViewAdmin).toBe(true);
-  });
-
-  /**
-   * Verifies: notification history is ordered by broadcastTime descending (newest first).
-   * Interacts with: NotificationService.notificationHistory subject, component notificationsHistory.
-   * Data: two notifications keyed 1 (Jan 1) and 2 (Jan 2); expects [2, 1].
-   */
-  it('sorts notification history with the newest broadcastTime first', async () => {
-    const { fixture, notificationHistory } = await renderNotifications();
-    notificationHistory.next([
-      makeNotification({ key: 1, broadcastTime: '2026-01-01T00:00:00Z' }),
-      makeNotification({ key: 2, broadcastTime: '2026-01-02T00:00:00Z' }),
-    ]);
-    expect(
-      fixture.componentInstance.notificationsHistory.map((n) => n.key),
-    ).toEqual([2, 1]);
-  });
-
-  /**
-   * Verifies: a live viewNotification emission is prepended to history and bumps the unseen count.
-   * Interacts with: NotificationService.viewNotification subject, newNotificationCount signal.
-   * Data: makeNotification override key 42; expects count 1 and head key 42.
-   */
-  it('viewNotification stream prepends a new notification and increments the count', async () => {
-    const { fixture, viewNotification } = await renderNotifications();
-    viewNotification.next(makeNotification({ key: 42, text: 'new!' }));
-    expect(fixture.componentInstance.newNotificationCount()).toBe(1);
-    expect(fixture.componentInstance.notificationsHistory[0].key).toBe(42);
-  });
-
-  /**
-   * Verifies: a SignalR deleteNotification 'all' message empties the local history.
-   * Interacts with: NotificationService.deleteNotification subject, notificationsHistory.
-   * Data: seed one notification, then emit 'all'.
-   */
-  it('deleteNotification SignalR "all" clears the history', async () => {
-    const { fixture, notificationHistory, deleteNotification } =
-      await renderNotifications();
-    notificationHistory.next([makeNotification()]);
-    deleteNotification.next('all');
-    expect(fixture.componentInstance.notificationsHistory).toEqual([]);
-  });
-
-  /**
-   * Verifies: a SignalR deleteNotification with a key removes only the matching entry.
-   * Interacts with: NotificationService.deleteNotification subject, notificationsHistory.
-   * Data: seed keys 1 and 2, emit the int key 1 as the API sends it
-   *   (player.api Features/Views/Requests/DeleteNotification.cs:61); expects [2] remaining.
-   */
-  it('deleteNotification SignalR by key removes that entry', async () => {
-    const { fixture, notificationHistory, deleteNotification } =
+  it('lists the notification history newest first', async () => {
+    const { fixture, container, notificationHistory } =
       await renderNotifications();
     notificationHistory.next([
-      makeNotification({ key: 1 }),
-      makeNotification({ key: 2 }),
+      makeNotification({
+        key: 1,
+        text: 'older',
+        broadcastTime: '2026-01-01T00:00:00Z',
+      }),
+      makeNotification({
+        key: 2,
+        text: 'newer',
+        broadcastTime: '2026-01-02T00:00:00Z',
+      }),
     ]);
-    // NotificationService.deleteNotification is typed string, but the hub
-    // forwards the API's int key unchanged; the component compares with +key.
-    deleteNotification.next(1 as unknown as string);
-    expect(
-      fixture.componentInstance.notificationsHistory.map((n) => n.key),
-    ).toEqual([2]);
+    fixture.detectChanges();
+    expect(renderedMessages(container)).toEqual(['newer', 'older']);
   });
 
   /**
-   * Verifies: setNewNotificationCount sets the browser title, with no suffix at 0 and Alert/Alerts by count.
-   * Interacts with: Title.setTitle spy, component setNewNotificationCount.
-   * Data: one row per count against AppTitle 'Player'.
+   * Verifies: a live notification goes to the top of the list, sets the badge and the browser title to the unseen
+   *   count, and makes the closed panel's header blink.
+   * Interacts with: NotificationService.viewNotification; the rendered list, badge and header; Title.setTitle.
+   * Data: history 'older'; two live notifications 'first' and 'second' while the panel is closed.
    */
-  it.each([
-    [0, 'Player'],
-    [1, 'Player (1 Alert)'],
-    [3, 'Player (3 Alerts)'],
+  it('puts live notifications on top and counts them as unseen', async () => {
+    const {
+      fixture,
+      container,
+      notificationHistory,
+      viewNotification,
+      setTitle,
+    } = await renderNotifications();
+    notificationHistory.next([makeNotification({ key: 1, text: 'older' })]);
+    viewNotification.next(makeNotification({ key: 2, text: 'first' }));
+    fixture.detectChanges();
+    expect(setTitle).toHaveBeenLastCalledWith('Player (1 Alert)');
+    viewNotification.next(makeNotification({ key: 3, text: 'second' }));
+    fixture.detectChanges();
+    expect(renderedMessages(container)).toEqual(['second', 'first', 'older']);
+    expect(setTitle).toHaveBeenLastCalledWith('Player (2 Alerts)');
+    expect(container.querySelector('.mat-badge-content')).toHaveTextContent(
+      '2',
+    );
+    expect(container.querySelector('mat-expansion-panel-header')).toHaveClass(
+      'blink',
+    );
+  });
+
+  /**
+   * Verifies: opening the panel stops the blink, and closing it marks everything seen and clears the count and title.
+   * Interacts with: the rendered panel header (clicked to open and close); Title.setTitle.
+   * Data: one live notification while the panel is closed.
+   */
+  it('clears the unseen count when the panel is opened and closed', async () => {
+    const user = userEvent.setup();
+    const { fixture, container, viewNotification, setTitle } =
+      await renderNotifications();
+    viewNotification.next(makeNotification({ key: 2, text: 'first' }));
+    fixture.detectChanges();
+    const header = container.querySelector('mat-expansion-panel-header')!;
+    await user.click(screen.getByText('Notifications'));
+    expect(header).not.toHaveClass('blink');
+    expect(setTitle).toHaveBeenLastCalledWith('Player (1 Alert)');
+    await user.click(screen.getByText('Notifications'));
+    expect(setTitle).toHaveBeenLastCalledWith('Player');
+    expect(header).not.toHaveClass('blink');
+    expect(fixture.componentInstance.notificationsHistory[0].wasSeen).toBe(
+      true,
+    );
+  });
+
+  /**
+   * Verifies: a hub delete of 'all' empties the rendered list, and a delete by key removes only that notification.
+   * Interacts with: NotificationService.deleteNotification; the rendered messages.
+   * Data: one row per payload: 'all', and the int key 1 as the API sends it
+   *   (player.api Features/Views/Requests/DeleteNotification.cs:61).
+   */
+  it.each<[string, string | number, string[]]>([
+    ['all', 'all', []],
+    ['the int key 1', 1, ['two']],
   ])(
-    'setNewNotificationCount(%i) sets the title to "%s"',
-    async (count, title) => {
-      const { fixture, setTitle } = await renderNotifications();
-      fixture.componentInstance.setNewNotificationCount(count);
-      expect(setTitle).toHaveBeenLastCalledWith(title);
+    'removes notifications on a hub delete of %s',
+    async (_payload, key, remaining) => {
+      const { fixture, container, notificationHistory, deleteNotification } =
+        await renderNotifications();
+      notificationHistory.next([
+        makeNotification({
+          key: 1,
+          text: 'one',
+          broadcastTime: '2026-01-02T00:00:00Z',
+        }),
+        makeNotification({
+          key: 2,
+          text: 'two',
+          broadcastTime: '2026-01-01T00:00:00Z',
+        }),
+      ]);
+      // NotificationService.deleteNotification is typed string; the hub
+      // forwards the API's payload unchanged.
+      deleteNotification.next(key as string);
+      fixture.detectChanges();
+      expect(renderedMessages(container)).toEqual(remaining);
     },
   );
 
   /**
-   * Verifies: closing the panel hides it, marks every notification seen, and resets the count to zero.
-   * Interacts with: notificationPanelToggle, notificationsHistory, newNotificationCount signal.
-   * Data: seed one notification with count 5, then toggle 'close'.
+   * Verifies: a notification with a link renders an Open link to it in a new tab.
+   * Interacts with: the rendered notification list.
+   * Data: link 'https://example.test'.
    */
-  it('notificationPanelToggle("close") marks all seen and resets count', async () => {
+  it('renders an Open link for a notification with a link', async () => {
     const { fixture, notificationHistory } = await renderNotifications();
-    notificationHistory.next([makeNotification({ key: 1 })]);
-    fixture.componentInstance.setNewNotificationCount(5);
-    fixture.componentInstance.notificationPanelToggle('close');
-    expect(fixture.componentInstance.showSystemNotifications).toBe(false);
-    expect(
-      fixture.componentInstance.notificationsHistory.every((n) => n.wasSeen),
-    ).toBe(true);
-    expect(fixture.componentInstance.newNotificationCount()).toBe(0);
+    notificationHistory.next([
+      makeNotification({ link: 'https://example.test' }),
+    ]);
+    fixture.detectChanges();
+    const link = screen.getByText('Open');
+    expect(link).toHaveAttribute('href', 'https://example.test');
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   /**
-   * Verifies: notificationDisplayClass returns 'blink' when the panel is closed and there are unseen alerts.
-   * Interacts with: component showSystemNotifications flag, notificationDisplayClass computed.
-   * Data: showSystemNotifications false with count 2.
+   * Verifies: openLink, which the browser notification's onclick calls, opens the link in a new tab.
+   * Interacts with: window.open spy; jsdom has no Notification API, so the method is called directly.
+   * Data: url 'https://example.test'.
    */
-  it('notificationDisplayClass returns "blink" when conditions met', async () => {
+  it('openLink opens the link in a new browser tab', async () => {
     const { fixture } = await renderNotifications();
-    fixture.componentInstance.showSystemNotifications = false;
-    fixture.componentInstance.setNewNotificationCount(2);
-    expect(fixture.componentInstance.notificationDisplayClass()).toBe('blink');
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    fixture.componentInstance.openLink('https://example.test');
+    expect(open).toHaveBeenCalledWith('https://example.test', '_blank');
   });
 
   /**
-   * Verifies: notificationDisplayClass returns '' (no blink) while the panel is open even with unseen alerts.
-   * Interacts with: component showSystemNotifications flag, notificationDisplayClass computed.
-   * Data: showSystemNotifications true with count 2.
+   * Verifies: a live notification beeps only when the useBeep setting is on.
+   * Interacts with: ComnSettingsService NotificationsSettings.useBeep; NotificationService.viewNotification;
+   *   HTMLMediaElement.prototype.play spy.
+   * Data: one row per setting.
    */
-  it('notificationDisplayClass returns empty when panel is open', async () => {
-    const { fixture } = await renderNotifications();
-    fixture.componentInstance.showSystemNotifications = true;
-    fixture.componentInstance.setNewNotificationCount(2);
-    expect(fixture.componentInstance.notificationDisplayClass()).toBe('');
-  });
+  it.each([
+    [true, 1],
+    [false, 0],
+  ])(
+    'with useBeep %s beeps %i time(s) on a live notification',
+    async (useBeep, beeps) => {
+      const play = vi
+        .spyOn(window.HTMLMediaElement.prototype, 'play')
+        .mockResolvedValue(undefined);
+      const { viewNotification } = await renderNotifications({ useBeep });
+      viewNotification.next(makeNotification({ key: 9 }));
+      expect(play).toHaveBeenCalledTimes(beeps);
+    },
+  );
 
   describe('admin actions in the open panel', () => {
     /**
@@ -329,14 +365,17 @@ describe('NotificationsComponent', () => {
      * Data: viewAdmin true; confirm true; 250 'x' characters pasted into the message box.
      */
     it('sends a confirmed message trimmed to 225 characters', async () => {
-      const { fixture, user, sendNotification, confirmDialog } =
-        await renderOpenPanel({ viewAdmin: true, confirm: true });
-      await user.click(screen.getByPlaceholderText(/send system wide/i));
+      const { user, sendNotification, confirmDialog } = await renderOpenPanel({
+        viewAdmin: true,
+        confirm: true,
+      });
+      const input = screen.getByPlaceholderText(/send system wide/i);
+      await user.click(input);
       await user.paste('x'.repeat(250));
       await user.click(screen.getByRole('button', { name: 'Send' }));
       expect(confirmDialog).toHaveBeenCalled();
       expect(sendNotification).toHaveBeenCalledWith('v1', 'x'.repeat(225));
-      expect(fixture.componentInstance.messageToSend).toBe('');
+      expect(input).toHaveValue('');
     });
 
     /**
@@ -400,49 +439,24 @@ describe('NotificationsComponent', () => {
         screen.queryByTitle('Delete ALL notifications'),
       ).not.toBeInTheDocument();
     });
-  });
-
-  /**
-   * Verifies: openLink delegates to window.open with the URL and a _blank target.
-   * Interacts with: window.open spy, component openLink.
-   * Data: url 'https://example.test'.
-   */
-  it('openLink opens the link in a new browser tab', async () => {
-    const { fixture } = await renderNotifications();
-    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-    fixture.componentInstance.openLink('https://example.test');
-    expect(open).toHaveBeenCalledWith('https://example.test', '_blank');
-  });
-
-  describe('playBeep()', () => {
-    /**
-     * Verifies: playBeep plays the audio element when useBeep is enabled.
-     * Interacts with: HTMLMediaElement.prototype.play spy, component playBeep.
-     * Data: useBeep true.
-     */
-    it('plays the beep audio when useBeep is enabled', async () => {
-      const { fixture } = await renderNotifications();
-      const play = vi
-        .spyOn(window.HTMLMediaElement.prototype, 'play')
-        .mockResolvedValue(undefined);
-      fixture.componentInstance.useBeep = true;
-      fixture.componentInstance.playBeep();
-      expect(play).toHaveBeenCalled();
-    });
 
     /**
-     * Verifies: playBeep does not play audio when useBeep is disabled.
-     * Interacts with: HTMLMediaElement.prototype.play spy, component playBeep.
-     * Data: useBeep false.
+     * Verifies: the delete icons appear once the hub reports that the user may post (canPost true), and are absent before.
+     * Interacts with: NotificationService.canSendMessage (fed by the hub's System message); the rendered icons.
+     * Data: viewAdmin false at first; history holds one notification; canSendMessage then emits true.
      */
-    it('does nothing when useBeep is disabled', async () => {
-      const { fixture } = await renderNotifications();
-      const play = vi
-        .spyOn(window.HTMLMediaElement.prototype, 'play')
-        .mockResolvedValue(undefined);
-      fixture.componentInstance.useBeep = false;
-      fixture.componentInstance.playBeep();
-      expect(play).not.toHaveBeenCalled();
+    it('shows the delete icons once the hub grants posting', async () => {
+      const { fixture, canSendMessage } = await renderOpenPanel(
+        { viewAdmin: false },
+        [makeNotification()],
+      );
+      expect(
+        screen.queryByTitle('Delete notification'),
+      ).not.toBeInTheDocument();
+      canSendMessage.next(true);
+      fixture.detectChanges();
+      expect(screen.getByTitle('Delete notification')).toBeInTheDocument();
+      expect(screen.getByTitle('Delete ALL notifications')).toBeInTheDocument();
     });
   });
 
@@ -471,7 +485,6 @@ describe('NotificationsComponent', () => {
      * Verifies: the send-message form stays out of the DOM for a user without view admin.
      * Interacts with: the template's @if (hasViewAdmin) gate; NotificationService.canSendMessage.
      * Data: default renderNotifications() — canSendMessage stays false.
-     * Why: the form broadcasts to everyone in the view, so the gate is what keeps non-admins out of it.
      */
     it('hides the form from a user without view admin', async () => {
       const { container } = await renderNotifications();
@@ -484,30 +497,26 @@ describe('NotificationsComponent', () => {
      * Interacts with: the rendered message input ([(ngModel)]) and Send button; the form's
      *   (ngSubmit) binding; NotificationService.sendNotification spy.
      * Data: viewAdmin true; 'broadcast me' typed into the message box.
-     * Why: pins (ngSubmit)="sendMessage()" and the ngModel binding — every method-level sendMessage
-     *   test passes with both removed from the template.
      */
     it('submitting the form broadcasts the typed message', async () => {
-      const { container, fixture, sendNotification } =
-        await renderNotifications({ viewAdmin: true });
+      const user = userEvent.setup();
+      const { container, sendNotification } = await renderNotifications({
+        viewAdmin: true,
+      });
       const input = messageInput(container);
-      input.value = 'broadcast me';
-      input.dispatchEvent(new Event('input'));
-      expect(fixture.componentInstance.messageToSend).toBe('broadcast me');
-      await fixture.whenStable();
-
-      sendButton(container).click();
-      await fixture.whenStable();
-      expect(sendNotification).toHaveBeenCalledWith('v1', 'broadcast me');
+      input.focus();
+      await user.type(input, 'broadcast me{Enter}', { skipClick: true });
+      expect(sendNotification).toHaveBeenCalledExactlyOnceWith(
+        'v1',
+        'broadcast me',
+      );
+      expect(input.value).toBe('');
     });
 
     /**
      * Verifies: the Send button is enabled while the form is valid.
      * Interacts with: the Send button's [disabled]="!notificationForm.form.valid" binding.
      * Data: viewAdmin true, empty message box.
-     * Why: the input carries no validators, so this binding only has two reachable states —
-     *   enabled (current behavior) and permanently disabled (inverted or hardcoded). This catches
-     *   the second, which would silently take the broadcast feature away from admins.
      */
     it('leaves the Send button enabled while the form is valid', async () => {
       const { container } = await renderNotifications({ viewAdmin: true });

@@ -65,7 +65,6 @@ describe('TeamsService', () => {
    * Verifies: a 500 response causes the returned observable to reject rather than swallow the error.
    * Interacts with: HttpTestingController.flush with an error status, TeamsService.getUserTeamsByView.
    * Data: 500 Server Error flushed for the user-1/view-1 teams request.
-   * Why: confirms catchError re-throws instead of suppressing; asserts via rejects rather than a value.
    */
   it('getUserTeamsByView() surfaces server errors through catchError', async () => {
     const ctx = setup();

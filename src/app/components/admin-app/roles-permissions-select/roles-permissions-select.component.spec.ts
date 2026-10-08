@@ -7,7 +7,10 @@ import { defer, of } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
 import { MatSelectHarness } from '@angular/material/select/testing';
-import { ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RolesService } from '../../../services/roles/roles.service';
+import { TeamRolesService } from '../../../services/roles/team-roles.service';
+import { TeamPermissionsService } from '../../../services/permissions/team-permissions.service';
 import { TeamPermissionScopesService } from '../../../services/permissions/team-permission-scopes.service';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
 import {
@@ -15,14 +18,15 @@ import {
   Team,
   UserService,
   TeamService,
-  Permission,
+  Role,
+  RoleService,
+  TeamPermissionModel,
   TeamPermissionService,
+  TeamRole,
+  TeamRoleService,
   TeamPermissionScopeService,
 } from '../../../generated/player-api';
-import {
-  ObjectType,
-  RolesPermissionsSelectComponent,
-} from './roles-permissions-select.component';
+import { RolesPermissionsSelectComponent } from './roles-permissions-select.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,8 +34,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiStub } from '../../../test-utils/api-stub';
 
-const permissionA: Permission = { id: 'p1', name: 'A' };
-const permissionB: Permission = { id: 'p2', name: 'B' };
+const permissionA: TeamPermissionModel = { id: 'p1', name: 'A' };
+const permissionB: TeamPermissionModel = { id: 'p2', name: 'B' };
+const systemRoles: Role[] = [
+  { id: 'r1', name: 'Observer' },
+  { id: 'r2', name: 'Content Developer' },
+];
+// Lead includes permission B.
+const teamRoles: TeamRole[] = [
+  { id: 'tr1', name: 'Lead', permissions: [permissionB] },
+  { id: 'tr2', name: 'Member', permissions: [] },
+];
 
 async function renderSelect(
   overrides: {
@@ -40,6 +53,7 @@ async function renderSelect(
     canEdit?: boolean;
     allTeams?: Team[];
     scopeError?: boolean;
+    loadCatalogs?: boolean;
   } = {},
 ) {
   const {
@@ -48,6 +62,7 @@ async function renderSelect(
     canEdit = true,
     allTeams = [],
     scopeError = false,
+    loadCatalogs = true,
   } = overrides;
 
   const updateUser = vi.fn(() => of({}));
@@ -70,6 +85,17 @@ async function renderSelect(
   );
   const removeScope = vi.fn((_teamId: string, _targetTeamId: string) =>
     scopeResult(),
+  );
+
+  // The catalogs the parent page loads into the real role and permission
+  // services before it renders this select.
+  const getRoles = vi.fn(() => of<Role[]>(structuredClone(systemRoles)));
+  const getTeamRoles = vi.fn(() => of<TeamRole[]>(structuredClone(teamRoles)));
+  const getTeamPermissions = vi.fn(() =>
+    of<TeamPermissionModel[]>([
+      structuredClone(permissionA),
+      structuredClone(permissionB),
+    ]),
   );
 
   const rendered = await renderComponent(RolesPermissionsSelectComponent, {
@@ -97,7 +123,16 @@ async function renderSelect(
         useValue: {
           addTeamPermissionToTeam: addToTeam,
           removeTeamPermissionFromTeam: removeFromTeam,
+          getTeamPermissions,
         } satisfies ApiStub<TeamPermissionService>,
+      },
+      {
+        provide: RoleService,
+        useValue: { getRoles } satisfies ApiStub<RoleService>,
+      },
+      {
+        provide: TeamRoleService,
+        useValue: { getTeamRoles } satisfies ApiStub<TeamRoleService>,
       },
       {
         provide: TeamPermissionScopeService,
@@ -112,6 +147,14 @@ async function renderSelect(
     ],
   });
 
+  if (loadCatalogs) {
+    TestBed.inject(RolesService).getRoles().subscribe();
+    TestBed.inject(TeamRolesService).getRoles().subscribe();
+    TestBed.inject(TeamPermissionsService).load().subscribe();
+    rendered.fixture.detectChanges();
+    await rendered.fixture.whenStable();
+  }
+
   return {
     ...rendered,
     updateUser,
@@ -125,7 +168,7 @@ async function renderSelect(
 
 describe('RolesPermissionsSelectComponent', () => {
   /**
-   * Verifies: rendering with both a user and a team, or with neither, throws a TypeError from the template instead of showing inert dropdowns (current behavior).
+   * Verifies: rendering with both a user and a team, or with neither, throws a TypeError from the template (current behavior).
    * Interacts with: ngOnInit's early return (it logs and leaves `subject` unset) and the template's subject.roleId binding.
    * Data: one row with a user and a team, one with neither.
    */
@@ -134,40 +177,68 @@ describe('RolesPermissionsSelectComponent', () => {
     ['neither a user nor a team', {}],
   ])('throws while rendering with %s', async (_label, inputs) => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
     await expect(renderSelect(inputs)).rejects.toThrow(TypeError);
   });
 
-  /**
-   * Verifies: passing a team puts the component in Team mode, shows permissions, and seeds selection from team.permissions/roleId.
-   * Interacts with: ngOnInit reading the team input.
-   * Data: team with roleId 'r1' and permission p1.
-   */
-  it('sets Team mode and seeds selectedPermissions from team.permissions', async () => {
-    const team: Team = {
-      id: 't1',
-      name: 'Red',
-      roleId: 'r1',
-      permissions: [permissionA],
-    };
-    const { fixture } = await renderSelect({ team });
-    expect(fixture.componentInstance.subjectType).toBe(ObjectType.Team);
-    expect(fixture.componentInstance.showPermissions).toBe(true);
-    expect(fixture.componentInstance.selectedPermissions).toEqual(['p1']);
-    expect(fixture.componentInstance.selectedRole).toBe('r1');
-  });
+  /** The rendered selects: Role, then (Team mode) Additional Permissions and Scoped Teams. */
+  async function selects(
+    fixture: ComponentFixture<RolesPermissionsSelectComponent>,
+  ) {
+    return TestbedHarnessEnvironment.loader(fixture).getAllHarnesses(
+      MatSelectHarness,
+    );
+  }
 
   /**
-   * Verifies: passing a user puts the component in User mode, hides the permissions UI, and seeds the role from roleId.
-   * Interacts with: ngOnInit reading the user input.
-   * Data: user with roleId 'r2'.
+   * Verifies: for a user, only the Role select renders, offering None plus every system role by name, with the user's role
+   *   selected.
+   * Interacts with: the real RolesService catalog; the rendered selects (MatSelectHarness).
+   * Data: user Alice with role r2 (Content Developer); system roles Observer and Content Developer.
    */
-  it('sets User mode without permissions', async () => {
+  it('offers None and the system roles for a user', async () => {
     const { fixture } = await renderSelect({
       user: { id: 'u1', name: 'Alice', roleId: 'r2' },
     });
-    expect(fixture.componentInstance.subjectType).toBe(ObjectType.User);
-    expect(fixture.componentInstance.showPermissions).toBe(false);
-    expect(fixture.componentInstance.selectedRole).toBe('r2');
+    const all = await selects(fixture);
+    expect(all).toHaveLength(1);
+    const [role] = all;
+    expect(await role.getValueText()).toBe('Content Developer');
+    await role.open();
+    expect(
+      await Promise.all((await role.getOptions()).map((o) => o.getText())),
+    ).toEqual(['None', 'Content Developer', 'Observer']);
+  });
+
+  /**
+   * Verifies: for a team, the Role select offers the team roles without None, and Additional Permissions shows the
+   *   team's own permissions selected and marks those its role already includes.
+   * Interacts with: the real TeamRolesService and TeamPermissionsService catalogs; the rendered selects.
+   * Data: team Red with role Lead (includes B) and permission A; team permissions A and B.
+   */
+  it('shows the team role and permissions for a team', async () => {
+    const { fixture } = await renderSelect({
+      team: {
+        id: 't1',
+        name: 'Red',
+        roleId: 'tr1',
+        permissions: [permissionA],
+      },
+    });
+    const [role, permissions] = await selects(fixture);
+    expect(await role.getValueText()).toBe('Lead');
+    await role.open();
+    expect(
+      await Promise.all((await role.getOptions()).map((o) => o.getText())),
+    ).toEqual(['Lead', 'Member']);
+    await role.close();
+    expect(await permissions.getValueText()).toBe('A');
+    await permissions.open();
+    expect(
+      await Promise.all(
+        (await permissions.getOptions()).map((o) => o.getText()),
+      ),
+    ).toEqual(['A', 'BIncluded in role']);
   });
 
   /**
@@ -187,6 +258,30 @@ describe('RolesPermissionsSelectComponent', () => {
   });
 
   /**
+   * Verifies: in Team mode canEdit false disables the role select but leaves the Additional Permissions and Scoped
+   *   Teams selects enabled (current behavior; latent, as no caller passes canEdit with a team).
+   * Interacts with: the three rendered MatSelects (MatSelectHarness).
+   * Data: team Red with canEdit false; allTeams Red and Blue.
+   */
+  it('leaves the team permission and scope selects enabled with canEdit false', async () => {
+    const { fixture } = await renderSelect({
+      team: { id: 't1', name: 'Red', permissions: [] },
+      allTeams: [
+        { id: 't1', name: 'Red' },
+        { id: 't2', name: 'Blue' },
+      ],
+      canEdit: false,
+    });
+    const loader = TestbedHarnessEnvironment.loader(fixture);
+    const [role, permissions, scopes] =
+      await loader.getAllHarnesses(MatSelectHarness);
+    expect(await role.isDisabled()).toBe(true);
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(await permissions.isDisabled()).toBe(false);
+    expect(await scopes.isDisabled()).toBe(false);
+  });
+
+  /**
    * Verifies: existing consumers remain editable by default.
    * Interacts with: the component's default canEdit input.
    * Data: a user without an explicit canEdit override.
@@ -202,98 +297,65 @@ describe('RolesPermissionsSelectComponent', () => {
   });
 
   /**
-   * Verifies: checking a permission in Team mode calls addToTeam and not removeFromTeam.
-   * Interacts with: the real TeamPermissionsService.addToTeam / removeFromTeam over the TeamPermissionService.addTeamPermissionToTeam / removeTeamPermissionFromTeam stubs.
-   * Data: team with p1; adding p2 (checked=true).
+   * Verifies: choosing a role for a user saves the user with that role, and choosing None saves a null role.
+   * Interacts with: the rendered Role select (MatSelectHarness); UserService.updateUser.
+   * Data: user Alice with no role; Observer chosen, then None.
    */
-  it('updatePermissions(Team, checked=true) calls addToTeam', async () => {
-    const team: Team = {
-      id: 't1',
-      name: 'Red',
-      permissions: [permissionA],
-    };
-    const { fixture, addToTeam, removeFromTeam } = await renderSelect({ team });
-    fixture.componentInstance.updatePermissions(permissionB, true);
-    expect(addToTeam).toHaveBeenCalledWith('t1', 'p2');
-    expect(removeFromTeam).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: unchecking a permission in Team mode calls removeFromTeam and not addToTeam.
-   * Interacts with: the real TeamPermissionsService.addToTeam / removeFromTeam over the TeamPermissionService.addTeamPermissionToTeam / removeTeamPermissionFromTeam stubs.
-   * Data: team with p1; removing p1 (checked=false).
-   */
-  it('updatePermissions(Team, checked=false) calls removeFromTeam', async () => {
-    const team: Team = {
-      id: 't1',
-      name: 'Red',
-      permissions: [permissionA],
-    };
-    const { fixture, addToTeam, removeFromTeam } = await renderSelect({ team });
-    fixture.componentInstance.updatePermissions(permissionA, false);
-    expect(removeFromTeam).toHaveBeenCalledWith('t1', 'p1');
-    expect(addToTeam).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: updateRole in User mode writes the new roleId onto the subject and persists that roleId via UserService.updateUser.
-   * Interacts with: stubbed UserService.updateUser.
-   * Data: user with roleId null; updateRole('new-role').
-   * Why: the payload is asserted against the literal roleId rather than against componentInstance.subject —
-   *   the subject is the very object the component mutates, so comparing it to itself would pass even if
-   *   the assignment were dropped.
-   */
-  it('updateRole(User) updates the user via UserService', async () => {
+  it('saves the chosen user role, and None as a null role', async () => {
     const { fixture, updateUser } = await renderSelect({
       user: { id: 'u1', name: 'Alice', roleId: null },
     });
-    fixture.componentInstance.updateRole('new-role');
-    expect(fixture.componentInstance.subject.roleId).toBe('new-role');
-    expect(updateUser).toHaveBeenCalledWith(
-      'u1',
-      expect.objectContaining({ id: 'u1', roleId: 'new-role' }),
-    );
-  });
-
-  /**
-   * Verifies: updateRole with an empty string nulls the subject's roleId and persists the null.
-   * Interacts with: stubbed UserService.updateUser.
-   * Data: user with roleId 'r2'; updateRole('').
-   */
-  it('updateRole("") clears the roleId to null', async () => {
-    const { fixture, updateUser } = await renderSelect({
-      user: { id: 'u1', name: 'Alice', roleId: 'r2' },
+    const [role] = await selects(fixture);
+    await role.open();
+    await role.clickOptions({ text: 'Observer' });
+    expect(updateUser).toHaveBeenLastCalledWith('u1', {
+      id: 'u1',
+      name: 'Alice',
+      roleId: 'r1',
     });
-    fixture.componentInstance.updateRole('');
-    expect(fixture.componentInstance.subject.roleId).toBeNull();
-    expect(updateUser).toHaveBeenCalledWith(
-      'u1',
-      expect.objectContaining({ id: 'u1', roleId: null }),
-    );
+    await role.open();
+    await role.clickOptions({ text: 'None' });
+    expect(updateUser).toHaveBeenLastCalledWith('u1', {
+      id: 'u1',
+      name: 'Alice',
+      roleId: null,
+    });
   });
 
   /**
-   * Verifies: updateRole in Team mode writes the new roleId onto the team and persists that roleId via TeamService.updateTeam.
-   * Interacts with: stubbed TeamService.updateTeam.
-   * Data: team with roleId null; updateRole('team-role').
-   * Why: the assignment in updateRole runs before the subjectType switch, so gating it to the User branch
-   *   leaves this path silently saving the old role. Asserting the literal roleId in the payload is what
-   *   catches that; asserting componentInstance.subject would compare the mutated object to itself.
+   * Verifies: choosing a role for a team saves the team with that role.
+   * Interacts with: the rendered Role select (MatSelectHarness); TeamService.updateTeam.
+   * Data: team Red with no role; Member chosen.
    */
-  it('updateRole(Team) updates the team via TeamService', async () => {
-    const team: Team = {
-      id: 't1',
-      name: 'Red',
-      roleId: null,
-      permissions: [],
-    };
-    const { fixture, updateTeam } = await renderSelect({ team });
-    fixture.componentInstance.updateRole('team-role');
-    expect(fixture.componentInstance.subject.roleId).toBe('team-role');
-    expect(updateTeam).toHaveBeenCalledWith(
+  it('saves the chosen team role', async () => {
+    const team: Team = { id: 't1', name: 'Red', roleId: null, permissions: [] };
+    const { fixture, updateTeam, updateUser } = await renderSelect({ team });
+    const [role] = await selects(fixture);
+    await role.open();
+    await role.clickOptions({ text: 'Member' });
+    expect(updateTeam).toHaveBeenCalledExactlyOnceWith(
       't1',
-      expect.objectContaining({ id: 't1', roleId: 'team-role' }),
+      expect.objectContaining({ id: 't1', roleId: 'tr2' }),
     );
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Verifies: ticking a permission adds it to the team and unticking one removes it.
+   * Interacts with: the rendered Additional Permissions select (MatSelectHarness); the real TeamPermissionsService
+   *   addToTeam and removeFromTeam over the TeamPermissionService stubs.
+   * Data: team Red holding A; B ticked, then A unticked.
+   */
+  it('adds and removes team permissions from Additional Permissions', async () => {
+    const team: Team = { id: 't1', name: 'Red', permissions: [permissionA] };
+    const { fixture, addToTeam, removeFromTeam } = await renderSelect({ team });
+    const [, permissions] = await selects(fixture);
+    await permissions.open();
+    await permissions.clickOptions({ text: /^B/ });
+    expect(addToTeam).toHaveBeenCalledExactlyOnceWith('t1', 'p2');
+    await permissions.clickOptions({ text: 'A' });
+    expect(removeFromTeam).toHaveBeenCalledExactlyOnceWith('t1', 'p1');
+    expect(team.permissions?.map((p) => p.id)).toEqual(['p2']);
   });
 
   describe('scoped teams', () => {

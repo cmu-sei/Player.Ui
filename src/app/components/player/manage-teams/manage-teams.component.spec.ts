@@ -3,20 +3,22 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { of, throwError } from 'rxjs';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {
   Team,
   TeamPermission,
+  TeamPermissionsClaim,
   TeamPermissionService,
   TeamService,
   UserService,
+  ViewPermission,
   ViewService,
 } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
-import {
-  permissionApiStubs,
-  permissionDataProviders,
-} from '../../../test-utils/mock-permission-data.service';
+import { permissionDataProviders } from '../../../test-utils/mock-permission-data.service';
 import { ApiStub } from '../../../test-utils/api-stub';
 import { ManageTeamsComponent } from './manage-teams.component';
 import { renderComponent } from '../../../test-utils/render-component';
@@ -32,29 +34,38 @@ const red: Team = { id: 't1', name: 'Red', isMember: true } as Team;
 const blue: Team = { id: 't2', name: 'Blue', isMember: true } as Team;
 const green: Team = { id: 't3', name: 'Green', isMember: false } as Team;
 
+/** A claim for one team in view v1 carrying the given permission values. */
+function claim(
+  teamId: string,
+  permissionValues: string[],
+): TeamPermissionsClaim {
+  return { viewId: 'v1', teamId, permissionValues };
+}
+
 async function renderManageTeams(
   overrides: {
-    viewId?: string;
     view?: unknown;
     viewError?: boolean;
     teams?: Team[];
-    manageableIds?: string[];
+    claims?: TeamPermissionsClaim[];
     teamUserCounts?: Record<string, number | 'error'>;
   } = {},
 ) {
   const {
-    viewId = 'v1',
     view = { id: 'v1', name: 'Demo View' },
     viewError = false,
     teams = [red, blue],
-    manageableIds = ['t1', 't2'],
+    claims = [
+      claim('t1', [TeamPermission.ManageTeam]),
+      claim('t2', [TeamPermission.ManageTeam]),
+    ],
     teamUserCounts = { t1: 3, t2: 5 },
   } = overrides;
 
   const getView = vi.fn(() =>
     viewError ? throwError(() => new Error('404')) : of(view),
   );
-  const getMyViewTeams = vi.fn(() => of(teams));
+  const getMyViewTeams = vi.fn(() => of(structuredClone(teams)));
   const getTeamUsers = vi.fn((teamId: string) => {
     const count = teamUserCounts[teamId];
     if (count === 'error') {
@@ -62,25 +73,15 @@ async function renderManageTeams(
     }
     return of(new Array(count ?? 0).fill({ id: 'u' }));
   });
-  // The dialog closes with { teamUsers }, while DialogService declares
-  // Observable<boolean>, so this stub is not checked against
-  // Pick<DialogService, ...>.
+  // Typed to what the dialog closes with; see the typing note on the
+  // DialogService stub in admin-view-edit.component.spec.ts.
   const addRemoveUsersToTeam = vi.fn(() =>
     of<{ teamUsers: TeamUser[] }>({ teamUsers: [] }),
   );
 
-  // A ManageTeam claim per manageable team and a ViewTeam-only claim for every
-  // other listed team, so the real getManageableTeamIds filter (not the claim
-  // list) decides which teams the dialog shows.
-  const grants = {
-    teams: teams.map((team) => ({
-      teamId: team.id,
-      permissionValues: manageableIds.includes(team.id)
-        ? [TeamPermission.ManageTeam]
-        : [TeamPermission.ViewTeam],
-    })),
-  };
-  const permissionStubs = permissionApiStubs(grants);
+  // The real UserPermissionsService loads the claims and its
+  // getManageableTeamIds decides which teams are listed.
+  const permissions = permissionDataProviders({ teams: claims });
 
   const rendered = await renderComponent(ManageTeamsComponent, {
     imports: [
@@ -93,7 +94,7 @@ async function renderManageTeams(
       ManageTeamsComponent,
     ],
     providers: [
-      { provide: MAT_DIALOG_DATA, useValue: { viewId } },
+      { provide: MAT_DIALOG_DATA, useValue: { viewId: 'v1' } },
       {
         provide: ViewService,
         useValue: { getView } satisfies ApiStub<ViewService>,
@@ -106,18 +107,15 @@ async function renderManageTeams(
         provide: UserService,
         useValue: { getTeamUsers } satisfies ApiStub<UserService>,
       },
-      ...permissionDataProviders(grants),
-      // Same grants, exposed so a test can assert how the dialog loads claims.
-      {
-        provide: TeamPermissionService,
-        useValue: permissionStubs.teamPermissions,
-      },
+      ...permissions,
       {
         provide: DialogService,
         useValue: { addRemoveUsersToTeam },
       },
     ],
   });
+  await rendered.fixture.whenStable();
+  rendered.fixture.detectChanges();
 
   return {
     ...rendered,
@@ -125,145 +123,177 @@ async function renderManageTeams(
     getMyViewTeams,
     getTeamUsers,
     addRemoveUsersToTeam,
-    getMyTeamPermissions: permissionStubs.teamPermissions.getMyTeamPermissions,
   };
+}
+
+/** Team names of the rendered list items, in render order. */
+function listedTeams(container: Element): string[] {
+  return Array.from(container.querySelectorAll('[matlistitemtitle]')).map(
+    (title) => title.textContent?.trim() ?? '',
+  );
+}
+
+/** The member count shown on each listed team ('' when none is shown). */
+function listedCounts(container: Element): string[] {
+  return Array.from(container.querySelectorAll('button[mat-list-item]')).map(
+    (item) =>
+      item.querySelector('[matlistitemmeta]')?.textContent?.trim() ?? '',
+  );
 }
 
 describe('ManageTeamsComponent', () => {
   /**
-   * Verifies: the view signal resolves to the fetched view's name.
-   * Interacts with: ViewService.getView, component's view resource/signal.
-   * Data: default view { id: 'v1', name: 'Demo View' }.
+   * Verifies: the dialog title names the view.
+   * Interacts with: ViewService.getView; the crucible-dialog title.
+   * Data: view 'Demo View'.
    */
-  it('exposes the view name via the view signal', async () => {
-    const { fixture } = await renderManageTeams();
-    await fixture.whenStable();
-    expect(fixture.componentInstance['view']()?.name).toBe('Demo View');
+  it('shows the view name in the title', async () => {
+    await renderManageTeams();
+    expect(screen.getByRole('heading')).toHaveTextContent(
+      'Manage Teams: Demo View',
+    );
   });
 
   /**
-   * Verifies: the view signal becomes null when the view fetch errors.
-   * Interacts with: ViewService.getView (errored), component view signal.
-   * Data: renderManageTeams override viewError true (getView throws 404).
+   * Verifies: a failed view request leaves the title without a view name and the team list intact.
+   * Interacts with: ViewService.getView (fails with a 404); the crucible-dialog title.
+   * Data: viewError true.
    */
-  it('falls back to null when the view fetch errors', async () => {
-    const { fixture } = await renderManageTeams({ viewError: true });
-    await fixture.whenStable();
-    expect(fixture.componentInstance['view']()).toBeNull();
+  it('keeps the title and the list when the view request fails', async () => {
+    const { container } = await renderManageTeams({ viewError: true });
+    expect(screen.getByRole('heading').textContent?.trim()).toBe(
+      'Manage Teams:',
+    );
+    expect(listedTeams(container)).toEqual(['Blue', 'Red']);
   });
 
   /**
-   * Verifies: teams signal lists manageable member teams alphabetically with per-team user counts.
-   * Interacts with: TeamService.getMyViewTeams, UserService.getTeamUsers, the real UserPermissionsService.getManageableTeamIds over ManageTeam claims.
-   * Data: default Red+Blue; asserts Blue sorts before Red and counts 3/5.
+   * Verifies: teams the user holds ManageTeam on are listed by name with their member counts.
+   * Interacts with: the real UserPermissionsService over TeamPermissionService.getMyTeamPermissions; TeamService.getMyViewTeams;
+   *   UserService.getTeamUsers; the rendered list.
+   * Data: Red (3 members) and Blue (5 members), both with ManageTeam claims.
    */
-  it('loads manageable teams with member counts, sorted by name', async () => {
-    const { fixture, getTeamUsers } = await renderManageTeams();
-    await fixture.whenStable();
-    const teams = fixture.componentInstance['teams']();
-    // Blue sorts before Red despite Red being first in the source list.
-    expect(teams.map((t) => t.team.name)).toEqual(['Blue', 'Red']);
-    expect(teams.find((t) => t.team.id === 't1')?.userCount).toBe(3);
-    expect(teams.find((t) => t.team.id === 't2')?.userCount).toBe(5);
-    expect(getTeamUsers).toHaveBeenCalledWith('t1');
-    expect(getTeamUsers).toHaveBeenCalledWith('t2');
+  it('lists the manageable teams by name with member counts', async () => {
+    const { container } = await renderManageTeams();
+    expect(listedTeams(container)).toEqual(['Blue', 'Red']);
+    expect(listedCounts(container)).toEqual(['5', '3']);
   });
 
   /**
-   * Verifies: manageable scoped teams are included even when the user is not a direct member.
-   * Interacts with: TeamService.getMyViewTeams, UserService.getTeamUsers spy.
-   * Data: override Red(member)+Green(scoped), both manageable.
+   * Verifies: a team the user reaches only through a scope is listed when its claim carries ManageTeam.
+   * Interacts with: the real UserPermissionsService; TeamService.getMyViewTeams; UserService.getTeamUsers.
+   * Data: Red (member) and Green (not a member), both with ManageTeam claims.
    */
-  it('includes manageable scoped teams', async () => {
-    const { fixture, getTeamUsers } = await renderManageTeams({
+  it('lists a manageable team the user is not a member of', async () => {
+    const { container, getTeamUsers } = await renderManageTeams({
       teams: [red, green],
-      manageableIds: ['t1', 't3'],
+      claims: [
+        claim('t1', [TeamPermission.ManageTeam]),
+        claim('t3', [TeamPermission.ManageTeam]),
+      ],
       teamUserCounts: { t1: 1, t3: 9 },
     });
-    await fixture.whenStable();
-    const teams = fixture.componentInstance['teams']();
-    expect(teams.map((t) => t.team.id)).toEqual(['t3', 't1']);
+    expect(listedTeams(container)).toEqual(['Green', 'Red']);
     expect(getTeamUsers).toHaveBeenCalledWith('t3');
   });
 
   /**
-   * Verifies: a team whose claim lacks ManageTeam is excluded, and its users are never fetched.
-   * Interacts with: the real UserPermissionsService.getManageableTeamIds over the claims, UserService.getTeamUsers spy.
-   * Data: Red (t1) with a ManageTeam claim, Blue (t2) with a ViewTeam-only claim; expects only t1.
-   * Why: Blue still has a claim, so dropping the ManageTeam filter would list it.
+   * Verifies: a team whose claim lacks ManageTeam (near miss) is not listed and its members are never fetched.
+   * Interacts with: the real UserPermissionsService.getManageableTeamIds over the claims; UserService.getTeamUsers; the rendered list.
+   * Data: Red with ManageTeam; Blue with the row's near-miss permission instead.
    */
-  it('excludes a team whose claim lacks ManageTeam', async () => {
-    const { fixture, getTeamUsers } = await renderManageTeams({
-      teams: [red, blue],
-      manageableIds: ['t1'],
+  it.each<[string, string[]]>([
+    ['ViewTeam', [TeamPermission.ViewTeam]],
+    ['ManageView', [ViewPermission.ManageView]],
+    [
+      'ViewView and ViewTeam',
+      [ViewPermission.ViewView, TeamPermission.ViewTeam],
+    ],
+  ])(
+    'hides a team whose claim holds only %s',
+    async (_nearMiss, blueValues) => {
+      const { container, getTeamUsers } = await renderManageTeams({
+        claims: [
+          claim('t1', [TeamPermission.ManageTeam]),
+          claim('t2', blueValues),
+        ],
+      });
+      expect(listedTeams(container)).toEqual(['Red']);
+      expect(getTeamUsers).not.toHaveBeenCalledWith('t2');
+    },
+  );
+
+  /**
+   * Verifies: without a ManageTeam claim on any team the dialog says so, lists nothing and fetches no members.
+   * Interacts with: the real UserPermissionsService; the empty-state card; UserService.getTeamUsers.
+   * Data: Red and Blue with ViewTeam-only claims (near miss).
+   */
+  it('shows the no-permission message when no team is manageable', async () => {
+    const { container, getTeamUsers } = await renderManageTeams({
+      claims: [
+        claim('t1', [TeamPermission.ViewTeam]),
+        claim('t2', [TeamPermission.ViewTeam]),
+      ],
     });
-    await fixture.whenStable();
-    const teams = fixture.componentInstance['teams']();
-    expect(teams.map((t) => t.team.id)).toEqual(['t1']);
-    expect(getTeamUsers).not.toHaveBeenCalledWith('t2');
+    expect(listedTeams(container)).toEqual([]);
+    expect(
+      screen.getByText(
+        'You do not have permission to manage any Teams in this View.',
+      ),
+    ).toBeInTheDocument();
+    expect(getTeamUsers).not.toHaveBeenCalled();
   });
 
   /**
    * Verifies: the dialog loads the user's claims for every team in the view, not just their own team.
-   * Interacts with: the real UserPermissionsService.loadTeamPermissions, TeamPermissionService.getMyTeamPermissions stub.
+   * Interacts with: the real UserPermissionsService.loadTeamPermissions over TeamPermissionService.getMyTeamPermissions.
    * Data: viewId 'v1'.
-   * Why: scoped teams are only manageable when includeAllViewTeams is true.
    */
   it('loads team claims for all teams in the view', async () => {
-    const { fixture, getMyTeamPermissions } = await renderManageTeams();
-    await fixture.whenStable();
-    expect(getMyTeamPermissions).toHaveBeenCalledWith('v1', undefined, true);
+    await renderManageTeams();
+    const teamPermissionsApi = TestBed.inject(TeamPermissionService);
+    expect(teamPermissionsApi.getMyTeamPermissions).toHaveBeenCalledWith(
+      'v1',
+      undefined,
+      true,
+    );
   });
 
   /**
-   * Verifies: a team whose user fetch errors gets a null userCount rather than failing the whole load.
-   * Interacts with: UserService.getTeamUsers (errored for one team), component teams signal.
-   * Data: override teamUserCounts { t1: 3, t2: 'error' }; expects t2 userCount null.
-   * Why: the 'error' sentinel makes the getTeamUsers stub throw 403 for that team to exercise the per-team error fallback.
+   * Verifies: a team whose member request is refused is still listed, without a count.
+   * Interacts with: UserService.getTeamUsers (403 for Blue); the rendered list.
+   * Data: Red 3 members; Blue's request fails with a 403.
    */
-  it('degrades to a null member count when getTeamUsers 403s', async () => {
-    const { fixture } = await renderManageTeams({
+  it('lists a team without a count when its members cannot be read', async () => {
+    const { container } = await renderManageTeams({
       teamUserCounts: { t1: 3, t2: 'error' },
     });
-    await fixture.whenStable();
-    const teams = fixture.componentInstance['teams']();
-    expect(teams.find((t) => t.team.id === 't2')?.userCount).toBeNull();
+    expect(listedTeams(container)).toEqual(['Blue', 'Red']);
+    expect(listedCounts(container)).toEqual(['', '3']);
   });
 
   /**
-   * Verifies: an empty manageable id set yields an empty teams list with no user fetches.
-   * Interacts with: the real UserPermissionsService.getManageableTeamIds over ManageTeam claims, UserService.getTeamUsers spy.
-   * Data: override manageableIds []; expects [] and getTeamUsers never called.
+   * Verifies: clicking a team opens the add/remove users dialog with canManageRoles false (restricted mode), and the
+   *   counts reload after it closes.
+   * Interacts with: the rendered team button; DialogService.addRemoveUsersToTeam; UserService.getTeamUsers.
+   * Data: Red clicked; Red has 4 members by the time the dialog closes.
    */
-  it('produces an empty list when no teams are manageable', async () => {
-    const { fixture, getTeamUsers } = await renderManageTeams({
-      manageableIds: [],
-    });
+  it('opens the users dialog without role management and reloads the counts', async () => {
+    const user = userEvent.setup();
+    const { container, fixture, addRemoveUsersToTeam, getTeamUsers } =
+      await renderManageTeams();
+    getTeamUsers.mockImplementation((teamId: string) =>
+      of(new Array(teamId === 't1' ? 4 : 5).fill({ id: 'u' })),
+    );
+    await user.click(screen.getByTitle('Add or remove users for Red'));
+    expect(addRemoveUsersToTeam).toHaveBeenCalledExactlyOnceWith(
+      'Add or Remove Users for team Red',
+      expect.objectContaining({ id: 't1' }),
+      { maxWidth: '100vw', width: 'auto', restoreFocus: false },
+      false,
+    );
     await fixture.whenStable();
-    expect(fixture.componentInstance['teams']()).toEqual([]);
-    expect(getTeamUsers).not.toHaveBeenCalled();
-  });
-
-  describe('openUsersDialog()', () => {
-    /**
-     * Verifies: openUsersDialog opens the add/remove users dialog in restricted (non-role) mode and reloads teams on close.
-     * Interacts with: DialogService.addRemoveUsersToTeam spy, spy on teamsResource.reload.
-     * Data: default render; opens dialog for the Red team.
-     * Why: asserts the final boolean arg is false to confirm canManageRoles=false drives the restricted ManageTeam mode.
-     */
-    it('opens the add/remove dialog in restricted mode and reloads on close', async () => {
-      const { fixture, addRemoveUsersToTeam } = await renderManageTeams();
-      await fixture.whenStable();
-      const c = fixture.componentInstance;
-      const reload = vi.spyOn(c['teamsResource'], 'reload');
-      c.openUsersDialog(red);
-      expect(addRemoveUsersToTeam).toHaveBeenCalledWith(
-        'Add or Remove Users for team Red',
-        red,
-        expect.objectContaining({ width: 'auto' }),
-        false, // canManageRoles=false → restricted (ManageTeam) mode
-      );
-      expect(reload).toHaveBeenCalled();
-    });
+    fixture.detectChanges();
+    expect(listedCounts(container)).toEqual(['5', '4']);
   });
 });

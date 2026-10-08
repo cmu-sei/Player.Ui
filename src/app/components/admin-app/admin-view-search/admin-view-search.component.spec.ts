@@ -2,14 +2,28 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { Component, EventEmitter, Output, TemplateRef } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  forwardRef,
+  getDebugNode,
+  Input,
+  Output,
+} from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { NEVER, Observable, of, Subject } from 'rxjs';
 import { AdminViewSearchComponent } from './admin-view-search.component';
+import { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { View, ViewService, ViewStatus } from '../../../generated/player-api';
+import {
+  SystemPermission,
+  View,
+  ViewService,
+  ViewStatus,
+} from '../../../generated/player-api';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule } from '@angular/material/sort';
@@ -17,9 +31,9 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatDialogModule } from '@angular/material/dialog';
 import { ClipboardModule } from 'ngx-clipboard';
-import { MatDialog } from '@angular/material/dialog';
-import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -27,70 +41,94 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
-import type { AdminViewEditComponent } from './admin-view-edit/admin-view-edit.component';
 import { ApiStub } from '../../../test-utils/api-stub';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
 import { activatedRouteStub } from '../../../test-utils/activated-route';
+import { permissionDataProviders } from '../../../test-utils/mock-permission-data.service';
 import { unstubbed } from '../../../test-utils/unstubbed';
 import {
   captureUnhandledRxErrors,
   flush,
 } from '../../../test-utils/unhandled-rx-errors';
 
-const mockViews: View[] = [
-  {
-    id: 'view-1',
-    name: 'Training View',
-    description: 'A training exercise',
-    status: ViewStatus.Active,
-  },
-  {
-    id: 'view-2',
-    name: 'Test View',
-    description: 'A test exercise',
-    status: ViewStatus.Inactive,
-  },
-];
+const training: View = {
+  id: 'view-1',
+  name: 'Training View',
+  description: 'A training exercise',
+  status: ViewStatus.Active,
+};
+const test: View = {
+  id: 'view-2',
+  name: 'Test View',
+  description: 'A test exercise',
+  status: ViewStatus.Inactive,
+};
+const mockViews = [training, test];
 
-@Component({ selector: 'app-admin-view-edit', template: '' })
-class AdminViewEditStubComponent {
-  @Output() editComplete = new EventEmitter<string>();
-}
-
-// executeViewAction drives exactly these five members of the edit child, so the
-// stand-in is typed off the real component: renaming any of them fails to compile.
-type ViewEditStub = Pick<
+// The search drives these members of the edit child. The stub provides itself
+// as AdminViewEditComponent, so the search's @ViewChild finds it.
+@Component({
+  selector: 'app-admin-view-edit',
+  template: '',
+  providers: [
+    {
+      provide: AdminViewEditComponent,
+      useExisting: forwardRef(() => AdminViewEditStubComponent),
+    },
+  ],
+})
+class AdminViewEditStubComponent implements Pick<
   AdminViewEditComponent,
   | 'resetStepper'
   | 'updateView'
   | 'updateApplicationTemplates'
   | 'setView'
   | 'updateViewTeams'
->;
-
-function viewEditStub(): ViewEditStub {
-  return {
-    resetStepper: vi.fn(),
-    updateView: vi.fn(),
-    updateApplicationTemplates: vi.fn(),
-    setView: vi.fn(),
-    updateViewTeams: vi.fn(),
-  };
+> {
+  @Output() editComplete = new EventEmitter<string>();
+  resetStepper = vi.fn();
+  updateView = vi.fn();
+  updateApplicationTemplates = vi.fn();
+  setView = vi.fn();
+  updateViewTeams = vi.fn();
 }
 
-// The header buttons carry only a matTooltip, so they are found by asking each
-// MatTooltip directive for its message.
+@Component({ selector: 'app-admin-app-view-export', template: '' })
+class ViewExportStubComponent {
+  @Input() ids!: string[];
+  @Output() complete = new EventEmitter<boolean>();
+}
+
+@Component({ selector: 'app-admin-app-view-import', template: '' })
+class ViewImportStubComponent {
+  @Output() complete = new EventEmitter<boolean>();
+}
+
+/** The header button whose matTooltip carries the message. */
 function tooltipButton(
   fixture: ComponentFixture<AdminViewSearchComponent>,
   message: string,
-): HTMLButtonElement {
+): HTMLButtonElement | null {
   const button = fixture.debugElement
     .queryAll(By.directive(MatTooltip))
     .find((el) => el.injector.get(MatTooltip).message === message);
-  if (!button) {
-    throw new Error(`No button with a "${message}" tooltip was rendered`);
+  return (button?.nativeElement as HTMLButtonElement) ?? null;
+}
+
+/** The stub component a dialog opened in the overlay. */
+function dialogStub<T>(selector: string): T {
+  const element = document.querySelector(selector);
+  if (!element) {
+    throw new Error(`No ${selector} dialog is open`);
   }
-  return button.nativeElement as HTMLButtonElement;
+  return getDebugNode(element)!.componentInstance as T;
+}
+
+/** View names listed in the table, in render order. */
+function listedViews(container: Element): string[] {
+  return Array.from(
+    container.querySelectorAll('mat-cell.mat-column-name button[mat-button]'),
+  ).map((button) => button.textContent?.trim() ?? '');
 }
 
 async function renderAdminViewSearch(
@@ -99,19 +137,22 @@ async function renderAdminViewSearch(
     getView?: (id: string) => Observable<View>;
     queryParamView?: string | null;
     viewsError?: Error;
+    permissions?: SystemPermission[];
   } = {},
 ) {
   const {
     confirmResult = false,
-    getView = () => of<View>(null),
+    getView = (id: string) =>
+      of<View>(structuredClone(mockViews.find((v) => v.id === id) ?? null)),
     queryParamView = null,
     viewsError,
+    permissions = [SystemPermission.ViewViews, SystemPermission.ManageViews],
   } = overrides;
 
-  // Use a Subject so getViews() does not emit synchronously during ngOnInit
-  // (the component calls refreshViews() before initializing viewDataSource).
+  // A Subject, so getViews() does not emit during ngOnInit (the component
+  // calls refreshViews() before it creates viewDataSource).
   const viewsSubject = new Subject<View[]>();
-  const { dialogRef, close: dialogClose } = dialogRefStub();
+  const navigate = vi.fn(() => Promise.resolve(true));
 
   const stubs = {
     getViews: vi.fn(() => viewsSubject.asObservable()),
@@ -121,8 +162,7 @@ async function renderAdminViewSearch(
     confirm: vi.fn(
       () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
     ),
-    dialogOpen: vi.fn(() => dialogRef),
-    dialogClose,
+    navigate,
   };
 
   const result = await renderComponent(AdminViewSearchComponent, {
@@ -140,10 +180,14 @@ async function renderAdminViewSearch(
       MatProgressSpinnerModule,
       MatCheckboxModule,
       MatBadgeModule,
+      MatDialogModule,
       ClipboardModule,
       AdminViewEditStubComponent,
+      ViewExportStubComponent,
+      ViewImportStubComponent,
     ],
     providers: [
+      ...permissionDataProviders({ system: permissions }),
       {
         provide: ViewService,
         useValue: {
@@ -163,10 +207,6 @@ async function renderAdminViewSearch(
       // Injected, but the component only reads it in commented-out code.
       unstubbed(LoggedInUserService),
       {
-        provide: MatDialog,
-        useValue: { open: stubs.dialogOpen } satisfies Pick<MatDialog, 'open'>,
-      },
-      {
         provide: ActivatedRoute,
         useValue: activatedRouteStub(
           queryParamView == null ? {} : { view: queryParamView },
@@ -174,25 +214,30 @@ async function renderAdminViewSearch(
       },
       {
         provide: Router,
-        useValue: {
-          navigate: vi.fn(() => Promise.resolve(true)),
-        } satisfies Pick<Router, 'navigate'>,
+        useValue: { navigate } satisfies Pick<Router, 'navigate'>,
       },
     ],
   });
 
-  // Now that ngOnInit has run and viewDataSource is initialized, emit the views.
-  // The emission comes from the test body, outside NgZone (an HTTP response
-  // would arrive inside it), so nothing schedules change detection for it.
+  /** Answers the pending getViews() requests, as the API would. */
+  function emitViews(views: View[] = mockViews) {
+    viewsSubject.next(structuredClone(views));
+    result.fixture.detectChanges();
+  }
+
   if (viewsError) {
     viewsSubject.error(viewsError);
   } else {
-    viewsSubject.next(mockViews);
+    emitViews();
   }
-  result.fixture.detectChanges();
   await result.fixture.whenStable();
 
-  return { ...result, stubs, viewsSubject };
+  const edit = result.fixture.debugElement.query(
+    By.directive(AdminViewEditStubComponent),
+  ).componentInstance as AdminViewEditStubComponent;
+  const list = result.container.querySelector('.view-list-container')!;
+
+  return { ...result, stubs, emitViews, edit, list };
 }
 
 describe('AdminViewSearchComponent', () => {
@@ -204,293 +249,268 @@ describe('AdminViewSearchComponent', () => {
   it('leaves the spinner up when the views request fails', async () => {
     const errors = captureUnhandledRxErrors();
     const failure = new Error('500');
-    const { fixture } = await renderAdminViewSearch({ viewsError: failure });
+    await renderAdminViewSearch({ viewsError: failure });
     await flush();
-    expect(fixture.componentInstance.isLoading).toBe(true);
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(errors).toEqual([failure]);
   });
 
   /**
-   * Verifies: the search input is rendered.
-   * Interacts with: the rendered DOM (queried by placeholder).
-   * Data: default overrides.
+   * Verifies: the loaded views are listed by name, sorted, with their description and status, and no spinner.
+   * Interacts with: ViewService.getViews; the rendered table.
+   * Data: Training View (Active) and Test View (Inactive).
    */
-  it('should show search input', async () => {
-    await renderAdminViewSearch();
+  it('lists the views sorted by name with description and status', async () => {
+    const { container } = await renderAdminViewSearch();
+    expect(listedViews(container)).toEqual(['Test View', 'Training View']);
+    expect(
+      Array.from(container.querySelectorAll('mat-header-cell')).map((cell) =>
+        cell.textContent?.trim(),
+      ),
+    ).toEqual(['', 'Name', 'Description', 'Status']);
     expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
+    expect(screen.getByText('A training exercise')).toBeInTheDocument();
+    expect(screen.getByText(ViewStatus.Inactive)).toBeInTheDocument();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   /**
-   * Verifies: each emitted view renders as a table row.
-   * Interacts with: the rendered DOM fed by the views Subject.
-   * Data: mockViews (Training View, Test View).
+   * Verifies: typing in Search lists only matching views, ignoring case and surrounding spaces, and Clear Search
+   *   lists all again.
+   * Interacts with: the rendered Search input and Clear Search button; the table.
+   * Data: ' TRAIN ' typed.
    */
-  it('should display views table', async () => {
-    await renderAdminViewSearch();
-    expect(screen.getByText('Training View')).toBeInTheDocument();
-    expect(screen.getByText('Test View')).toBeInTheDocument();
+  it('filters by the typed text and clears the filter', async () => {
+    const user = userEvent.setup();
+    const { container } = await renderAdminViewSearch();
+    const search = screen.getByPlaceholderText('Search');
+    search.focus();
+    await user.type(search, ' TRAIN ', { skipClick: true });
+    expect(listedViews(container)).toEqual(['Training View']);
+    await user.click(screen.getByTitle('Clear Search'));
+    expect(listedViews(container)).toEqual(['Test View', 'Training View']);
   });
 
   /**
-   * Verifies: the Name and Description column headers are rendered.
-   * Interacts with: the rendered DOM (queried via Testing Library screen).
-   * Data: default overrides.
+   * Verifies: clicking a view's name loads it into the edit screen and hides the list.
+   * Interacts with: the rendered view name button; ViewService.getView; the edit child stub.
+   * Data: Training View clicked.
    */
-  it('should show Name and Description column headers', async () => {
-    await renderAdminViewSearch();
-    expect(screen.getByText('Name')).toBeInTheDocument();
-    expect(screen.getByText('Description')).toBeInTheDocument();
+  it('opens a view in the edit screen from its name', async () => {
+    const user = userEvent.setup();
+    const { stubs, edit, list } = await renderAdminViewSearch();
+    await user.click(screen.getByText('Training View'));
+    expect(stubs.getView).toHaveBeenCalledExactlyOnceWith('view-1');
+    expect(edit.resetStepper).toHaveBeenCalledTimes(1);
+    expect(edit.updateView).toHaveBeenCalledTimes(1);
+    expect(edit.updateApplicationTemplates).toHaveBeenCalledTimes(1);
+    expect(edit.setView).toHaveBeenCalledExactlyOnceWith(training);
+    expect(edit.updateViewTeams).toHaveBeenCalledTimes(1);
+    expect(list).toHaveClass('hidden');
   });
 
   /**
-   * Verifies: applyFilter trims and lowercases the value before applying it to the datasource filter.
-   * Interacts with: component.applyFilter and the MatTableDataSource filter.
-   * Data: padded mixed-case input '  Training  '.
-   * Why: contrasts with admin-user-search whose applyFilter keeps surrounding whitespace.
+   * Verifies: when the edit screen completes, the list reloads and shows again.
+   * Interacts with: the edit child stub's editComplete output; ViewService.getViews; Router.navigate.
+   * Data: Training View opened, then completed; the reload returns a renamed Training View.
    */
-  it('applyFilter trims, lowercases, and sets the datasource filter', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    c.applyFilter('  Training  ');
-    expect(c.filterString).toBe('  Training  ');
-    expect(c.viewDataSource.filter).toBe('training');
+  it('returns to the reloaded list when editing completes', async () => {
+    const user = userEvent.setup();
+    const { container, stubs, edit, list, emitViews } =
+      await renderAdminViewSearch();
+    await user.click(screen.getByText('Training View'));
+    edit.editComplete.emit('view-1');
+    emitViews([{ ...training, name: 'Renamed View' }, test]);
+    expect(stubs.getViews).toHaveBeenCalledTimes(2);
+    expect(list).not.toHaveClass('hidden');
+    expect(listedViews(container)).toEqual(['Renamed View', 'Test View']);
+    expect(stubs.navigate).not.toHaveBeenCalled();
   });
 
   /**
-   * Verifies: clearFilter empties the datasource filter.
-   * Interacts with: component.applyFilter / clearFilter and the datasource.
-   * Data: a 'Training' filter set then cleared.
+   * Verifies: opening the page with ?view= edits that view, and completing the edit clears the query parameter.
+   * Interacts with: the ActivatedRoute query params; ViewService.getView; the edit child stub; Router.navigate.
+   * Data: queryParamView 'view-2'.
    */
-  it('clearFilter resets the datasource filter', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    c.applyFilter('Training');
-    c.clearFilter();
-    expect(c.viewDataSource.filter).toBe('');
-  });
-
-  /**
-   * Verifies: refreshViews loads views into the datasource and clears isLoading and showEditScreen.
-   * Interacts with: stubbed ViewService.getViews via the views Subject.
-   * Data: mockViews re-emitted for the fresh subscription.
-   * Why: getViews is a Subject, so the test must emit again after refreshViews re-subscribes.
-   */
-  it('refreshViews loads views into the datasource and clears loading', async () => {
-    const { fixture, viewsSubject } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    c.refreshViews();
-    // getViews() is backed by a Subject, so emit again for this fresh subscribe.
-    viewsSubject.next(mockViews);
-    expect(c.viewDataSource.data.map((v) => v.id)).toEqual([
-      'view-1',
-      'view-2',
-    ]);
-    expect(c.isLoading).toBe(false);
-    expect(c.showEditScreen).toBe(false);
-  });
-
-  /**
-   * Verifies: executeViewAction('edit') fetches the view and drives the edit child (reset/setView/updateViewTeams) and shows it.
-   * Interacts with: stubbed ViewService.getView and a fake AdminViewEditComponent ViewChild.
-   * Data: getView override returns mockViews[0]; child stub with spied methods.
-   */
-  it("executeViewAction('edit') loads the view and shows the edit screen", async () => {
-    const { fixture, stubs } = await renderAdminViewSearch({
-      getView: () => of(mockViews[0]),
+  it('edits the view named in ?view= and clears it when done', async () => {
+    const { stubs, edit, list } = await renderAdminViewSearch({
+      queryParamView: 'view-2',
     });
-    const c = fixture.componentInstance;
-    const editStub = viewEditStub();
-    c.adminViewEditComponent = editStub as AdminViewEditComponent;
-    c.executeViewAction('edit', 'view-1');
-    expect(stubs.getView).toHaveBeenCalledWith('view-1');
-    expect(editStub.resetStepper).toHaveBeenCalled();
-    expect(editStub.setView).toHaveBeenCalledWith(mockViews[0]);
-    expect(editStub.updateViewTeams).toHaveBeenCalled();
-    expect(c.showEditScreen).toBe(true);
-  });
-
-  /**
-   * Verifies: activating an inactive view confirms then updates status to Active.
-   * Interacts with: stubbed ViewService.getView/updateView and CrucibleDialogService.confirm.
-   * Data: inactive mockViews[1]; confirmResult=true.
-   */
-  it("executeViewAction('activate') activates an inactive view after confirmation", async () => {
-    const inactive: View = { ...mockViews[1] };
-    const { fixture, stubs } = await renderAdminViewSearch({
-      getView: () => of(inactive),
-      confirmResult: true,
+    expect(stubs.getView).toHaveBeenCalledExactlyOnceWith('view-2');
+    expect(edit.setView).toHaveBeenCalledExactlyOnceWith(test);
+    expect(list).toHaveClass('hidden');
+    edit.editComplete.emit('view-2');
+    expect(stubs.navigate).toHaveBeenCalledExactlyOnceWith([], {
+      relativeTo: expect.anything(),
+      queryParams: { view: null },
+      queryParamsHandling: 'merge',
     });
-    fixture.componentInstance.executeViewAction('activate', 'view-2');
-    expect(stubs.confirm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Activate View?',
-        message: expect.stringContaining('Activate'),
-      }),
-    );
-    expect(stubs.updateView).toHaveBeenCalledWith(
-      'view-2',
-      expect.objectContaining({ status: ViewStatus.Active }),
-    );
   });
 
   /**
-   * Verifies: the same 'activate' action on an active view prompts a Deactivate confirm and updates status to Inactive.
-   * Interacts with: stubbed ViewService.getView/updateView and CrucibleDialogService.confirm.
-   * Data: active mockViews[0]; confirmResult=true.
+   * Verifies: Add creates an Active "New View" and opens it in the edit screen.
+   * Interacts with: the Add button; ViewService.createView and getView; the edit child stub.
+   * Data: createView returns id 'created-view'; getView for it never answers.
    */
-  it("executeViewAction('activate') deactivates an active view after confirmation", async () => {
-    const active: View = { ...mockViews[0] };
+  it('creates a view from Add and opens it for editing', async () => {
+    const user = userEvent.setup();
     const { fixture, stubs } = await renderAdminViewSearch({
-      getView: () => of(active),
-      confirmResult: true,
-    });
-    fixture.componentInstance.executeViewAction('activate', 'view-1');
-    expect(stubs.confirm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Deactivate View?',
-        message: expect.stringContaining('deactivate'),
-      }),
-    );
-    expect(stubs.updateView).toHaveBeenCalledWith(
-      'view-1',
-      expect.objectContaining({ status: ViewStatus.Inactive }),
-    );
-  });
-
-  /**
-   * Verifies: declining the confirm skips the status update.
-   * Interacts with: stubbed CrucibleDialogService.confirm and ViewService.updateView.
-   * Data: confirmResult=false.
-   */
-  it("executeViewAction('activate') does not update when confirmation is declined", async () => {
-    const { fixture, stubs } = await renderAdminViewSearch({
-      getView: () => of({ ...mockViews[1] }),
-      confirmResult: false,
-    });
-    fixture.componentInstance.executeViewAction('activate', 'view-2');
-    expect(stubs.updateView).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: an unrecognized action triggers an 'Unknown Action' alert.
-   * Interacts with: a spy on window.alert.
-   * Data: action string 'bogus'.
-   */
-  it('executeViewAction with an unknown action alerts', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    fixture.componentInstance.executeViewAction('bogus', 'view-1');
-    expect(alertSpy).toHaveBeenCalledWith('Unknown Action');
-  });
-
-  /**
-   * Verifies: addNewView creates a default 'New View' (Active) then dispatches executeViewAction('edit') on its id.
-   * Interacts with: stubbed ViewService.createView and a spy on executeViewAction.
-   * Data: createView returns id 'created-view'.
-   */
-  it('addNewView creates a view then edits it', async () => {
-    const { fixture, stubs } = await renderAdminViewSearch({
-      getView: () => of(mockViews[0]),
-    });
-    const c = fixture.componentInstance;
-    c.adminViewEditComponent = viewEditStub() as AdminViewEditComponent;
-    const executeSpy = vi.spyOn(c, 'executeViewAction');
-    c.addNewView();
-    expect(stubs.createView).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'New View', status: ViewStatus.Active }),
-    );
-    expect(executeSpy).toHaveBeenCalledWith('edit', 'created-view');
-  });
-
-  /**
-   * Verifies: onEditComplete triggers a refresh of the view list.
-   * Interacts with: a spy on refreshViews.
-   * Data: arbitrary view id 'view-1'.
-   */
-  it('onEditComplete refreshes the views', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    const refreshSpy = vi.spyOn(c, 'refreshViews');
-    c.onEditComplete('view-1');
-    expect(refreshSpy).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: isAllSelected is false initially and true after every row is toggled on.
-   * Interacts with: component.isAllSelected and toggleAllRows over the loaded rows.
-   * Data: mockViews (two rows).
-   */
-  it('isAllSelected reflects whether every filtered row is selected', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    expect(c.isAllSelected()).toBe(false);
-    c.toggleAllRows();
-    expect(c.isAllSelected()).toBe(true);
-  });
-
-  /**
-   * Verifies: toggleAllRows selects all row ids on the first call and clears them on the second.
-   * Interacts with: component.toggleAllRows and the SelectionModel.
-   * Data: mockViews (view-1, view-2).
-   */
-  it('toggleAllRows selects all rows then clears them', async () => {
-    const { fixture } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    c.toggleAllRows();
-    expect(c.selection.selected.sort()).toEqual(['view-1', 'view-2']);
-    c.toggleAllRows();
-    expect(c.selection.selected).toEqual([]);
-  });
-
-  /**
-   * Verifies: the Import Views button opens the import template in a dialog and importComplete closes that ref and refreshes views.
-   * Interacts with: the rendered Import Views button, stubbed MatDialog.open, and a spy on refreshViews.
-   * Data: the component's own #importDialog TemplateRef, passed by the template's (click) binding.
-   * Why: clicking the button covers the (click)="openDialog(importDialog)" binding, which a direct openDialog() call leaves untested.
-   */
-  it('the Import Views button opens a dialog and importComplete closes it and refreshes', async () => {
-    const { fixture, stubs } = await renderAdminViewSearch();
-    const c = fixture.componentInstance;
-    tooltipButton(fixture, 'Import Views').click();
-    await fixture.whenStable();
-    expect(stubs.dialogOpen).toHaveBeenCalledWith(
-      expect.any(TemplateRef),
-      expect.objectContaining({ width: '480px' }),
-    );
-    const refreshSpy = vi.spyOn(c, 'refreshViews');
-    c.importComplete();
-    expect(stubs.dialogClose).toHaveBeenCalled();
-    expect(refreshSpy).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: closeDialog closes the ref opened by the Export Views button.
-   * Interacts with: the rendered Export Views button and stubbed MatDialog.open (ref with a close spy).
-   * Data: the component's own #exportDialog TemplateRef.
-   */
-  it('closeDialog closes the open dialog', async () => {
-    const { fixture, stubs } = await renderAdminViewSearch();
-    tooltipButton(fixture, 'Export Views').click();
-    await fixture.whenStable();
-    fixture.componentInstance.closeDialog();
-    expect(stubs.dialogClose).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: ngOnInit reads the ?view= query param and dispatches an edit fetch for that view id.
-   * Interacts with: the ActivatedRoute queryParamMap stub and ViewService.getView.
-   * Data: queryParamView 'view-1'; getView returns NEVER.
-   * Why: getView returns NEVER so executeViewAction('edit')'s subscribe body (which touches the un-rendered edit ViewChild) never runs; only the dispatch is asserted.
-   */
-  it('edits the view named in the ?view= query param on init', async () => {
-    // getView returns NEVER so executeViewAction('edit')'s subscribe body (which
-    // touches the un-rendered AdminViewEditComponent ViewChild) never runs — we
-    // only assert that ngOnInit dispatched the edit for the query-param view.
-    const { stubs } = await renderAdminViewSearch({
-      queryParamView: 'view-1',
       getView: () => NEVER,
     });
-    expect(stubs.getView).toHaveBeenCalledWith('view-1');
+    await user.click(tooltipButton(fixture, 'Add a new View')!);
+    expect(stubs.createView).toHaveBeenCalledExactlyOnceWith({
+      name: 'New View',
+      description: 'Add description',
+      status: ViewStatus.Active,
+    });
+    expect(stubs.getView).toHaveBeenCalledExactlyOnceWith('created-view');
+  });
+
+  /**
+   * Verifies: the header checkbox selects every row (the Export badge counts them) and a second click clears the
+   *   selection and the badge.
+   * Interacts with: the rendered header and row checkboxes; the Export button's badge.
+   * Data: two views.
+   */
+  it('selects and clears every row from the header checkbox', async () => {
+    const user = userEvent.setup();
+    const { container } = await renderAdminViewSearch();
+    const [all, ...rows] = Array.from(
+      container.querySelectorAll<HTMLInputElement>('mat-checkbox input'),
+    );
+    await user.click(all);
+    expect(rows.map((box) => box.checked)).toEqual([true, true]);
+    expect(container.querySelector('.mat-badge-content')).toHaveTextContent(
+      '2',
+    );
+    await user.click(all);
+    expect(rows.map((box) => box.checked)).toEqual([false, false]);
+    expect(all.checked).toBe(false);
+    expect(container.querySelector('.mat-badge-content')).toHaveTextContent(
+      /^$/,
+    );
+  });
+
+  /**
+   * Verifies: the header checkbox selects every row and Export opens the export dialog with those ids; its complete
+   *   output closes the dialog.
+   * Interacts with: the header checkbox; the Export button; the real MatDialog; the export dialog stub.
+   * Data: two views.
+   */
+  it('exports the selected views in a dialog', async () => {
+    const user = userEvent.setup();
+    const { container, fixture } = await renderAdminViewSearch();
+    const [all] = Array.from(
+      container.querySelectorAll<HTMLInputElement>('mat-checkbox input'),
+    );
+    await user.click(all);
+    expect(container.querySelector('.mat-badge-content')).toHaveTextContent(
+      '2',
+    );
+    await user.click(tooltipButton(fixture, 'Export Views')!);
+    const dialog = dialogStub<ViewExportStubComponent>(
+      'app-admin-app-view-export',
+    );
+    expect([...dialog.ids].sort()).toEqual(['view-1', 'view-2']);
+    dialog.complete.emit(true);
+    await fixture.whenStable();
+    expect(document.querySelector('app-admin-app-view-export')).toBeNull();
+  });
+
+  /**
+   * Verifies: Import opens the import dialog, and its complete output closes it and reloads the list.
+   * Interacts with: the Import button; the real MatDialog; the import dialog stub; ViewService.getViews.
+   * Data: the reload returns a third view, Imported View.
+   */
+  it('imports in a dialog and reloads the list', async () => {
+    const user = userEvent.setup();
+    const { container, fixture, stubs, emitViews } =
+      await renderAdminViewSearch();
+    await user.click(tooltipButton(fixture, 'Import Views')!);
+    dialogStub<ViewImportStubComponent>(
+      'app-admin-app-view-import',
+    ).complete.emit(true);
+    emitViews([...mockViews, { id: 'view-3', name: 'Imported View' }]);
+    await fixture.whenStable();
+    expect(document.querySelector('app-admin-app-view-import')).toBeNull();
+    expect(stubs.getViews).toHaveBeenCalledTimes(2);
+    expect(listedViews(container)).toEqual([
+      'Imported View',
+      'Test View',
+      'Training View',
+    ]);
+  });
+
+  /**
+   * Verifies: a user who holds only ViewViews (the Views section's gate) is offered Add and Import (current behavior).
+   * Interacts with: the rendered header buttons; the real UserPermissionsService over stubbed permission endpoints.
+   * Data: system permissions [ViewViews].
+   */
+  it('offers Add and Import to a user with only ViewViews', async () => {
+    const { fixture } = await renderAdminViewSearch({
+      permissions: [SystemPermission.ViewViews],
+    });
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(tooltipButton(fixture, 'Add a new View')).toBeInTheDocument();
+    expect(tooltipButton(fixture, 'Import Views')).toBeInTheDocument();
+  });
+
+  describe("the 'activate' action, which no rendered control offers", () => {
+    /**
+     * Verifies: activating toggles the view's status after confirmation, with a prompt for the direction.
+     * Interacts with: executeViewAction (called directly); ViewService.getView and updateView; CrucibleDialogService.confirm.
+     * Data: one row per starting status; confirmResult true.
+     */
+    it.each<[string, View, string, ViewStatus]>([
+      ['activates an inactive view', test, 'Activate View?', ViewStatus.Active],
+      [
+        'deactivates an active view',
+        training,
+        'Deactivate View?',
+        ViewStatus.Inactive,
+      ],
+    ])('%s after confirmation', async (_case, view, title, status) => {
+      const logged = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const { fixture, stubs } = await renderAdminViewSearch({
+        confirmResult: true,
+      });
+      fixture.componentInstance.executeViewAction('activate', view.id!);
+      expect(stubs.confirm).toHaveBeenCalledWith(
+        expect.objectContaining({ title }),
+      );
+      expect(stubs.updateView).toHaveBeenCalledExactlyOnceWith(view.id, {
+        ...view,
+        status,
+      });
+      expect(logged).toHaveBeenCalledWith(
+        `successfully updated view ${view.name}`,
+      );
+    });
+
+    /**
+     * Verifies: declining the confirmation leaves the status unchanged.
+     * Interacts with: executeViewAction (called directly); CrucibleDialogService.confirm; ViewService.updateView.
+     * Data: confirmResult false.
+     */
+    it('does not update when the confirmation is declined', async () => {
+      const { fixture, stubs } = await renderAdminViewSearch({
+        confirmResult: false,
+      });
+      fixture.componentInstance.executeViewAction('activate', 'view-2');
+      expect(stubs.updateView).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: an unrecognized action alerts.
+     * Interacts with: executeViewAction (called directly); window.alert.
+     * Data: action 'bogus'.
+     */
+    it('alerts on an unknown action', async () => {
+      const { fixture } = await renderAdminViewSearch();
+      const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      fixture.componentInstance.executeViewAction('bogus', 'view-1');
+      expect(alert).toHaveBeenCalledWith('Unknown Action');
+    });
   });
 });

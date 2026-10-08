@@ -149,7 +149,7 @@ describe('UserPermissionsService', () => {
     expect(result).toEqual(mockTeamPerms);
   });
 
-  // Shared claims fixture includes a null-teamId ManageTeam grant that must be filtered out.
+  // Shared claims fixture, including a ManageTeam grant with a null teamId.
   describe('manageable teams', () => {
     const claims: TeamPermissionsClaim[] = [
       { teamId: 'team-1', permissionValues: [TeamPermission.ManageTeam] },
@@ -501,11 +501,11 @@ describe('UserPermissionsService', () => {
   describe('can() with a teamId that has no claim', () => {
     /**
      * Verifies: can() with a teamId the user holds no claim for errors with a
-     *   TypeError instead of returning false.
+     *   TypeError (current behavior).
      * Interacts with: getMyPermissions + getMyTeamPermissions (stubs), load + loadTeamPermissions + can.
      * Data: no system permissions; one claim for team-A; can(ManageViews, 'team-B', ManageTeam).
      */
-    it('throws a TypeError instead of returning false', async () => {
+    it('throws a TypeError for a team without a claim', async () => {
       const service = createService({
         myPermissions: [],
         myTeamPermissions: [
@@ -515,6 +515,7 @@ describe('UserPermissionsService', () => {
       await firstValueFrom(service.load());
       await firstValueFrom(service.loadTeamPermissions());
 
+      // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
       await expect(
         firstValueFrom(
           service.can(

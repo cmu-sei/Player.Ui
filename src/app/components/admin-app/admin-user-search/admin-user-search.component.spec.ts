@@ -83,7 +83,7 @@ async function renderAdminUserSearch(
 
   const stubs = {
     getUsers: vi.fn(() =>
-      usersError ? throwError(() => usersError) : of(result),
+      usersError ? throwError(() => usersError) : of(structuredClone(result)),
     ),
     deleteUser: vi.fn(() => of(undefined)),
     // The real RolesService loads the role catalog over this endpoint.
@@ -132,6 +132,30 @@ async function renderAdminUserSearch(
   });
 
   return { ...rendered, stubs };
+}
+
+/** User names listed in the table, in render order. */
+function listedUsers(container: Element): string[] {
+  return Array.from(container.querySelectorAll('td.mat-column-name')).map(
+    (cell) => cell.textContent?.trim() ?? '',
+  );
+}
+
+/** Header texts of the users table, in render order. */
+function headers(container: Element): string[] {
+  return Array.from(container.querySelectorAll('th[mat-header-cell]')).map(
+    (cell) => cell.textContent?.trim() ?? '',
+  );
+}
+
+/** The identity attribute cells of the named user's row. */
+function rowCells(container: Element, name: string): string[] {
+  const row = Array.from(container.querySelectorAll('tr[mat-row]')).find(
+    (r) => r.querySelector('td.mat-column-name')?.textContent?.trim() === name,
+  );
+  return Array.from(
+    row?.querySelectorAll('td[class*="mat-column-identityAttribute-"]') ?? [],
+  ).map((cell) => cell.textContent?.trim() ?? '');
 }
 
 describe('AdminUserSearchComponent', () => {
@@ -227,19 +251,21 @@ describe('AdminUserSearchComponent', () => {
   });
 
   /**
-   * Verifies: ngOnInit fetches users and loads the role catalog into RolesService, fills the datasource, and clears isLoading.
+   * Verifies: ngOnInit fetches users and loads the role catalog into RolesService, lists the users, and clears the spinner.
    * Interacts with: stubbed UserService.getUsers; the real RolesService.getRoles over the RoleService.getRoles stub.
    * Data: mockUsers; one role, Admin.
    */
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
-    const { fixture, stubs } = await renderAdminUserSearch();
+    const { stubs } = await renderAdminUserSearch();
     expect(stubs.getUsers).toHaveBeenCalled();
     expect(stubs.getRoles).toHaveBeenCalledTimes(1);
     // The roles select in each row reads this stream.
     const roles = await firstValueFrom(TestBed.inject(RolesService).roles$);
     expect(roles.map((r) => r.name)).toEqual(['Admin']);
-    expect(fixture.componentInstance.isLoading).toBe(false);
-    expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(mockUsers.every((u) => screen.queryByText(u.name!) !== null)).toBe(
+      true,
+    );
   });
 
   /**
@@ -250,153 +276,97 @@ describe('AdminUserSearchComponent', () => {
   it('leaves the spinner up when the users request fails', async () => {
     const errors = captureUnhandledRxErrors();
     const failure = new Error('500');
-    const { fixture } = await renderAdminUserSearch({ usersError: failure });
+    await renderAdminUserSearch({ usersError: failure });
     await flush();
-    expect(fixture.componentInstance.isLoading).toBe(true);
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(errors).toEqual([failure]);
   });
 
   /**
-   * Verifies: applyFilter lowercases the value (without trimming) and applies it to the datasource filter.
-   * Interacts with: component.applyFilter and the MatTableDataSource filter.
-   * Data: padded mixed-case input '  ALICE  '.
+   * Verifies: typing in Search lists only the users whose name, role or identity attributes match, case-insensitively,
+   *   and Clear Search lists everyone again.
+   * Interacts with: the rendered Search input and Clear Search button; the users table.
+   * Data: one row per search text: Alice by name, by role name and by Department value; Bob by Location value.
    */
-  it('applyFilter lowercases the value and sets the datasource filter', async () => {
-    const { fixture } = await renderAdminUserSearch();
-    const component = fixture.componentInstance;
-    component.applyFilter('  ALICE  ');
-    expect(component.filterString).toBe('  alice  ');
-    expect(component.userDataSource.filter).toBe('  alice  ');
-  });
-
-  /**
-   * Verifies: refreshUsers re-fetches users into the datasource and clears isLoading.
-   * Interacts with: stubbed UserService.getUsers (re-stubbed for this call).
-   * Data: getUsers returns a fresh single-user list ('New') on the next call.
-   */
-  it('refreshUsers reloads the user list into the datasource', async () => {
-    const { fixture, stubs } = await renderAdminUserSearch();
-    const component = fixture.componentInstance;
-    const refreshedResult: UserDirectoryEntry[] = [
-      { id: 'user-9', name: 'New' },
-    ];
-
-    stubs.getUsers.mockClear();
-    stubs.getUsers.mockReturnValueOnce(of(refreshedResult));
-    component.refreshUsers();
-
-    expect(stubs.getUsers).toHaveBeenCalled();
-    expect(component.userDataSource.data).toEqual(refreshedResult);
-    expect(component.isLoading).toBe(false);
+  it.each<[string, string[]]>([
+    ['ALICE', ['Alice Smith']],
+    ['administrator', ['Alice Smith']],
+    ['logistics', ['Alice Smith']],
+    ['West', ['Bob Jones']],
+  ])('filters the users by "%s"', async (text, expected) => {
+    const user = userEvent.setup();
+    const { container } = await renderAdminUserSearch();
+    const search = screen.getByPlaceholderText('Search');
+    search.focus();
+    await user.type(search, text, { skipClick: true });
+    expect(listedUsers(container)).toEqual(expected);
+    await user.click(screen.getByTitle('Clear Search'));
+    expect(listedUsers(container)).toEqual(['Alice Smith', 'Bob Jones']);
   });
 
   describe('identity attribute columns', () => {
     /**
-     * Verifies: identity attributes become columns, in response order, between the name and role columns.
-     * Interacts with: component.attributeColumns and component.displayedColumns.
-     * Data: mockUsers identity attributes (Department, Organization, Location).
+     * Verifies: each identity attribute becomes a column, in response order, between Name and Role, showing each
+     *   user's value or nothing when the user lacks it.
+     * Interacts with: the rendered table headers and cells.
+     * Data: mockUsers (Department, Organization, Location) plus Carol, who has no Location.
      */
-    it('creates ordered columns from configured identity attributes', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      expect(component.attributeColumns.map((column) => column.name)).toEqual([
+    it('shows a column per identity attribute', async () => {
+      const carol: UserDirectoryEntry = {
+        id: 'user-3',
+        name: 'Carol King',
+        identityAttributes: [
+          { key: 'department', name: 'Department', value: 'Finance' },
+          { key: 'organization', name: 'Organization', value: 'Example Three' },
+        ],
+      };
+      const { container } = await renderAdminUserSearch({
+        result: [...mockUsers, carol],
+      });
+      expect(headers(container)).toEqual([
+        'ID',
+        'Name',
         'Department',
         'Organization',
         'Location',
+        'Role',
       ]);
-      expect(component.displayedColumns).toEqual([
-        'id',
-        'name',
-        'identityAttribute-0',
-        'identityAttribute-1',
-        'identityAttribute-2',
-        'role',
-      ]);
-    });
-
-    /**
-     * Verifies: getAttributeValue returns the user's value for a key, or '' when the key is missing.
-     * Interacts with: component.getAttributeValue.
-     * Data: mockUsers[0] (Alice Smith) with keys 'department', 'location' and 'missing'.
-     */
-    it('returns the configured value for each user', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      expect(component.getAttributeValue(mockUsers[0], 'department')).toBe(
+      expect(rowCells(container, 'Alice Smith')).toEqual([
         'Logistics',
-      );
-      expect(component.getAttributeValue(mockUsers[0], 'location')).toBe(
+        'Example One',
         'East',
-      );
-      expect(component.getAttributeValue(mockUsers[0], 'missing')).toBe('');
+      ]);
+      expect(rowCells(container, 'Carol King')).toEqual([
+        'Finance',
+        'Example Three',
+        '',
+      ]);
     });
 
     /**
-     * Verifies: the datasource filter matches identity attribute values.
-     * Interacts with: component.applyFilter and the MatTableDataSource filterPredicate.
-     * Data: filter 'logistics', matching Alice Smith's Department.
+     * Verifies: clicking an attribute column's header sorts the users by that attribute, ascending then descending.
+     * Interacts with: the rendered Organization header (MatSort); the users table.
+     * Data: Alice (Example One) and Bob (Example Two).
      */
-    it('filters users by identity attribute values', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      component.applyFilter('logistics');
-
-      expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
+    it('sorts the users by an attribute column', async () => {
+      const user = userEvent.setup();
+      const { container } = await renderAdminUserSearch();
+      await user.click(screen.getByText('Organization'));
+      expect(listedUsers(container)).toEqual(['Alice Smith', 'Bob Jones']);
+      await user.click(screen.getByText('Organization'));
+      expect(listedUsers(container)).toEqual(['Bob Jones', 'Alice Smith']);
     });
 
     /**
-     * Verifies: the datasource filter matches the role name.
-     * Interacts with: component.applyFilter and the MatTableDataSource filterPredicate.
-     * Data: filter 'administrator', matching Alice Smith's roleName.
-     */
-    it('filters users by role name', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      component.applyFilter('administrator');
-
-      expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
-    });
-
-    /**
-     * Verifies: the sorting accessor returns the identity attribute value for a dynamic column.
-     * Interacts with: the MatTableDataSource sortingDataAccessor.
-     * Data: mockUsers[1] (Bob Jones) and the Organization column.
-     */
-    it('sorts dynamic columns by their identity attribute values', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-      const organizationColumn = component.attributeColumns.find(
-        (column) => column.key === 'organization',
-      );
-
-      expect(organizationColumn).toBeDefined();
-      expect(
-        component.userDataSource.sortingDataAccessor(
-          mockUsers[1],
-          organizationColumn!.columnId,
-        ),
-      ).toBe('Example Two');
-    });
-
-    /**
-     * Verifies: with no users, no attribute columns are added and only the static columns display.
-     * Interacts with: stubbed UserService.getUsers, component.attributeColumns and displayedColumns.
-     * Data: getUsers returns an empty list (result=[]).
+     * Verifies: with no users only the static columns render.
+     * Interacts with: stubbed UserService.getUsers; the rendered headers.
+     * Data: getUsers returns no users.
      */
     it('keeps only static columns when no users are returned', async () => {
-      const { fixture } = await renderAdminUserSearch({
-        result: [],
-      });
-      const component = fixture.componentInstance;
-
-      expect(component.attributeColumns).toEqual([]);
-      expect(component.displayedColumns).toEqual(['id', 'name', 'role']);
-      expect(component.userDataSource.data).toEqual([]);
+      const { container } = await renderAdminUserSearch({ result: [] });
+      expect(headers(container)).toEqual(['ID', 'Name', 'Role']);
+      expect(listedUsers(container)).toEqual([]);
     });
   });
 
@@ -411,16 +381,17 @@ describe('AdminUserSearchComponent', () => {
     }
 
     /**
-     * Verifies: clicking Delete User and confirming deletes the user by id and refreshes the list.
+     * Verifies: clicking Delete User and confirming deletes the user by id and renders the reloaded list.
      * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm, UserService.deleteUser and getUsers.
-     * Data: ManageUsers granted; confirmResult=true; Alice Smith's row (user-1).
+     * Data: ManageUsers granted; confirmResult=true; Alice Smith's row (user-1); the reload returns Bob only.
      */
     it('deletes and refreshes when the user confirms', async () => {
-      const { stubs } = await renderAdminUserSearch({
+      const { container, stubs } = await renderAdminUserSearch({
         confirmResult: true,
         permissions: [SystemPermission.ManageUsers],
       });
       stubs.getUsers.mockClear();
+      stubs.getUsers.mockReturnValueOnce(of(structuredClone([mockUsers[1]])));
       await clickDeleteInRow('Alice Smith');
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -430,7 +401,8 @@ describe('AdminUserSearchComponent', () => {
         }),
       );
       expect(stubs.deleteUser).toHaveBeenCalledWith('user-1');
-      expect(stubs.getUsers).toHaveBeenCalled();
+      expect(stubs.getUsers).toHaveBeenCalledTimes(1);
+      expect(listedUsers(container)).toEqual(['Bob Jones']);
     });
 
     /**

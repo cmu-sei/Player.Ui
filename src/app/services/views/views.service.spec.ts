@@ -78,9 +78,6 @@ describe('ViewsService', () => {
      *   entry, and announces the change as a fresh views$ emission.
      * Interacts with: ViewService.getMyViews stub, ViewsService.upsert (synchronous), views$ via recordEmissions.
      * Data: cached view v1 'Old'; upsert('v1', { name: 'Updated' }).
-     * Why: upsert mutates the array it got from getValue() and re-next()s that same reference, so
-     *   reading views$ after the call sees the new name whether or not next() ever ran. Snapshotting
-     *   each emission as it arrives is what pins the notification.
      */
     it('mutates an existing view in place and emits the updated cache', async () => {
       const svc = createService({
@@ -99,8 +96,6 @@ describe('ViewsService', () => {
      *   the grown cache.
      * Interacts with: ViewService.getMyViews stub, ViewsService.upsert (synchronous), views$ via recordEmissions.
      * Data: empty cache; upsert('v9', { name: 'Brand New' }).
-     * Why: same in-place mutation as the update path — only a recorded emission proves the append was
-     *   published rather than merely applied to the cached array.
      */
     it('appends a new view when the id is absent and emits the new cache', async () => {
       const svc = createService({ getMyViews: () => of([]) });
@@ -142,7 +137,6 @@ describe('ViewsService', () => {
    * Verifies: export requests a full response and maps it to { blob, filename, hasErrors }, parsing filename from content-disposition and hasErrors from the X-Archive-Contains-Errors header.
    * Interacts with: ViewService.exportViews (vi.fn returning HttpResponse), ViewsService.export.
    * Data: HttpResponse with a Blob body, content-disposition filename=export.zip, and X-Archive-Contains-Errors:true.
-   * Why: stub returns a full HttpResponse (observe 'response') so the service can read headers, not just the body.
    */
   it('export() maps the response into blob/filename/hasErrors', async () => {
     const body = new Blob(['data']);

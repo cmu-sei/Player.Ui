@@ -2,7 +2,9 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { MatDialogRef } from '@angular/material/dialog';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import { FileService } from '../../../generated/player-api';
@@ -54,39 +56,57 @@ async function renderDialog(
 
 describe('EditFileDialogComponent', () => {
   /**
-   * Verifies: ngOnInit splits the original filename into a name control value
-   *   and a retained extension.
-   * Interacts with: component init parsing of the oldName input.
-   * Data: oldName override 'notes.md' (expects name 'notes', extension '.md').
+   * Verifies: the Name field shows the file's name without its extension.
+   * Interacts with: the rendered Name field.
+   * Data: oldName 'notes.md'.
    */
-  it('splits the filename into name + extension on init', async () => {
-    const { fixture } = await renderDialog({ oldName: 'notes.md' });
-    expect(fixture.componentInstance.form.value.name).toBe('notes');
-    expect(fixture.componentInstance.extension).toBe('.md');
+  it('shows the file name without its extension', async () => {
+    await renderDialog({ oldName: 'notes.md' });
+    expect(screen.getByLabelText('Name')).toHaveValue('notes');
   });
 
   /**
-   * Verifies: submit() reattaches the original extension to the edited name,
-   *   persists via updateFile, then closes with the resulting name + teams.
-   * Interacts with: FileService.updateFile and MatDialogRef.close.
+   * Verifies: saving keeps the original extension on the edited name, updates the file with its teams unchanged, and
+   *   closes with the new name and teams.
+   * Interacts with: the Name field and Save button; FileService.updateFile; MatDialogRef.close.
    * Data: oldName 'doc.txt' edited to 'new-doc'; oldTeams ['team-a'].
    */
-  it('submit() appends the original extension to the new name and persists', async () => {
-    const { fixture, updateFile, close } = await renderDialog({
+  it('saves the new name with the original extension', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const user = userEvent.setup();
+    const { updateFile, close } = await renderDialog({
       oldName: 'doc.txt',
       oldTeams: ['team-a'],
     });
-    fixture.componentInstance.form.get('name').setValue('new-doc');
-    fixture.componentInstance.submit();
-    expect(updateFile).toHaveBeenCalledWith(
+    const name = screen.getByLabelText('Name');
+    await user.clear(name);
+    await user.type(name, 'new-doc', { skipClick: true });
+    await user.click(screen.getByText('Save'));
+    expect(updateFile).toHaveBeenCalledExactlyOnceWith(
       'f1',
       'new-doc.txt',
       ['team-a'],
       null,
     );
-    expect(close).toHaveBeenCalledWith({
+    expect(close).toHaveBeenCalledExactlyOnceWith({
       name: 'new-doc.txt',
       teams: ['team-a'],
     });
+  });
+
+  /**
+   * Verifies: a refused update logs the error and leaves the dialog open.
+   * Interacts with: the Save button; FileService.updateFile (fails); console.log; MatDialogRef.close.
+   * Data: updateFile fails with a 403.
+   */
+  it('stays open when the update fails', async () => {
+    const logged = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const user = userEvent.setup();
+    const { updateFile, close } = await renderDialog();
+    updateFile.mockReturnValueOnce(throwError(() => '403'));
+    await user.type(screen.getByLabelText('Name'), '2');
+    await user.click(screen.getByText('Save'));
+    expect(close).not.toHaveBeenCalled();
+    expect(logged).toHaveBeenLastCalledWith('Error updating file: 403');
   });
 });

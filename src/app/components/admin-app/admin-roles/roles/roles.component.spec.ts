@@ -62,8 +62,8 @@ const mockRoles: Role[] = [
 
 // The component runs over the REAL RolesService and PermissionsService (the
 // state under test); only the generated RoleService and PermissionService
-// endpoints are stubbed. Each call returns a fresh object, because the
-// services mutate what they store (Object.assign, push, in-place sort).
+// endpoints are stubbed. Each call returns a fresh object, as the services
+// mutate what they store (Object.assign, push, in-place sort).
 async function renderRoles(
   hasManageRoles = false,
   overrides: {
@@ -203,9 +203,11 @@ describe('SystemRolesComponent', () => {
     expect(roleApi.getRoles).toHaveBeenCalledTimes(1);
     expect(permissionApi.getPermissions).toHaveBeenCalledTimes(1);
     expect(roleHeaders()).toEqual(['TestRole']);
-    expect(screen.getByRole('cell', { name: /ViewViews/ })).toBeInTheDocument();
     expect(
-      screen.getByRole('cell', { name: /ManageUsers/ }),
+      screen.getByText('ViewViews', { selector: 'td' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('ManageUsers', { selector: 'td' }),
     ).toBeInTheDocument();
   });
 
@@ -251,50 +253,25 @@ describe('SystemRolesComponent', () => {
     expect(screen.queryByTitle('Delete Role')).not.toBeInTheDocument();
   });
 
-  describe('hasPermission()', () => {
-    /**
-     * Verifies: the synthetic "All" row reports its state from role.allPermissions rather than the list.
-     * Interacts with: component.hasPermission (pure method).
-     * Data: role with allPermissions=true; permission named 'All'.
-     */
-    it('reads allPermissions for the synthetic "All" row', async () => {
-      const { fixture } = await renderRoles();
-      const role: Role = { allPermissions: true, permissions: [] };
-      expect(
-        fixture.componentInstance.hasPermission({ name: 'All' }, role),
-      ).toBe(true);
-    });
-
-    /**
-     * Verifies: a normal permission is matched by id against the role's permission list (true present, false absent).
-     * Interacts with: component.hasPermission (pure method).
-     * Data: role with permission perm-1; queried for perm-1 (hit) and perm-x (miss).
-     */
-    it('checks the role permission list for a normal permission', async () => {
-      const { fixture } = await renderRoles();
-      const role: Role = { permissions: [{ id: 'perm-1' }] };
-      expect(
-        fixture.componentInstance.hasPermission(
-          { id: 'perm-1', name: 'ViewViews' },
-          role,
-        ),
-      ).toBe(true);
-      expect(
-        fixture.componentInstance.hasPermission(
-          { id: 'perm-x', name: 'Other' },
-          role,
-        ),
-      ).toBe(false);
-    });
-  });
-
   describe('permission matrix checkboxes', () => {
+    /**
+     * Verifies: a role holding all permissions shows only its All box, checked.
+     * Interacts with: the rendered matrix through MatCheckboxHarness.
+     * Data: renderRoles(true) with the role's allPermissions set.
+     */
+    it('shows only a checked All box for a role with all permissions', async () => {
+      const { fixture } = await renderRoles(true, {
+        roles: [{ ...mockRoles[0], allPermissions: true }],
+      });
+      const boxes = await matrixCheckboxes(fixture);
+      expect(boxes).toHaveLength(1);
+      expect(await boxes[0].isChecked()).toBe(true);
+    });
+
     /**
      * Verifies: each rendered checkbox reports the role's current state.
      * Interacts with: the rendered matrix through MatCheckboxHarness.
      * Data: renderRoles(true); rows are All (allPermissions false), ViewViews (held), ManageUsers (not held).
-     * Why: pins the [checked]="hasPermission(permission, role)" binding — the calls-only tests below pass
-     *   with that binding dropped.
      */
     it('reflects the role state in the rendered checkboxes', async () => {
       const { fixture } = await renderRoles(true);
@@ -308,8 +285,6 @@ describe('SystemRolesComponent', () => {
      * Verifies: checking a permission the role lacks adds it to that role, and the box stays checked.
      * Interacts with: the ManageUsers checkbox via MatCheckboxHarness; the real RolesService over PermissionService.addPermissionToRole.
      * Data: renderRoles(true); mockRoles holds perm-1 only, so perm-2 is the unheld row.
-     * Why: drives the (change)="setPermission(permission, role, $event)" binding rather than calling the
-     *   method directly — deleting that binding leaves every method-level test green.
      */
     it('checking a permission the role lacks adds it to the role', async () => {
       const { fixture, permissionApi } = await renderRoles(true);
@@ -364,10 +339,23 @@ describe('SystemRolesComponent', () => {
     });
 
     /**
+     * Verifies: with ManageRoles every matrix checkbox of a mutable role renders enabled.
+     * Interacts with: the rendered matrix through MatCheckboxHarness; real UserPermissionsService over stubbed permission endpoints.
+     * Data: renderRoles(true) — three rows (All plus the two permissions).
+     */
+    it('enables every checkbox when the user has ManageRoles', async () => {
+      const { fixture } = await renderRoles(true);
+      const boxes = await matrixCheckboxes(fixture);
+      expect(boxes).toHaveLength(3);
+      for (const box of boxes) {
+        expect(await box.isDisabled()).toBe(false);
+      }
+    });
+
+    /**
      * Verifies: without ManageRoles every matrix checkbox renders disabled.
      * Interacts with: the rendered matrix through MatCheckboxHarness; real UserPermissionsService over stubbed permission endpoints.
      * Data: renderRoles(false) — three rows (All plus the two permissions).
-     * Why: pins the [disabled] binding, the only thing keeping a read-only user from editing the matrix.
      */
     it('disables every checkbox when the user lacks ManageRoles', async () => {
       const { fixture } = await renderRoles(false);
@@ -417,24 +405,22 @@ describe('SystemRolesComponent', () => {
    * Interacts with: the rendered Add button; stubbed DialogService.name.
    * Data: renderRoles(true); nameResult null (the dialog is cancelled).
    */
-  it('never offers Add Permission, because the Add button skips the adding menu', async () => {
+  it('opens the role dialog straight from the Add button', async () => {
     const user = userEvent.setup();
     const { fixture, dialogs } = await renderRoles(true, { nameResult: null });
     await user.click(getAddButton(fixture));
     expect(dialogs.name).toHaveBeenCalledWith('Create New Role?', '', {
       nameValue: '',
     });
-    expect(
-      screen.queryByRole('button', { name: 'Add Permission' }),
-    ).not.toBeInTheDocument();
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(screen.queryByText('Add Permission')).not.toBeInTheDocument();
   });
 
   /**
    * Verifies: addPermission() creates a permission from the dialog's name, and its row renders.
    * Interacts with: stubbed DialogService.name; the real PermissionsService.createPermission over PermissionService.createPermission.
    * Data: nameResult override (nameValue 'New Perm').
-   * Why: called directly, because the UI cannot reach it: the Add button opens the role dialog
-   *   (see 'never offers Add Permission, because the Add button skips the adding menu').
+   *   Called directly, as no rendered control reaches it (see 'opens the role dialog straight from the Add button').
    */
   it('addPermission() creates a permission from the dialog result', async () => {
     const { fixture, permissionApi } = await renderRoles(true, {
@@ -445,7 +431,9 @@ describe('SystemRolesComponent', () => {
     expect(permissionApi.createPermission).toHaveBeenCalledWith({
       name: 'New Perm',
     });
-    expect(screen.getByRole('cell', { name: /New Perm/ })).toBeInTheDocument();
+    expect(
+      screen.getByText('New Perm', { selector: 'td' }),
+    ).toBeInTheDocument();
   });
 
   /**
@@ -500,15 +488,5 @@ describe('SystemRolesComponent', () => {
       expect(roleApi.deleteRole).not.toHaveBeenCalled();
       expect(roleHeaders()).toEqual(['TestRole']);
     });
-  });
-
-  /**
-   * Verifies: trackById returns the item's id for *ngFor identity tracking.
-   * Interacts with: component.trackById (pure method).
-   * Data: an object literal { id: 'abc' }.
-   */
-  it('trackById returns the item id', async () => {
-    const { fixture } = await renderRoles();
-    expect(fixture.componentInstance.trackById(0, { id: 'abc' })).toBe('abc');
   });
 });

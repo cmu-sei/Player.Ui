@@ -63,18 +63,23 @@ const mockTeamRoles: TeamRole[] = [
 // The component runs over the REAL TeamRolesService and TeamPermissionsService
 // (the state under test); only the generated TeamRoleService and
 // TeamPermissionService endpoints are stubbed. Each call returns a fresh
-// object, because the services mutate what they store.
+// object, as the services mutate what they store.
 async function renderTeamRoles(
   hasManageRoles = false,
   overrides: {
     nameResult?: { nameValue?: string } | null;
     confirmResult?: boolean;
+    roles?: TeamRole[];
   } = {},
 ) {
-  const { nameResult = null, confirmResult = false } = overrides;
+  const {
+    nameResult = null,
+    confirmResult = false,
+    roles = mockTeamRoles,
+  } = overrides;
 
   const teamRoleApi = {
-    getTeamRoles: vi.fn(() => of(structuredClone(mockTeamRoles))),
+    getTeamRoles: vi.fn(() => of(structuredClone(roles))),
     updateTeamRole: vi.fn((id: string, command?: EditTeamRoleCommand) =>
       of<TeamRole>({ ...structuredClone(command), id }),
     ),
@@ -202,9 +207,11 @@ describe('TeamRolesComponent', () => {
     expect(teamRoleApi.getTeamRoles).toHaveBeenCalledTimes(1);
     expect(teamPermissionApi.getTeamPermissions).toHaveBeenCalledTimes(1);
     expect(roleHeaders()).toEqual(['TeamTestRole']);
-    expect(screen.getByRole('cell', { name: /ViewTeam/ })).toBeInTheDocument();
     expect(
-      screen.getByRole('cell', { name: /ManageTeam/ }),
+      screen.getByText('ViewTeam', { selector: 'td' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('ManageTeam', { selector: 'td' }),
     ).toBeInTheDocument();
   });
 
@@ -250,50 +257,25 @@ describe('TeamRolesComponent', () => {
     expect(screen.queryByTitle('Delete Role')).not.toBeInTheDocument();
   });
 
-  describe('hasPermission()', () => {
-    /**
-     * Verifies: the synthetic "All" row reports its state from role.allPermissions rather than the list.
-     * Interacts with: component.hasPermission (pure method).
-     * Data: role with allPermissions=true; permission named 'All'.
-     */
-    it('reads allPermissions for the synthetic "All" row', async () => {
-      const { fixture } = await renderTeamRoles();
-      const role: TeamRole = { allPermissions: true, permissions: [] };
-      expect(
-        fixture.componentInstance.hasPermission({ name: 'All' }, role),
-      ).toBe(true);
-    });
-
-    /**
-     * Verifies: a normal team permission is matched by id against the role's list (true present, false absent).
-     * Interacts with: component.hasPermission (pure method).
-     * Data: role with permission tp-1; queried for tp-1 (hit) and tp-x (miss).
-     */
-    it('checks the role permission list for a normal permission', async () => {
-      const { fixture } = await renderTeamRoles();
-      const role: TeamRole = { permissions: [{ id: 'tp-1' }] };
-      expect(
-        fixture.componentInstance.hasPermission(
-          { id: 'tp-1', name: 'ViewTeam' },
-          role,
-        ),
-      ).toBe(true);
-      expect(
-        fixture.componentInstance.hasPermission(
-          { id: 'tp-x', name: 'Other' },
-          role,
-        ),
-      ).toBe(false);
-    });
-  });
-
   describe('permission matrix checkboxes', () => {
+    /**
+     * Verifies: a role holding all permissions shows only its All box, checked.
+     * Interacts with: the rendered matrix through MatCheckboxHarness.
+     * Data: renderTeamRoles(true) with the role's allPermissions set.
+     */
+    it('shows only a checked All box for a role with all permissions', async () => {
+      const { fixture } = await renderTeamRoles(true, {
+        roles: [{ ...mockTeamRoles[0], allPermissions: true }],
+      });
+      const boxes = await matrixCheckboxes(fixture);
+      expect(boxes).toHaveLength(1);
+      expect(await boxes[0].isChecked()).toBe(true);
+    });
+
     /**
      * Verifies: each rendered checkbox reports the team role's current state.
      * Interacts with: the rendered matrix through MatCheckboxHarness.
      * Data: renderTeamRoles(true); rows are All (allPermissions false), ViewTeam (held), ManageTeam (not held).
-     * Why: pins the [checked]="hasPermission(permission, role)" binding — the calls-only tests below pass
-     *   with that binding dropped.
      */
     it('reflects the team role state in the rendered checkboxes', async () => {
       const { fixture } = await renderTeamRoles(true);
@@ -307,8 +289,6 @@ describe('TeamRolesComponent', () => {
      * Verifies: checking a permission the team role lacks adds it to that role, and the box stays checked.
      * Interacts with: the ManageTeam checkbox via MatCheckboxHarness; the real TeamRolesService over TeamPermissionService.addTeamPermissionToRole.
      * Data: renderTeamRoles(true); mockTeamRoles holds tp-1 only, so tp-2 is the unheld row.
-     * Why: drives the (change)="setPermission(permission, role, $event)" binding rather than calling the
-     *   method directly — deleting that binding leaves every method-level test green.
      */
     it('checking a permission the role lacks adds it to the role', async () => {
       const { fixture, teamPermissionApi } = await renderTeamRoles(true);
@@ -364,10 +344,23 @@ describe('TeamRolesComponent', () => {
     });
 
     /**
+     * Verifies: with ManageRoles every matrix checkbox of a mutable role renders enabled.
+     * Interacts with: the rendered matrix through MatCheckboxHarness; real UserPermissionsService over stubbed permission endpoints.
+     * Data: renderTeamRoles(true) — three rows (All plus the two team permissions).
+     */
+    it('enables every checkbox when the user has ManageRoles', async () => {
+      const { fixture } = await renderTeamRoles(true);
+      const boxes = await matrixCheckboxes(fixture);
+      expect(boxes).toHaveLength(3);
+      for (const box of boxes) {
+        expect(await box.isDisabled()).toBe(false);
+      }
+    });
+
+    /**
      * Verifies: without ManageRoles every matrix checkbox renders disabled.
      * Interacts with: the rendered matrix through MatCheckboxHarness; real UserPermissionsService over stubbed permission endpoints.
      * Data: renderTeamRoles(false) — three rows (All plus the two team permissions).
-     * Why: pins the [disabled] binding, the only thing keeping a read-only user from editing the matrix.
      */
     it('disables every checkbox when the user lacks ManageRoles', async () => {
       const { fixture } = await renderTeamRoles(false);
@@ -419,7 +412,7 @@ describe('TeamRolesComponent', () => {
    * Interacts with: the rendered Add button; stubbed DialogService.name.
    * Data: renderTeamRoles(true); nameResult null (the dialog is cancelled).
    */
-  it('never offers Add Permission, because the Add button skips the adding menu', async () => {
+  it('opens the role dialog straight from the Add button', async () => {
     const user = userEvent.setup();
     const { fixture, dialogs } = await renderTeamRoles(true, {
       nameResult: null,
@@ -428,17 +421,15 @@ describe('TeamRolesComponent', () => {
     expect(dialogs.name).toHaveBeenCalledWith('Create New Team Role?', '', {
       nameValue: '',
     });
-    expect(
-      screen.queryByRole('button', { name: 'Add Permission' }),
-    ).not.toBeInTheDocument();
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(screen.queryByText('Add Permission')).not.toBeInTheDocument();
   });
 
   /**
    * Verifies: addPermission() creates a team permission from the dialog's name, and its row renders.
    * Interacts with: stubbed DialogService.name; the real TeamPermissionsService.createTeamPermission over TeamPermissionService.createTeamPermission.
    * Data: nameResult override (nameValue 'New Team Perm').
-   * Why: called directly, because the UI cannot reach it: the Add button opens the role dialog
-   *   (see 'never offers Add Permission, because the Add button skips the adding menu').
+   *   Called directly, as no rendered control reaches it (see 'opens the role dialog straight from the Add button').
    */
   it('addPermission() creates a team permission from the dialog result', async () => {
     const { fixture, teamPermissionApi } = await renderTeamRoles(true, {
@@ -450,7 +441,7 @@ describe('TeamRolesComponent', () => {
       name: 'New Team Perm',
     });
     expect(
-      screen.getByRole('cell', { name: /New Team Perm/ }),
+      screen.getByText('New Team Perm', { selector: 'td' }),
     ).toBeInTheDocument();
   });
 
@@ -506,15 +497,5 @@ describe('TeamRolesComponent', () => {
       expect(teamRoleApi.deleteTeamRole).not.toHaveBeenCalled();
       expect(roleHeaders()).toEqual(['TeamTestRole']);
     });
-  });
-
-  /**
-   * Verifies: trackById returns the item's id for *ngFor identity tracking.
-   * Interacts with: component.trackById (pure method).
-   * Data: an object literal { id: 'abc' }.
-   */
-  it('trackById returns the item id', async () => {
-    const { fixture } = await renderTeamRoles();
-    expect(fixture.componentInstance.trackById(0, { id: 'abc' })).toBe('abc');
   });
 });

@@ -45,8 +45,6 @@ describe('HomeAppComponent', () => {
    * Verifies: the app-topbar element is rendered in the template.
    * Interacts with: rendered DOM via document.querySelector.
    * Data: default renderHome() settings.
-   * Why: app-topbar is replaced by a local stub component, so the assertion
-   *       queries the element by selector rather than any topbar content.
    */
   it('should display topbar', async () => {
     await renderHome();
@@ -79,9 +77,6 @@ describe('HomeAppComponent', () => {
    * Verifies: the template hands the topbar the settings-derived title and the PLAYER_HOME view.
    * Interacts with: the TopbarStubComponent standing in for app-topbar, read through its signal inputs.
    * Data: renderHome() override appTopBarText 'My Player'.
-   * Why: reading the values that actually arrived at the child is what pins the two template bindings —
-   *   asserting the component's own TopbarView enum reference passes no matter which member the template
-   *   binds, or whether it binds one at all.
    */
   it('should pass the title and PLAYER_HOME topbar view to the topbar', async () => {
     const { fixture } = await renderHome({ appTopBarText: 'My Player' });

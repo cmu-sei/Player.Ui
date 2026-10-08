@@ -72,7 +72,6 @@ describe('ApplicationsService', () => {
    * Verifies: a 500 response causes the returned observable to reject rather than swallow the error
    * Interacts with: HttpTestingController flushing an error status; service.getApplicationsByTeam catchError path
    * Data: a 500 "Server Error" flush with body 'boom'
-   * Why: catchError re-throws and also logs to console.log, which beforeEach silences to keep output clean
    */
   it('getApplicationsByTeam() surfaces server errors through catchError', async () => {
     const ctx = setup();

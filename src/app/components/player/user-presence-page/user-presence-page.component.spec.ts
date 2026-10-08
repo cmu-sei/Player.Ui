@@ -36,9 +36,6 @@ describe('UserPresencePageComponent', () => {
    * Interacts with: RouterQuery.getParams stub, component viewId, the UserPresenceStubComponent standing
    *   in for app-user-presence.
    * Data: renderPage override viewId 'my-view'.
-   * Why: the page's only job is to route the id through to the child, so the value that arrived at the
-   *   child is the behavior worth pinning — the [viewId] binding could be dropped entirely and a check of
-   *   the page's own field would still pass.
    */
   it('reads the viewId from the router query and passes it to the presence child', async () => {
     const { fixture } = await renderPage({ viewId: 'my-view' });
