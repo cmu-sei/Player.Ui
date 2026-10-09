@@ -60,6 +60,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               [disabled]="moveUp.disabled"
               [ngClass]="moveUp.disabled ? 'disabled-button' : null"
               mat-icon-button
+              aria-label="Move Up"
               title="Move Up"
               (click)="moveAppUp(app.id)"
               >
@@ -77,6 +78,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               [ngClass]="moveDown.disabled ? 'disabled-button' : null"
               title="Move Down"
               mat-icon-button
+              aria-label="Move Down"
               (click)="moveAppDown(app.id)"
               >
               <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>

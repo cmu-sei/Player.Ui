@@ -32,6 +32,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             @if (filterString !== '') {
               <button
                 mat-icon-button
+                aria-label="Clear Search"
                 matSuffix
                 (click)="clearFilter()"
                 title="Clear Search"
@@ -77,6 +78,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <div>
               <button
                 mat-icon-button
+                [attr.aria-label]="'Add ' + (element.name ?? element.id) + ' to team'"
                 [matTooltip]="
                   'Add ' + (element.name ?? element.id) + ' to team'
                 "
@@ -168,6 +170,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               @if (teamFilterString !== '') {
                 <button
                   mat-icon-button
+                  aria-label="Clear Search"
                   matSuffix
                   (click)="clearTeamFilter()"
                   title="Clear Search"
@@ -233,6 +236,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               <div>
                 <button
                   mat-icon-button
+                  [attr.aria-label]="'Remove ' + (element.user.name ?? element.user.id) + ' from team'"
                   [matTooltip]="
                     'Remove ' +
                     (element.user.name ?? element.user.id) +

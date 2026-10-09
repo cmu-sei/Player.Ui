@@ -26,6 +26,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         @if (filterString !== '') {
           <button
             mat-icon-button
+            aria-label="Clear Search"
             matSuffix
             color="primary"
             (click)="clearFilter()"
@@ -42,6 +43,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="ms-auto">
       <button
         mat-icon-button
+        aria-label="Add a new Application Template"
         matTooltip="Add a new Application Template"
         (click)="addAppTemplate()"
       >
@@ -49,6 +51,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <button
         mat-icon-button
+        aria-label="Import Application Templates"
         matTooltip="Import Application Templates"
         (click)="openDialog(importDialog)"
       >
@@ -56,6 +59,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <button
         mat-icon-button
+        aria-label="Export Application Templates"
         matTooltip="Export Application Templates"
         [matBadge]="
           selection.selected.length > 0 ? selection.selected.length : ''

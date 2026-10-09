@@ -29,6 +29,7 @@ DM20-0181 -->
       <div>
         <button
           mat-icon-button
+          [attr.aria-label]="'Download ' + file.name"
           (click)="downloadFile(file.id, file.name)"
           title="Download"
           >
