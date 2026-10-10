@@ -1,13 +1,13 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, Mock } from 'vitest';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { TopbarComponent } from './topbar.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { userPermissionsProvider } from 'src/app/test-utils/mock-user-permissions.service';
+import { permissionDataProviders } from 'src/app/test-utils/mock-permission-data.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
 import { TopbarView } from './topbar.models';
 import {
@@ -34,6 +34,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ClipboardModule } from 'ngx-clipboard';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import type { User as AuthUser } from 'oidc-client-ts';
 
 const mockLogout = vi.fn();
 
@@ -59,6 +62,8 @@ async function renderTopbar(
     systemPermissions?: SystemPermission[];
     teamClaims?: TeamPermissionsClaim[];
     confirmResult?: boolean;
+    theme?: string;
+    on?: Partial<Record<'setTeam' | 'editView' | 'sidenavToggle', Mock>>;
   } = {},
 ) {
   const {
@@ -77,9 +82,14 @@ async function renderTopbar(
   const dialogOpen = vi.fn();
   const dialogCloseAll = vi.fn();
   const snackbarOpen = vi.fn();
-  const confirm = vi.fn(() => ({
-    afterClosed: () => of(overrides.confirmResult ?? false),
-  }));
+  const confirm = vi.fn(
+    () =>
+      dialogRefStub<unknown, boolean>(overrides.confirmResult ?? false)
+        .dialogRef,
+  );
+  const loggedInUser$ = new BehaviorSubject({
+    profile: { name: 'Test User' },
+  } as AuthUser);
 
   const rendered = await renderComponent(TopbarComponent, {
     imports: [
@@ -91,47 +101,57 @@ async function renderTopbar(
       MatToolbarModule,
       MatTooltipModule,
       MatButtonModule,
+      ClipboardModule,
       ...CRUCIBLE_DIALOG_IMPORTS,
     ],
     declarations: [TopbarComponent],
     providers: [
-      userPermissionsProvider(systemPermissions, teamClaims),
+      ...permissionDataProviders({
+        system: systemPermissions,
+        teams: teamClaims,
+      }),
       {
         provide: LoggedInUserService,
         useValue: {
-          loggedInUser$: of({ profile: { name: 'Test User' } }),
+          loggedInUser$,
           setLoggedInUser: () => {},
-        },
+        } satisfies Pick<
+          LoggedInUserService,
+          'loggedInUser$' | 'setLoggedInUser'
+        >,
       },
       {
         provide: ComnAuthService,
+        // TopbarComponent calls only these two.
         useValue: {
-          isAuthenticated$: of(true),
-          user$: of({}),
           logout: mockLogout,
           setUserTheme,
-        },
+        } satisfies Pick<ComnAuthService, 'logout' | 'setUserTheme'>,
       },
       {
         provide: ComnAuthQuery,
         useValue: {
-          userTheme$: of('light-theme'),
+          userTheme$: of(overrides.theme ?? 'light-theme'),
           isLoggedIn$: of(true),
         },
       },
       {
         provide: MatDialog,
-        useValue: { open: dialogOpen, closeAll: dialogCloseAll },
+        useValue: { open: dialogOpen, closeAll: dialogCloseAll } satisfies Pick<
+          MatDialog,
+          'open' | 'closeAll'
+        >,
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm },
+        useValue: { confirm } satisfies Pick<CrucibleDialogService, 'confirm'>,
       },
       {
         provide: MatSnackBar,
-        useValue: { open: snackbarOpen },
+        useValue: { open: snackbarOpen } satisfies Pick<MatSnackBar, 'open'>,
       },
     ],
+    on: overrides.on,
     componentProperties: {
       title,
       topbarView,
@@ -150,6 +170,7 @@ async function renderTopbar(
     dialogCloseAll,
     snackbarOpen,
     confirm,
+    loggedInUser$,
   };
 }
 
@@ -215,6 +236,22 @@ describe('TopbarComponent', () => {
   });
 
   /**
+   * Verifies: once the topbar is destroyed it no longer follows the logged-in user: it holds no subscription to the
+   *   user stream, and a renewed user renders nowhere.
+   * Interacts with: LoggedInUserService.loggedInUser$ (a live subject, observed); fixture.destroy(); the document.
+   * Data: 'Test User' shown; after destroy the user stream emits 'Renamed User'.
+   */
+  it('stops following the logged-in user after destroy', async () => {
+    const { fixture, loggedInUser$ } = await renderTopbar();
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(loggedInUser$.observed).toBe(true);
+    fixture.destroy();
+    expect(loggedInUser$.observed).toBe(false);
+    loggedInUser$.next({ profile: { name: 'Renamed User' } } as AuthUser);
+    expect(screen.queryByText('Renamed User')).not.toBeInTheDocument();
+  });
+
+  /**
    * Verifies: the default 'Player' title renders in the toolbar.
    * Interacts with: rendered template; screen.getByText.
    * Data: title 'Player'.
@@ -240,20 +277,30 @@ describe('TopbarComponent', () => {
     });
 
     /**
-     * Verifies: the Administration link is hidden for a user holding no View* permission.
+     * Verifies: a user holding a system permission that is not a View* one (near miss) gets neither the
+     *   Administration link nor, inside the admin area, Exit Administration.
      * Interacts with: UserPermissionsService.canViewAdminstration(); opens the menu via click.
-     * Data: systemPermissions [ManageRoles] — a non-View* permission; PLAYER_HOME view.
-     * Why: an empty permission list would also hide the link, so a user who holds a
-     *   different system permission is the case that pins the View* filter itself.
+     * Data: one row per topbar view; systemPermissions [ManageRoles, ManageViews].
      */
-    it('should hide Administration link when user lacks any View* permission', async () => {
-      await renderTopbar({
-        systemPermissions: [SystemPermission.ManageRoles],
-        topbarView: TopbarView.PLAYER_HOME,
-      });
-      await openUserMenu();
-      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
-    });
+    it.each<[string, TopbarView]>([
+      ['Administration', TopbarView.PLAYER_HOME],
+      ['Exit Administration', TopbarView.PLAYER_ADMIN],
+    ])(
+      'hides "%s" in the %s view without a View* permission',
+      async (entry, topbarView) => {
+        await renderTopbar({
+          systemPermissions: [
+            SystemPermission.ManageRoles,
+            SystemPermission.ManageViews,
+          ],
+          topbarView,
+        });
+        await openUserMenu();
+        // The menu is open (Logout renders), so the absence below is the gate.
+        expect(screen.getByText('Logout')).toBeInTheDocument();
+        expect(screen.queryByText(entry)).not.toBeInTheDocument();
+      },
+    );
 
     /**
      * Verifies: inside the admin view, Exit Administration is shown while the
@@ -291,7 +338,6 @@ describe('TopbarComponent', () => {
      * Verifies: Edit View appears via the ManageViews *system* permission.
      * Interacts with: UserPermissionsService.can(ManageViews, ...) + team input; opens the menu via click.
      * Data: systemPermissions [ManageViews], no team claims; team 'Team 1'; PLAYER_PLAYER view.
-     * Why: the system path has to hold on its own, with the view-permission path unavailable.
      */
     it('should show Edit View for the ManageViews system permission', async () => {
       await renderTopbar({
@@ -307,9 +353,6 @@ describe('TopbarComponent', () => {
      * Verifies: Edit View appears via the per-view ManageView claim with no system permission.
      * Interacts with: UserPermissionsService.can(..., viewPermission: ManageView) + team input.
      * Data: systemPermissions []; team claim { team-1, [ManageView] }; team 'Team 1'.
-     * Why: this is the path a scoped-team user takes. Both cases used to pass a single
-     *   canManageViews boolean into a can() stub that ignored its arguments, so they were
-     *   the same test twice and neither pinned the permission it named.
      */
     it('should show Edit View for the ManageView view-permission alone', async () => {
       await renderTopbar({
@@ -323,17 +366,33 @@ describe('TopbarComponent', () => {
     });
 
     /**
-     * Verifies: Edit View is hidden when the user holds neither ManageViews nor ManageView.
+     * Verifies: Edit View is hidden when the user holds only the neighbours of ManageViews and ManageView (near miss).
      * Interacts with: UserPermissionsService.can() + team input; opens the menu via click.
-     * Data: systemPermissions []; no team claims; team 'Team 1'; PLAYER_PLAYER view.
+     * Data: systemPermissions [ViewViews, CreateViews, EditViews]; team claim { team-1, [ViewView, ManageTeam] };
+     *   team 'Team 1'; PLAYER_PLAYER view.
      */
     it('should hide Edit View when user lacks ManageViews/ManageView permission', async () => {
       await renderTopbar({
-        systemPermissions: [],
+        systemPermissions: [
+          SystemPermission.ViewViews,
+          SystemPermission.CreateViews,
+          SystemPermission.EditViews,
+        ],
+        teamClaims: [
+          {
+            teamId: 'team-1',
+            permissionValues: [
+              ViewPermission.ViewView,
+              TeamPermission.ManageTeam,
+            ],
+          },
+        ],
         team: TEAM_1,
         topbarView: TopbarView.PLAYER_PLAYER,
       });
       await openUserMenu();
+      // The menu is open (Reset UI renders), so the absence below is the gate.
+      expect(screen.getByText('Reset UI')).toBeInTheDocument();
       expect(screen.queryByText('Edit View')).not.toBeInTheDocument();
     });
 
@@ -354,20 +413,6 @@ describe('TopbarComponent', () => {
   });
 
   describe('Manage Teams entry', () => {
-    /**
-     * Verifies: the Reset UI item is available in the menu while in the player view.
-     * Interacts with: topbarView input + team input; opens the menu via click.
-     * Data: PLAYER_PLAYER view; team 'Team 1'.
-     */
-    it('should show Reset UI option in menu when in player view', async () => {
-      await renderTopbar({
-        topbarView: TopbarView.PLAYER_PLAYER,
-        team: TEAM_1,
-      });
-      await openUserMenu();
-      expect(screen.getByText('Reset UI')).toBeInTheDocument();
-    });
-
     /**
      * Verifies: Manage Teams shows (and Edit View does not) when the user can
      *   manage a team but cannot edit the view.
@@ -406,6 +451,26 @@ describe('TopbarComponent', () => {
     });
 
     /**
+     * Verifies: Manage Teams is hidden for a user whose only team claim lacks ManageTeam.
+     * Interacts with: the real canManageAnyTeam$ (getManageableTeamIds over the claims) + can(); opens the menu.
+     * Data: team claim { team-1, [ViewTeam] }; no system permissions; team 'Team 1'; PLAYER_PLAYER view.
+     */
+    it('should hide Manage Teams when the team claim lacks ManageTeam', async () => {
+      await renderTopbar({
+        systemPermissions: [],
+        teamClaims: [
+          { teamId: 'team-1', permissionValues: [TeamPermission.ViewTeam] },
+        ],
+        team: TEAM_1,
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      await openUserMenu();
+      // The menu is open (Reset UI renders), so the absence below is the gate.
+      expect(screen.getByText('Reset UI')).toBeInTheDocument();
+      expect(screen.queryByText('Manage Teams')).not.toBeInTheDocument();
+    });
+
+    /**
      * Verifies: Manage Teams is hidden when no team is set, despite team-manage rights.
      * Interacts with: canManageAnyTeam$; opens the menu via click.
      * Data: team claim { team-1, [ManageTeam] }; team undefined; PLAYER_PLAYER view.
@@ -421,13 +486,19 @@ describe('TopbarComponent', () => {
     });
 
     /**
-     * Verifies: openManageTeams opens a dialog passing the current view id as data.
-     * Interacts with: MatDialog.open (dialogOpen spy).
-     * Data: viewId 'view-42'; asserts data { viewId: 'view-42' }.
+     * Verifies: choosing Manage Teams in the user menu opens the manage teams dialog with the current view id.
+     * Interacts with: the rendered user menu (canManageAnyTeam$ gate); MatDialog.open (dialogOpen spy).
+     * Data: team claim { team-1, [ManageTeam] }; team 'Team 1'; viewId 'view-42'; PLAYER_PLAYER view.
      */
-    it('openManageTeams opens the manage teams dialog with the view id', async () => {
-      const { fixture, dialogOpen } = await renderTopbar({ viewId: 'view-42' });
-      fixture.componentInstance.openManageTeams();
+    it('opens the manage teams dialog with the view id from the menu', async () => {
+      const { dialogOpen } = await renderTopbar({
+        teamClaims: [manageTeamClaim()],
+        team: TEAM_1,
+        viewId: 'view-42',
+        topbarView: TopbarView.PLAYER_PLAYER,
+      });
+      const user = await openUserMenu();
+      await user.click(screen.getByRole('menuitem', { name: 'Manage Teams' }));
       expect(dialogOpen).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ data: { viewId: 'view-42' } }),
@@ -435,162 +506,154 @@ describe('TopbarComponent', () => {
     });
   });
 
-  describe('setTeamFn()', () => {
+  describe('team menu', () => {
+    const teams: Team[] = [TEAM_1, { id: 'team-9', name: 'Team 9' }];
+
     /**
-     * Verifies: setTeamFn emits the id on the setTeam output when one is provided.
-     * Interacts with: component.setTeam EventEmitter.
-     * Data: id 'team-9'.
+     * Verifies: picking a team in the Select a Team menu emits its id on setTeam.
+     * Interacts with: the rendered Select a Team menu; the setTeam output.
+     * Data: teams Team 1 and Team 9; current team Team 1; Team 9 picked.
      */
-    it('emits setTeam when an id is provided', async () => {
-      const { fixture } = await renderTopbar();
-      const spy = vi.fn();
-      fixture.componentInstance.setTeam.subscribe(spy);
-      fixture.componentInstance.setTeamFn('team-9');
-      expect(spy).toHaveBeenCalledWith('team-9');
+    it('emits setTeam with the picked team id', async () => {
+      const user = userEvent.setup();
+      const setTeam = vi.fn();
+      await renderTopbar({ teams, team: TEAM_1, on: { setTeam } });
+      await user.click(screen.getByLabelText('Select a Team'));
+      await user.click(screen.getByText('Team 9'));
+      expect(setTeam).toHaveBeenCalledExactlyOnceWith('team-9');
     });
 
     /**
-     * Verifies: setTeamFn does not emit for an empty id.
-     * Interacts with: component.setTeam EventEmitter (asserted not called).
-     * Data: id ''.
+     * Verifies: picking a team that has no id emits nothing.
+     * Interacts with: the rendered Select a Team menu; the setTeam output.
+     * Data: teams Team 1 and an id-less 'Unsaved' team; 'Unsaved' picked.
      */
-    it('does not emit when id is empty', async () => {
-      const { fixture } = await renderTopbar();
-      const spy = vi.fn();
-      fixture.componentInstance.setTeam.subscribe(spy);
-      fixture.componentInstance.setTeamFn('');
-      expect(spy).not.toHaveBeenCalled();
+    it('does not emit setTeam for a team without an id', async () => {
+      const user = userEvent.setup();
+      const setTeam = vi.fn();
+      await renderTopbar({
+        teams: [TEAM_1, { id: '', name: 'Unsaved' }],
+        team: TEAM_1,
+        on: { setTeam },
+      });
+      await user.click(screen.getByLabelText('Select a Team'));
+      await user.click(screen.getByText('Unsaved'));
+      expect(setTeam).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: the Users button opens the presence dialog.
+     * Interacts with: the rendered Users button; MatDialog.open (dialogOpen spy).
+     * Data: teams Team 1 and Team 9.
+     */
+    it('opens the presence dialog from the Users button', async () => {
+      const user = userEvent.setup();
+      const { dialogOpen } = await renderTopbar({ teams, team: TEAM_1 });
+      await user.click(screen.getByLabelText('Users'));
+      expect(dialogOpen).toHaveBeenCalledExactlyOnceWith(
+        expect.anything(),
+        expect.objectContaining({ height: '75%' }),
+      );
     });
   });
 
-  describe('themeFn()', () => {
+  describe('Dark Theme toggle', () => {
     /**
-     * Verifies: themeFn applies the dark theme when the toggle is checked.
-     * Interacts with: ComnAuthService.setUserTheme (setUserTheme spy).
-     * Data: toggle event { checked: true }.
+     * Verifies: switching the Dark Theme toggle sets the theme it switches to.
+     * Interacts with: the rendered slide toggle in the user menu; ComnAuthQuery.userTheme$; ComnAuthService.setUserTheme.
+     * Data: one row per starting theme.
      */
-    it('sets the dark theme when toggled on', async () => {
-      const { fixture, setUserTheme } = await renderTopbar();
-      fixture.componentInstance.themeFn({ checked: true });
-      expect(setUserTheme).toHaveBeenCalledWith('dark-theme');
-    });
-
-    /**
-     * Verifies: themeFn applies the light theme when the toggle is unchecked.
-     * Interacts with: ComnAuthService.setUserTheme (setUserTheme spy).
-     * Data: toggle event { checked: false }.
-     */
-    it('sets the light theme when toggled off', async () => {
-      const { fixture, setUserTheme } = await renderTopbar();
-      fixture.componentInstance.themeFn({ checked: false });
-      expect(setUserTheme).toHaveBeenCalledWith('light-theme');
+    it.each<[string, string]>([
+      ['light-theme', 'dark-theme'],
+      ['dark-theme', 'light-theme'],
+    ])('switches from %s to %s', async (theme, expected) => {
+      const { setUserTheme } = await renderTopbar({ theme });
+      const user = await openUserMenu();
+      await user.click(screen.getByRole('switch'));
+      expect(setUserTheme).toHaveBeenCalledExactlyOnceWith(expected);
     });
   });
 
-  describe('editFn / editFnNewTab', () => {
+  describe('Edit View', () => {
     /**
-     * Verifies: editFn calls preventDefault on the event and emits editView.
-     * Interacts with: component.editView EventEmitter and the event's preventDefault.
-     * Data: event stub with a preventDefault spy.
+     * Verifies: the Edit View item links to the view's admin page and, when clicked, emits editView instead of
+     *   following the link.
+     * Interacts with: the rendered Edit View item; the editView output.
+     * Data: ManageViews granted; team Team 1; viewId 'view-42'.
      */
-    it('editFn prevents default and emits the event', async () => {
-      const { fixture } = await renderTopbar();
-      const spy = vi.fn();
-      fixture.componentInstance.editView.subscribe(spy);
-      const preventDefault = vi.fn();
-      fixture.componentInstance.editFn({ preventDefault });
-      expect(preventDefault).toHaveBeenCalled();
-      expect(spy).toHaveBeenCalled();
+    it('links to the view admin page and emits editView on click', async () => {
+      const editView = vi.fn();
+      await renderTopbar({
+        systemPermissions: [SystemPermission.ManageViews],
+        team: TEAM_1,
+        viewId: 'view-42',
+        topbarView: TopbarView.PLAYER_PLAYER,
+        on: { editView },
+      });
+      const user = await openUserMenu();
+      const item = screen.getByText('Edit View').closest('a')!;
+      expect(item.getAttribute('href')).toContain(
+        '/admin?section=views&view=view-42',
+      );
+      await user.click(item);
+      expect(editView).toHaveBeenCalledTimes(1);
+      expect(editView.mock.calls[0][0].defaultPrevented).toBe(true);
     });
 
     /**
-     * Verifies: editFnNewTab emits editView with the event augmented by
-     *   isNewBrowserTab: true.
-     * Interacts with: component.editView EventEmitter.
-     * Data: event stub { foo: 1 }.
+     * Verifies: editFnNewTab, which no template binds, emits editView with the event flagged for a new browser tab.
+     * Interacts with: the editView output.
+     * Data: event { foo: 1 }.
      */
     it('editFnNewTab emits the event flagged for a new browser tab', async () => {
-      const { fixture } = await renderTopbar();
-      const spy = vi.fn();
-      fixture.componentInstance.editView.subscribe(spy);
+      const editView = vi.fn();
+      const { fixture } = await renderTopbar({ on: { editView } });
       fixture.componentInstance.editFnNewTab({ foo: 1 });
-      expect(spy).toHaveBeenCalledWith({ foo: 1, isNewBrowserTab: true });
+      expect(editView).toHaveBeenCalledWith({ foo: 1, isNewBrowserTab: true });
     });
   });
 
   /**
-   * Verifies: sidenavToggleFn emits the negation of the sidenav's opened state.
-   * Interacts with: component.sidenavToggle EventEmitter; reads sidenav.opened.
+   * Verifies: sidenavToggleFn, which no template binds, emits the negation of the sidenav's opened state.
+   * Interacts with: the sidenavToggle output; reads sidenav.opened.
    * Data: sidenav stub opened=true (expects emitted false).
    */
   it('sidenavToggleFn emits the negation of the current sidenav opened state', async () => {
+    const sidenavToggle = vi.fn();
     const { fixture } = await renderTopbar({
       sidenav: { opened: true } as MatSidenav,
+      on: { sidenavToggle },
     });
-    const spy = vi.fn();
-    fixture.componentInstance.sidenavToggle.subscribe(spy);
     fixture.componentInstance.sidenavToggleFn();
-    expect(spy).toHaveBeenCalledWith(false);
-  });
-
-  describe('user presence dialog', () => {
-    /**
-     * Verifies: openUserPresence opens a dialog.
-     * Interacts with: MatDialog.open (dialogOpen spy).
-     * Data: default render.
-     */
-    it('openUserPresence opens the presence dialog', async () => {
-      const { fixture, dialogOpen } = await renderTopbar();
-      fixture.componentInstance.openUserPresence();
-      expect(dialogOpen).toHaveBeenCalled();
-    });
-
-    /**
-     * Verifies: closeUserPresence closes all open dialogs.
-     * Interacts with: MatDialog.closeAll (dialogCloseAll spy).
-     * Data: default render.
-     */
-    it('closeUserPresence closes all dialogs', async () => {
-      const { fixture, dialogCloseAll } = await renderTopbar();
-      fixture.componentInstance.closeUserPresence();
-      expect(dialogCloseAll).toHaveBeenCalled();
-    });
+    expect(sidenavToggle).toHaveBeenCalledWith(false);
   });
 
   /**
-   * Verifies: getEditViewUrl builds the admin views deep-link for the view id.
-   * Interacts with: component.getEditViewUrl (pure helper).
-   * Data: viewId 'view-42'; asserts URL contains the section/view query.
+   * Verifies: closeUserPresence, which the presence dialog's closeMe output calls, closes all dialogs.
+   * Interacts with: MatDialog.closeAll (dialogCloseAll spy).
+   * Data: default render; the dialog itself is stubbed, so the method is called directly.
    */
-  it('getEditViewUrl builds the admin views URL for the current view id', async () => {
-    const { fixture } = await renderTopbar({ viewId: 'view-42' });
-    expect(fixture.componentInstance.getEditViewUrl()).toContain(
-      '/admin?section=views&view=view-42',
-    );
+  it('closeUserPresence closes all dialogs', async () => {
+    const { fixture, dialogCloseAll } = await renderTopbar();
+    fixture.componentInstance.closeUserPresence();
+    expect(dialogCloseAll).toHaveBeenCalled();
   });
 
-  describe('resetUI()', () => {
+  describe('Reset UI', () => {
     /**
-     * Verifies: resetUI opens a confirm dialog whose message names the team.
-     * Interacts with: DialogService.confirm (confirm spy).
-     * Data: team 'Team 7'; confirmResult false.
-     * Why: the confirmed branch calls window.location.reload(), which under
-     *      real-browser mode reloads the runner and is non-configurable, so only
-     *      the prompt is asserted (confirmResult left false).
+     * Verifies: Reset UI asks for confirmation naming the team.
+     * Interacts with: the rendered Reset UI item; CrucibleDialogService.confirm (confirm spy).
+     * Data: PLAYER_PLAYER view; team 'Team 7'; confirmResult false (a confirmed reset reloads the page, which jsdom
+     *   cannot do).
      */
     it('prompts for confirmation with the team name', async () => {
-      // We intentionally do not exercise the confirmed branch here: on a
-      // positive confirm resetUI() calls window.location.reload(), which under
-      // real-browser test mode reloads the runner page and kills the Vitest
-      // connection (and Location.reload is non-configurable, so it can't be
-      // stubbed either). With confirmResult left false the confirm observable
-      // still emits, so we assert resetUI() opens the confirm dialog with the
-      // team-specific prompt. The cancelled-state behavior is covered below.
-      const { fixture, confirm } = await renderTopbar({
+      const { confirm } = await renderTopbar({
         team: { id: 'team-7', name: 'Team 7' },
+        topbarView: TopbarView.PLAYER_PLAYER,
         confirmResult: false,
       });
-      fixture.componentInstance.resetUI();
+      const user = await openUserMenu();
+      await user.click(screen.getByText('Reset UI'));
       expect(confirm).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Reset UI?',
@@ -601,26 +664,28 @@ describe('TopbarComponent', () => {
     });
 
     /**
-     * Verifies: a cancelled confirm leaves persisted team UI state untouched.
-     * Interacts with: DialogService.confirm (emits cancel) and localStorage.
+     * Verifies: a cancelled Reset UI leaves the team's stored UI state untouched.
+     * Interacts with: the rendered Reset UI item; CrucibleDialogService.confirm (answers false); localStorage.
      * Data: team 'Team 7'; confirmResult false; localStorage seeded under 'team-7'.
      */
     it('does nothing when the reset is cancelled', async () => {
-      const { fixture } = await renderTopbar({
+      localStorage.setItem('team-7', '{"width":300}');
+      await renderTopbar({
         team: { id: 'team-7', name: 'Team 7' },
+        topbarView: TopbarView.PLAYER_PLAYER,
         confirmResult: false,
       });
-      localStorage.setItem('team-7', '{"width":300}');
-      fixture.componentInstance.resetUI();
+      const user = await openUserMenu();
+      await user.click(screen.getByText('Reset UI'));
       expect(localStorage.getItem('team-7')).toBe('{"width":300}');
       localStorage.removeItem('team-7');
     });
   });
 
   /**
-   * Verifies: openSnackBar opens a snackbar with the message positioned at top.
+   * Verifies: openSnackBar, which the team id copy calls on success, opens a snackbar with the message at the top.
    * Interacts with: MatSnackBar.open (snackbarOpen spy).
-   * Data: message 'Saved'; asserts verticalPosition 'top'.
+   * Data: message 'Saved'; jsdom has no clipboard, so the method is called directly.
    */
   it('openSnackBar opens a top snackbar with the message', async () => {
     const { fixture, snackbarOpen } = await renderTopbar();
@@ -630,20 +695,5 @@ describe('TopbarComponent', () => {
       '',
       expect.objectContaining({ verticalPosition: 'top' }),
     );
-  });
-
-  /**
-   * Verifies: ngOnDestroy completes the unsubscribe Subject to tear down streams.
-   * Interacts with: component.unsubscribe$.complete (spied).
-   * Data: default render.
-   */
-  it('ngOnDestroy completes the unsubscribe subject', async () => {
-    const { fixture } = await renderTopbar();
-    const complete = vi.spyOn(
-      fixture.componentInstance.unsubscribe$,
-      'complete',
-    );
-    fixture.componentInstance.ngOnDestroy();
-    expect(complete).toHaveBeenCalled();
   });
 });

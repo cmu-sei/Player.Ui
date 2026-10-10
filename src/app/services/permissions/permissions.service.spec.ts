@@ -12,14 +12,13 @@ import {
   Permission,
   PermissionService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function perm(overrides: Partial<Permission> = {}): Permission {
   return { id: 'p1', name: 'Alpha', immutable: false, ...overrides };
 }
 
-function createService(
-  api: Partial<Record<keyof PermissionService, unknown>> = {},
-) {
+function createService(api: ApiStub<PermissionService> = {}) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
@@ -137,9 +136,6 @@ describe('PermissionsService', () => {
      *   announces the change as a fresh permissions$ emission.
      * Interacts with: getPermissions stub; service.upsert; service.permissions$ via recordEmissions.
      * Data: a single cached perm 'p1' named 'Old', upserted to name 'Updated'.
-     * Why: upsert mutates the array it got from getValue() and re-next()s that same reference, so
-     *   reading permissions$ after the call sees the new name whether or not next() ever ran.
-     *   Snapshotting each emission as it arrives is what pins the notification.
      */
     it('mutates an existing entry in place and emits the updated cache', async () => {
       const svc = createService({
@@ -158,8 +154,6 @@ describe('PermissionsService', () => {
      *   one, and emits the grown cache.
      * Interacts with: getPermissions stub; service.upsert; service.permissions$ via recordEmissions.
      * Data: an empty cache, upserting id 'p9' name 'Brand New'.
-     * Why: same in-place mutation as the update path — only a recorded emission proves the append was
-     *   published rather than merely applied to the cached array.
      */
     it('appends a new entry when the id is not present and emits the new cache', async () => {
       const svc = createService({ getPermissions: () => of([]) });

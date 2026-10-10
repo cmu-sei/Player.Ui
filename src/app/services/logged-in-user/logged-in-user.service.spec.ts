@@ -3,12 +3,20 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { BehaviorSubject, of, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
 import { ComnAuthQuery } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
 import { LoggedInUserService } from './logged-in-user.service';
-import { UserService } from '../../generated/player-api';
+import {
+  PermissionService,
+  SystemPermission,
+  TeamPermissionService,
+  User,
+  UserService,
+} from '../../generated/player-api';
 import { UserPermissionsService } from '../permissions/user-permissions.service';
+import { ApiStub } from '../../test-utils/api-stub';
+import { permissionApiStubs } from '../../test-utils/mock-permission-data.service';
 
 function authUser(
   sub: string,
@@ -20,33 +28,44 @@ function authUser(
 function createService(
   overrides: {
     user$?: BehaviorSubject<AuthUser>;
-    getUser?: () => unknown;
-    load?: () => unknown;
+    getUser?: () => Observable<User>;
+    system?: SystemPermission[];
   } = {},
 ) {
   const {
     user$ = new BehaviorSubject<AuthUser>(null),
     getUser = () => of({ id: 'p1', name: 'Player Name' }),
-    load = () => of([]),
+    system = [],
   } = overrides;
 
-  const loadSpy = vi.fn(load);
   const getUserSpy = vi.fn(getUser);
+  // The real UserPermissionsService over the stubbed "my permissions"
+  // endpoints, constructed (not loaded) here: logging in is what loads it.
+  const permissionStubs = permissionApiStubs({ system });
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
       { provide: ComnAuthQuery, useValue: { user$ } },
-      { provide: UserService, useValue: { getUser: getUserSpy } },
-      { provide: UserPermissionsService, useValue: { load: loadSpy } },
+      {
+        provide: UserService,
+        useValue: { getUser: getUserSpy } satisfies ApiStub<UserService>,
+      },
+      { provide: PermissionService, useValue: permissionStubs.permissions },
+      {
+        provide: TeamPermissionService,
+        useValue: permissionStubs.teamPermissions,
+      },
+      UserPermissionsService,
       LoggedInUserService,
     ],
   });
 
   return {
     service: TestBed.inject(LoggedInUserService),
+    permissions: TestBed.inject(UserPermissionsService),
     user$,
-    loadSpy,
+    getMyPermissions: permissionStubs.permissions.getMyPermissions,
     getUserSpy,
   };
 }
@@ -55,26 +74,33 @@ describe('LoggedInUserService', () => {
   beforeEach(() => TestBed.resetTestingModule());
 
   /**
-   * Verifies: with no logged-in auth user, neither permissions load nor player-user fetch is triggered
-   * Interacts with: UserPermissionsService.load and UserService.getUser spies; ComnAuthQuery.user$ seam
+   * Verifies: with no logged-in auth user, neither the permissions load nor the player-user fetch is triggered
+   * Interacts with: PermissionService.getMyPermissions and UserService.getUser stubs; ComnAuthQuery.user$ seam
    * Data: default user$ BehaviorSubject seeded with null
    */
   it('does nothing while the auth user is null', () => {
-    const { loadSpy, getUserSpy } = createService();
-    expect(loadSpy).not.toHaveBeenCalled();
+    const { getMyPermissions, getUserSpy } = createService();
+    expect(getMyPermissions).not.toHaveBeenCalled();
     expect(getUserSpy).not.toHaveBeenCalled();
   });
 
   /**
-   * Verifies: emitting an auth user triggers permissions load and fetches the player user keyed by the auth sub
-   * Interacts with: UserPermissionsService.load and UserService.getUser spies; ComnAuthQuery.user$
-   * Data: a user$ that emits authUser('sub-1') after subscription
+   * Verifies: emitting an auth user loads the user's system permissions into the real UserPermissionsService and fetches the player user keyed by the auth sub
+   * Interacts with: the real UserPermissionsService over PermissionService.getMyPermissions; UserService.getUser stub; ComnAuthQuery.user$
+   * Data: a user$ that emits authUser('sub-1') after subscription; granted ViewViews and ManageUsers
    */
   it('loads permissions and the player user when a user logs in', async () => {
     const user$ = new BehaviorSubject<AuthUser>(null);
-    const { loadSpy, getUserSpy } = createService({ user$ });
+    const { permissions, getUserSpy } = createService({
+      user$,
+      system: [SystemPermission.ViewViews, SystemPermission.ManageUsers],
+    });
+    expect(await firstValueFrom(permissions.permissions$)).toEqual([]);
     user$.next(authUser('sub-1'));
-    expect(loadSpy).toHaveBeenCalled();
+    expect(await firstValueFrom(permissions.permissions$)).toEqual([
+      SystemPermission.ViewViews,
+      SystemPermission.ManageUsers,
+    ]);
     expect(getUserSpy).toHaveBeenCalledWith('sub-1');
   });
 

@@ -2,15 +2,14 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
-import { SecurityContext } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import { DomSanitizer } from '@angular/platform-browser';
+import { of } from 'rxjs';
+import userEvent from '@testing-library/user-event';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
+import { XApiService } from '../../../services/xapi/xapi.service';
 import { ApplicationListComponent } from './application-list.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
@@ -40,9 +39,11 @@ async function renderList(
     isAuthenticated = true,
   } = overrides;
 
-  const getApplicationsByTeam = vi.fn(() => of(apps));
+  const getApplicationsByTeam = vi.fn(() => of(structuredClone(apps)));
   const isAuth = vi.fn(() => Promise.resolve(isAuthenticated));
-  const focusedAppUrl = new BehaviorSubject<string>('about:blank');
+  const xapi = {
+    applicationSwitched: vi.fn(() => of(null)),
+  } satisfies Pick<XApiService, 'applicationSwitched'>;
 
   const rendered = await renderComponent(ApplicationListComponent, {
     imports: [MatListModule, MatButtonModule],
@@ -51,20 +52,25 @@ async function renderList(
     providers: [
       {
         provide: ApplicationsService,
-        useValue: { getApplicationsByTeam },
-      },
-      {
-        provide: FocusedAppService,
-        useValue: { focusedAppUrl },
+        // ApplicationsService holds no state and builds its own HttpClient
+        // request, so it is stubbed at its own boundary.
+        useValue: { getApplicationsByTeam } satisfies Pick<
+          ApplicationsService,
+          'getApplicationsByTeam'
+        >,
       },
       {
         provide: ComnAuthService,
-        useValue: { isAuthenticated: isAuth },
+        useValue: { isAuthenticated: isAuth } satisfies Pick<
+          ComnAuthService,
+          'isAuthenticated'
+        >,
       },
       {
         provide: ComnAuthQuery,
         useValue: { userTheme$: of(theme) },
       },
+      { provide: XApiService, useValue: xapi },
     ],
   });
 
@@ -72,157 +78,217 @@ async function renderList(
     ...rendered,
     getApplicationsByTeam,
     isAuth,
-    focusedAppUrl,
+    // The real FocusedAppService from the default providers.
+    focusedAppUrl:
+      rendered.fixture.debugElement.injector.get(FocusedAppService)
+        .focusedAppUrl,
+    applicationSwitched: xapi.applicationSwitched,
   };
+}
+
+/** The rendered application links, in render order. */
+function appLinks(container: Element): HTMLAnchorElement[] {
+  return Array.from(container.querySelectorAll<HTMLAnchorElement>('a[title]'));
+}
+
+/**
+ * Clicks a link with user-event and reports whether the component prevented
+ * the browser's navigation; a bubbling listener prevents it afterwards, as
+ * jsdom cannot navigate.
+ */
+async function clickLink(
+  container: Element,
+  link: HTMLElement,
+  keys: { ctrl?: boolean } = {},
+): Promise<boolean> {
+  let prevented = false;
+  const record = (event: Event) => {
+    prevented = event.defaultPrevented;
+    event.preventDefault();
+  };
+  container.addEventListener('click', record);
+  const user = userEvent.setup();
+  if (keys.ctrl) {
+    await user.keyboard('{Control>}');
+  }
+  await user.click(link);
+  if (keys.ctrl) {
+    await user.keyboard('{/Control}');
+  }
+  container.removeEventListener('click', record);
+  return prevented;
 }
 
 describe('ApplicationListComponent', () => {
   /**
-   * Verifies: applications are fetched for the team flagged isPrimary, not just the first team.
-   * Interacts with: ApplicationsService.getApplicationsByTeam spy.
-   * Data: default teams array where 'team-a' is the primary team.
+   * Verifies: the primary team's applications are listed by name, linked to their URLs, and the first is opened in
+   *   the focused app.
+   * Interacts with: ApplicationsService.getApplicationsByTeam; the rendered links; the real FocusedAppService;
+   *   XApiService.applicationSwitched.
+   * Data: teams Primary (team-a) and Secondary; apps a1 and a2.
    */
-  it('requests applications for the primary team', async () => {
-    const { getApplicationsByTeam } = await renderList();
-    expect(getApplicationsByTeam).toHaveBeenCalledWith('team-a');
+  it('lists the primary team applications and opens the first', async () => {
+    const {
+      container,
+      fixture,
+      getApplicationsByTeam,
+      focusedAppUrl,
+      applicationSwitched,
+    } = await renderList({
+      apps: [
+        makeApp('a1', 'https://a.test/app'),
+        makeApp('a2', 'https://b.test/app'),
+      ],
+    });
+    await fixture.whenStable();
+    expect(getApplicationsByTeam).toHaveBeenLastCalledWith('team-a');
+    expect(
+      appLinks(container).map((a) => [a.title, a.getAttribute('href')]),
+    ).toEqual([
+      ['app-a1', 'https://a.test/app'],
+      ['app-a2', 'https://b.test/app'],
+    ]);
+    expect(focusedAppUrl.value).toBe('https://a.test/app');
+    expect(applicationSwitched).toHaveBeenCalledExactlyOnceWith(
+      'v1',
+      'app-a1',
+      'https://a.test/app',
+    );
   });
 
   /**
-   * Verifies: each app's themedUrl substitutes the current theme into the {theme} placeholder and safeUrl is sanitized.
-   * Interacts with: applications$ stream, ComnAuthQuery.userTheme$, the real DomSanitizer.
-   * Data: renderList override with a {theme}-placeholder URL and dark-theme.
+   * Verifies: the {theme} placeholder in an application URL becomes a theme query parameter in its link.
+   * Interacts with: ComnAuthQuery.userTheme$; the rendered link.
+   * Data: one row per URL shape, with the dark theme.
    */
-  it('applies theme query string and safe URL to each app', async () => {
-    const { fixture } = await renderList({
-      apps: [makeApp('a1', 'https://a.test/app?other=1&{theme}')],
+  it.each<[string, string]>([
+    ['https://a.test/app{theme}', 'https://a.test/app?theme=dark-theme'],
+    ['https://a.test/app?{theme}', 'https://a.test/app?theme=dark-theme'],
+    [
+      'https://a.test/app?x=1&{theme}',
+      'https://a.test/app?x=1&theme=dark-theme',
+    ],
+    [
+      'https://a.test/app?x=1{theme}',
+      'https://a.test/app?x=1&theme=dark-theme',
+    ],
+    ['https://a.test/app', 'https://a.test/app'],
+  ])('links %s as %s', async (url, href) => {
+    const { container } = await renderList({
+      apps: [makeApp('a1', url)],
       theme: 'dark-theme' as Theme,
     });
-    const apps = await firstValueFrom(fixture.componentInstance.applications$);
-    expect(apps[0].themedUrl).toBe(
-      'https://a.test/app?other=1&theme=dark-theme',
-    );
-    const sanitizer = TestBed.inject(DomSanitizer);
-    expect(
-      sanitizer.sanitize(SecurityContext.RESOURCE_URL, apps[0].safeUrl),
-    ).toBe('https://a.test/app?other=1&theme=dark-theme');
+    expect(appLinks(container)[0].getAttribute('href')).toBe(href);
   });
 
   /**
-   * Verifies: insertThemeToUrl replaces a {theme} placeholder with a ?theme= query when the URL has no existing query.
-   * Interacts with: component.insertThemeToUrl seam (pure method).
-   * Data: URL 'https://a.test/app{theme}' with dark-theme.
+   * Verifies: an application set to load in the background gets a hidden iframe on its themed URL.
+   * Interacts with: the rendered background iframe and the real DomSanitizer.
+   * Data: one app with loadInBackground true.
    */
-  it('insertThemeToUrl appends ?theme when no existing query and {theme} placeholder present', async () => {
-    const { fixture } = await renderList();
-    const url = fixture.componentInstance.insertThemeToUrl(
-      'https://a.test/app{theme}',
-      'dark-theme' as Theme,
-    );
-    expect(url).toBe('https://a.test/app?theme=dark-theme');
-  });
-
-  /**
-   * Verifies: insertThemeToUrl returns the URL unchanged when no {theme} placeholder is present.
-   * Interacts with: component.insertThemeToUrl seam (pure method).
-   * Data: URL 'https://a.test' with light-theme.
-   */
-  it('insertThemeToUrl leaves URLs without placeholder untouched', async () => {
-    const { fixture } = await renderList();
-    expect(
-      fixture.componentInstance.insertThemeToUrl(
-        'https://a.test',
-        'light-theme' as Theme,
-      ),
-    ).toBe('https://a.test');
-  });
-
-  /**
-   * Verifies: a plain click on an embeddable app is prevented and pushed into the focused-app URL stream.
-   * Interacts with: openApplication, MouseEvent.preventDefault spy, FocusedAppService.focusedAppUrl subject.
-   * Data: default renderList(); a real non-ctrl MouseEvent and an app with a themedUrl.
-   * Why: awaits fixture.whenStable() to flush the isAuthenticated() promise that openInFocusedApp awaits
-   *       before the focusedAppUrl is updated.
-   */
-  it('openApplication intercepts non-ctrl clicks on embeddable apps', async () => {
-    const { fixture, focusedAppUrl } = await renderList();
-    // Let the stream run so currentApp gets seeded.
-    await firstValueFrom(fixture.componentInstance.applications$);
-    const event = new MouseEvent('click', { ctrlKey: false });
-    const preventDefault = vi.spyOn(event, 'preventDefault');
-    const app = makeApp('a2', 'https://a2.test/app');
-    app.themedUrl = 'https://a2.test/app';
-    fixture.componentInstance.openApplication(app, event);
-    expect(preventDefault).toHaveBeenCalled();
-    // Flush the isAuthenticated() promise that openInFocusedApp awaits.
-    await fixture.whenStable();
-    expect(focusedAppUrl.value).toBe('https://a2.test/app');
-  });
-
-  /**
-   * Verifies: a ctrl-click is not intercepted, allowing the browser's default open-in-new-tab behavior.
-   * Interacts with: openApplication, MouseEvent.preventDefault spy.
-   * Data: default renderList(); a real ctrlKey:true MouseEvent.
-   */
-  it('openApplication respects ctrl-click (does not intercept)', async () => {
-    const { fixture } = await renderList();
-    const event = new MouseEvent('click', { ctrlKey: true });
-    const preventDefault = vi.spyOn(event, 'preventDefault');
-    const app = makeApp('a2', 'https://a2.test/app');
-    fixture.componentInstance.openApplication(app, event);
-    expect(preventDefault).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: openInFocusedApp checks ComnAuthService.isAuthenticated before opening the app.
-   * Interacts with: openInFocusedApp, ComnAuthService.isAuthenticated spy.
-   * Data: renderList({ isAuthenticated: true }); only the authenticated branch is exercised.
-   * Why: the unauthenticated branch calls window.location.reload(), which would reload the runner
-   *       page in browser mode and jsdom's Location is non-configurable, so it is deliberately skipped.
-   */
-  it('openInFocusedApp consults ComnAuthService.isAuthenticated', async () => {
-    // We intentionally do not exercise the unauthenticated branch here:
-    // that branch calls window.location.reload(), which under real-
-    // browser test mode would actually reload the runner page and kill
-    // the Vitest connection (and jsdom's Location is non-configurable,
-    // so it can't be cleanly stubbed either). The authenticated branch
-    // is covered by "openApplication intercepts non-ctrl clicks" above.
-    const { fixture, isAuth } = await renderList({ isAuthenticated: true });
-    await firstValueFrom(fixture.componentInstance.applications$);
-    isAuth.mockClear();
-    const app = makeApp('a2', 'https://a2.test');
-    app.themedUrl = 'https://a2.test';
-    fixture.componentInstance.openInFocusedApp(app);
-    // Flush the isAuthenticated() promise that openInFocusedApp awaits.
-    await fixture.whenStable();
-    expect(isAuth).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: trackByFn returns the item's id for ngFor identity tracking.
-   * Interacts with: component.trackByFn seam (pure method).
-   * Data: an inline { id: 'foo' } item.
-   */
-  it('trackByFn returns the item id', async () => {
-    const { fixture } = await renderList();
-    expect(fixture.componentInstance.trackByFn(0, { id: 'foo' })).toBe('foo');
-  });
-
-  /**
-   * Verifies: ngOnChanges re-fetches applications when the teams input changes.
-   * Interacts with: ngOnChanges, ApplicationsService.getApplicationsByTeam spy (cleared first).
-   * Data: a synthetic SimpleChanges entry for the teams input.
-   */
-  it('ngOnChanges refreshes apps when teams input changes', async () => {
-    const { fixture, getApplicationsByTeam } = await renderList();
-    getApplicationsByTeam.mockClear();
-    fixture.componentInstance.ngOnChanges({
-      teams: {
-        currentValue: teams,
-        previousValue: [],
-        firstChange: false,
-        isFirstChange: () => false,
-      },
+  it('loads a background application in a hidden iframe', async () => {
+    const { container } = await renderList({
+      apps: [
+        {
+          ...makeApp('a1', 'https://a.test/app{theme}'),
+          loadInBackground: true,
+        },
+      ],
     });
-    expect(getApplicationsByTeam).toHaveBeenCalled();
+    const iframe = container.querySelector('iframe.hidden-app-iframe');
+    expect(iframe).toHaveAttribute(
+      'src',
+      'https://a.test/app?theme=light-theme',
+    );
+    expect(iframe).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  /**
+   * Verifies: clicking an embeddable application opens it in the focused app instead of navigating, after checking
+   *   the login.
+   * Interacts with: the rendered link; ComnAuthService.isAuthenticated; the real FocusedAppService;
+   *   XApiService.applicationSwitched.
+   * Data: apps a1 and a2 (both embeddable); a2 clicked.
+   */
+  it('opens an embeddable application in the focused app on click', async () => {
+    const { container, fixture, isAuth, focusedAppUrl, applicationSwitched } =
+      await renderList({
+        apps: [
+          makeApp('a1', 'https://a.test/app'),
+          makeApp('a2', 'https://b.test/app'),
+        ],
+      });
+    await fixture.whenStable();
+    isAuth.mockClear();
+    const prevented = await clickLink(container, appLinks(container)[1]);
+    await fixture.whenStable();
+    expect(prevented).toBe(true);
+    expect(isAuth).toHaveBeenCalledTimes(1);
+    expect(focusedAppUrl.value).toBe('https://b.test/app');
+    expect(applicationSwitched).toHaveBeenLastCalledWith(
+      'v1',
+      'app-a2',
+      'https://b.test/app',
+    );
+  });
+
+  /**
+   * Verifies: a ctrl-click, or a click on an application that cannot be embedded, is left to the browser.
+   * Interacts with: the rendered link; the real FocusedAppService.
+   * Data: one row per case; apps a1 and a2, with a2 clicked.
+   */
+  it.each<[string, boolean, boolean]>([
+    ['a ctrl-click on an embeddable application', true, true],
+    ['a click on an application that cannot be embedded', false, false],
+  ])('leaves %s to the browser', async (_case, ctrl, embeddable) => {
+    const { container, fixture, focusedAppUrl } = await renderList({
+      apps: [
+        makeApp('a1', 'https://a.test/app'),
+        { ...makeApp('a2', 'https://b.test/app'), embeddable },
+      ],
+    });
+    await fixture.whenStable();
+    const prevented = await clickLink(container, appLinks(container)[1], {
+      ctrl,
+    });
+    await fixture.whenStable();
+    expect(prevented).toBe(false);
+    expect(focusedAppUrl.value).toBe('https://a.test/app');
+  });
+
+  /**
+   * Verifies: in mini mode each application is an icon link titled with its name.
+   * Interacts with: the mini input; the rendered links and icons.
+   * Data: mini true; app a1.
+   */
+  it('shows icon links in mini mode', async () => {
+    const { container, rerender } = await renderList();
+    await rerender({
+      componentProperties: { mini: true },
+      partialUpdate: true,
+    });
+    const [link] = appLinks(container);
+    expect(link).toHaveClass('app-link-mini');
+    expect(link.querySelector('img')).toHaveAttribute('alt', 'app-a1');
+    expect(link).not.toHaveTextContent('app-a1');
+  });
+
+  /**
+   * Verifies: a new teams input reloads the applications for the new primary team.
+   * Interacts with: ngOnChanges through rerender; ApplicationsService.getApplicationsByTeam.
+   * Data: the teams change so Secondary (team-b) becomes primary.
+   */
+  it('reloads the applications when the teams change', async () => {
+    const { rerender, getApplicationsByTeam } = await renderList();
+    await rerender({
+      componentProperties: {
+        teams: [
+          { ...teams[0], isPrimary: false },
+          { ...teams[1], isPrimary: true },
+        ],
+      },
+      partialUpdate: true,
+    });
+    expect(getApplicationsByTeam).toHaveBeenLastCalledWith('team-b');
   });
 });

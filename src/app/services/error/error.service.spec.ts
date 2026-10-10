@@ -12,7 +12,13 @@ function createService() {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
-      { provide: SystemMessageService, useValue: { displayMessage } },
+      {
+        provide: SystemMessageService,
+        useValue: { displayMessage } satisfies Pick<
+          SystemMessageService,
+          'displayMessage'
+        >,
+      },
       ErrorService,
     ],
   });
@@ -30,7 +36,6 @@ describe('ErrorService', () => {
    * Verifies: a status-0/"Unknown Error" HttpErrorResponse maps to a friendly "API could not be reached" system message
    * Interacts with: SystemMessageService.displayMessage stub; service.handleError
    * Data: an HttpErrorResponse with status 0, statusText 'Unknown Error', and a url
-   * Why: relies on Angular's real generated message text matching the start/end substrings the service checks
    */
   it('reports an unreachable API for a "0 Unknown Error" HTTP response', () => {
     const { service, displayMessage } = createService();

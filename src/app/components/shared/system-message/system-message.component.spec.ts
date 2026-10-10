@@ -36,20 +36,6 @@ async function renderMessage(
 
 describe('SystemMessageComponent', () => {
   /**
-   * Verifies: displayTitle/displayMessage are populated from the injected sheet data.
-   * Interacts with: MAT_BOTTOM_SHEET_DATA read on init.
-   * Data: title 'Error', message 'Boom'.
-   */
-  it('captures the title and message from the bottom sheet data', async () => {
-    const { fixture } = await renderMessage({
-      title: 'Error',
-      message: 'Boom',
-    });
-    expect(fixture.componentInstance.displayTitle).toBe('Error');
-    expect(fixture.componentInstance.displayMessage).toBe('Boom');
-  });
-
-  /**
    * Verifies: the title and message are rendered into the DOM.
    * Interacts with: rendered template; screen.findByText/getByText.
    * Data: title 'Info', message 'Hello'.
@@ -61,30 +47,14 @@ describe('SystemMessageComponent', () => {
   });
 
   /**
-   * Verifies: close() dismisses the bottom sheet.
-   * Interacts with: MatBottomSheetRef.dismiss (dismiss spy).
+   * Verifies: clicking Close dismisses the bottom sheet.
+   * Interacts with: the rendered Close button; MatBottomSheetRef.dismiss.
    * Data: default render.
    */
-  it('close() dismisses the bottom sheet', async () => {
-    const { fixture, dismiss } = await renderMessage();
-    fixture.componentInstance.close();
-    expect(dismiss).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: clicking the rendered close control wires through to dismiss.
-   * Interacts with: MatBottomSheetRef.dismiss; driven by a real user click.
-   * Data: default render; clicks the first rendered button.
-   * Why: the close button's accessible name is not guaranteed, so the test
-   *      clicks the first button rather than querying by name.
-   */
-  it('clicking the close control invokes close()', async () => {
+  it('dismisses the bottom sheet from Close', async () => {
     const user = userEvent.setup();
     const { dismiss } = await renderMessage();
-    // The template exposes a button whose accessible name is "Close"
-    // (fallback: any button in the rendered message).
-    const buttons = await screen.findAllByRole('button');
-    await user.click(buttons[0]);
-    expect(dismiss).toHaveBeenCalled();
+    await user.click(screen.getByTitle('Close'));
+    expect(dismiss).toHaveBeenCalledTimes(1);
   });
 });

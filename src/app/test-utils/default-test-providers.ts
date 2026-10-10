@@ -1,12 +1,27 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { EnvironmentProviders, Provider, ProviderToken } from '@angular/core';
 import { EMPTY, of } from 'rxjs';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import {
+  ComnAuthQuery,
+  ComnAuthService,
+  ComnSettingsService,
+  CrucibleDialogService,
+} from '@cmusei/crucible-common';
+import { AnyProvider, mergeProviders, unstubbed } from './unstubbed';
 
-// App Services
+// 1. App services that components inject. player.ui keeps its state in
+//    BehaviorSubject services rather than Akita stores, and those stay REAL,
+//    like Akita data services: PermissionsService, TeamPermissionsService,
+//    RolesService, TeamRolesService and UserPermissionsService are
+//    `providedIn: 'root'` and are not listed, so specs get the real service
+//    over the generated API placeholders below (gate tests prime
+//    UserPermissionsService with permissionDataProviders()). ViewsService is
+//    provided by AppModule rather than root, so it is listed as its real
+//    class. ApplicationsService and TeamsService hold no state and call
+//    HttpClient directly, so they stay placeholders.
 import { ApplicationsService } from '../services/applications/applications.service';
 import { DialogService } from '../services/dialog/dialog.service';
 import { ErrorService } from '../services/error/error.service';
@@ -16,18 +31,10 @@ import { NotificationService } from '../services/notification/notification.servi
 import { SystemMessageService } from '../services/system-message/system-message.service';
 import { TeamsService } from '../services/teams/teams.service';
 import { ViewsService } from '../services/views/views.service';
-
-// Permission Services
-import { PermissionsService } from '../services/permissions/permissions.service';
-import { UserPermissionsService } from '../services/permissions/user-permissions.service';
-import { TeamPermissionsService } from '../services/permissions/team-permissions.service';
+import { XApiService as AppXApiService } from '../services/xapi/xapi.service';
 import { TeamPermissionScopesService } from '../services/permissions/team-permission-scopes.service';
 
-// Role Services
-import { RolesService } from '../services/roles/roles.service';
-import { TeamRolesService } from '../services/roles/team-roles.service';
-
-// Generated API Services
+// 2. Every generated API service under src/app/generated/player-api.
 import {
   ApplicationService,
   FileService,
@@ -46,70 +53,19 @@ import {
   XApiService,
 } from '../generated/player-api';
 
-// Akita Router
+// 3. RouterQuery: player.ui uses @datorama/akita-ng-router-store.
 import { RouterQuery } from '@datorama/akita-ng-router-store';
-
-// Common library
-import {
-  ComnSettingsService,
-  ComnAuthService,
-  ComnAuthQuery,
-} from '@cmusei/crucible-common';
-
-type AnyProvider = Provider | EnvironmentProviders;
-
-const PLACEHOLDER_PASSTHROUGH = new Set<string>(['ngOnDestroy', 'then']);
-const PLACEHOLDER_DI_PROBED = new Set<string>(['name']);
-
-function unstubbed(token: ProviderToken<unknown>): Provider {
-  const name = ('name' in token ? token.name : String(token)).replace(
-    /^_+/,
-    '',
-  );
-  const fail = (prop: string) =>
-    new Error(
-      `${name}.${prop} was used by the code under test, but ${name} has no stub here — ` +
-        `it is only a placeholder so unrelated tests can construct their component. ` +
-        `Pass an explicit stub for this test: { provide: ${name}, useValue: { ${prop}: ... } }`,
-    );
-  const value = new Proxy(
-    {},
-    {
-      get(target, prop) {
-        if (
-          typeof prop === 'symbol' ||
-          prop in target ||
-          PLACEHOLDER_PASSTHROUGH.has(prop)
-        ) {
-          return Reflect.get(target, prop);
-        }
-        if (PLACEHOLDER_DI_PROBED.has(prop)) {
-          return () => {
-            throw fail(prop);
-          };
-        }
-        throw fail(prop);
-      },
-    },
-  );
-  return { provide: token, useValue: value };
-}
-
-function getProvideToken(provider: AnyProvider): ProviderToken<unknown> | null {
-  if (typeof provider === 'function') return provider as ProviderToken<unknown>;
-  const withProvide = provider as { provide?: ProviderToken<unknown> };
-  return withProvide.provide ?? null;
-}
 
 export function getDefaultProviders(
   overrides?: readonly AnyProvider[],
 ): AnyProvider[] {
-  const defaults: Provider[] = [
-    // App Services
+  const defaults: AnyProvider[] = [
+    // App services
     unstubbed(ApplicationsService),
     unstubbed(DialogService),
     { provide: ErrorService, useValue: { handleError: () => {} } },
-    { provide: FocusedAppService, useValue: { focusedAppUrl: of('') } },
+    // Real, as in AppModule: a BehaviorSubject state service with no dependencies.
+    FocusedAppService,
     {
       provide: LoggedInUserService,
       useValue: {
@@ -120,19 +76,14 @@ export function getDefaultProviders(
     unstubbed(NotificationService),
     unstubbed(SystemMessageService),
     unstubbed(TeamsService),
-    unstubbed(ViewsService),
-
-    // Permission Services
-    { provide: PermissionsService, useValue: { load: () => of([]) } },
-    unstubbed(UserPermissionsService),
-    { provide: TeamPermissionsService, useValue: { load: () => of([]) } },
+    // Real, as in AppModule: it reads the ViewService/TeamService stubs.
+    ViewsService,
+    unstubbed(AppXApiService, 'XApiService (services/xapi)'),
     unstubbed(TeamPermissionScopesService),
 
-    // Role Services
-    unstubbed(RolesService),
-    unstubbed(TeamRolesService),
-
-    // Generated API Services
+    // Generated API services: one `unstubbed(...)` per service. A test that
+    // needs an endpoint passes `{ provide: XService, useValue: xApi }` built
+    // with `satisfies ApiStub<XService>`.
     unstubbed(ApplicationService),
     unstubbed(FileService),
     { provide: HealthService, useValue: { healthCheck: () => of({}) } },
@@ -147,9 +98,9 @@ export function getDefaultProviders(
     unstubbed(ViewMembershipService),
     unstubbed(ViewService),
     unstubbed(WebhookService),
-    unstubbed(XApiService),
+    unstubbed(XApiService, 'XApiService (generated)'),
 
-    // Akita Router
+    // Akita router
     {
       provide: RouterQuery,
       useValue: {
@@ -158,7 +109,9 @@ export function getDefaultProviders(
       },
     },
 
-    // Common library services
+    // Common library. CrucibleDialogService is root-provided: without this
+    // placeholder the real confirm dialog would open in every spec.
+    unstubbed(CrucibleDialogService),
     {
       provide: ComnSettingsService,
       useValue: {
@@ -209,16 +162,12 @@ export function getDefaultProviders(
         snapshot: {
           params: {},
           paramMap: convertToParamMap({}),
+          queryParams: {},
+          queryParamMap: convertToParamMap({}),
         },
       },
     },
   ];
 
-  if (!overrides?.length) return defaults;
-
-  const overrideTokens = new Set(overrides.map(getProvideToken));
-  const filtered = defaults.filter(
-    (p) => !overrideTokens.has(getProvideToken(p)),
-  );
-  return [...filtered, ...overrides];
+  return mergeProviders(defaults, overrides);
 }

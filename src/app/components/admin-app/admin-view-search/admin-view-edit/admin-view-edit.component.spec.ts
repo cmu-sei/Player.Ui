@@ -2,8 +2,13 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { of } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
+import { Component, forwardRef, Input } from '@angular/core';
+import { ComponentFixture } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { EMPTY, firstValueFrom, NEVER, Observable, of, throwError } from 'rxjs';
+import { screen, within } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
 import {
   FormGroup,
   FormGroupDirective,
@@ -11,138 +16,181 @@ import {
   Validators,
 } from '@angular/forms';
 import { Clipboard } from '@angular/cdk/clipboard';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
+import { MatFormFieldHarness } from '@angular/material/form-field/testing';
 import {
   CrucibleDialogService,
   CRUCIBLE_DIALOG_IMPORTS,
 } from '@cmusei/crucible-common';
 import {
+  Application,
+  ApplicationService,
+  ApplicationTemplate,
+  FileModel,
+  FileService,
+  SystemPermission,
   Team,
+  TeamPermissionModel,
+  TeamPermissionService,
+  TeamRole,
+  TeamRoleService,
   TeamService,
+  User,
+  UserService,
   View,
   ViewService,
-  UserService,
-  FileService,
-  FileModel,
 } from '../../../../generated/player-api';
-import { ApplicationService } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
-import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
-import { TeamRolesService } from '../../../../services/roles/team-roles.service';
+import type { TeamUser } from '../../../shared/add-remove-users-dialog/add-remove-users-dialog.component';
 import {
   AdminViewEditComponent,
-  TeamUserApp,
   UserErrorStateMatcher,
 } from './admin-view-edit.component';
 import { renderComponent } from '../../../../test-utils/render-component';
-import { fileList } from '../../../../test-utils/file-list';
+import { permissionDataProviders } from '../../../../test-utils/mock-permission-data.service';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { ClipboardModule } from 'ngx-clipboard';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatStepper, MatStepperModule } from '@angular/material/stepper';
+import { MatStepperModule } from '@angular/material/stepper';
 import { MatInputModule } from '@angular/material/input';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../../test-utils/dialog-refs';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../../test-utils/unhandled-rx-errors';
 
-type ServiceStubs = {
-  updateView: ReturnType<typeof vi.fn>;
-  deleteView: ReturnType<typeof vi.fn>;
-  getViewTeams: ReturnType<typeof vi.fn>;
-  deleteTeam: ReturnType<typeof vi.fn>;
-  getTeam: ReturnType<typeof vi.fn>;
-  updateTeam: ReturnType<typeof vi.fn>;
-  createTeam: ReturnType<typeof vi.fn>;
-  getTeamUsers: ReturnType<typeof vi.fn>;
-  uploadMultipleFiles: ReturnType<typeof vi.fn>;
-  deleteFile: ReturnType<typeof vi.fn>;
-  updateFile: ReturnType<typeof vi.fn>;
-  getViewFiles: ReturnType<typeof vi.fn>;
-  download: ReturnType<typeof vi.fn>;
-  getApplicationTemplates: ReturnType<typeof vi.fn>;
-  createApplication: ReturnType<typeof vi.fn>;
-  getViewApplications: ReturnType<typeof vi.fn>;
-  confirm: ReturnType<typeof vi.fn>;
-  addRemoveUsersToTeam: ReturnType<typeof vi.fn>;
-  editFile: ReturnType<typeof vi.fn>;
-  createApplicationDialog: ReturnType<typeof vi.fn>;
-  clipboardCopy: ReturnType<typeof vi.fn>;
-  loadTeamPermissions: ReturnType<typeof vi.fn>;
-  getTeamRoles: ReturnType<typeof vi.fn>;
+const demoView: View = {
+  id: 'v1',
+  name: 'Demo View',
+  description: 'A demo',
+  status: 'Active',
+  isTemplate: false,
 };
+const red: Team = { id: 't1', name: 'Red', viewId: 'v1' };
+const alpha: Team = { id: 't2', name: 'Alpha', viewId: 'v1' };
+const alice: User = { id: 'u1', name: 'Alice' };
+const docFile: FileModel = { id: 'f1', name: 'doc.txt', teamIds: ['t1'] };
+const template: ApplicationTemplate = { id: 'tmpl-1', name: 'Chat' };
 
-// The parent only ever touches these three members of the applications-select
-// child, so the stand-in is typed off the real component: renaming any of them
-// breaks this spec at compile time.
-type ApplicationsSelectStub = Pick<
+// The edit page drives these members of the applications select. The stub
+// provides itself as ViewApplicationsSelectComponent, so the page's
+// @ViewChild finds it.
+@Component({
+  selector: 'app-view-applications-select',
+  template: '',
+  providers: [
+    {
+      provide: ViewApplicationsSelectComponent,
+      useExisting: forwardRef(() => ViewApplicationsSelectStubComponent),
+    },
+  ],
+})
+class ViewApplicationsSelectStubComponent implements Pick<
   ViewApplicationsSelectComponent,
-  'view' | 'currentApp' | 'updateApplications'
->;
+  'currentApp'
+> {
+  @Input() view!: View;
+  currentApp: Application;
+  updateApplications = vi.fn();
+}
 
-function applicationsSelectStub(
-  overrides: Partial<ApplicationsSelectStub> = {},
-): ViewApplicationsSelectComponent {
-  const stub: ApplicationsSelectStub = {
-    view: undefined,
-    currentApp: undefined,
-    updateApplications: vi.fn(),
-    ...overrides,
-  };
-  return stub as ViewApplicationsSelectComponent;
+@Component({ selector: 'app-roles-permissions-select', template: '' })
+class RolesPermissionsSelectStubComponent {
+  @Input() team!: Team;
+  @Input() allTeams!: Team[];
+}
+
+@Component({ selector: 'app-team-applications-select', template: '' })
+class TeamApplicationsSelectStubComponent {
+  @Input() view!: View;
+  @Input() team!: Team;
 }
 
 async function renderEdit(
   overrides: {
     confirmResult?: boolean;
-    initialView?: View;
+    view?: View;
+    teams?: Team[];
+    teamUsers?: Record<string, User[]>;
+    files?: FileModel[];
+    viewApps?: Application[];
+    permissions?: SystemPermission[];
+    asDialog?: boolean;
+    open?: boolean;
   } = {},
 ) {
   const {
     confirmResult = true,
-    initialView = {
-      id: 'v1',
-      name: 'Demo View',
-      description: 'd',
-      status: 'Active',
-    },
+    view = demoView,
+    teams = [red],
+    teamUsers = { t1: [alice] },
+    files = [docFile],
+    viewApps = [],
+    permissions = [SystemPermission.ViewViews, SystemPermission.ManageViews],
+    asDialog = false,
+    open = true,
   } = overrides;
 
-  const stubs: ServiceStubs = {
-    updateView: vi.fn((_id: string, v: View) => of({ ...v, id: 'v1' })),
+  const stubs = {
+    updateView: vi.fn((_id: string, v: View) => of(structuredClone(v))),
     deleteView: vi.fn(() => of(undefined)),
-    getViewTeams: vi.fn(() => of([])),
+    getViewTeams: vi.fn(() => of(structuredClone(teams))),
     deleteTeam: vi.fn(() => of(undefined)),
-    getTeam: vi.fn((id: string) => of({ id, name: 'Old' } as Team)),
-    updateTeam: vi.fn((_id: string, t: Team) => of({ ...t })),
-    createTeam: vi.fn((_viewId: string, t: Team) =>
-      of({ ...t, id: 'new-team' }),
+    updateTeam: vi.fn((id: string, t: Team) => of<Team>({ ...t, id })),
+    createTeam: vi.fn((viewId: string, t: Team) =>
+      of<Team>({ ...t, id: 'new-team', viewId }),
     ),
-    getTeamUsers: vi.fn(() => of([])),
-    uploadMultipleFiles: vi.fn(() => of(undefined)),
+    getTeamUsers: vi.fn((teamId: string) =>
+      of(structuredClone(teamUsers[teamId] ?? [])),
+    ),
+    // The component calls the 'events' overload. EMPTY keeps it inert; the
+    // upload tests supply their own events.
+    uploadMultipleFiles: vi.fn((): Observable<HttpEvent<FileModel[]>> => EMPTY),
     deleteFile: vi.fn(() => of(null)),
     updateFile: vi.fn(() => of(undefined)),
-    getViewFiles: vi.fn(() => of([])),
+    getViewFiles: vi.fn(() => of(structuredClone(files))),
     download: vi.fn(() => of(new Blob(['x']))),
-    getApplicationTemplates: vi.fn(() => of([])),
-    createApplication: vi.fn(() => of({ id: 'app-1', name: 'App' })),
-    getViewApplications: vi.fn(() => of([])),
-    confirm: vi.fn(() => ({
-      afterClosed: () => of(confirmResult),
-    })),
-    addRemoveUsersToTeam: vi.fn(() => of({ teamUsers: [] })),
-    editFile: vi.fn(() => of({ name: 'renamed.txt' })),
-    createApplicationDialog: vi.fn(() => of(undefined)),
+    getApplicationTemplates: vi.fn(() => of([structuredClone(template)])),
+    // The API echoes the created application back with an id.
+    createApplication: vi.fn((_viewId: string, app?: Application) =>
+      of<Application>({ ...app, id: 'app-1' }),
+    ),
+    getViewApplications: vi.fn(() => of(structuredClone(viewApps))),
+    confirm: vi.fn(
+      () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
+    ),
+    // Typed to what the dialogs close with ({ teamUsers }, { name, teams },
+    // { teams }), so the DialogService provider below is not checked against
+    // Pick<DialogService, ...>; see agent-docs/ui-test-bugs/player.ui.md.
+    addRemoveUsersToTeam: vi.fn(() =>
+      of<{ teamUsers: TeamUser[] } | undefined>({ teamUsers: [] }),
+    ),
+    editFile: vi.fn(() =>
+      of<{ name: string; teams: string[] }>({ name: 'renamed.txt', teams: [] }),
+    ),
+    // Dismissed: afterClosed() emits undefined.
+    createApplicationDialog: vi.fn(() => of<{ teams: unknown[] }>(undefined)),
     clipboardCopy: vi.fn(),
-    loadTeamPermissions: vi.fn(() => of([])),
-    getTeamRoles: vi.fn(() => of([])),
+    getTeamPermissions: vi.fn(() =>
+      of<TeamPermissionModel[]>([{ id: 'tp-1', name: 'ViewTeam' }]),
+    ),
+    getTeamRoles: vi.fn(() => of<TeamRole[]>([{ id: 'tr-1', name: 'Member' }])),
   };
+  const editComplete = vi.fn();
 
   const rendered = await renderComponent(AdminViewEditComponent, {
     imports: [
@@ -162,27 +210,43 @@ async function renderEdit(
       MatTooltipModule,
       MatButtonModule,
       ...CRUCIBLE_DIALOG_IMPORTS,
+      ClipboardModule,
+      ViewApplicationsSelectStubComponent,
+      RolesPermissionsSelectStubComponent,
+      TeamApplicationsSelectStubComponent,
     ],
     declarations: [AdminViewEditComponent],
+    on: { editComplete },
     providers: [
+      ...permissionDataProviders({ system: permissions }),
+      // In the admin Views section the page is not a dialog; PlayerComponent
+      // opens it in one.
+      {
+        provide: MatDialogRef,
+        useValue: asDialog ? dialogRefStub().dialogRef : null,
+      },
       {
         provide: ViewService,
         useValue: {
           updateView: stubs.updateView,
           deleteView: stubs.deleteView,
-        },
+        } satisfies ApiStub<ViewService>,
       },
       {
         provide: TeamService,
         useValue: {
           getViewTeams: stubs.getViewTeams,
           deleteTeam: stubs.deleteTeam,
-          getTeam: stubs.getTeam,
           updateTeam: stubs.updateTeam,
           createTeam: stubs.createTeam,
-        },
+        } satisfies ApiStub<TeamService>,
       },
-      { provide: UserService, useValue: { getTeamUsers: stubs.getTeamUsers } },
+      {
+        provide: UserService,
+        useValue: {
+          getTeamUsers: stubs.getTeamUsers,
+        } satisfies ApiStub<UserService>,
+      },
       {
         provide: FileService,
         useValue: {
@@ -191,7 +255,7 @@ async function renderEdit(
           updateFile: stubs.updateFile,
           getViewFiles: stubs.getViewFiles,
           download: stubs.download,
-        },
+        } satisfies ApiStub<FileService>,
       },
       {
         provide: ApplicationService,
@@ -199,7 +263,7 @@ async function renderEdit(
           getApplicationTemplates: stubs.getApplicationTemplates,
           createApplication: stubs.createApplication,
           getViewApplications: stubs.getViewApplications,
-        },
+        } satisfies ApiStub<ApplicationService>,
       },
       {
         provide: DialogService,
@@ -211,804 +275,1105 @@ async function renderEdit(
       },
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: stubs.confirm },
+        useValue: { confirm: stubs.confirm } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
+      },
+      // The real TeamPermissionsService and TeamRolesService load over these.
+      {
+        provide: TeamPermissionService,
+        useValue: {
+          getTeamPermissions: stubs.getTeamPermissions,
+        } satisfies ApiStub<TeamPermissionService>,
       },
       {
-        provide: TeamPermissionsService,
-        useValue: { load: stubs.loadTeamPermissions },
-      },
-      {
-        provide: TeamRolesService,
-        useValue: { getRoles: stubs.getTeamRoles },
+        provide: TeamRoleService,
+        useValue: {
+          getTeamRoles: stubs.getTeamRoles,
+        } satisfies ApiStub<TeamRoleService>,
       },
       {
         provide: Clipboard,
-        useValue: { copy: stubs.clipboardCopy },
+        useValue: { copy: stubs.clipboardCopy } satisfies Pick<
+          Clipboard,
+          'copy'
+        >,
       },
     ],
   });
 
-  rendered.fixture.componentInstance.view = initialView;
-  return { ...rendered, stubs };
+  const { fixture } = rendered;
+  /** Opens a view the way AdminViewSearchComponent.executeViewAction('edit') does. */
+  function openView(next: View) {
+    const c = fixture.componentInstance;
+    c.resetStepper();
+    c.updateView();
+    c.updateApplicationTemplates();
+    c.setView(structuredClone(next));
+    c.updateViewTeams();
+    fixture.detectChanges();
+  }
+  if (open) {
+    openView(view);
+  }
+
+  const user = userEvent.setup();
+  return { ...rendered, stubs, editComplete, openView, user };
+}
+
+type Rendered = Awaited<ReturnType<typeof renderEdit>>;
+
+/** The applications select stub. */
+function appsSelect(fixture: ComponentFixture<AdminViewEditComponent>) {
+  return fixture.debugElement.query(
+    By.directive(ViewApplicationsSelectStubComponent),
+  ).componentInstance as ViewApplicationsSelectStubComponent;
+}
+
+/** The expansion panels of the Teams step, in render order. */
+function teamPanels(container: Element): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>('mat-expansion-panel'),
+  ).filter((panel) => panel.querySelector('app-team-applications-select'));
+}
+
+/** Panel titles of the Teams step, in render order. */
+function teamTitles(container: Element): string[] {
+  return teamPanels(container).map(
+    (panel) =>
+      panel
+        .querySelector('mat-panel-title')
+        ?.textContent?.replace(/\s+/g, ' ')
+        .trim() ?? '',
+  );
+}
+
+/** The Teams step panel of the named team. */
+function teamPanel(container: Element, name: string): HTMLElement {
+  const panel = teamPanels(container).find((p) =>
+    p.querySelector('mat-panel-title')?.textContent?.trim().startsWith(name),
+  );
+  if (!panel) {
+    throw new Error(`No team panel for ${name}`);
+  }
+  return panel;
+}
+
+/** The expansion panels of the Files step for uploaded files, in render order. */
+function filePanels(container: Element): HTMLElement[] {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>('mat-expansion-panel'),
+  ).filter((panel) => panel.querySelector('button[title="Download"]'));
+}
+
+/** File names of the Files step, in render order. */
+function fileTitles(container: Element): string[] {
+  return filePanels(container).map(
+    (panel) =>
+      panel.querySelector('mat-panel-title')?.textContent?.trim() ?? '',
+  );
+}
+
+/** Clicks a step header of the stepper. */
+async function goToStep(r: Rendered, label: string) {
+  await r.user.click(
+    within(r.container.querySelector('mat-vertical-stepper')!).getByText(
+      label,
+      { selector: '.mat-step-label *, .mat-step-text-label' },
+    ),
+  );
+}
+
+/** Goes to the Teams step and expands the named team, as the user does. */
+async function openTeam(r: Rendered, name: string): Promise<HTMLElement> {
+  await goToStep(r, 'Teams');
+  const panel = teamPanel(r.container, name);
+  await r.user.click(panel.querySelector('mat-expansion-panel-header')!);
+  return panel;
+}
+
+/** Goes to the Files step and expands the named file, as the user does. */
+async function openFile(r: Rendered, name: string): Promise<HTMLElement> {
+  await goToStep(r, 'Files');
+  const panel = filePanels(r.container).find(
+    (p) => p.querySelector('mat-panel-title')?.textContent?.trim() === name,
+  );
+  if (!panel) {
+    throw new Error(`No file panel for ${name}`);
+  }
+  await r.user.click(panel.querySelector('mat-expansion-panel-header')!);
+  return panel;
+}
+
+/** The Teams with Access select of the field at the index (staged file first, then files). */
+async function teamsWithAccess(
+  fixture: ComponentFixture<AdminViewEditComponent>,
+  index = 0,
+) {
+  const fields = await TestbedHarnessEnvironment.loader(
+    fixture,
+  ).getAllHarnesses(
+    MatFormFieldHarness.with({ floatingLabelText: 'Teams with Access' }),
+  );
+  return (await fields[index].getControl(MatSelectHarness))!;
 }
 
 describe('AdminViewEditComponent', () => {
   /**
-   * Verifies: ngOnInit loads the team permission and team role catalogs.
-   * Interacts with: TeamPermissionsService.load and TeamRolesService.getRoles stubs.
-   * Data: default renderEdit; both stubs return of([]).
-   * Why: the component forkJoins these two calls, so the assertion is that both
-   *   were issued — the previous test carried this name but only checked that two
-   *   collections were empty, which the empty stubs guaranteed on their own.
+   * Verifies: a user who holds only ViewViews (the admin Views section's gate) gets the view's editable fields and its
+   *   Delete View, Add New Application, Add New Team and Delete Team controls (current behavior).
+   * Interacts with: the rendered View Information, Applications and Teams steps; the real UserPermissionsService over
+   *   stubbed permission endpoints.
+   * Data: system permissions [ViewViews]; view v1 with one team, Red.
    */
-  it('ngOnInit loads team permissions and roles', async () => {
-    const { stubs } = await renderEdit();
-    expect(stubs.loadTeamPermissions).toHaveBeenCalled();
-    expect(stubs.getTeamRoles).toHaveBeenCalled();
+  it('offers every edit control to a user with only ViewViews', async () => {
+    await renderEdit({ permissions: [SystemPermission.ViewViews] });
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(
+      (screen.getByLabelText('Name (required)') as HTMLInputElement).disabled,
+    ).toBe(false);
+    expect(screen.getByText('Delete View')).toBeInTheDocument();
+    expect(screen.getByText('Add New Application')).toBeInTheDocument();
+    expect(screen.getByText('Add New Team')).toBeInTheDocument();
+    expect(screen.getByText('Delete Team')).toBeInTheDocument();
   });
 
   /**
-   * Verifies: ngOnInit clears any previously held view, team, file, and app state.
-   * Interacts with: component.ngOnInit re-run against a dirtied instance.
-   * Data: instance seeded with a view plus non-empty teams/staged/viewFiles/appNames.
+   * Verifies: on init the page loads the team permission and team role catalogs its team editors read.
+   * Interacts with: the real TeamPermissionsService.load and TeamRolesService.getRoles over the
+   *   TeamPermissionService.getTeamPermissions and TeamRoleService.getTeamRoles stubs.
+   * Data: one team permission (ViewTeam) and one team role (Member).
    */
-  it('ngOnInit resets the previously loaded view state', async () => {
-    const { fixture } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1', name: 'Stale' };
-    c.teams = [new TeamUserApp('Red', { id: 't1' } as Team, [])];
-    // PlayerFile is module-private to the component, so the staged entry is
-    // typed off the field it is assigned to.
-    c.staged = [{ id: 'f0', file: new File([], 'stale.txt') }];
-    c.viewFiles = [{ id: 'f1', name: 'stale.txt' }];
-    c.appNames = ['Stale App'];
-
-    c.ngOnInit();
-
-    expect(c.view).toBeUndefined();
-    expect(c.teams).toEqual([]);
-    expect(c.staged).toEqual([]);
-    expect(c.viewFiles).toEqual([]);
-    expect(c.appNames).toEqual([]);
-    expect(c.isLoadingTeams).toBe(false);
-  });
-
-  /**
-   * Verifies: setView copies the view's name and description into the respective form controls.
-   * Interacts with: component.setView and viewName/description FormControls.
-   * Data: a view literal (name 'Test', description 'desc').
-   */
-  it('setView applies name and description from the given view', async () => {
-    const { fixture } = await renderEdit();
-    fixture.componentInstance.setView({
-      id: 'v2',
-      name: 'Test',
-      description: 'desc',
-    });
-    expect(fixture.componentInstance.viewNameFormControl.value).toBe('Test');
-    expect(fixture.componentInstance.descriptionFormControl.value).toBe('desc');
-  });
-
-  /**
-   * Verifies: setView(null) clears the name and description form controls back to empty.
-   * Interacts with: component.setView and viewName/description FormControls.
-   * Data: a populated view first, then null.
-   */
-  it('setView with null clears form values', async () => {
-    const { fixture } = await renderEdit();
-    fixture.componentInstance.setView({
-      id: 'v2',
-      name: 'Test',
-      description: 'desc',
-    });
-    fixture.componentInstance.setView(null);
-    expect(fixture.componentInstance.viewNameFormControl.value).toBe('');
-    expect(fixture.componentInstance.descriptionFormControl.value).toBe('');
-  });
-
-  /**
-   * Verifies: returnToViewSearch emits the current view's id on the editComplete output.
-   * Interacts with: the component's editComplete EventEmitter (subscribed spy).
-   * Data: initialView with id 'v1'.
-   */
-  it('returnToViewSearch emits editComplete with the current view id', async () => {
-    const { fixture } = await renderEdit();
-    const spy = vi.fn();
-    fixture.componentInstance.editComplete.subscribe(spy);
-    fixture.componentInstance.returnToViewSearch();
-    expect(spy).toHaveBeenCalledWith('v1');
-  });
-
-  /**
-   * Verifies: saveView calls ViewService.updateView with the new name when the name form control changed.
-   * Interacts with: viewNameFormControl and stubbed ViewService.updateView (call args inspected).
-   * Data: name control set to 'Renamed View' (differs from initialView).
-   */
-  it('saveView calls updateView when the name changed', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.viewNameFormControl.setValue('Renamed View');
-    fixture.componentInstance.saveView();
-    expect(stubs.updateView).toHaveBeenCalled();
-    expect((stubs.updateView.mock.calls[0][1] as View).name).toBe(
-      'Renamed View',
-    );
-  });
-
-  /**
-   * Verifies: saveView skips the update when both name and description match the current view.
-   * Interacts with: viewName/description FormControls and stubbed ViewService.updateView.
-   * Data: controls set to the initialView's 'Demo View' / 'd'.
-   */
-  it('saveView is a no-op when name and description unchanged', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.viewNameFormControl.setValue('Demo View');
-    fixture.componentInstance.descriptionFormControl.setValue('d');
-    fixture.componentInstance.saveView();
-    expect(stubs.updateView).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: a confirmed delete calls deleteView('v1') and emits null on editComplete (not the view id).
-   * Interacts with: stubbed DialogService.confirm, ViewService.deleteView, editComplete output.
-   * Data: confirmResult=true.
-   * Why: emitting null (rather than the deleted view's id) keeps the parent search from re-selecting it.
-   */
-  it('deleteView deletes and returns to search when confirmed', async () => {
-    const { fixture, stubs } = await renderEdit({ confirmResult: true });
-    const spy = vi.fn();
-    fixture.componentInstance.editComplete.subscribe(spy);
-    fixture.componentInstance.deleteView();
-    expect(stubs.deleteView).toHaveBeenCalledWith('v1');
-    // After a delete editComplete emits null (rather than the view id) so the
-    // parent search returns to the list without re-selecting the deleted view.
-    expect(spy).toHaveBeenCalledWith(null);
-  });
-
-  /**
-   * Verifies: a declined confirm leaves deleteView untouched.
-   * Interacts with: stubbed DialogService.confirm and ViewService.deleteView.
-   * Data: confirmResult=false.
-   */
-  it('deleteView is a no-op when cancelled', async () => {
-    const { fixture, stubs } = await renderEdit({ confirmResult: false });
-    fixture.componentInstance.deleteView();
-    expect(stubs.deleteView).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: setDefaultTeam writes the team id onto view.defaultTeamId and persists via updateView.
-   * Interacts with: stubbed ViewService.updateView.
-   * Data: team id 'team-42'.
-   */
-  it('setDefaultTeam sets the id on the view and calls updateView', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.setDefaultTeam('team-42');
-    expect(fixture.componentInstance.view.defaultTeamId).toBe('team-42');
-    expect(stubs.updateView).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: deleteTeam calls TeamService.deleteTeam with the team id once the user confirms.
-   * Interacts with: stubbed DialogService.confirm and TeamService.deleteTeam.
-   * Data: confirmResult=true; team { id: 't1' }.
-   */
-  it('deleteTeam only deletes when user confirms', async () => {
-    const { fixture, stubs } = await renderEdit({ confirmResult: true });
-    fixture.componentInstance.deleteTeam({ id: 't1', name: 'Red' });
-    expect(stubs.deleteTeam).toHaveBeenCalledWith('t1');
-  });
-
-  /**
-   * Verifies: toggleAllTeamsForFile sets teamsForFile to every team id when checked and empties it when unchecked.
-   * Interacts with: component.toggleAllTeamsForFile and the teams collection.
-   * Data: two TeamUserApp teams (t1, t2).
-   */
-  it('toggleAllTeamsForFile selects all team ids when checked, empties when unchecked', async () => {
-    const { fixture } = await renderEdit();
-    fixture.componentInstance.teams = [
-      new TeamUserApp('Red', { id: 't1' } as Team, []),
-      new TeamUserApp('Blue', { id: 't2' } as Team, []),
-    ];
-    fixture.componentInstance.toggleAllTeamsForFile(true);
-    expect(fixture.componentInstance.teamsForFile).toEqual(['t1', 't2']);
-    fixture.componentInstance.toggleAllTeamsForFile(false);
-    expect(fixture.componentInstance.teamsForFile).toEqual([]);
-  });
-
-  /**
-   * Verifies: onTeamsForFileChange sets selectAllTeamsForFile true only when every team is selected.
-   * Interacts with: component.onTeamsForFileChange and teams/teamsForFile state.
-   * Data: two teams; selection of both (true) then one (false).
-   */
-  it('onTeamsForFileChange computes selectAllTeamsForFile based on selection', async () => {
-    const { fixture } = await renderEdit();
-    fixture.componentInstance.teams = [
-      new TeamUserApp('Red', { id: 't1' } as Team, []),
-      new TeamUserApp('Blue', { id: 't2' } as Team, []),
-    ];
-    fixture.componentInstance.teamsForFile = ['t1', 't2'];
-    fixture.componentInstance.onTeamsForFileChange();
-    expect(fixture.componentInstance.selectAllTeamsForFile).toBe(true);
-    fixture.componentInstance.teamsForFile = ['t1'];
-    fixture.componentInstance.onTeamsForFileChange();
-    expect(fixture.componentInstance.selectAllTeamsForFile).toBe(false);
-  });
-
-  /**
-   * Verifies: isAllTeamsSelected returns true only when the file's teamIds cover every team.
-   * Interacts with: component.isAllTeamsSelected against the teams collection.
-   * Data: two teams; file with both ids (true) vs one id (false).
-   */
-  it('isAllTeamsSelected returns true when all team ids are on the file', async () => {
-    const { fixture } = await renderEdit();
-    fixture.componentInstance.teams = [
-      new TeamUserApp('Red', { id: 't1' } as Team, []),
-      new TeamUserApp('Blue', { id: 't2' } as Team, []),
-    ];
-    const yes = fixture.componentInstance.isAllTeamsSelected({
-      id: 'f1',
-      teamIds: ['t1', 't2'],
-    });
-    const no = fixture.componentInstance.isAllTeamsSelected({
-      id: 'f1',
-      teamIds: ['t1'],
-    });
-    expect(yes).toBe(true);
-    expect(no).toBe(false);
-  });
-
-  /**
-   * Verifies: updateApplicationTemplates stores the fetched templates onto applicationTemplates.
-   * Interacts with: stubbed ApplicationService.getApplicationTemplates (re-stubbed for this call).
-   * Data: a single template ('Template').
-   */
-  it('updateApplicationTemplates stores the fetched templates', async () => {
-    const { fixture, stubs } = await renderEdit();
-    stubs.getApplicationTemplates.mockReturnValueOnce(
-      of([{ id: 'tpl-1', name: 'Template' }]),
-    );
-    fixture.componentInstance.updateApplicationTemplates();
-    expect(fixture.componentInstance.applicationTemplates).toEqual([
-      { id: 'tpl-1', name: 'Template' },
-    ]);
-  });
-
-  /**
-   * Verifies: updateViewTeams fetches the view's teams plus their users and stores them sorted by name.
-   * Interacts with: stubbed TeamService.getViewTeams and UserService.getTeamUsers.
-   * Data: unsorted teams (Zebra, Alpha) — asserted ordered Alpha, Zebra; isLoadingTeams cleared.
-   */
-  it('updateViewTeams loads teams with their users and sorts them by name', async () => {
+  it('loads the team permission and role catalogs on init', async () => {
     const { fixture, stubs } = await renderEdit();
     const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    stubs.getViewTeams.mockReturnValueOnce(
-      of([
-        { id: 't2', name: 'Zebra' },
-        { id: 't1', name: 'Alpha' },
-      ]),
-    );
-    stubs.getTeamUsers.mockReturnValue(of([{ id: 'u1', name: 'Alice' }]));
-    c.updateViewTeams();
-    expect(stubs.getViewTeams).toHaveBeenCalledWith('v1');
-    expect(c.teams.map((t) => t.name)).toEqual(['Alpha', 'Zebra']);
-    expect(c.isLoadingTeams).toBe(false);
-  });
-
-  /**
-   * Verifies: updateViewTeams skips the fetch when the view has no id.
-   * Interacts with: stubbed TeamService.getViewTeams.
-   * Data: view set to {} (no id).
-   */
-  it('updateViewTeams is a no-op when there is no view id', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.view = {};
-    fixture.componentInstance.updateViewTeams();
-    expect(stubs.getViewTeams).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: updateView pushes the current view into the child app-select, triggers its reload, and clears its currentApp.
-   * Interacts with: the stubbed viewApplicationsSelectComponent ViewChild (updateApplications spy).
-   * Data: a fake child component with a preset currentApp.
-   */
-  it('updateView pushes the view into the application-select child', async () => {
-    const { fixture } = await renderEdit();
-    const c = fixture.componentInstance;
-    const updateApplications = vi.fn();
-    c.viewApplicationsSelectComponent = applicationsSelectStub({
-      updateApplications,
-      currentApp: { id: 'x', viewId: 'v1' },
-    });
-    c.view = { id: 'v1', name: 'Demo View' };
-    c.updateView();
-    expect(c.viewApplicationsSelectComponent.view).toEqual(c.view);
-    expect(updateApplications).toHaveBeenCalled();
-    expect(c.viewApplicationsSelectComponent.currentApp).toBeUndefined();
-  });
-
-  /**
-   * Verifies: addViewApplication with a null template id creates a blank app carrying just name + viewId.
-   * Interacts with: stubbed ApplicationService.createApplication.
-   * Data: template arg { id: null, name: 'New Application' }.
-   * Why: the null id path sends the name (not an applicationTemplateId), distinct from the template-id path below.
-   */
-  it('addViewApplication creates an app from a blank template (no template id)', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    c.viewApplicationsSelectComponent = applicationsSelectStub();
-    c.addViewApplication(c.BLANK_TEMPLATE);
-    expect(stubs.createApplication).toHaveBeenCalledWith('v1', {
-      name: 'New Application',
-      viewId: 'v1',
-    });
-  });
-
-  /**
-   * Verifies: addViewApplication with a real template id creates an app carrying viewId + applicationTemplateId (no name).
-   * Interacts with: stubbed ApplicationService.createApplication.
-   * Data: template arg { id: 'tpl-9' }.
-   */
-  it('addViewApplication creates an app from an existing template id', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    c.viewApplicationsSelectComponent = applicationsSelectStub();
-    c.addViewApplication({ id: 'tpl-9', name: 'From Template' });
-    expect(stubs.createApplication).toHaveBeenCalledWith('v1', {
-      viewId: 'v1',
-      applicationTemplateId: 'tpl-9',
-    });
-  });
-
-  /**
-   * Verifies: saveViewStatus calls updateView with the current view (carrying its status).
-   * Interacts with: stubbed ViewService.updateView.
-   * Data: view with status 'Inactive'.
-   */
-  it('saveViewStatus persists the current view', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.view = { id: 'v1', status: 'Inactive' } as View;
-    fixture.componentInstance.saveViewStatus();
-    expect(stubs.updateView).toHaveBeenCalledWith('v1', {
-      id: 'v1',
-      status: 'Inactive',
-    });
-  });
-
-  /**
-   * Verifies: saveTeamName applies the form value, writes it back, and updates the local list.
-   * Interacts with: stubbed TeamService.updateTeam.
-   * Data: a team 't1' renamed to 'Renamed'.
-   */
-  it('saveTeamName fetches, renames, and writes the team back', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    const team = new TeamUserApp('Old', { id: 't1', name: 'Old' } as Team, []);
-    c.teams = [team];
-    c.teamNameFormControl.setValue('Renamed');
-    c.saveTeamName(team);
-    expect(stubs.updateTeam).toHaveBeenCalledWith(
-      't1',
-      expect.objectContaining({ name: 'Renamed' }),
-    );
-    expect(c.teams[0].team.name).toBe('Renamed');
-  });
-
-  /**
-   * Verifies: openUsersDialog applies the dialog's returned teamUsers onto the matching team's users.
-   * Interacts with: stubbed DialogService.addRemoveUsersToTeam.
-   * Data: dialog returns teamUsers [Alice] for team 't1'.
-   */
-  it('openUsersDialog updates the team users with the dialog result', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.teams = [new TeamUserApp('Red', { id: 't1', name: 'Red' } as Team, [])];
-    stubs.addRemoveUsersToTeam.mockReturnValueOnce(
-      of({ teamUsers: [{ id: 'u1', name: 'Alice' }] }),
-    );
-    c.openUsersDialog({ id: 't1', name: 'Red' });
-    expect(stubs.addRemoveUsersToTeam).toHaveBeenCalled();
-    expect(c.teams[0].users).toEqual([{ id: 'u1', name: 'Alice' }]);
-  });
-
-  /**
-   * Verifies: openUsersDialog does nothing when called without a team.
-   * Interacts with: stubbed DialogService.addRemoveUsersToTeam.
-   * Data: team argument undefined.
-   */
-  it('openUsersDialog is a no-op when team is undefined', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.openUsersDialog(undefined);
-    expect(stubs.addRemoveUsersToTeam).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: addNewTeam creates a 'New Team', prepends it to teams, and sets it as currentTeam.
-   * Interacts with: stubbed TeamService.createTeam (returns id 'new-team').
-   * Data: empty teams list; view 'v1'.
-   */
-  it('addNewTeam creates a team and prepends it as the current team', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    c.teams = [];
-    c.addNewTeam();
-    expect(stubs.createTeam).toHaveBeenCalledWith('v1', { name: 'New Team' });
-    expect(c.teams[0].team.id).toBe('new-team');
-    expect(c.currentTeam.team.id).toBe('new-team');
-  });
-
-  /**
-   * Verifies: selectFile stages the chosen files and leaves uploading false.
-   * Interacts with: component.selectFile and the staged collection.
-   * Data: a single File('doc.txt') passed as a FileList.
-   */
-  it('selectFile stages the selected files', async () => {
-    const { fixture } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.staged = [];
-    const file = new File(['data'], 'doc.txt');
-    c.selectFile(fileList(file));
-    expect(c.staged).toHaveLength(1);
-    expect(c.uploading).toBe(false);
-  });
-
-  /**
-   * Verifies: removeFile drops only the matching staged entry, keeping the rest.
-   * Interacts with: component.selectFile / removeFile and the staged collection.
-   * Data: two staged files (a.txt, b.txt); removing the first leaves b.txt.
-   */
-  it('removeFile drops the matching staged file', async () => {
-    const { fixture } = await renderEdit();
-    const c = fixture.componentInstance;
-    const fileA = new File(['a'], 'a.txt');
-    const fileB = new File(['b'], 'b.txt');
-    c.staged = [];
-    c.selectFile(fileList(fileA, fileB));
-    c.removeFile(c.staged[0]);
-    expect(c.staged.map((f) => f.file.name)).toEqual(['b.txt']);
-  });
-
-  /**
-   * Verifies: getDownloadLink copies a file URI (id + name query) to the clipboard.
-   * Interacts with: the stubbed Clipboard.copy spy.
-   * Data: file { id: 'f1', name: 'doc.txt' }.
-   */
-  it('getDownloadLink copies the file URI to the clipboard', async () => {
-    const { fixture, stubs } = await renderEdit();
-    fixture.componentInstance.getDownloadLink({ id: 'f1', name: 'doc.txt' });
-    expect(stubs.clipboardCopy).toHaveBeenCalledWith(
-      expect.stringContaining('/file?id=f1&name=doc.txt'),
-    );
-  });
-
-  /**
-   * Verifies: getViewFiles merges fetched files, skipping any whose name already exists locally.
-   * Interacts with: stubbed FileService.getViewFiles.
-   * Data: existing viewFiles [dup.txt]; fetch returns dup.txt + new.txt — only new.txt added.
-   */
-  it('getViewFiles appends fetched files without duplicating by name', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    c.viewFiles = [{ id: 'f1', name: 'dup.txt' }];
-    stubs.getViewFiles.mockReturnValueOnce(
-      of([
-        { id: 'f1b', name: 'dup.txt' },
-        { id: 'f2', name: 'new.txt' },
-      ]),
-    );
-    c.getViewFiles();
-    expect(c.viewFiles.map((f) => f.name)).toEqual(['dup.txt', 'new.txt']);
-  });
-
-  /**
-   * Verifies: a confirmed deleteFile calls FileService.deleteFile and removes the file from viewFiles.
-   * Interacts with: stubbed DialogService.confirm and FileService.deleteFile.
-   * Data: confirmResult=true; viewFiles [f1 a.txt, f2 b.txt]; delete f1.
-   */
-  it('deleteFile removes the file from viewFiles when confirmed and delete succeeds', async () => {
-    const { fixture, stubs } = await renderEdit({ confirmResult: true });
-    const c = fixture.componentInstance;
-    c.viewFiles = [
-      { id: 'f1', name: 'a.txt' },
-      { id: 'f2', name: 'b.txt' },
-    ];
-    c.deleteFile('f1', 'a.txt');
-    expect(stubs.deleteFile).toHaveBeenCalledWith('f1');
-    expect(c.viewFiles.map((f) => f.id)).toEqual(['f2']);
-  });
-
-  /**
-   * Verifies: a declined confirm leaves FileService.deleteFile uncalled.
-   * Interacts with: stubbed DialogService.confirm and FileService.deleteFile.
-   * Data: confirmResult=false.
-   */
-  it('deleteFile is a no-op when cancelled', async () => {
-    const { fixture, stubs } = await renderEdit({ confirmResult: false });
-    fixture.componentInstance.deleteFile('f1', 'a.txt');
-    expect(stubs.deleteFile).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: editFile sends the file/view/name/teams to the dialog and applies the returned name locally.
-   * Interacts with: stubbed DialogService.editFile.
-   * Data: file f1 'old.txt' on team t1; dialog returns name 'new.txt'.
-   */
-  it('editFile updates the file name from the dialog result', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    c.viewFiles = [{ id: 'f1', name: 'old.txt' }];
-    stubs.editFile.mockReturnValueOnce(of({ name: 'new.txt' }));
-    c.editFile('f1', 'old.txt', ['t1']);
-    expect(stubs.editFile).toHaveBeenCalledWith('f1', 'v1', 'old.txt', ['t1']);
-    expect(c.viewFiles[0].name).toBe('new.txt');
-  });
-
-  /**
-   * Verifies: createApplication makes an embeddable app from a file, tracks its name, then opens the dialog.
-   * Interacts with: stubbed ApplicationService.createApplication and DialogService.createApplication.
-   * Data: file f1 'doc.txt'; createApplication returns id 'app-7'.
-   */
-  it('createApplication creates the app then opens the create-application dialog', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1', name: 'Demo View' };
-    c.appNames = [];
-    stubs.createApplication.mockReturnValueOnce(
-      of({ id: 'app-7', name: 'doc.txt' }),
-    );
-    c.createApplication({ id: 'f1', name: 'doc.txt' });
-    expect(stubs.createApplication).toHaveBeenCalledWith(
-      'v1',
-      expect.objectContaining({ name: 'doc.txt', embeddable: true }),
-    );
-    expect(c.appNames).toContain('doc.txt');
-    expect(stubs.createApplicationDialog).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: getExistingApps fills appNames with the names of the view's applications.
-   * Interacts with: stubbed ApplicationService.getViewApplications.
-   * Data: fetch returns apps named 'App A', 'App B'.
-   */
-  it('getExistingApps populates appNames from the view applications', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    stubs.getViewApplications.mockReturnValueOnce(
-      of([{ name: 'App A' }, { name: 'App B' }]),
-    );
-    c.getExistingApps();
-    expect(c.appNames).toEqual(['App A', 'App B']);
-  });
-
-  /**
-   * Verifies: teamsForFileUpdated persists via FileService.updateFile when teams are selected.
-   * Interacts with: stubbed FileService.updateFile.
-   * Data: change value ['t1'] for file f1 'doc.txt'.
-   */
-  it('teamsForFileUpdated saves when teams are selected', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const file: FileModel = { id: 'f1', name: 'doc.txt', teamIds: [] };
-    fixture.componentInstance.teamsForFileUpdated({ value: ['t1'] }, file);
-    expect(stubs.updateFile).toHaveBeenCalledWith(
-      'f1',
-      'doc.txt',
-      ['t1'],
-      null,
-    );
-  });
-
-  /**
-   * Verifies: teamsForFileUpdated with an empty selection clears file.teamIds locally but skips the save.
-   * Interacts with: stubbed FileService.updateFile.
-   * Data: change value [] for file f1 that previously had ['t1'].
-   */
-  it('teamsForFileUpdated clears teams locally but does not save when none selected', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const file: FileModel = {
-      id: 'f1',
-      name: 'doc.txt',
-      teamIds: ['t1'],
-    };
-    fixture.componentInstance.teamsForFileUpdated({ value: [] }, file);
-    expect(file.teamIds).toEqual([]);
-    expect(stubs.updateFile).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: toggleAllTeamsForViewFile(true) assigns every team id to the file and persists via updateFile.
-   * Interacts with: stubbed FileService.updateFile against the teams collection.
-   * Data: two teams (t1, t2); file f1 'doc.txt'.
-   */
-  it('toggleAllTeamsForViewFile selects all and saves when checked', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.teams = [
-      new TeamUserApp('Red', { id: 't1' } as Team, []),
-      new TeamUserApp('Blue', { id: 't2' } as Team, []),
-    ];
-    const file: FileModel = { id: 'f1', name: 'doc.txt', teamIds: [] };
-    c.toggleAllTeamsForViewFile(true, file);
-    expect(file.teamIds).toEqual(['t1', 't2']);
-    expect(stubs.updateFile).toHaveBeenCalledWith(
-      'f1',
-      'doc.txt',
-      ['t1', 't2'],
-      null,
-    );
-  });
-
-  /**
-   * Verifies: toggleAllTeamsForViewFile(false) clears file.teamIds locally without calling updateFile.
-   * Interacts with: stubbed FileService.updateFile.
-   * Data: file f1 that previously had ['t1'].
-   */
-  it('toggleAllTeamsForViewFile clears teams locally without saving when unchecked', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const file: FileModel = {
-      id: 'f1',
-      name: 'doc.txt',
-      teamIds: ['t1'],
-    };
-    fixture.componentInstance.toggleAllTeamsForViewFile(false, file);
-    expect(file.teamIds).toEqual([]);
-    expect(stubs.updateFile).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: on a 201 response uploadFile appends the returned files to viewFiles and clears staged/uploading.
-   * Interacts with: stubbed FileService.uploadMultipleFiles (returns an HttpResponse).
-   * Data: staged 'up.txt' for teams ['t1']; response body [{ f9 up.txt }].
-   * Why: the upload result is wrapped in an HttpResponse(status 201) so the component reads .body / .status.
-   */
-  it('uploadFile pushes uploaded files from a 201 response and clears the staged list', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.view = { id: 'v1' };
-    c.teamsForFile = ['t1'];
-    c.viewFiles = [];
-    c.staged = [];
-    c.selectFile(fileList(new File(['x'], 'up.txt')));
-    stubs.uploadMultipleFiles.mockReturnValueOnce(
-      of(
-        new HttpResponse({ status: 201, body: [{ id: 'f9', name: 'up.txt' }] }),
+    expect(stubs.getTeamPermissions).toHaveBeenCalledTimes(1);
+    expect(stubs.getTeamRoles).toHaveBeenCalledTimes(1);
+    expect(
+      (await firstValueFrom(c.teamPermissionsService.teamPermissions$)).map(
+        (p) => p.name,
       ),
-    );
-    c.uploadFile();
-    expect(stubs.uploadMultipleFiles).toHaveBeenCalled();
-    expect(c.viewFiles.map((f) => f.name)).toContain('up.txt');
-    expect(c.staged).toEqual([]);
-    expect(c.uploading).toBe(false);
+    ).toEqual(['ViewTeam']);
+    expect(
+      (await firstValueFrom(c.teamRolesService.roles$)).map((r) => r.name),
+    ).toEqual(['Member']);
   });
 
   /**
-   * Verifies: saveView still persists (exactly once) when only the description differs from the current view.
-   * Interacts with: viewName/description FormControls and stubbed ViewService.updateView (call args inspected).
-   * Data: name unchanged ('Demo View'); description changed to 'A new description'.
+   * Verifies: nothing renders until a view is opened.
+   * Interacts with: the @if (view !== undefined) guard.
+   * Data: the page rendered without opening a view.
    */
-  it('saveView updates when only the description changed', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.viewNameFormControl.setValue('Demo View'); // unchanged
-    c.descriptionFormControl.setValue('A new description');
-    c.saveView();
-    expect(stubs.updateView).toHaveBeenCalledTimes(1);
-    expect((stubs.updateView.mock.calls[0][1] as View).description).toBe(
-      'A new description',
-    );
+  it('renders nothing before a view is opened', async () => {
+    const { container } = await renderEdit({ open: false });
+    expect(container.querySelector('mat-vertical-stepper')).toBeNull();
   });
 
-  /**
-   * Verifies: resetStepper rewinds the stepper to index 0 and unsets the current view.
-   * Interacts with: the fake stepper reference and component.view.
-   * Data: stepper preset to selectedIndex 3.
-   */
-  it('resetStepper returns the stepper to index 0 and clears the view', async () => {
-    const { fixture } = await renderEdit();
-    const c = fixture.componentInstance;
-    c.stepper = { selectedIndex: 3 } as MatStepper;
-    c.resetStepper();
-    expect(c.stepper.selectedIndex).toBe(0);
-    expect(c.view).toBeUndefined();
-  });
-
-  /**
-   * Verifies: downloadFile fetches the blob and, for non-image files, sets the anchor download attribute and clicks it.
-   * Interacts with: stubbed FileService.download; spied document.createElement / URL.createObjectURL and anchor.click.
-   * Data: file f1 'report.txt'.
-   * Why: a real anchor is injected via createElement spy so click() and the download attribute can be asserted in jsdom.
-   */
-  it('downloadFile sets the download attribute for non-image files', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const link = document.createElement('a');
-    const clickSpy = vi.spyOn(link, 'click').mockImplementation(() => {});
-    vi.spyOn(document, 'createElement').mockReturnValueOnce(link);
-    vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url');
-    stubs.download.mockReturnValueOnce(of(new Blob(['x'])));
-    fixture.componentInstance.downloadFile('f1', 'report.txt');
-    expect(link.download).toBe('report.txt');
-    expect(clickSpy).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: downloadFile leaves the download attribute empty for image/pdf files (open in-browser instead).
-   * Interacts with: stubbed FileService.download; spied document.createElement / URL.createObjectURL.
-   * Data: file f1 'photo.png'.
-   * Why: relies on the createElement spy returning a real anchor so link.download can be asserted.
-   */
-  it('downloadFile opens image/pdf files in the browser (no download attribute)', async () => {
-    const { fixture, stubs } = await renderEdit();
-    const link = document.createElement('a');
-    vi.spyOn(link, 'click').mockImplementation(() => {});
-    vi.spyOn(document, 'createElement').mockReturnValueOnce(link);
-    vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url');
-    stubs.download.mockReturnValueOnce(of(new Blob(['x'])));
-    fixture.componentInstance.downloadFile('f1', 'photo.png');
-    expect(link.download).toBe('');
-  });
-
-  describe('onViewStepChange', () => {
+  describe('View Information', () => {
     /**
-     * Verifies: landing on the files step (index 3) refreshes files, apps, and teams.
-     * Interacts with: spies on getViewFiles, getExistingApps, updateViewTeams.
-     * Data: step event { selectedIndex: 3 }.
+     * Verifies: an opened view shows its name in the title and its name, description, status and template flag in the form.
+     * Interacts with: setView as the search page calls it; the rendered title and View Information fields.
+     * Data: Demo View, Active, not a template.
      */
-    it('refreshes files, apps, and teams on the files step (index 3)', async () => {
+    it('shows the opened view', async () => {
       const { fixture } = await renderEdit();
-      const c = fixture.componentInstance;
-      c.view = { id: 'v1' };
-      const getFiles = vi.spyOn(c, 'getViewFiles').mockImplementation(() => {});
-      const getApps = vi
-        .spyOn(c, 'getExistingApps')
-        .mockImplementation(() => {});
-      const getTeams = vi
-        .spyOn(c, 'updateViewTeams')
-        .mockImplementation(() => {});
-      c.onViewStepChange({ selectedIndex: 3 });
-      expect(getFiles).toHaveBeenCalled();
-      expect(getApps).toHaveBeenCalled();
-      expect(getTeams).toHaveBeenCalled();
+      expect(screen.getByText('Edit View: Demo View')).toBeInTheDocument();
+      expect(screen.getByLabelText('Name (required)')).toHaveValue('Demo View');
+      expect(screen.getByLabelText('Description (required)')).toHaveValue(
+        'A demo',
+      );
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const status = await (
+        await TestbedHarnessEnvironment.loader(fixture).getHarness(
+          MatFormFieldHarness.with({ floatingLabelText: 'Status' }),
+        )
+      ).getControl(MatSelectHarness);
+      expect(await status!.getValueText()).toBe('Active');
+      expect(screen.getByLabelText('Template')).not.toBeChecked();
     });
 
     /**
-     * Verifies: landing on the teams step (index 2) clears currentTeam and refreshes teams.
-     * Interacts with: spy on updateViewTeams.
-     * Data: step event { selectedIndex: 2 }.
+     * Verifies: changing the name and leaving the field saves the view, and the title shows the saved name.
+     * Interacts with: the Name input (change on blur); ViewService.updateView.
+     * Data: name changed to 'Renamed View'.
      */
-    it('refreshes teams on the teams step (index 2)', async () => {
-      const { fixture } = await renderEdit();
-      const c = fixture.componentInstance;
-      const getTeams = vi
-        .spyOn(c, 'updateViewTeams')
-        .mockImplementation(() => {});
-      c.onViewStepChange({ selectedIndex: 2 });
-      expect(c.currentTeam).toBeUndefined();
-      expect(getTeams).toHaveBeenCalled();
-    });
-
-    /**
-     * Verifies: moving to the applications step (index 1) refreshes app templates and the child's applications.
-     * Interacts with: spy on updateApplicationTemplates and the child's updateApplications.
-     * Data: step event { selectedIndex: 1 }.
-     */
-    it('refreshes app templates when leaving the teams step (index 1)', async () => {
-      const { fixture } = await renderEdit();
-      const c = fixture.componentInstance;
-      const updateApplications = vi.fn();
-      c.viewApplicationsSelectComponent = applicationsSelectStub({
-        updateApplications,
+    it('saves a changed name', async () => {
+      const { stubs, user } = await renderEdit();
+      const name = screen.getByLabelText('Name (required)');
+      await user.clear(name);
+      await user.type(name, 'Renamed View', { skipClick: true });
+      await user.tab();
+      expect(stubs.updateView).toHaveBeenCalledExactlyOnceWith('v1', {
+        ...demoView,
+        name: 'Renamed View',
       });
-      const getTemplates = vi
-        .spyOn(c, 'updateApplicationTemplates')
-        .mockImplementation(() => {});
-      c.onViewStepChange({ selectedIndex: 1 });
-      expect(getTemplates).toHaveBeenCalled();
-      expect(updateApplications).toHaveBeenCalled();
+      expect(screen.getByText('Edit View: Renamed View')).toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: changing only the description saves the view once with the new description.
+     * Interacts with: the Description textarea (change on blur); ViewService.updateView.
+     * Data: description changed to 'A new description'.
+     */
+    it('saves a changed description', async () => {
+      const { stubs, user } = await renderEdit();
+      const description = screen.getByLabelText('Description (required)');
+      await user.clear(description);
+      await user.type(description, 'A new description', { skipClick: true });
+      await user.tab();
+      expect(stubs.updateView).toHaveBeenCalledExactlyOnceWith('v1', {
+        ...demoView,
+        description: 'A new description',
+      });
+    });
+
+    /**
+     * Verifies: leaving Name or Description after putting back its saved value sends no update for either field.
+     * Interacts with: the Name input and Description textarea (change on blur); ViewService.updateView; the title.
+     * Data: one row per field; the field is first set to an invalid value (not saved), then back to the saved one.
+     */
+    it.each<[string, string, string]>([
+      ['Name (required)', 'abc', 'Demo View'],
+      ['Description (required)', '', 'A demo'],
+    ])(
+      'sends no update when %s is put back to its saved value',
+      async (label, invalid, saved) => {
+        const { stubs, user } = await renderEdit();
+        const field = screen.getByLabelText(label);
+        await user.clear(field);
+        if (invalid) {
+          await user.type(field, invalid, { skipClick: true });
+        }
+        await user.tab();
+        await user.click(field);
+        await user.clear(field);
+        await user.type(field, saved, { skipClick: true });
+        await user.tab();
+        expect(field).toHaveValue(saved);
+        expect(stubs.updateView).not.toHaveBeenCalled();
+        expect(screen.getByText('Edit View: Demo View')).toBeInTheDocument();
+      },
+    );
+
+    /**
+     * Verifies: a name shorter than four characters shows its error, is not saved, and disables Return and Done.
+     * Interacts with: the Name input; the mat-error; ViewService.updateView; the Return and Done buttons.
+     * Data: name changed to 'abc'.
+     */
+    it('rejects a name shorter than four characters', async () => {
+      const { stubs, user } = await renderEdit();
+      const name = screen.getByLabelText('Name (required)');
+      await user.clear(name);
+      await user.type(name, 'abc', { skipClick: true });
+      await user.tab();
+      expect(
+        screen.getByText('Must contain 4 or more characters'),
+      ).toBeInTheDocument();
+      expect(stubs.updateView).not.toHaveBeenCalled();
+      expect((screen.getByTitle('Return') as HTMLButtonElement).disabled).toBe(
+        true,
+      );
+      expect(
+        (screen.getByText('Done').closest('button') as HTMLButtonElement)
+          .disabled,
+      ).toBe(true);
+    });
+
+    /**
+     * Verifies: choosing a status saves the view with it.
+     * Interacts with: the Status select (MatSelectHarness); ViewService.updateView.
+     * Data: Demo View Active; Inactive chosen.
+     */
+    it('saves a chosen status', async () => {
+      const logged = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const { fixture, stubs } = await renderEdit();
+      const status = await (
+        await TestbedHarnessEnvironment.loader(fixture).getHarness(
+          MatFormFieldHarness.with({ floatingLabelText: 'Status' }),
+        )
+      ).getControl(MatSelectHarness);
+      await status!.open();
+      await status!.clickOptions({ text: 'Inactive' });
+      expect(stubs.updateView).toHaveBeenCalledExactlyOnceWith('v1', {
+        ...demoView,
+        status: 'Inactive',
+      });
+      expect(logged).toHaveBeenCalledWith('Inactive');
+    });
+
+    /**
+     * Verifies: ticking Template saves the view as a template.
+     * Interacts with: the Template checkbox; ViewService.updateView.
+     * Data: Demo View not a template.
+     */
+    it('saves the view as a template', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const { stubs, user } = await renderEdit();
+      await user.click(screen.getByLabelText('Template'));
+      expect(stubs.updateView).toHaveBeenCalledExactlyOnceWith('v1', {
+        ...demoView,
+        isTemplate: true,
+      });
+    });
+
+    /**
+     * Verifies: a confirmed Delete View deletes the view and completes with null, so the search does not reselect it.
+     * Interacts with: the Delete View button; CrucibleDialogService.confirm; ViewService.deleteView; the editComplete output.
+     * Data: confirmResult true.
+     */
+    it('deletes the view after confirmation and completes with null', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const { stubs, editComplete, user } = await renderEdit({
+        confirmResult: true,
+      });
+      await user.click(screen.getByText('Delete View'));
+      expect(stubs.confirm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Delete View',
+          message: 'Are you sure that you want to delete view Demo View?',
+        }),
+      );
+      expect(stubs.deleteView).toHaveBeenCalledExactlyOnceWith('v1');
+      expect(editComplete).toHaveBeenCalledExactlyOnceWith(null);
+    });
+
+    /**
+     * Verifies: a declined Delete View deletes nothing and stays open.
+     * Interacts with: the Delete View button; CrucibleDialogService.confirm; ViewService.deleteView; editComplete.
+     * Data: confirmResult false.
+     */
+    it('keeps the view when the deletion is declined', async () => {
+      const { stubs, editComplete, user } = await renderEdit({
+        confirmResult: false,
+      });
+      await user.click(screen.getByText('Delete View'));
+      expect(stubs.deleteView).not.toHaveBeenCalled();
+      expect(editComplete).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: Return and Done both complete the edit with the view's id.
+     * Interacts with: the Return and Done buttons; the editComplete output.
+     * Data: one row per button.
+     */
+    it.each<[string, () => HTMLElement]>([
+      ['Return', () => screen.getByTitle('Return')],
+      ['Done', () => screen.getByText('Done')],
+    ])('completes with the view id from %s', async (_button, button) => {
+      const { editComplete, user } = await renderEdit();
+      await user.click(button());
+      expect(editComplete).toHaveBeenCalledExactlyOnceWith('v1');
+    });
+
+    /**
+     * Verifies: opened from the player (in a dialog), the page renders inside a crucible dialog whose Done completes the edit.
+     * Interacts with: the injected MatDialogRef; the crucible-dialog layout; the editComplete output.
+     * Data: a MatDialogRef is provided.
+     */
+    it('renders as a dialog when opened in one', async () => {
+      const { container, editComplete, user } = await renderEdit({
+        asDialog: true,
+      });
+      const dialog = container.querySelector('crucible-dialog')!;
+      expect(dialog).not.toBeNull();
+      expect(
+        within(dialog as HTMLElement).getByText('Edit View: Demo View'),
+      ).toBeInTheDocument();
+      await user.click(within(dialog as HTMLElement).getByText('Done'));
+      expect(editComplete).toHaveBeenCalledExactlyOnceWith('v1');
+    });
+  });
+
+  describe('Applications', () => {
+    /**
+     * Verifies: the applications select gets the opened view, and moving to the Applications step reloads the templates
+     *   and the view's applications.
+     * Interacts with: the applications select stub; the Applications step header; ApplicationService.getApplicationTemplates.
+     * Data: Demo View.
+     */
+    it('reloads templates and applications on the Applications step', async () => {
+      const r = await renderEdit();
+      expect(appsSelect(r.fixture).view).toEqual(demoView);
+      expect(r.stubs.getApplicationTemplates).toHaveBeenCalledTimes(1);
+      await goToStep(r, 'Applications');
+      expect(r.stubs.getApplicationTemplates).toHaveBeenCalledTimes(2);
+      expect(appsSelect(r.fixture).updateApplications).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * Verifies: Add New Application, Blank Application creates a "New Application" in the view and selects it in the
+     *   applications select; choosing a template creates one from that template.
+     * Interacts with: the Add New Application menu and its Templates submenu; ApplicationService.createApplication; the
+     *   applications select stub.
+     * Data: one row per menu choice; template Chat (tmpl-1).
+     */
+    it.each<[string, string[], Application]>([
+      [
+        'a blank application',
+        ['Blank Application'],
+        { name: 'New Application', viewId: 'v1' },
+      ],
+      [
+        'an application from a template',
+        ['Templates', 'Chat'],
+        { viewId: 'v1', applicationTemplateId: 'tmpl-1' },
+      ],
+    ])('adds %s from the menu', async (_case, choices, created) => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit();
+      const { fixture, stubs, user } = r;
+      await goToStep(r, 'Applications');
+      appsSelect(fixture).updateApplications.mockClear();
+      await user.click(screen.getByText('Add New Application'));
+      for (const choice of choices) {
+        await user.click(await screen.findByText(choice));
+      }
+      expect(stubs.createApplication).toHaveBeenCalledExactlyOnceWith(
+        'v1',
+        created,
+      );
+      expect(appsSelect(fixture).updateApplications).toHaveBeenCalledTimes(1);
+      expect(appsSelect(fixture).currentApp).toEqual({
+        ...created,
+        id: 'app-1',
+      });
+    });
+  });
+
+  describe('Teams', () => {
+    /**
+     * Verifies: the view's teams are listed by name, each with its member count, the DEFAULT badge on the default team,
+     *   and its role and applications editors bound to the team.
+     * Interacts with: TeamService.getViewTeams; UserService.getTeamUsers; the Teams step; the child stubs.
+     * Data: Red (default, one member) and Alpha (no members), returned unsorted.
+     */
+    it('lists the teams with member counts and the default badge', async () => {
+      const { container, fixture } = await renderEdit({
+        view: { ...demoView, defaultTeamId: 't1' },
+        teams: [red, alpha],
+      });
+      expect(teamTitles(container)).toEqual(['Alpha', 'Red DEFAULT']);
+      expect(
+        teamPanels(container).map(
+          (panel) => panel.querySelector('.mat-badge-content')?.textContent,
+        ),
+      ).toEqual(['0', '1']);
+      const roles = fixture.debugElement
+        .queryAll(By.directive(RolesPermissionsSelectStubComponent))
+        .map(
+          (de) => de.componentInstance as RolesPermissionsSelectStubComponent,
+        );
+      expect(roles.map((r) => r.team.name)).toEqual(['Alpha', 'Red']);
+      expect(roles[0].allTeams.map((t) => t.name)).toEqual(['Alpha', 'Red']);
+      const apps = fixture.debugElement
+        .queryAll(By.directive(TeamApplicationsSelectStubComponent))
+        .map(
+          (de) => de.componentInstance as TeamApplicationsSelectStubComponent,
+        );
+      expect(apps.map((a) => [a.view.id, a.team.name])).toEqual([
+        ['v1', 'Alpha'],
+        ['v1', 'Red'],
+      ]);
+    });
+
+    /**
+     * Verifies: while team members are loading the Teams step shows a spinner and no Add New Team.
+     * Interacts with: UserService.getTeamUsers (never answers); the Teams step.
+     * Data: Red.
+     */
+    it('shows a spinner while the teams load', async () => {
+      const { container, stubs, openView } = await renderEdit({ open: false });
+      stubs.getTeamUsers.mockReturnValue(NEVER);
+      openView(demoView);
+      expect(container.querySelector('mat-progress-spinner')).not.toBeNull();
+      expect(screen.queryByText('Add New Team')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: moving to the Teams step reloads the teams.
+     * Interacts with: the Teams step header; TeamService.getViewTeams.
+     * Data: Red; the reload returns Red and Alpha.
+     */
+    it('reloads the teams on the Teams step', async () => {
+      const r = await renderEdit();
+      r.stubs.getViewTeams.mockReturnValue(of([red, alpha]));
+      await goToStep(r, 'Teams');
+      expect(r.stubs.getViewTeams).toHaveBeenCalledTimes(2);
+      expect(teamTitles(r.container)).toEqual(['Alpha', 'Red']);
+    });
+
+    /**
+     * Verifies: Add New Team creates a "New Team" in the view and lists it first, open, with its name in the name field.
+     * Interacts with: the Add New Team button; TeamService.createTeam; the Teams step.
+     * Data: Red.
+     */
+    it('adds a new team and opens it', async () => {
+      const r = await renderEdit();
+      const { container, stubs, user } = r;
+      await goToStep(r, 'Teams');
+      await user.click(screen.getByText('Add New Team'));
+      expect(stubs.createTeam).toHaveBeenCalledExactlyOnceWith('v1', {
+        name: 'New Team',
+      });
+      expect(teamTitles(container)).toEqual(['New Team', 'Red']);
+      const panel = teamPanel(container, 'New Team');
+      expect(panel.querySelector('mat-expansion-panel-header')).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      expect(panel.querySelector('#teamNamenew-team')).toHaveValue('New Team');
+    });
+
+    /**
+     * Verifies: renaming an opened team saves the name with its role and updates the panel title; a name under three
+     *   characters is not saved.
+     * Interacts with: the team's panel header and Team Name field; TeamService.updateTeam.
+     * Data: Red (role tr-1) renamed to 'ab' (rejected), then to 'Crimson'.
+     */
+    it('renames a team and rejects a too-short name', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit({ teams: [{ ...red, roleId: 'tr-1' }] });
+      const { container, stubs, user } = r;
+      const panel = await openTeam(r, 'Red');
+      const name = panel.querySelector<HTMLInputElement>('#teamNamet1')!;
+      expect(name).toHaveValue('Red');
+      await user.clear(name);
+      await user.type(name, 'ab', { skipClick: true });
+      await user.tab();
+      expect(stubs.updateTeam).not.toHaveBeenCalled();
+      await user.clear(name);
+      await user.type(name, 'Crimson', { skipClick: true });
+      await user.tab();
+      expect(stubs.updateTeam).toHaveBeenCalledExactlyOnceWith('t1', {
+        name: 'Crimson',
+        roleId: 'tr-1',
+      });
+      expect(teamTitles(container)).toEqual(['Crimson']);
+    });
+
+    /**
+     * Verifies: ticking a team's Default makes it the view's default team, and unticking clears the default.
+     * Interacts with: the team's Default checkbox; ViewService.updateView; the DEFAULT badge.
+     * Data: Red; no default team at first.
+     */
+    it('sets and clears the default team', async () => {
+      const r = await renderEdit();
+      const { container, stubs, user } = r;
+      const panel = await openTeam(r, 'Red');
+      await user.click(within(panel).getByLabelText('Default'));
+      expect(stubs.updateView).toHaveBeenLastCalledWith('v1', {
+        ...demoView,
+        defaultTeamId: 't1',
+      });
+      expect(teamTitles(container)).toEqual(['Red DEFAULT']);
+      await user.click(
+        within(teamPanel(container, 'Red')).getByLabelText('Default'),
+      );
+      expect(stubs.updateView).toHaveBeenLastCalledWith('v1', {
+        ...demoView,
+        defaultTeamId: null,
+      });
+      expect(teamTitles(container)).toEqual(['Red']);
+    });
+
+    /**
+     * Verifies: the Users button opens the add/remove users dialog for the team (with role management), and the
+     *   member count follows what the dialog closes with; a dismissed dialog leaves it.
+     * Interacts with: the team's Users button; DialogService.addRemoveUsersToTeam; the member badge.
+     * Data: Red with one member; the dialog closes with two rows, then is dismissed.
+     */
+    it('updates the member count from the users dialog', async () => {
+      const r = await renderEdit();
+      const { container, stubs, user } = r;
+      await openTeam(r, 'Red');
+      const twoRows = [{ name: 'A' }, { name: 'B' }] as TeamUser[];
+      stubs.addRemoveUsersToTeam.mockReturnValueOnce(
+        of({ teamUsers: twoRows }),
+      );
+      const usersButton = () =>
+        within(teamPanel(container, 'Red'))
+          .getByAltText('Users')
+          .closest('button')!;
+      await user.click(usersButton());
+      expect(stubs.addRemoveUsersToTeam).toHaveBeenCalledExactlyOnceWith(
+        'Add or Remove Users for team Red',
+        red,
+        { maxWidth: '100vw', width: 'auto' },
+      );
+      // Only the length of the closed-with rows is rendered (the member badge).
+      const badge = () =>
+        teamPanel(container, 'Red').querySelector('.mat-badge-content');
+      expect(badge()).toHaveTextContent('2');
+      stubs.addRemoveUsersToTeam.mockReturnValueOnce(of(undefined));
+      await user.click(usersButton());
+      expect(badge()).toHaveTextContent('2');
+    });
+
+    /**
+     * Verifies: a confirmed Delete Team deletes the team and reloads the teams; a declined one deletes nothing.
+     * Interacts with: the team's Delete Team button; CrucibleDialogService.confirm; TeamService.deleteTeam and getViewTeams.
+     * Data: one row per answer; Red and Alpha, the reload returning Alpha.
+     */
+    it.each<[string, boolean, string[]]>([
+      ['deletes the team when confirmed', true, ['Alpha']],
+      ['keeps the team when declined', false, ['Alpha', 'Red']],
+    ])('%s', async (_case, confirmResult, remaining) => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit({ confirmResult, teams: [red, alpha] });
+      const { container, stubs, user } = r;
+      const panel = await openTeam(r, 'Red');
+      stubs.getViewTeams.mockReturnValue(of([alpha]));
+      await user.click(within(panel).getByText('Delete Team'));
+      expect(stubs.confirm).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Delete Team',
+          message: 'Are you sure that you want to delete team Red?',
+        }),
+      );
+      expect(stubs.deleteTeam).toHaveBeenCalledTimes(confirmResult ? 1 : 0);
+      expect(teamTitles(container)).toEqual(remaining);
+    });
+
+    /**
+     * Verifies: deleting the view's last team leaves the Teams step on its spinner, with Add New Team hidden (current behavior).
+     * Interacts with: the rendered Delete Team and Add New Team buttons; stubbed CrucibleDialogService.confirm,
+     *   TeamService.deleteTeam and TeamService.getViewTeams (which then returns no teams).
+     * Data: confirmResult=true; view v1 with one team, Red (t1).
+     */
+    it('leaves the Teams step on a spinner after the last team is deleted', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit({ confirmResult: true });
+      const { container, stubs, user } = r;
+      const panel = await openTeam(r, 'Red');
+      expect(screen.getByText('Add New Team')).toBeInTheDocument();
+      stubs.getViewTeams.mockReturnValue(of([]));
+      await user.click(within(panel).getByText('Delete Team'));
+      expect(stubs.deleteTeam).toHaveBeenCalledWith('t1');
+      // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+      expect(container.querySelector('mat-progress-spinner')).not.toBeNull();
+      expect(screen.queryByText('Add New Team')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Files', () => {
+    /**
+     * Verifies: opening another view after working on the Files step starts it on the first step, View Information,
+     *   with the new view's fields.
+     * Interacts with: the Files step header; the openView sequence AdminViewSearchComponent.executeViewAction('edit')
+     *   runs (resetStepper, then setView); the stepper's current step header; the Name input.
+     * Data: Demo View on the Files step, then Second View (v2) opened.
+     */
+    it('opens a second view on the View Information step', async () => {
+      const r = await renderEdit();
+      const currentStep = () =>
+        r.container.querySelector('mat-step-header[aria-current="step"]');
+      await goToStep(r, 'Files');
+      expect(currentStep()).toHaveTextContent('Files');
+      r.openView({ ...demoView, id: 'v2', name: 'Second View' });
+      await r.fixture.whenStable();
+      expect(currentStep()).toHaveTextContent('View Information');
+      expect(screen.getByText('Edit View: Second View')).toBeInTheDocument();
+      expect(screen.getByLabelText('Name (required)')).toHaveValue(
+        'Second View',
+      );
+    });
+
+    /**
+     * Verifies: moving to the Files step loads the view's files, its application names and its teams; Add as App is
+     *   offered only for a file no application is named after.
+     * Interacts with: the Files step header; FileService.getViewFiles; ApplicationService.getViewApplications;
+     *   TeamService.getViewTeams; the file panels.
+     * Data: files doc.txt and map.png; an application named map.png already exists.
+     */
+    it('lists the files and offers Add as App for new ones', async () => {
+      const r = await renderEdit({
+        files: [docFile, { id: 'f2', name: 'map.png', teamIds: ['t1'] }],
+        viewApps: [{ id: 'a1', name: 'map.png', viewId: 'v1' }],
+      });
+      await goToStep(r, 'Files');
+      expect(r.stubs.getViewFiles).toHaveBeenCalledExactlyOnceWith('v1', true);
+      expect(r.stubs.getViewApplications).toHaveBeenCalledExactlyOnceWith('v1');
+      expect(r.stubs.getViewTeams).toHaveBeenCalledTimes(2);
+      expect(fileTitles(r.container)).toEqual(['doc.txt', 'map.png']);
+      const [doc, map] = filePanels(r.container);
+      expect(within(doc).getByTitle('Add as Application')).toBeInTheDocument();
+      expect(
+        within(map).queryByTitle('Add as Application'),
+      ).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: coming back to the Files step reloads the files without listing any twice.
+     * Interacts with: the Files and Teams step headers; FileService.getViewFiles; the file panels.
+     * Data: files doc.txt and map.png; Files, then Teams, then Files again.
+     */
+    it('lists each file once after returning to the Files step', async () => {
+      const r = await renderEdit({
+        files: [docFile, { id: 'f2', name: 'map.png', teamIds: ['t1'] }],
+      });
+      await goToStep(r, 'Files');
+      await goToStep(r, 'Teams');
+      await goToStep(r, 'Files');
+      expect(r.stubs.getViewFiles).toHaveBeenCalledTimes(2);
+      expect(fileTitles(r.container)).toEqual(['doc.txt', 'map.png']);
+    });
+
+    /**
+     * Verifies: uploading a file whose name is already listed does not list it twice.
+     * Interacts with: the hidden file input, Select All Teams and Upload File; FileService.uploadMultipleFiles.
+     * Data: doc.txt listed; doc.txt uploaded again and returned by the API with a 201.
+     */
+    it('lists a re-uploaded file once', async () => {
+      const r = await renderEdit();
+      await goToStep(r, 'Files');
+      const file = new File(['y'], 'doc.txt');
+      await r.user.upload(
+        r.container.querySelector<HTMLInputElement>('input[type="file"]')!,
+        file,
+      );
+      // The staged file's panel comes first, before the listed files.
+      const [stagedSelectAll] = screen.getAllByLabelText('Select All Teams');
+      await r.user.click(stagedSelectAll);
+      r.stubs.uploadMultipleFiles.mockReturnValueOnce(
+        of(
+          new HttpResponse({
+            status: 201,
+            body: [{ id: 'f9', name: 'doc.txt', teamIds: ['t1'] }],
+          }),
+        ),
+      );
+      await r.user.click(screen.getByText('Upload File'));
+      expect(r.stubs.uploadMultipleFiles).toHaveBeenCalledTimes(1);
+      expect(fileTitles(r.container)).toEqual(['doc.txt']);
+    });
+
+    /**
+     * Verifies: a staged file can be uploaded only once a team is chosen; Select All Teams chooses every team, and a 201
+     *   lists the uploaded file and clears the staged one.
+     * Interacts with: the hidden file input behind Add New File; the staged file's Select All Teams and Upload File;
+     *   FileService.uploadMultipleFiles.
+     * Data: Red and Alpha; up.txt staged; the upload answers 201 with up.txt.
+     */
+    it('uploads a staged file to the chosen teams', async () => {
+      const r = await renderEdit({ teams: [red, alpha], files: [] });
+      await goToStep(r, 'Files');
+      const file = new File(['x'], 'up.txt');
+      await r.user.upload(
+        r.container.querySelector<HTMLInputElement>('input[type="file"]')!,
+        file,
+      );
+      expect(screen.getByText('up.txt')).toBeInTheDocument();
+      const upload = screen.getByText('Upload File').closest('button')!;
+      expect(upload.disabled).toBe(true);
+      expect(
+        screen.getByText('At least one team must be selected'),
+      ).toBeInTheDocument();
+
+      await r.user.click(screen.getByLabelText('Select All Teams'));
+      expect(upload.disabled).toBe(false);
+      r.stubs.uploadMultipleFiles.mockReturnValueOnce(
+        of(
+          new HttpResponse({
+            status: 201,
+            body: [{ id: 'f9', name: 'up.txt', teamIds: ['t2', 't1'] }],
+          }),
+        ),
+      );
+      await r.user.click(upload);
+      expect(r.stubs.uploadMultipleFiles).toHaveBeenCalledExactlyOnceWith(
+        'v1',
+        ['t2', 't1'],
+        [file],
+        'events',
+        true,
+      );
+      expect(fileTitles(r.container)).toEqual(['up.txt']);
+      expect(screen.queryByText('Upload File')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: picking teams one by one in the staged file's Teams with Access ticks Select All Teams once every team
+     *   is chosen.
+     * Interacts with: the staged file's Teams with Access select (MatSelectHarness) and Select All Teams checkbox.
+     * Data: Red and Alpha; both picked.
+     */
+    it('ticks Select All Teams once every team is picked', async () => {
+      const r = await renderEdit({ teams: [red, alpha], files: [] });
+      await goToStep(r, 'Files');
+      await r.user.upload(
+        r.container.querySelector<HTMLInputElement>('input[type="file"]')!,
+        new File(['x'], 'up.txt'),
+      );
+      const select = await teamsWithAccess(r.fixture);
+      await select.open();
+      await select.clickOptions({ text: 'Alpha' });
+      expect(screen.getByLabelText('Select All Teams')).not.toBeChecked();
+      await select.clickOptions({ text: 'Red' });
+      // ngModel writes the checkbox after a microtask.
+      await r.fixture.whenStable();
+      r.fixture.detectChanges();
+      expect(screen.getByLabelText('Select All Teams')).toBeChecked();
+    });
+
+    /**
+     * Verifies: an upload in progress shows its percentage on the progress bar.
+     * Interacts with: Upload File; FileService.uploadMultipleFiles (an UploadProgress event); the progress bar.
+     * Data: 50 of 200 bytes sent.
+     */
+    it('shows the upload progress', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit({ files: [] });
+      await goToStep(r, 'Files');
+      await r.user.upload(
+        r.container.querySelector<HTMLInputElement>('input[type="file"]')!,
+        new File(['x'], 'up.txt'),
+      );
+      await r.user.click(screen.getByLabelText('Select All Teams'));
+      r.stubs.uploadMultipleFiles.mockReturnValueOnce(
+        of({ type: HttpEventType.UploadProgress, loaded: 50, total: 200 }),
+      );
+      await r.user.click(screen.getByText('Upload File'));
+      expect(r.container.querySelector('mat-progress-bar')).toHaveAttribute(
+        'aria-valuenow',
+        '25',
+      );
+    });
+
+    /**
+     * Verifies: Cancel drops the staged file.
+     * Interacts with: the staged file's Cancel button.
+     * Data: up.txt staged.
+     */
+    it('drops a staged file on Cancel', async () => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit({ files: [] });
+      await goToStep(r, 'Files');
+      await r.user.upload(
+        r.container.querySelector<HTMLInputElement>('input[type="file"]')!,
+        new File(['x'], 'up.txt'),
+      );
+      await r.user.click(screen.getByText('Cancel'));
+      expect(screen.queryByText('up.txt')).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: changing a file's teams saves them, and clearing them warns and saves nothing.
+     * Interacts with: the file's Teams with Access select (MatSelectHarness); FileService.updateFile.
+     * Data: doc.txt shared with Red; Alpha added, then both removed.
+     */
+    it('saves a file’s teams and refuses to save none', async () => {
+      const r = await renderEdit({ teams: [red, alpha] });
+      await openFile(r, 'doc.txt');
+      const select = await teamsWithAccess(r.fixture);
+      await select.open();
+      await select.clickOptions({ text: 'Alpha' });
+      expect(r.stubs.updateFile).toHaveBeenCalledExactlyOnceWith(
+        'f1',
+        'doc.txt',
+        ['t2', 't1'],
+        null,
+      );
+      await select.clickOptions({ text: 'Alpha' });
+      await select.clickOptions({ text: 'Red' });
+      expect(r.stubs.updateFile).toHaveBeenCalledTimes(2);
+      expect(
+        screen.getByText('At least one team must be selected'),
+      ).toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: a file's Select All Teams shares it with every team and saves; unticking clears its teams without saving.
+     * Interacts with: the file's Select All Teams checkbox; FileService.updateFile.
+     * Data: doc.txt shared with Red; teams Red and Alpha.
+     */
+    it('shares a file with all teams from Select All Teams', async () => {
+      const r = await renderEdit({ teams: [red, alpha] });
+      const panel = await openFile(r, 'doc.txt');
+      const selectAll = within(panel).getByLabelText('Select All Teams');
+      await r.user.click(selectAll);
+      expect(r.stubs.updateFile).toHaveBeenCalledExactlyOnceWith(
+        'f1',
+        'doc.txt',
+        ['t2', 't1'],
+        null,
+      );
+      expect(selectAll).toBeChecked();
+      await r.user.click(selectAll);
+      expect(r.stubs.updateFile).toHaveBeenCalledTimes(1);
+      expect(
+        screen.getByText('At least one team must be selected'),
+      ).toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: Download fetches the file and clicks a link to it, naming the download for a document and not for an
+     *   image or pdf (which opens in the browser).
+     * Interacts with: the file's Download button; FileService.download; URL.createObjectURL; the created link.
+     * Data: one row per file name.
+     */
+    it.each<[string, string]>([
+      ['report.txt', 'report.txt'],
+      ['photo.png', ''],
+      ['guide.pdf', ''],
+    ])('downloads %s with download name "%s"', async (name, download) => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      const r = await renderEdit({
+        files: [{ id: 'f1', name, teamIds: ['t1'] }],
+      });
+      await openFile(r, name);
+      const link = document.createElement('a');
+      const click = vi.spyOn(link, 'click').mockImplementation(() => {});
+      const createElement = document.createElement.bind(document);
+      vi.spyOn(document, 'createElement').mockImplementation(
+        (tag: string, options?: ElementCreationOptions) =>
+          tag === 'a' ? link : createElement(tag, options),
+      );
+      vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:url');
+      await r.user.click(screen.getByTitle('Download'));
+      expect(r.stubs.download).toHaveBeenCalledExactlyOnceWith('f1');
+      expect(link.href).toBe('blob:url');
+      expect(link.target).toBe('_blank');
+      expect(link.download).toBe(download);
+      expect(click).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * Verifies: a confirmed Delete removes the file; a refused delete alerts and keeps it; a declined one does nothing.
+     * Interacts with: the file's Delete button; CrucibleDialogService.confirm; FileService.deleteFile; window.alert.
+     * Data: one row per outcome; doc.txt.
+     */
+    it.each<[string, boolean, unknown, string[], boolean]>([
+      ['removes the file when confirmed', true, null, [], false],
+      ['alerts when the API refuses', true, { status: 403 }, ['doc.txt'], true],
+      ['keeps the file when declined', false, null, ['doc.txt'], false],
+    ])(
+      'Delete %s',
+      async (_case, confirmResult, response, remaining, alerted) => {
+        const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+        const r = await renderEdit({ confirmResult });
+        r.stubs.deleteFile.mockReturnValue(of(response as null));
+        await openFile(r, 'doc.txt');
+        await r.user.click(screen.getByTitle('Delete'));
+        expect(r.stubs.confirm).toHaveBeenCalledWith(
+          expect.objectContaining({ title: 'Delete File?' }),
+        );
+        expect(r.stubs.deleteFile).toHaveBeenCalledTimes(confirmResult ? 1 : 0);
+        expect(fileTitles(r.container)).toEqual(remaining);
+        expect(alert).toHaveBeenCalledTimes(alerted ? 1 : 0);
+      },
+    );
+
+    /**
+     * Verifies: Copy Link copies the file's download link.
+     * Interacts with: the file's Copy Link button; Clipboard.copy.
+     * Data: doc.txt (f1).
+     */
+    it('copies the file link', async () => {
+      const r = await renderEdit();
+      await openFile(r, 'doc.txt');
+      await r.user.click(screen.getByTitle('Copy Link'));
+      expect(r.stubs.clipboardCopy).toHaveBeenCalledExactlyOnceWith(
+        expect.stringMatching(/\/file\?id=f1&name=doc\.txt$/),
+      );
+    });
+
+    /**
+     * Verifies: Edit Name opens the file dialog and the file's title follows the name it closes with.
+     * Interacts with: the file's Edit button; DialogService.editFile; the file panel title.
+     * Data: doc.txt shared with Red; the dialog closes with 'renamed.txt'.
+     */
+    it('renames a file from the edit dialog', async () => {
+      const r = await renderEdit();
+      await openFile(r, 'doc.txt');
+      await r.user.click(screen.getByTitle('Edit'));
+      expect(r.stubs.editFile).toHaveBeenCalledExactlyOnceWith(
+        'f1',
+        'v1',
+        'doc.txt',
+        ['t1'],
+      );
+      expect(fileTitles(r.container)).toEqual(['renamed.txt']);
+    });
+
+    /**
+     * Verifies: Add as App creates an embeddable application pointing at the file, opens the team dialog for it, and
+     *   stops offering Add as App for that file.
+     * Interacts with: the file's Add as Application button; ApplicationService.createApplication;
+     *   DialogService.createApplication.
+     * Data: doc.txt; teams Red.
+     */
+    it('adds a file as an application', async () => {
+      const r = await renderEdit();
+      await openFile(r, 'doc.txt');
+      await r.user.click(screen.getByTitle('Add as Application'));
+      expect(r.stubs.createApplication).toHaveBeenCalledExactlyOnceWith('v1', {
+        name: 'doc.txt',
+        url: expect.stringMatching(/\/file\?id=f1&name=doc\.txt$/),
+        embeddable: true,
+        loadInBackground: false,
+        viewId: 'v1',
+        icon: '/assets/img/SP_Icon_Intel.png',
+      });
+      expect(r.stubs.createApplicationDialog).toHaveBeenCalledExactlyOnceWith(
+        'app-1',
+        expect.objectContaining({ id: 'f1' }),
+        [expect.objectContaining({ name: 'Red' })],
+      );
+      expect(screen.queryByTitle('Add as Application')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('progress flags after a failed request', () => {
+    type Act = (r: Rendered, failure: Error) => Promise<void>;
+    const loadTeams: Act = async ({ stubs, openView }, failure) => {
+      stubs.getViewTeams.mockReturnValueOnce(throwError(() => failure));
+      openView(demoView);
+    };
+    const loadTeamUsers: Act = async ({ stubs, openView }, failure) => {
+      stubs.getTeamUsers.mockReturnValueOnce(throwError(() => failure));
+      openView(demoView);
+    };
+    const upload: Act = async (r, failure) => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+      r.openView(demoView);
+      await goToStep(r, 'Files');
+      await r.user.upload(
+        r.container.querySelector<HTMLInputElement>('input[type="file"]')!,
+        new File(['x'], 'up.txt'),
+      );
+      await r.user.click(screen.getByLabelText('Select All Teams'));
+      r.stubs.uploadMultipleFiles.mockReturnValueOnce(
+        throwError(() => failure),
+      );
+      await r.user.click(screen.getByText('Upload File'));
+    };
+
+    /**
+     * Verifies: a failed request leaves its progress indicator up (the teams spinner or the upload bar) and lets the error escape (current behavior).
+     * Interacts with: the failing endpoint (TeamService.getViewTeams, UserService.getTeamUsers or
+     *   FileService.uploadMultipleFiles); the rendered indicator; captureUnhandledRxErrors.
+     * Data: view v1 with team Red; the row's endpoint fails with a 500 on its next call.
+     */
+    it.each<[string, Act, string]>([
+      ['getViewTeams in updateViewTeams', loadTeams, 'mat-progress-spinner'],
+      [
+        'getTeamUsers in updateViewTeams',
+        loadTeamUsers,
+        'mat-progress-spinner',
+      ],
+      ['uploadMultipleFiles in uploadFile', upload, 'mat-progress-bar'],
+    ])('leaves %s stuck when it fails', async (_label, act, indicator) => {
+      const errors = captureUnhandledRxErrors();
+      const failure = new Error('500');
+      const rendered = await renderEdit({ open: false, files: [] });
+      await act(rendered, failure);
+      await flush();
+      rendered.fixture.detectChanges();
+      // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+      expect(rendered.container.querySelector(indicator)).not.toBeNull();
+      expect(errors).toEqual([failure]);
     });
   });
 

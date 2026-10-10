@@ -2,6 +2,8 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect } from 'vitest';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
@@ -38,142 +40,126 @@ async function renderDialog(
   return { ...rendered, close, dialogRef, data };
 }
 
+/** The dialog's Save button. */
+function saveButton(): HTMLButtonElement {
+  return screen.getByText('Save').closest('button')!;
+}
+
 describe('NameDialogComponent', () => {
   /**
-   * Verifies: the name form control is initialized from data.nameValue.
-   * Interacts with: component reactive form built on init from MAT_DIALOG_DATA.
-   * Data: dialog data { nameValue: 'Hi' }.
+   * Verifies: the dialog shows its title, message and the current name, with Save disabled until the name is edited.
+   * Interacts with: the rendered crucible-dialog title, message, Name field and Save button.
+   * Data: title 'Rename', message 'Pick a name'; nameValue 'Hi'.
    */
-  it('seeds the name form control from data.nameValue', async () => {
+  it('shows the current name with Save disabled until it changes', async () => {
     const { fixture } = await renderDialog({ data: { nameValue: 'Hi' } });
-    expect(fixture.componentInstance.form.value.name).toBe('Hi');
+    fixture.componentInstance.title = 'Rename';
+    fixture.componentInstance.message = 'Pick a name';
+    fixture.detectChanges();
+    expect(screen.getByRole('heading')).toHaveTextContent('Rename');
+    expect(screen.getByText('Pick a name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('Hi');
+    expect(saveButton().disabled).toBe(true);
   });
 
   /**
-   * Verifies: validators supplied via data.validators are attached to the name
-   *   control (invalid for too-short input, valid once satisfied).
-   * Interacts with: component form validation; Angular Validators.minLength.
-   * Data: dialog data with a minLength(5) validator and seed 'x'.
+   * Verifies: editing the name and saving closes with the dialog data carrying the new name, and removeArtifacts false
+   *   when there are no artifacts.
+   * Interacts with: the Name field and Save button; MatDialogRef.close; the injected MAT_DIALOG_DATA.
+   * Data: nameValue 'A' edited to 'B'; no artifacts.
    */
-  it('applies extra validators from data.validators', async () => {
-    const { fixture } = await renderDialog({
+  it('closes with the edited name', async () => {
+    const user = userEvent.setup();
+    const { close, data } = await renderDialog({ data: { nameValue: 'A' } });
+    const name = screen.getByLabelText('Name');
+    await user.clear(name);
+    await user.type(name, 'B', { skipClick: true });
+    expect(saveButton().disabled).toBe(false);
+    await user.click(saveButton());
+    expect(close).toHaveBeenCalledExactlyOnceWith(data);
+    expect(data).toEqual({ nameValue: 'B', removeArtifacts: false });
+  });
+
+  /**
+   * Verifies: with artifacts, saving passes removeArtifacts through as the component holds it (true by default).
+   * Interacts with: the Save button; the injected MAT_DIALOG_DATA.
+   * Data: artifacts ['art-1']; name edited to 'B'.
+   */
+  it('keeps removeArtifacts true when artifacts exist', async () => {
+    const user = userEvent.setup();
+    const { data } = await renderDialog({
+      data: { nameValue: 'A', artifacts: ['art-1'] },
+    });
+    await user.type(screen.getByLabelText('Name'), 'B');
+    await user.click(saveButton());
+    expect(data).toEqual({
+      nameValue: 'AB',
+      artifacts: ['art-1'],
+      removeArtifacts: true,
+    });
+  });
+
+  /**
+   * Verifies: an emptied name cannot be saved, and a name failing a caller's validator shows its message and keeps Save
+   *   disabled.
+   * Interacts with: the Name field, its mat-error and the Save button; data.validators.
+   * Data: a minLength(5) validator with message 'At least 5'; 'abc' typed, then cleared.
+   */
+  it('blocks a name that fails its validators', async () => {
+    const user = userEvent.setup();
+    await renderDialog({
       data: {
-        nameValue: 'x',
-        validators: [{ name: 'minLength', validator: Validators.minLength(5) }],
+        nameValue: 'Alpha',
+        validators: [
+          {
+            name: 'minlength',
+            validator: Validators.minLength(5),
+            errorMessage: 'At least 5',
+          },
+        ],
       },
     });
-    const ctrl = fixture.componentInstance.form.controls['name'];
-    expect(ctrl.valid).toBe(false); // 'x' is shorter than 5
-    ctrl.setValue('longer');
-    expect(ctrl.valid).toBe(true);
-  });
-
-  /**
-   * Verifies: the `name` getter exposes the underlying name form control.
-   * Interacts with: component form control accessor.
-   * Data: default dialog data { nameValue: 'Alpha' }.
-   */
-  it('name getter returns the name form control', async () => {
-    const { fixture } = await renderDialog();
-    expect(fixture.componentInstance.name.value).toBe('Alpha');
-  });
-
-  /**
-   * Verifies: onClick() updates the name, defaults removeArtifacts to false,
-   *   and closes with the shared data object.
-   * Interacts with: MatDialogRef.close; mutates the injected MAT_DIALOG_DATA.
-   * Data: dialog data { nameValue: 'A' } edited to 'B'; no artifacts present.
-   */
-  it('onClick() closes with the edited name', async () => {
-    const { fixture, close, data } = await renderDialog({
-      data: { nameValue: 'A' },
-    });
-    fixture.componentInstance.form.get('name').setValue('B');
-    fixture.componentInstance.onClick();
-    expect(close).toHaveBeenCalledWith(data);
-    expect(data.nameValue).toBe('B');
-    expect(data.removeArtifacts).toBe(false); // no artifacts provided
-  });
-
-  /**
-   * Verifies: when artifacts exist, onClick() copies the user's removeArtifacts selection through in
-   *   both directions rather than writing a fixed value.
-   * Interacts with: component.removeArtifacts flag; mutates injected data.
-   * Data: dialog data with artifacts ['art-1'], clicked once with the flag false and once with it true.
-   * Why: the flag defaults to true, so asserting only the true case passes even if the branch assigned a
-   *   literal; exercising false first — the non-default — and then true pins the copy itself.
-   */
-  it('onClick() copies the user removeArtifacts choice when artifacts exist', async () => {
-    const data = { nameValue: 'A', artifacts: ['art-1'] } as {
-      nameValue: string;
-      artifacts: string[];
-      removeArtifacts?: boolean;
-    };
-    const { fixture } = await renderDialog({ data });
-    fixture.componentInstance.removeArtifacts = false;
-    fixture.componentInstance.onClick();
-    expect(data.removeArtifacts).toBe(false);
-    fixture.componentInstance.removeArtifacts = true;
-    fixture.componentInstance.onClick();
-    expect(data.removeArtifacts).toBe(true);
+    const name = screen.getByLabelText('Name');
+    await user.clear(name);
+    await user.type(name, 'abc', { skipClick: true });
+    await user.tab();
+    expect(screen.getByText('At least 5')).toBeInTheDocument();
+    expect(saveButton().disabled).toBe(true);
+    await user.clear(name);
+    expect(saveButton().disabled).toBe(true);
   });
 
   describe('description field (data.showDescription)', () => {
     /**
-     * Verifies: when showDescription is set, a description control is added and
-     *   seeded from data.descriptionValue.
-     * Interacts with: component form built on init from MAT_DIALOG_DATA.
-     * Data: dialog data with showDescription true and descriptionValue 'Initial desc'.
+     * Verifies: with showDescription the Description field shows the given value (or nothing), and the edited value is
+     *   saved with the name.
+     * Interacts with: the Description and Name fields; the Save button; the injected MAT_DIALOG_DATA.
+     * Data: one row per starting description; description changed to 'Updated'.
      */
-    it('adds a description control seeded from data.descriptionValue', async () => {
-      const { fixture } = await renderDialog({
-        data: {
-          nameValue: 'A',
-          showDescription: true,
-          descriptionValue: 'Initial desc',
-        },
+    it.each<[string, string | undefined, string]>([
+      ['a given description', 'Initial desc', 'Initial desc'],
+      ['no description', undefined, ''],
+    ])('shows and saves %s', async (_case, descriptionValue, shown) => {
+      const user = userEvent.setup();
+      const { data } = await renderDialog({
+        data: { nameValue: 'A', showDescription: true, descriptionValue },
       });
-      expect(fixture.componentInstance.form.get('description')?.value).toBe(
-        'Initial desc',
-      );
-    });
-
-    /**
-     * Verifies: the added description control defaults to '' when no
-     *   descriptionValue is supplied.
-     * Interacts with: component form built on init from MAT_DIALOG_DATA.
-     * Data: dialog data with showDescription true and no descriptionValue.
-     */
-    it('defaults the description control to empty when no value is given', async () => {
-      const { fixture } = await renderDialog({
-        data: { nameValue: 'A', showDescription: true },
-      });
-      expect(fixture.componentInstance.form.get('description')?.value).toBe('');
-    });
-
-    /**
-     * Verifies: onClick() writes the edited description control value back into
-     *   data.descriptionValue.
-     * Interacts with: MatDialogRef.close; mutates the injected MAT_DIALOG_DATA.
-     * Data: dialog data with showDescription true; description edited to 'Updated'.
-     */
-    it('onClick() writes the edited description back into data', async () => {
-      const { fixture, data } = await renderDialog({
-        data: { nameValue: 'A', showDescription: true, descriptionValue: '' },
-      });
-      fixture.componentInstance.form.get('description').setValue('Updated');
-      fixture.componentInstance.onClick();
+      const description = screen.getByLabelText('Description');
+      expect(description).toHaveValue(shown);
+      await user.clear(description);
+      await user.type(description, 'Updated', { skipClick: true });
+      await user.click(saveButton());
       expect(data.descriptionValue).toBe('Updated');
     });
 
     /**
-     * Verifies: no description control is created when showDescription is absent.
-     * Interacts with: component form built on init from MAT_DIALOG_DATA.
-     * Data: dialog data { nameValue: 'A' } with no showDescription flag.
+     * Verifies: without showDescription no Description field renders.
+     * Interacts with: the rendered form.
+     * Data: nameValue 'A' only.
      */
-    it('does not add a description control when showDescription is absent', async () => {
-      const { fixture } = await renderDialog({ data: { nameValue: 'A' } });
-      expect(fixture.componentInstance.form.get('description')).toBeNull();
+    it('renders no Description field without showDescription', async () => {
+      await renderDialog({ data: { nameValue: 'A' } });
+      expect(screen.queryByLabelText('Description')).not.toBeInTheDocument();
     });
   });
 });
