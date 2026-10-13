@@ -20,6 +20,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
+import { TestBed } from '@angular/core/testing';
+import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
 
 function makeNotification(
   overrides: Partial<NotificationDataStatus> = {},
@@ -68,6 +70,7 @@ async function renderNotifications(
       MatInputModule,
       MatBadgeModule,
       MatButtonModule,
+      TimeZoneAbbrPipe,
     ],
     declarations: [NotificationsComponent],
     componentProperties: {
@@ -443,5 +446,29 @@ describe('NotificationsComponent', () => {
       const { container } = await renderNotifications({ viewAdmin: true });
       expect(sendButton(container).disabled).toBe(false);
     });
+  });
+
+  /**
+   * Verifies: the notification list shows the zone label next to the time and in the hover title.
+   * Interacts with: notificationHistory stream, #time element.
+   * Data: one notification; label is the viewer's zone for that date.
+   */
+  it('shows the zone label next to the notification time', async () => {
+    const { fixture, container, notificationHistory } =
+      await renderNotifications();
+    const n = makeNotification({
+      key: 1,
+      broadcastTime: '2026-11-12T16:00:00Z',
+    });
+    notificationHistory.next([n]);
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    await fixture.whenStable();
+    const zone = TestBed.runInInjectionContext(
+      () => new TimeZoneAbbrPipe(),
+    ).transform(n.broadcastTime);
+    expect(zone).not.toBe('');
+    const time = container.querySelector('#time') as HTMLElement;
+    expect(time.querySelector('.zone')?.textContent?.trim()).toBe(zone);
+    expect(time.getAttribute('title')).toMatch(new RegExp(` ${zone}$`));
   });
 });

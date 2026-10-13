@@ -73,6 +73,7 @@ import { ViewListComponent } from './components/home-app/view-list/view-list.com
 import { ApplicationListComponent } from './components/player/application-list/application-list.component';
 import { FocusedAppComponent } from './components/player/focused-app/focused-app.component';
 import { NotificationsComponent } from './components/player/notifications/notifications.component';
+import { TimeZoneAbbrPipe } from './pipes/time-zone-abbr.pipe';
 import { PlayerComponent } from './components/player/player.component';
 import { AddRemoveUsersDialogComponent } from './components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
 import { SystemMessageComponent } from './components/shared/system-message/system-message.component';
@@ -200,6 +201,7 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
         AdminAppViewImportComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
+        TimeZoneAbbrPipe,
         BrowserAnimationsModule,
         FormsModule,
         AngularMaterialModule,
