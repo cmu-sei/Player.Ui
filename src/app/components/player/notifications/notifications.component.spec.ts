@@ -2,8 +2,9 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
+import { formatDate } from '@angular/common';
 import { Title } from '@angular/platform-browser';
-import { screen } from '@testing-library/angular';
+import { screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { BehaviorSubject, of } from 'rxjs';
 import {
@@ -528,26 +529,29 @@ describe('NotificationsComponent', () => {
   });
 
   /**
-   * Verifies: the notification list shows the zone label next to the time and in the hover title.
-   * Interacts with: notificationHistory stream, #time element.
-   * Data: one notification; label is the viewer's zone for that date.
+   * Verifies: each notification shows its time with the viewer's zone label beside it, and the hover title gives the
+   *   full date and time followed by the same label.
+   * Interacts with: notificationHistory stream; the rendered #time element; the real TimeZoneAbbrPipe and DatePipe
+   *   in the template (default LOCALE_ID en-US, the test process's time zone).
+   * Data: one notification broadcast 2026-11-12T16:00:00Z; the expected label and times are formatted for that date
+   *   in the same zone, so the test holds in any zone the suite runs in.
    */
   it('shows the zone label next to the notification time', async () => {
-    const { fixture, container, notificationHistory } =
-      await renderNotifications();
-    const n = makeNotification({
-      key: 1,
-      broadcastTime: '2026-11-12T16:00:00Z',
-    });
-    notificationHistory.next([n]);
-    fixture.componentRef.changeDetectorRef.markForCheck();
-    await fixture.whenStable();
+    const { fixture, notificationHistory } = await renderNotifications();
+    const broadcastTime = '2026-11-12T16:00:00Z';
+    notificationHistory.next([makeNotification({ key: 1, broadcastTime })]);
+    fixture.detectChanges();
+
     const zone = TestBed.runInInjectionContext(
       () => new TimeZoneAbbrPipe(),
-    ).transform(n.broadcastTime);
+    ).transform(broadcastTime);
     expect(zone).not.toBe('');
-    const time = container.querySelector('#time') as HTMLElement;
-    expect(time.querySelector('.zone')?.textContent?.trim()).toBe(zone);
-    expect(time.getAttribute('title')).toMatch(new RegExp(` ${zone}$`));
+    const time = screen.getByTitle(
+      `${formatDate(broadcastTime, 'MM/dd/yyyy HH:mm', 'en-US')} ${zone}`,
+    );
+    expect(time.querySelector('b')).toHaveTextContent(
+      formatDate(broadcastTime, 'HH:mm', 'en-US'),
+    );
+    expect(within(time).getByText(zone)).toHaveClass('zone');
   });
 });
