@@ -45,10 +45,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <div id="wrapper">
             <div
               id="time"
-              title="{{ notif.broadcastTime | date : 'MM/dd/yyyy HH:mm' }} {{ timeZoneAbbr(notif.broadcastTime) }}"
+              title="{{ notif.broadcastTime | date : 'MM/dd/yyyy HH:mm' }} {{ notif.broadcastTime | timeZoneAbbr }}"
               >
               <b>{{ notif.broadcastTime | date : 'HH:mm' }}</b>
-              <span class="zone">{{ timeZoneAbbr(notif.broadcastTime) }}</span>
+              <span class="zone">{{ notif.broadcastTime | timeZoneAbbr }}</span>
             </div>
             <div id="from">
               {{ notif.fromName }}

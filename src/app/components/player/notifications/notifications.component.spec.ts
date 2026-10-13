@@ -20,6 +20,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
+import { TestBed } from '@angular/core/testing';
+import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
 
 function makeNotification(
   overrides: Partial<NotificationDataStatus> = {},
@@ -68,6 +70,7 @@ async function renderNotifications(
       MatInputModule,
       MatBadgeModule,
       MatButtonModule,
+      TimeZoneAbbrPipe,
     ],
     declarations: [NotificationsComponent],
     componentProperties: {
@@ -446,31 +449,23 @@ describe('NotificationsComponent', () => {
   });
 
   /**
-   * Verifies: timeZoneAbbr labels each time from its own date, not today's, across the DST boundary.
-   * Interacts with: component timeZoneAbbr with an explicit zone (the dev container runs in UTC).
-   * Data: America/New_York, 2026-10-12 16:00Z (EDT) and 2026-11-12 16:00Z (EST, DST ends Nov 1).
-   */
-  it('timeZoneAbbr derives EDT/EST from the notification date', async () => {
-    const { fixture } = await renderNotifications();
-    const c = fixture.componentInstance;
-    expect(c.timeZoneAbbr('2026-10-12T16:00:00Z', 'America/New_York')).toBe('EDT');
-    expect(c.timeZoneAbbr('2026-11-12T16:00:00Z', 'America/New_York')).toBe('EST');
-    expect(c.timeZoneAbbr(new Date('2026-11-12T16:00:00Z'), 'America/New_York')).toBe('EST');
-    expect(c.timeZoneAbbr('')).toBe('');
-  });
-
-  /**
    * Verifies: the notification list shows the zone label next to the time and in the hover title.
    * Interacts with: notificationHistory stream, #time element.
    * Data: one notification; label is the viewer's zone for that date.
    */
   it('shows the zone label next to the notification time', async () => {
-    const { fixture, container, notificationHistory } = await renderNotifications();
-    const n = makeNotification({ key: 1, broadcastTime: '2026-11-12T16:00:00Z' });
+    const { fixture, container, notificationHistory } =
+      await renderNotifications();
+    const n = makeNotification({
+      key: 1,
+      broadcastTime: '2026-11-12T16:00:00Z',
+    });
     notificationHistory.next([n]);
     fixture.componentRef.changeDetectorRef.markForCheck();
     await fixture.whenStable();
-    const zone = fixture.componentInstance.timeZoneAbbr(n.broadcastTime);
+    const zone = TestBed.runInInjectionContext(
+      () => new TimeZoneAbbrPipe(),
+    ).transform(n.broadcastTime);
     expect(zone).not.toBe('');
     const time = container.querySelector('#time') as HTMLElement;
     expect(time.querySelector('.zone')?.textContent?.trim()).toBe(zone);
