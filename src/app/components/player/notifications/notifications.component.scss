@@ -72,11 +72,14 @@
   display: table-cell;
 }
 #time {
-  width: 45px;
+  width: 75px;
   font-size: 90%;
   padding: 0;
   margin: 0;
   text-align: left;
+}
+#time .zone {
+  font-size: 80%;
 }
 #from {
   width: 100px;

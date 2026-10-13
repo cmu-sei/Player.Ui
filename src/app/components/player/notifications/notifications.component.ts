@@ -177,6 +177,19 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Label each time from its own date, so a November notification reads EST
+  // even when viewed in October. timeZone defaults to the viewer's zone.
+  timeZoneAbbr(value: string | Date, timeZone?: string): string {
+    if (!value) {
+      return '';
+    }
+    return (
+      new Intl.DateTimeFormat('en-US', { timeZone, timeZoneName: 'short' })
+        .formatToParts(new Date(value))
+        .find((part) => part.type === 'timeZoneName')?.value ?? ''
+    );
+  }
+
   notificationDisplayClass() {
     if (
       this.useBlink &&
