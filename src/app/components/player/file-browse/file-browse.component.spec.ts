@@ -3,7 +3,9 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { of } from 'rxjs';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { screen, within } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { ActivatedRoute } from '@angular/router';
 import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
 import { FileBrowseComponent } from './file-browse.component';
@@ -11,6 +13,8 @@ import { renderComponent } from '../../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { activatedRouteStub } from '../../../test-utils/activated-route';
 
 const files: FileModel[] = [
   { id: 'f1', name: 'doc.txt', teamIds: ['team-a'] },
@@ -55,7 +59,8 @@ async function renderBrowse(
 ) {
   const { viewId = 'v1', files: f = files, teams: t = teams } = overrides;
 
-  const getViewFiles = vi.fn(() => of(f));
+  const getViewFiles = vi.fn(() => of(structuredClone(f)));
+  vi.spyOn(console, 'log').mockImplementation(() => {});
   const getMyViewTeams = vi.fn(() => of(t));
   const download = vi.fn(() => of(new Blob(['x'])));
 
@@ -65,19 +70,15 @@ async function renderBrowse(
     providers: [
       {
         provide: FileService,
-        useValue: { getViewFiles, download },
+        useValue: { getViewFiles, download } satisfies ApiStub<FileService>,
       },
       {
         provide: TeamService,
-        useValue: { getMyViewTeams },
+        useValue: { getMyViewTeams } satisfies ApiStub<TeamService>,
       },
       {
         provide: ActivatedRoute,
-        useValue: {
-          snapshot: {
-            paramMap: convertToParamMap({ id: viewId }),
-          },
-        },
+        useValue: activatedRouteStub({}, { id: viewId }).route,
       },
     ],
   });
@@ -85,95 +86,72 @@ async function renderBrowse(
   return { ...rendered, getViewFiles, getMyViewTeams, download };
 }
 
+/** File names listed for the selected team, in render order. */
+function listedFiles(container: Element): string[] {
+  return Array.from(container.querySelectorAll('mat-list-item')).map(
+    (item) => item.textContent?.trim() ?? '',
+  );
+}
+
 describe('FileBrowseComponent', () => {
   /**
-   * Verifies: init fetches files and teams using the view id from the route, populating files and a teams map.
-   * Interacts with: FileService.getViewFiles, TeamService.getMyViewTeams, ActivatedRoute.snapshot.paramMap.
-   * Data: route id 'v1'; default files/teams; asserts teams map has 2 entries.
+   * Verifies: the view's files and the user's teams load for the route's view, a button per team renders, and no
+   *   file is listed until a team is picked.
+   * Interacts with: FileService.getViewFiles and TeamService.getMyViewTeams with the ActivatedRoute id; the rendered
+   *   team buttons and file list.
+   * Data: route id 'v1'; teams Red and Blue; three files.
    */
-  it('loads files and teams on init using the route id', async () => {
-    const { fixture, getViewFiles, getMyViewTeams } = await renderBrowse();
-    expect(getViewFiles).toHaveBeenCalledWith('v1');
-    expect(getMyViewTeams).toHaveBeenCalledWith('v1');
-    expect(fixture.componentInstance.files).toEqual(files);
-    expect(fixture.componentInstance.teams.size).toBe(2);
+  it('loads the files and teams of the routed view', async () => {
+    const { container, getViewFiles, getMyViewTeams } = await renderBrowse();
+    expect(getViewFiles).toHaveBeenCalledExactlyOnceWith('v1');
+    expect(getMyViewTeams).toHaveBeenCalledExactlyOnceWith('v1');
+    expect(screen.getByText('Red')).toBeInTheDocument();
+    expect(screen.getByText('Blue')).toBeInTheDocument();
+    expect(listedFiles(container)).toEqual([]);
   });
 
   /**
-   * Verifies: filtered() returns only files whose teamIds include the selected team.
-   * Interacts with: component.selectTeam then filtered() seam.
-   * Data: default files; selectTeam('team-a') expects f1 and f3.
+   * Verifies: picking a team lists the files shared with it.
+   * Interacts with: the rendered team buttons; the file list.
+   * Data: one row per team; doc.txt for Red, image.png for Blue, shared.pdf for both.
    */
-  it('filtered() returns files belonging to the current team', async () => {
-    const { fixture } = await renderBrowse();
-    fixture.componentInstance.selectTeam('team-a');
-    expect(fixture.componentInstance.filtered().map((f) => f.id)).toEqual([
-      'f1',
-      'f3',
-    ]);
+  it.each<[string, string[]]>([
+    ['Red', ['doc.txt', 'shared.pdf']],
+    ['Blue', ['image.png', 'shared.pdf']],
+  ])('lists the files of team %s', async (team, expected) => {
+    const user = userEvent.setup();
+    const { container } = await renderBrowse();
+    await user.click(screen.getByText(team));
+    expect(listedFiles(container)).toEqual(expected);
   });
 
   /**
-   * Verifies: filtered() returns an empty array when no team has been selected.
-   * Interacts with: component.filtered() seam without a prior selectTeam.
-   * Data: default renderBrowse().
+   * Verifies: Download fetches the file and clicks a link to it, naming the download for a document and not for an
+   *   image (which opens in the browser).
+   * Interacts with: the file's Download button; FileService.download; URL.createObjectURL; the created link.
+   * Data: one row per file of team Red's and Blue's lists.
    */
-  it('filtered() returns empty when currentTeam is unset', async () => {
-    const { fixture } = await renderBrowse();
-    expect(fixture.componentInstance.filtered()).toEqual([]);
-  });
-
-  /**
-   * Verifies: selectTeam stores the chosen team id in currentTeam.
-   * Interacts with: component.selectTeam seam.
-   * Data: selectTeam('team-b').
-   */
-  it('selectTeam updates currentTeam', async () => {
-    const { fixture } = await renderBrowse();
-    fixture.componentInstance.selectTeam('team-b');
-    expect(fixture.componentInstance.currentTeam).toBe('team-b');
-  });
-
-  /**
-   * Verifies: downloadFile fetches the blob, points the anchor at the object URL, names the download after
-   *   the file, and clicks it for a non-image file.
-   * Interacts with: FileService.download, URL.createObjectURL spy, document.createElement anchor stub.
-   * Data: file id 'f1' / 'doc.txt'.
-   * Why: the download attribute is the whole point of this branch, so it is asserted with the file name
-   *   rather than left to a no-op setter; the anchor's click is stubbed to avoid jsdom
-   *   "Not implemented: navigation".
-   */
-  it('downloadFile triggers a browser download for a non-image file', async () => {
-    const { fixture, download } = await renderBrowse();
-    const { anchor, setDownload, click } = makeAnchorStub();
-    const createUrl = vi
-      .spyOn(URL, 'createObjectURL')
-      .mockReturnValue('blob://x');
-    stubAnchorCreation(anchor);
-    fixture.componentInstance.downloadFile('f1', 'doc.txt');
-    expect(download).toHaveBeenCalledWith('f1');
-    expect(createUrl).toHaveBeenCalled();
-    expect(anchor.getAttribute('href')).toBe('blob://x');
-    expect(anchor.getAttribute('target')).toBe('_blank');
-    expect(setDownload).toHaveBeenCalledWith('doc.txt');
-    expect(click).toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: downloadFile omits the anchor download attribute for image files (opens inline instead of
-   *   forcing a save) while still clicking the anchor.
-   * Interacts with: FileService.download, anchor download setter spy via createElement stub.
-   * Data: file id 'f2' / 'image.png'.
-   * Why: instruments the anchor's download setter so it can assert the attribute is never assigned, and
-   *   asserts the click so a downloadFile that did nothing at all could not pass.
-   */
-  it('downloadFile does not set download attribute for image files', async () => {
-    const { fixture } = await renderBrowse();
+  it.each<[string, string, string, string | null]>([
+    ['Red', 'doc.txt', 'f1', 'doc.txt'],
+    ['Blue', 'image.png', 'f2', null],
+  ])('downloads %s team file %s', async (team, name, id, downloadName) => {
+    const user = userEvent.setup();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { container, download } = await renderBrowse();
+    await user.click(screen.getByText(team));
     const { anchor, setDownload, click } = makeAnchorStub();
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob://x');
     stubAnchorCreation(anchor);
-    fixture.componentInstance.downloadFile('f2', 'image.png');
-    expect(setDownload).not.toHaveBeenCalled();
-    expect(click).toHaveBeenCalled();
+    const item = Array.from(container.querySelectorAll('mat-list-item')).find(
+      (i) => i.textContent?.trim() === name,
+    )!;
+    await user.click(within(item as HTMLElement).getByTitle('Download'));
+    expect(download).toHaveBeenCalledExactlyOnceWith(id);
+    expect(anchor.getAttribute('href')).toBe('blob://x');
+    expect(anchor.getAttribute('target')).toBe('_blank');
+    expect(setDownload.mock.calls).toEqual(
+      downloadName ? [[downloadName]] : [],
+    );
+    expect(click).toHaveBeenCalledTimes(1);
   });
 });

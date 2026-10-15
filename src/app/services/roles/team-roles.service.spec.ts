@@ -14,6 +14,7 @@ import {
   TeamRole,
   TeamRoleService,
 } from '../../generated/player-api';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function role(overrides: Partial<TeamRole> = {}): TeamRole {
   return {
@@ -30,8 +31,8 @@ function perm(id: string): TeamPermissionModel {
 }
 
 function createService(
-  roleApi: Partial<Record<keyof TeamRoleService, unknown>> = {},
-  permApi: Partial<Record<keyof TeamPermissionService, unknown>> = {},
+  roleApi: ApiStub<TeamRoleService> = {},
+  permApi: ApiStub<TeamPermissionService> = {},
 ) {
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({
@@ -144,9 +145,6 @@ describe('TeamRolesService', () => {
    *   cached role, and publishes the grown role on roles$.
    * Interacts with: TeamPermissionService.addTeamPermissionToRole (vi.fn) and TeamRoleService.getTeamRoles stub, TeamRolesService.addPermission, roles$ via recordEmissions.
    * Data: role r1 with empty permissions; perm('p1') added.
-   * Why: the permission is pushed onto the role object already held in the cached array and upsert
-   *   re-next()s that same array reference, so a post-hoc read of roles$ sees the permission even if
-   *   the subject never re-emits. Recording emissions is what proves subscribers were told.
    */
   it('addPermission() calls the API, appends the permission, and emits', async () => {
     const addTeamPermissionToRole = vi.fn(() => of(undefined));
@@ -167,8 +165,6 @@ describe('TeamRolesService', () => {
    *   from the cached role, and publishes the trimmed role on roles$.
    * Interacts with: TeamPermissionService.removeTeamPermissionFromRole (vi.fn) and getTeamRoles stub, TeamRolesService.removePermission, roles$ via recordEmissions.
    * Data: role r1 holding p1 and p2; p1 removed, expecting only p2 to remain.
-   * Why: the filtered array is assigned onto the role object already held in the cache, so a post-hoc
-   *   read of roles$ sees the removal even if the subject never re-emits.
    */
   it('removePermission() calls the API, drops the permission, and emits', async () => {
     const removeTeamPermissionFromRole = vi.fn(() => of(undefined));

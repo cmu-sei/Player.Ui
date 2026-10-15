@@ -1,9 +1,9 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { of, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { UserPermissionsService } from './user-permissions.service';
 import {
   PermissionService,
@@ -14,28 +14,28 @@ import {
   ViewPermission,
 } from '../../generated/player-api';
 import { getDefaultProviders } from 'src/app/test-utils/default-test-providers';
+import { permissionApiStubs } from '../../test-utils/mock-permission-data.service';
 
 function createService(
   overrides: {
-    myPermissions?: string[];
+    myPermissions?: SystemPermission[];
     myTeamPermissions?: TeamPermissionsClaim[];
   } = {},
 ) {
   const { myPermissions = [], myTeamPermissions = [] } = overrides;
+  // The shared "my permissions" endpoint stubs; the service under test is
+  // constructed here rather than through permissionDataProviders(), which
+  // would load it before the test does.
+  const stubs = permissionApiStubs({
+    system: myPermissions,
+    teams: myTeamPermissions,
+  });
 
   TestBed.configureTestingModule({
     providers: [
       ...getDefaultProviders([
-        {
-          provide: PermissionService,
-          useValue: { getMyPermissions: () => of(myPermissions) },
-        },
-        {
-          provide: TeamPermissionService,
-          useValue: {
-            getMyTeamPermissions: () => of(myTeamPermissions),
-          },
-        },
+        { provide: PermissionService, useValue: stubs.permissions },
+        { provide: TeamPermissionService, useValue: stubs.teamPermissions },
       ]),
       UserPermissionsService,
     ],
@@ -46,35 +46,25 @@ function createService(
 
 describe('UserPermissionsService', () => {
   /**
-   * Verifies: the service instantiates under DI with empty permission stubs.
-   * Interacts with: PermissionService/TeamPermissionService stubs, UserPermissionsService construction.
-   * Data: createService() with default empty overrides.
+   * Verifies: both permission streams start empty and nothing is fetched until load() / loadTeamPermissions() is called.
+   * Interacts with: the PermissionService and TeamPermissionService stubs (asserted unused); permissions$ and teamPermissions$.
+   * Data: CreateViews and a ManageTeam claim waiting on the endpoints.
    */
-  it('should be created', () => {
-    const service = createService();
-    expect(service).toBeTruthy();
-  });
-
-  /**
-   * Verifies: permissions$ exposes an array even before any explicit load.
-   * Interacts with: UserPermissionsService.permissions$ (BehaviorSubject seed).
-   * Data: default empty myPermissions.
-   */
-  it('should have permissions$ observable', async () => {
-    const service = createService();
-    const permissions = await firstValueFrom(service.permissions$);
-    expect(Array.isArray(permissions)).toBe(true);
-  });
-
-  /**
-   * Verifies: teamPermissions$ exposes an array even before any team permissions are loaded.
-   * Interacts with: UserPermissionsService.teamPermissions$ (BehaviorSubject seed).
-   * Data: default empty myTeamPermissions.
-   */
-  it('should have teamPermissions$ observable', async () => {
-    const service = createService();
-    const teamPermissions = await firstValueFrom(service.teamPermissions$);
-    expect(Array.isArray(teamPermissions)).toBe(true);
+  it('starts with empty permissions and fetches nothing until loaded', async () => {
+    const service = createService({
+      myPermissions: [SystemPermission.CreateViews],
+      myTeamPermissions: [
+        { teamId: 'team-1', permissionValues: [TeamPermission.ManageTeam] },
+      ],
+    });
+    expect(await firstValueFrom(service.permissions$)).toEqual([]);
+    expect(await firstValueFrom(service.teamPermissions$)).toEqual([]);
+    expect(
+      vi.mocked(TestBed.inject(PermissionService).getMyPermissions),
+    ).not.toHaveBeenCalled();
+    expect(
+      vi.mocked(TestBed.inject(TeamPermissionService).getMyTeamPermissions),
+    ).not.toHaveBeenCalled();
   });
 
   /**
@@ -159,7 +149,7 @@ describe('UserPermissionsService', () => {
     expect(result).toEqual(mockTeamPerms);
   });
 
-  // Shared claims fixture includes a null-teamId ManageTeam grant that must be filtered out.
+  // Shared claims fixture, including a ManageTeam grant with a null teamId.
   describe('manageable teams', () => {
     const claims: TeamPermissionsClaim[] = [
       { teamId: 'team-1', permissionValues: [TeamPermission.ManageTeam] },
@@ -241,29 +231,34 @@ describe('UserPermissionsService', () => {
     const allPermissions = Object.values(SystemPermission);
 
     /**
-     * Verifies: per SystemPermission value, hasPermission returns true when that exact permission is granted and false when only a different one is (the false case is skipped when no distinct alternative exists).
-     * Interacts with: PermissionService.getMyPermissions (stub), UserPermissionsService.load + hasPermission, looped over every SystemPermission.
-     * Data: per iteration, myPermissions seeded with either [perm] or [some other perm].
-     * Why: one header for the whole loop; the not-granted assertion is guarded so a single-value enum wouldn't false-fail.
+     * Verifies: hasPermission returns true for a SystemPermission that is granted.
+     * Interacts with: PermissionService.getMyPermissions (stub), UserPermissionsService.load + hasPermission.
+     * Data: one row per SystemPermission value; myPermissions is [perm].
      */
-    for (const perm of allPermissions) {
-      it(`should return true for ${perm} when granted`, async () => {
+    it.each(allPermissions)(
+      'returns true for %s when granted',
+      async (perm) => {
         const service = createService({ myPermissions: [perm] });
         await firstValueFrom(service.load());
-        const result = await firstValueFrom(service.hasPermission(perm));
-        expect(result).toBe(true);
-      });
+        expect(await firstValueFrom(service.hasPermission(perm))).toBe(true);
+      },
+    );
 
-      it(`should return false for ${perm} when not granted`, async () => {
-        const other = allPermissions.find((p) => p !== perm) ?? perm;
-        const service = createService({ myPermissions: [other] });
+    /**
+     * Verifies: hasPermission returns false for a SystemPermission when every other one is granted (near miss).
+     * Interacts with: PermissionService.getMyPermissions (stub), UserPermissionsService.load + hasPermission.
+     * Data: one row per SystemPermission value; myPermissions is every value except perm.
+     */
+    it.each(allPermissions)(
+      'returns false for %s when only the other permissions are granted',
+      async (perm) => {
+        const service = createService({
+          myPermissions: allPermissions.filter((p) => p !== perm),
+        });
         await firstValueFrom(service.load());
-        const result = await firstValueFrom(service.hasPermission(perm));
-        if (other !== perm) {
-          expect(result).toBe(false);
-        }
-      });
-    }
+        expect(await firstValueFrom(service.hasPermission(perm))).toBe(false);
+      },
+    );
   });
 
   describe('canViewAdminstration()', () => {
@@ -287,31 +282,41 @@ describe('UserPermissionsService', () => {
 
     /**
      * Verifies: canViewAdminstration returns true when the sole granted permission is any one of the View* admin permissions.
-     * Interacts with: PermissionService.getMyPermissions (stub), load + canViewAdminstration, looped over viewPerms.
-     * Data: per iteration, myPermissions seeded with a single View* permission.
+     * Interacts with: PermissionService.getMyPermissions (stub), load + canViewAdminstration.
+     * Data: one row per View* permission; myPermissions is [perm].
      */
-    for (const perm of viewPerms) {
-      it(`should return true when only ${perm} is granted`, async () => {
-        const service = createService({ myPermissions: [perm] });
-        await firstValueFrom(service.load());
-        const result = await firstValueFrom(service.canViewAdminstration());
-        expect(result).toBe(true);
-      });
-    }
+    it.each(viewPerms)('returns true when only %s is granted', async (perm) => {
+      const service = createService({ myPermissions: [perm] });
+      await firstValueFrom(service.load());
+      expect(await firstValueFrom(service.canViewAdminstration())).toBe(true);
+    });
 
     /**
      * Verifies: canViewAdminstration returns false when the sole granted permission is a non-View admin permission (Manage/Create/Edit).
-     * Interacts with: PermissionService.getMyPermissions (stub), load + canViewAdminstration, looped over nonViewPerms.
-     * Data: per iteration, myPermissions seeded with a single non-View* permission.
+     * Interacts with: PermissionService.getMyPermissions (stub), load + canViewAdminstration.
+     * Data: one row per non-View* permission; myPermissions is [perm].
      */
-    for (const perm of nonViewPerms) {
-      it(`should return false when only ${perm} is granted`, async () => {
+    it.each(nonViewPerms)(
+      'returns false when only %s is granted',
+      async (perm) => {
         const service = createService({ myPermissions: [perm] });
         await firstValueFrom(service.load());
-        const result = await firstValueFrom(service.canViewAdminstration());
-        expect(result).toBe(false);
-      });
-    }
+        expect(await firstValueFrom(service.canViewAdminstration())).toBe(
+          false,
+        );
+      },
+    );
+
+    /**
+     * Verifies: canViewAdminstration returns false when every non-View* permission is granted together (near miss).
+     * Interacts with: PermissionService.getMyPermissions (stub), load + canViewAdminstration.
+     * Data: myPermissions is all of nonViewPerms.
+     */
+    it('returns false when all the Manage, Create and Edit permissions are granted', async () => {
+      const service = createService({ myPermissions: nonViewPerms });
+      await firstValueFrom(service.load());
+      expect(await firstValueFrom(service.canViewAdminstration())).toBe(false);
+    });
 
     /**
      * Verifies: canViewAdminstration returns false when no permissions are granted at all.
@@ -361,12 +366,16 @@ describe('UserPermissionsService', () => {
     });
 
     /**
-     * Verifies: can() returns false when the system permission is absent and no team permissions exist.
+     * Verifies: can() returns false when every system permission except the required one is granted and there are no team claims (near miss).
      * Interacts with: PermissionService.getMyPermissions (stub), load + can.
-     * Data: empty myPermissions; checks ManageViews.
+     * Data: myPermissions is every SystemPermission except ManageViews; checks ManageViews.
      */
-    it('should return false when the system permission is absent and no team perms', async () => {
-      const service = createService({ myPermissions: [] });
+    it('returns false when every system permission but ManageViews is granted', async () => {
+      const service = createService({
+        myPermissions: Object.values(SystemPermission).filter(
+          (p) => p !== SystemPermission.ManageViews,
+        ),
+      });
       await firstValueFrom(service.load());
       const result = await firstValueFrom(
         service.can(SystemPermission.ManageViews),
@@ -426,14 +435,23 @@ describe('UserPermissionsService', () => {
     });
 
     /**
-     * Verifies: can() returns false when none of the system, team, or view permissions are present.
-     * Interacts with: getMyPermissions + getMyTeamPermissions (empty stubs), load + loadTeamPermissions + can.
-     * Data: empty permissions and claims; can(ManageViews, undefined, ManageTeam, ManageView).
+     * Verifies: can() returns false when the system grants and the team claim hold only the View-level neighbours of the required permissions (near miss).
+     * Interacts with: getMyPermissions + getMyTeamPermissions (stubs), load + loadTeamPermissions + can.
+     * Data: myPermissions [ViewViews, EditViews]; a team-1 claim with ViewTeam and ViewView;
+     *   can(ManageViews, undefined, ManageTeam, ManageView), the topbar's showEditView$ shape.
      */
-    it('should return false when nothing is present', async () => {
+    it('returns false when only the View-level system, team and view permissions are granted', async () => {
       const service = createService({
-        myPermissions: [],
-        myTeamPermissions: [],
+        myPermissions: [SystemPermission.ViewViews, SystemPermission.EditViews],
+        myTeamPermissions: [
+          {
+            teamId: 'team-1',
+            permissionValues: [
+              TeamPermission.ViewTeam,
+              ViewPermission.ViewView,
+            ],
+          },
+        ],
       });
       await firstValueFrom(service.load());
       await firstValueFrom(service.loadTeamPermissions());
@@ -449,39 +467,64 @@ describe('UserPermissionsService', () => {
     });
 
     /**
-     * Verifies: when a teamId is passed, can() evaluates only that team's claim — true for the team holding ManageTeam, false for the team lacking it.
+     * Verifies: when a teamId is passed, can() evaluates only that team's claim: true for the team holding ManageTeam, false for the team holding only ViewTeam.
      * Interacts with: getMyPermissions + getMyTeamPermissions (stubs), load + loadTeamPermissions + can.
-     * Data: team-A has ManageTeam, team-B has none; can(ManageViews, 'team-A'|'team-B', ManageTeam).
+     * Data: team-A has ManageTeam, team-B has ViewTeam; can(ManageViews, teamId, ManageTeam).
      */
-    it('should only check the specified teamId when teamId is provided', async () => {
-      const teamPerms: TeamPermissionsClaim[] = [
-        { teamId: 'team-A', permissionValues: [TeamPermission.ManageTeam] },
-        { teamId: 'team-B', permissionValues: [] },
-      ];
+    it.each([
+      ['team-A', true],
+      ['team-B', false],
+    ])(
+      'checks only the claim of %s when a teamId is passed',
+      async (teamId, expected) => {
+        const service = createService({
+          myPermissions: [],
+          myTeamPermissions: [
+            { teamId: 'team-A', permissionValues: [TeamPermission.ManageTeam] },
+            { teamId: 'team-B', permissionValues: [TeamPermission.ViewTeam] },
+          ],
+        });
+        await firstValueFrom(service.load());
+        await firstValueFrom(service.loadTeamPermissions());
+        const result = await firstValueFrom(
+          service.can(
+            SystemPermission.ManageViews,
+            teamId,
+            TeamPermission.ManageTeam,
+          ),
+        );
+        expect(result).toBe(expected);
+      },
+    );
+  });
+
+  describe('can() with a teamId that has no claim', () => {
+    /**
+     * Verifies: can() with a teamId the user holds no claim for errors with a
+     *   TypeError (current behavior).
+     * Interacts with: getMyPermissions + getMyTeamPermissions (stubs), load + loadTeamPermissions + can.
+     * Data: no system permissions; one claim for team-A; can(ManageViews, 'team-B', ManageTeam).
+     */
+    it('throws a TypeError for a team without a claim', async () => {
       const service = createService({
         myPermissions: [],
-        myTeamPermissions: teamPerms,
+        myTeamPermissions: [
+          { teamId: 'team-A', permissionValues: [TeamPermission.ManageTeam] },
+        ],
       });
       await firstValueFrom(service.load());
       await firstValueFrom(service.loadTeamPermissions());
 
-      const resultA = await firstValueFrom(
-        service.can(
-          SystemPermission.ManageViews,
-          'team-A',
-          TeamPermission.ManageTeam,
+      // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+      await expect(
+        firstValueFrom(
+          service.can(
+            SystemPermission.ManageViews,
+            'team-B',
+            TeamPermission.ManageTeam,
+          ),
         ),
-      );
-      expect(resultA).toBe(true);
-
-      const resultB = await firstValueFrom(
-        service.can(
-          SystemPermission.ManageViews,
-          'team-B',
-          TeamPermission.ManageTeam,
-        ),
-      );
-      expect(resultB).toBe(false);
+      ).rejects.toThrow(TypeError);
     });
   });
 

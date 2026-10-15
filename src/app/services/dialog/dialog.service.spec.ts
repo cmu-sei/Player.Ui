@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { of, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from './dialog.service';
 import { NameDialogComponent } from '../../components/shared/name-dialog/name-dialog.component';
@@ -13,9 +13,11 @@ import { EditSubscriptionComponent } from '../../components/admin-app/app-admin-
 import { CreateApplicationDialogComponent } from '../../components/shared/create-application-dialog/create-application-dialog.component';
 import { TeamUserApp } from '../../components/admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { Team, FileModel } from '../../generated/player-api';
+import { dialogRefStub } from '../../test-utils/dialog-refs';
 
-// Each open() returns a fake dialog ref whose componentInstance captures
-// whatever DialogService assigns to it, plus an afterClosed() we control. This
+// Each open() returns a dialogRefStub whose componentInstance captures
+// whatever DialogService assigns to it, and whose afterClosed() emits the
+// result the test chooses. This
 // lets us assert which component was opened, what config it got, and which
 // inputs were set — without rendering anything.
 //
@@ -30,16 +32,25 @@ type DialogComponentInstance = Partial<NameDialogComponent> &
 
 function setup(closedWith: unknown = true) {
   const componentInstance: DialogComponentInstance = { loadTeam: vi.fn() };
-  const afterClosed = vi.fn(() => of(closedWith));
-  const dialogRef = { componentInstance, afterClosed };
+  const { dialogRef } = dialogRefStub<DialogComponentInstance, unknown>(
+    closedWith,
+  );
+  // dialogRefStub has no componentInstance; DialogService writes inputs onto it.
+  Object.assign(dialogRef, { componentInstance });
   const open = vi.fn(() => dialogRef);
 
   TestBed.configureTestingModule({
-    providers: [{ provide: MatDialog, useValue: { open } }, DialogService],
+    providers: [
+      {
+        provide: MatDialog,
+        useValue: { open } satisfies Pick<MatDialog, 'open'>,
+      },
+      DialogService,
+    ],
   });
 
   const service = TestBed.inject(DialogService);
-  return { service, open, componentInstance, afterClosed };
+  return { service, open, componentInstance };
 }
 
 describe('DialogService', () => {
@@ -66,7 +77,6 @@ describe('DialogService', () => {
    * Verifies: addRemoveUsersToTeam() sets the title and invokes the instance's loadTeam(team) method rather than setting a plain input
    * Interacts with: MatDialog.open stub; the fake instance's loadTeam vi.fn; service.addRemoveUsersToTeam
    * Data: a Team fixture { id: 't1', name: 'Red' } and configData { width: '600px' }
-   * Why: the fake componentInstance is pre-seeded with a loadTeam spy so the method call can be asserted without a real component
    */
   it('addRemoveUsersToTeam() sets the title and calls loadTeam with the team', () => {
     const { service, open, componentInstance } = setup();
@@ -85,7 +95,6 @@ describe('DialogService', () => {
    * Verifies: addRemoveUsersToTeam() defaults canManageRoles to true when the caller omits it.
    * Interacts with: MatDialog.open stub; service.addRemoveUsersToTeam.
    * Data: a Team fixture, no canManageRoles argument.
-   * Why: the flag gates every role-editing control in the dialog, so the default has to be pinned separately from the explicit-false path.
    */
   it('addRemoveUsersToTeam() grants role management by default', () => {
     const { service, componentInstance } = setup();
@@ -97,7 +106,6 @@ describe('DialogService', () => {
    * Verifies: addRemoveUsersToTeam() forwards canManageRoles: false onto the dialog instance.
    * Interacts with: MatDialog.open stub; service.addRemoveUsersToTeam.
    * Data: a Team fixture with canManageRoles passed as false.
-   * Why: manage-teams passes false for scoped-team users; if this assignment is lost they silently regain role management.
    */
   it('addRemoveUsersToTeam() forwards canManageRoles: false', () => {
     const { service, componentInstance } = setup();
@@ -176,7 +184,7 @@ describe('DialogService', () => {
 
   /**
    * Verifies: the observable a dialog method returns reflects whatever afterClosed emits (here, false)
-   * Interacts with: the fake dialogRef.afterClosed stub; service.name
+   * Interacts with: dialogRefStub(false).afterClosed; service.name
    * Data: setup configured to close the dialog with false
    */
   it('propagates the value the dialog closes with', async () => {

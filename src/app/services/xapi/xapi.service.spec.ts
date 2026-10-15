@@ -7,6 +7,7 @@ import { of, throwError, firstValueFrom } from 'rxjs';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { XApiService as GeneratedXApiService } from '../../generated/player-api';
 import { XApiService } from './xapi.service';
+import { ApiStub } from '../../test-utils/api-stub';
 
 function createService(
   overrides: {
@@ -24,7 +25,7 @@ function createService(
     applicationSwitched: vi.fn(result),
     teamSwitched: vi.fn(result),
     viewTerminated: vi.fn(result),
-  };
+  } satisfies ApiStub<GeneratedXApiService>;
 
   TestBed.configureTestingModule({
     providers: [
@@ -96,14 +97,15 @@ describe('XApiService', () => {
      * Verifies: a missing XApiEnabled setting is treated as disabled, so viewViewed returns null.
      * Interacts with: ComnSettingsService (empty settings), GeneratedXApiService.viewViewed, XApiService.viewViewed.
      * Data: hand-rolled TestBed with settings:{} rather than the createService helper.
-     * Why: builds its own module to exercise the absent-setting branch the helper can't express.
      */
     it('defaults to disabled when XApiEnabled setting is absent', async () => {
       TestBed.configureTestingModule({
         providers: [
           {
             provide: GeneratedXApiService,
-            useValue: { viewViewed: vi.fn(() => of({})) },
+            useValue: {
+              viewViewed: vi.fn(() => of({})),
+            } satisfies ApiStub<GeneratedXApiService>,
           },
           { provide: ComnSettingsService, useValue: { settings: {} } },
           XApiService,
@@ -171,7 +173,6 @@ describe('XApiService', () => {
      * Verifies: a failing generated call is caught so viewViewed emits null and logs the error.
      * Interacts with: GeneratedXApiService.viewViewed (throwError), XApiService.viewViewed, console.error spy.
      * Data: createService with enabled:true and fail:true (client emits an Error).
-     * Why: fail flag swaps the stub to throwError to drive the catchError path; console.error is spied/silenced in beforeEach.
      */
     it('viewViewed swallows errors and returns null', async () => {
       const { service } = createService({ enabled: true, fail: true });

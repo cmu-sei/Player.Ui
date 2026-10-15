@@ -7,8 +7,9 @@ import userEvent from '@testing-library/user-event';
 import { of } from 'rxjs';
 import { MatSelectModule } from '@angular/material/select';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
-import { ArchiveType } from '../../../generated/player-api';
-import { ViewsService } from '../../../services/views/views.service';
+import { HttpHeaders, HttpResponse } from '@angular/common/http';
+import { ArchiveType, ViewService } from '../../../generated/player-api';
+import { ApiStub } from '../../../test-utils/api-stub';
 import FileDownloadUtils from '../../../utilities/file-download-utils';
 import { AdminAppViewExportComponent } from './admin-app-view-export.component';
 import { renderComponent } from '../../../test-utils/render-component';
@@ -36,7 +37,20 @@ async function renderExport(
     },
   } = overrides;
 
-  const exportFn = vi.fn(() => of(exportResult));
+  // The real ViewsService.export (a default provider) reads the filename and
+  // the error flag from these response headers.
+  const exportFn = vi.fn(
+    (_archiveType: ArchiveType, _ids?: string[], _observe?: 'response') =>
+      of(
+        new HttpResponse<Blob>({
+          body: exportResult.blob,
+          headers: new HttpHeaders({
+            'content-disposition': `attachment; filename=${exportResult.filename}`,
+            'X-Archive-Contains-Errors': String(exportResult.hasErrors),
+          }),
+        }),
+      ),
+  );
   vi.spyOn(FileDownloadUtils, 'downloadFile').mockImplementation(() => {});
 
   const rendered = await renderComponent(AdminAppViewExportComponent, {
@@ -50,8 +64,8 @@ async function renderExport(
     componentProperties: { ids },
     providers: [
       {
-        provide: ViewsService,
-        useValue: { export: exportFn },
+        provide: ViewService,
+        useValue: { exportViews: exportFn } satisfies ApiStub<ViewService>,
       },
     ],
   });
@@ -111,24 +125,28 @@ describe('AdminAppViewExportComponent', () => {
   });
 
   /**
-   * Verifies: submitting calls ViewsService.export with the ids and the resolved
-   *   ArchiveType enum value (not the key).
-   * Interacts with: ViewsService.export spy; userEvent click.
+   * Verifies: submitting exports the ids with the resolved ArchiveType enum value
+   *   (not the key), asking for the full response.
+   * Interacts with: the real ViewsService.export over the ViewService.exportViews stub; userEvent click.
    * Data: ids = ['view-1','view-2'] with default first archive type.
    */
-  it('calls ViewsService.export with ids and archive type on submit', async () => {
+  it('exports the ids with the selected archive type on submit', async () => {
     const user = userEvent.setup();
     const { exportFn } = await renderExport({ ids: ['view-1', 'view-2'] });
     await user.click(screen.getByRole('button', { name: /Export/ }));
     const firstArchive =
       ArchiveType[Object.keys(ArchiveType)[0] as keyof typeof ArchiveType];
-    expect(exportFn).toHaveBeenCalledWith(['view-1', 'view-2'], firstArchive);
+    expect(exportFn).toHaveBeenCalledWith(
+      firstArchive,
+      ['view-1', 'view-2'],
+      'response',
+    );
   });
 
   /**
    * Verifies: a clean export result downloads the blob under its filename and
    *   emits complete(true).
-   * Interacts with: ViewsService.export stub + FileDownloadUtils.downloadFile spy;
+   * Interacts with: the real ViewsService.export over the ViewService.exportViews stub + FileDownloadUtils.downloadFile spy;
    *   component.complete output.
    * Data: export result with hasErrors=false, filename 'views.zip'.
    */
@@ -154,7 +172,7 @@ describe('AdminAppViewExportComponent', () => {
   /**
    * Verifies: an export result flagged with errors surfaces the partial-error
    *   message.
-   * Interacts with: ViewsService.export stub; rendered DOM.
+   * Interacts with: the real ViewsService.export over the ViewService.exportViews stub; rendered DOM.
    * Data: export result with hasErrors=true.
    */
   it('shows the error message when export reports archive errors', async () => {

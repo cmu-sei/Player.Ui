@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ApiStub } from '../../../test-utils/api-stub';
 
 function makeResponse(hasErrors: boolean): HttpResponse<Blob> {
   return new HttpResponse<Blob>({
@@ -43,9 +44,8 @@ async function renderExport(
       : of(exportResult),
   );
 
-  // HttpHeaderUtils.getFilename uses a regex that is fragile against
-  // realistic header values — stub it to avoid coupling this test to
-  // that utility's behavior.
+  // The file name and download are utilities outside the component; stub
+  // them so the test controls the name and no download starts.
   vi.spyOn(HttpHeaderUtils, 'getFilename').mockReturnValue('template.zip');
   vi.spyOn(FileDownloadUtils, 'downloadFile').mockImplementation(() => {});
 
@@ -63,7 +63,9 @@ async function renderExport(
     providers: [
       {
         provide: ApplicationService,
-        useValue: { exportApplicationTemplates },
+        useValue: {
+          exportApplicationTemplates,
+        } satisfies ApiStub<ApplicationService>,
       },
     ],
   });
@@ -141,7 +143,6 @@ describe('AdminAppTemplateExportComponent', () => {
    *   and 'response' observe mode to the service.
    * Interacts with: ApplicationService.exportApplicationTemplates spy.
    * Data: ids = ['id-a','id-b'] with default form (icons off, first archive type).
-   * Why: embedIcons is asserted false because it stays disabled while includeIcons is off.
    */
   it('calls exportApplicationTemplates with the form values when Export is submitted', async () => {
     const user = userEvent.setup();
@@ -151,7 +152,7 @@ describe('AdminAppTemplateExportComponent', () => {
     await user.click(screen.getByRole('button', { name: /^Export$/ }));
     expect(exportApplicationTemplates).toHaveBeenCalledWith(
       false, // includeIcons
-      false, // embedIcons (disabled because includeIcons=false)
+      false, // embedIcons (disabled while includeIcons is false)
       ArchiveType[Object.keys(ArchiveType)[0] as keyof typeof ArchiveType],
       ['id-a', 'id-b'],
       'response',
@@ -180,8 +181,8 @@ describe('AdminAppTemplateExportComponent', () => {
   });
 
   /**
-   * Verifies: a response carrying the errors header surfaces the partial-error
-   *   message instead of completing silently.
+   * Verifies: a response carrying the errors header shows the partial-error
+   *   message.
    * Interacts with: ApplicationService.exportApplicationTemplates stub; rendered DOM.
    * Data: response with X-Archive-Contains-Errors=true.
    */

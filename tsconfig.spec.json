@@ -5,7 +5,7 @@
     "baseUrl": "./",
     "types": ["node"]
   },
-  "files": ["src/app/app.module.ts", "src/polyfills.ts"],
+  "files": ["src/app/app.module.ts"],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts",
@@ -13,6 +13,8 @@
     "src/app/test-utils/**/*.ts"
   ],
   "angularCompilerOptions": {
+    "strictInjectionParameters": false,
+    "strictInputAccessModifiers": false,
     "strictTemplates": false
   }
 }

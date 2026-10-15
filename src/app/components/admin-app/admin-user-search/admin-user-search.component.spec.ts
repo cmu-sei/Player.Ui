@@ -3,8 +3,10 @@
 
 import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { screen } from '@testing-library/angular';
-import { of } from 'rxjs';
+import { screen, within } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { firstValueFrom, of, throwError } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { ClipboardModule } from 'ngx-clipboard';
@@ -21,11 +23,19 @@ import {
   SystemPermission,
   UserDirectoryEntry,
   UserService,
+  Role,
+  RoleService,
 } from '../../../generated/player-api';
-import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { permissionDataProviders } from '../../../test-utils/mock-permission-data.service';
 import { RolesService } from '../../../services/roles/roles.service';
 import { renderComponent } from '../../../test-utils/render-component';
 import { AdminUserSearchComponent } from './admin-user-search.component';
+import { ApiStub } from '../../../test-utils/api-stub';
+import { dialogRefStub } from '../../../test-utils/dialog-refs';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 const mockUsers: UserDirectoryEntry[] = [
   {
@@ -59,23 +69,28 @@ class RolesPermissionsSelectStubComponent {
 async function renderAdminUserSearch(
   overrides: {
     confirmResult?: boolean;
-    permissions?: string[];
+    permissions?: SystemPermission[];
     result?: UserDirectoryEntry[];
+    usersError?: Error;
   } = {},
 ) {
   const {
     confirmResult = false,
     permissions = [],
     result = mockUsers,
+    usersError,
   } = overrides;
 
   const stubs = {
-    getUsers: vi.fn(() => of(result)),
+    getUsers: vi.fn(() =>
+      usersError ? throwError(() => usersError) : of(structuredClone(result)),
+    ),
     deleteUser: vi.fn(() => of(undefined)),
-    getRoles: vi.fn(() => of([])),
-    confirm: vi.fn(() => ({
-      afterClosed: () => of(confirmResult),
-    })),
+    // The real RolesService loads the role catalog over this endpoint.
+    getRoles: vi.fn(() => of<Role[]>([{ id: 'r1', name: 'Admin' }])),
+    confirm: vi.fn(
+      () => dialogRefStub<unknown, boolean>(confirmResult).dialogRef,
+    ),
   };
 
   const rendered = await renderComponent(AdminUserSearchComponent, {
@@ -99,28 +114,48 @@ async function renderAdminUserSearch(
         useValue: {
           getUsers: stubs.getUsers,
           deleteUser: stubs.deleteUser,
-        },
+        } satisfies ApiStub<UserService>,
       },
       {
-        provide: RolesService,
-        useValue: { getRoles: stubs.getRoles },
+        provide: RoleService,
+        useValue: { getRoles: stubs.getRoles } satisfies ApiStub<RoleService>,
       },
-      {
-        provide: UserPermissionsService,
-        useValue: {
-          hasPermission: vi.fn((permission: string) =>
-            of(permissions.includes(permission)),
-          ),
-        },
-      },
+      ...permissionDataProviders({ system: permissions }),
       {
         provide: CrucibleDialogService,
-        useValue: { confirm: stubs.confirm },
+        useValue: { confirm: stubs.confirm } satisfies Pick<
+          CrucibleDialogService,
+          'confirm'
+        >,
       },
     ],
   });
 
   return { ...rendered, stubs };
+}
+
+/** User names listed in the table, in render order. */
+function listedUsers(container: Element): string[] {
+  return Array.from(container.querySelectorAll('td.mat-column-name')).map(
+    (cell) => cell.textContent?.trim() ?? '',
+  );
+}
+
+/** Header texts of the users table, in render order. */
+function headers(container: Element): string[] {
+  return Array.from(container.querySelectorAll('th[mat-header-cell]')).map(
+    (cell) => cell.textContent?.trim() ?? '',
+  );
+}
+
+/** The identity attribute cells of the named user's row. */
+function rowCells(container: Element, name: string): string[] {
+  const row = Array.from(container.querySelectorAll('tr[mat-row]')).find(
+    (r) => r.querySelector('td.mat-column-name')?.textContent?.trim() === name,
+  );
+  return Array.from(
+    row?.querySelectorAll('td[class*="mat-column-identityAttribute-"]') ?? [],
+  ).map((cell) => cell.textContent?.trim() ?? '');
 }
 
 describe('AdminUserSearchComponent', () => {
@@ -173,7 +208,7 @@ describe('AdminUserSearchComponent', () => {
 
   /**
    * Verifies: users without ManageUsers cannot see per-row delete controls.
-   * Interacts with: the UserPermissionsService stub and rendered DOM.
+   * Interacts with: the real UserPermissionsService over stubbed permission endpoints and rendered DOM.
    * Data: ViewUsers without ManageUsers.
    */
   it('should hide delete buttons without ManageUsers permission', async () => {
@@ -185,7 +220,7 @@ describe('AdminUserSearchComponent', () => {
 
   /**
    * Verifies: users without ManageUsers receive a read-only role selector.
-   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Interacts with: the real UserPermissionsService over stubbed permission endpoints and child input binding.
    * Data: ViewUsers without ManageUsers.
    */
   it('disables role selectors without ManageUsers permission', async () => {
@@ -201,7 +236,7 @@ describe('AdminUserSearchComponent', () => {
 
   /**
    * Verifies: users with ManageUsers retain role-editing access.
-   * Interacts with: the UserPermissionsService stub and child input binding.
+   * Interacts with: the real UserPermissionsService over stubbed permission endpoints and child input binding.
    * Data: ViewUsers and ManageUsers.
    */
   it('enables role selectors with ManageUsers permission', async () => {
@@ -216,173 +251,148 @@ describe('AdminUserSearchComponent', () => {
   });
 
   /**
-   * Verifies: ngOnInit fetches users and roles, fills the datasource, and clears isLoading.
-   * Interacts with: stubbed UserService.getUsers and RolesService.getRoles.
-   * Data: mockUsers.
+   * Verifies: ngOnInit fetches users and loads the role catalog into RolesService, lists the users, and clears the spinner.
+   * Interacts with: stubbed UserService.getUsers; the real RolesService.getRoles over the RoleService.getRoles stub.
+   * Data: mockUsers; one role, Admin.
    */
   it('ngOnInit loads users and roles and clears the loading flag', async () => {
-    const { fixture, stubs } = await renderAdminUserSearch();
+    const { stubs } = await renderAdminUserSearch();
     expect(stubs.getUsers).toHaveBeenCalled();
-    expect(stubs.getRoles).toHaveBeenCalled();
-    expect(fixture.componentInstance.isLoading).toBe(false);
-    expect(fixture.componentInstance.userDataSource.data).toEqual(mockUsers);
+    expect(stubs.getRoles).toHaveBeenCalledTimes(1);
+    // The roles select in each row reads this stream.
+    const roles = await firstValueFrom(TestBed.inject(RolesService).roles$);
+    expect(roles.map((r) => r.name)).toEqual(['Admin']);
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    expect(mockUsers.every((u) => screen.queryByText(u.name!) !== null)).toBe(
+      true,
+    );
   });
 
   /**
-   * Verifies: applyFilter lowercases the value (without trimming) and applies it to the datasource filter.
-   * Interacts with: component.applyFilter and the MatTableDataSource filter.
-   * Data: padded mixed-case input '  ALICE  '.
+   * Verifies: a failed users request leaves the loading spinner up and lets the error escape (current behavior).
+   * Interacts with: UserService.getUsers (throws); the rendered spinner; captureUnhandledRxErrors.
+   * Data: getUsers fails with a 500.
    */
-  it('applyFilter lowercases the value and sets the datasource filter', async () => {
-    const { fixture } = await renderAdminUserSearch();
-    const component = fixture.componentInstance;
-    component.applyFilter('  ALICE  ');
-    expect(component.filterString).toBe('  alice  ');
-    expect(component.userDataSource.filter).toBe('  alice  ');
+  it('leaves the spinner up when the users request fails', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new Error('500');
+    await renderAdminUserSearch({ usersError: failure });
+    await flush();
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(errors).toEqual([failure]);
   });
 
   /**
-   * Verifies: refreshUsers re-fetches users into the datasource and clears isLoading.
-   * Interacts with: stubbed UserService.getUsers (re-stubbed for this call).
-   * Data: getUsers returns a fresh single-user list ('New') on the next call.
+   * Verifies: typing in Search lists only the users whose name, role or identity attributes match, case-insensitively,
+   *   and Clear Search lists everyone again.
+   * Interacts with: the rendered Search input and Clear Search button; the users table.
+   * Data: one row per search text: Alice by name, by role name and by Department value; Bob by Location value.
    */
-  it('refreshUsers reloads the user list into the datasource', async () => {
-    const { fixture, stubs } = await renderAdminUserSearch();
-    const component = fixture.componentInstance;
-    const refreshedResult: UserDirectoryEntry[] = [
-      { id: 'user-9', name: 'New' },
-    ];
-
-    stubs.getUsers.mockClear();
-    stubs.getUsers.mockReturnValueOnce(of(refreshedResult));
-    component.refreshUsers();
-
-    expect(stubs.getUsers).toHaveBeenCalled();
-    expect(component.userDataSource.data).toEqual(refreshedResult);
-    expect(component.isLoading).toBe(false);
+  it.each<[string, string[]]>([
+    ['ALICE', ['Alice Smith']],
+    ['administrator', ['Alice Smith']],
+    ['logistics', ['Alice Smith']],
+    ['West', ['Bob Jones']],
+  ])('filters the users by "%s"', async (text, expected) => {
+    const user = userEvent.setup();
+    const { container } = await renderAdminUserSearch();
+    const search = screen.getByPlaceholderText('Search');
+    search.focus();
+    await user.type(search, text, { skipClick: true });
+    expect(listedUsers(container)).toEqual(expected);
+    await user.click(screen.getByTitle('Clear Search'));
+    expect(listedUsers(container)).toEqual(['Alice Smith', 'Bob Jones']);
   });
 
   describe('identity attribute columns', () => {
     /**
-     * Verifies: identity attributes become columns, in response order, between the name and role columns.
-     * Interacts with: component.attributeColumns and component.displayedColumns.
-     * Data: mockUsers identity attributes (Department, Organization, Location).
+     * Verifies: each identity attribute becomes a column, in response order, between Name and Role, showing each
+     *   user's value or nothing when the user lacks it.
+     * Interacts with: the rendered table headers and cells.
+     * Data: mockUsers (Department, Organization, Location) plus Carol, who has no Location.
      */
-    it('creates ordered columns from configured identity attributes', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      expect(component.attributeColumns.map((column) => column.name)).toEqual([
+    it('shows a column per identity attribute', async () => {
+      const carol: UserDirectoryEntry = {
+        id: 'user-3',
+        name: 'Carol King',
+        identityAttributes: [
+          { key: 'department', name: 'Department', value: 'Finance' },
+          { key: 'organization', name: 'Organization', value: 'Example Three' },
+        ],
+      };
+      const { container } = await renderAdminUserSearch({
+        result: [...mockUsers, carol],
+      });
+      expect(headers(container)).toEqual([
+        'ID',
+        'Name',
         'Department',
         'Organization',
         'Location',
+        'Role',
       ]);
-      expect(component.displayedColumns).toEqual([
-        'id',
-        'name',
-        'identityAttribute-0',
-        'identityAttribute-1',
-        'identityAttribute-2',
-        'role',
-      ]);
-    });
-
-    /**
-     * Verifies: getAttributeValue returns the user's value for a key, or '' when the key is missing.
-     * Interacts with: component.getAttributeValue.
-     * Data: mockUsers[0] (Alice Smith) with keys 'department', 'location' and 'missing'.
-     */
-    it('returns the configured value for each user', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      expect(component.getAttributeValue(mockUsers[0], 'department')).toBe(
+      expect(rowCells(container, 'Alice Smith')).toEqual([
         'Logistics',
-      );
-      expect(component.getAttributeValue(mockUsers[0], 'location')).toBe(
+        'Example One',
         'East',
-      );
-      expect(component.getAttributeValue(mockUsers[0], 'missing')).toBe('');
+      ]);
+      expect(rowCells(container, 'Carol King')).toEqual([
+        'Finance',
+        'Example Three',
+        '',
+      ]);
     });
 
     /**
-     * Verifies: the datasource filter matches identity attribute values.
-     * Interacts with: component.applyFilter and the MatTableDataSource filterPredicate.
-     * Data: filter 'logistics', matching Alice Smith's Department.
+     * Verifies: clicking an attribute column's header sorts the users by that attribute, ascending then descending.
+     * Interacts with: the rendered Organization header (MatSort); the users table.
+     * Data: Alice (Example One) and Bob (Example Two).
      */
-    it('filters users by identity attribute values', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      component.applyFilter('logistics');
-
-      expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
+    it('sorts the users by an attribute column', async () => {
+      const user = userEvent.setup();
+      const { container } = await renderAdminUserSearch();
+      await user.click(screen.getByText('Organization'));
+      expect(listedUsers(container)).toEqual(['Alice Smith', 'Bob Jones']);
+      await user.click(screen.getByText('Organization'));
+      expect(listedUsers(container)).toEqual(['Bob Jones', 'Alice Smith']);
     });
 
     /**
-     * Verifies: the datasource filter matches the role name.
-     * Interacts with: component.applyFilter and the MatTableDataSource filterPredicate.
-     * Data: filter 'administrator', matching Alice Smith's roleName.
-     */
-    it('filters users by role name', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-
-      component.applyFilter('administrator');
-
-      expect(component.userDataSource.filteredData).toEqual([mockUsers[0]]);
-    });
-
-    /**
-     * Verifies: the sorting accessor returns the identity attribute value for a dynamic column.
-     * Interacts with: the MatTableDataSource sortingDataAccessor.
-     * Data: mockUsers[1] (Bob Jones) and the Organization column.
-     */
-    it('sorts dynamic columns by their identity attribute values', async () => {
-      const { fixture } = await renderAdminUserSearch();
-      const component = fixture.componentInstance;
-      const organizationColumn = component.attributeColumns.find(
-        (column) => column.key === 'organization',
-      );
-
-      expect(organizationColumn).toBeDefined();
-      expect(
-        component.userDataSource.sortingDataAccessor(
-          mockUsers[1],
-          organizationColumn!.columnId,
-        ),
-      ).toBe('Example Two');
-    });
-
-    /**
-     * Verifies: with no users, no attribute columns are added and only the static columns display.
-     * Interacts with: stubbed UserService.getUsers, component.attributeColumns and displayedColumns.
-     * Data: getUsers returns an empty list (result=[]).
+     * Verifies: with no users only the static columns render.
+     * Interacts with: stubbed UserService.getUsers; the rendered headers.
+     * Data: getUsers returns no users.
      */
     it('keeps only static columns when no users are returned', async () => {
-      const { fixture } = await renderAdminUserSearch({
-        result: [],
-      });
-      const component = fixture.componentInstance;
-
-      expect(component.attributeColumns).toEqual([]);
-      expect(component.displayedColumns).toEqual(['id', 'name', 'role']);
-      expect(component.userDataSource.data).toEqual([]);
+      const { container } = await renderAdminUserSearch({ result: [] });
+      expect(headers(container)).toEqual(['ID', 'Name', 'Role']);
+      expect(listedUsers(container)).toEqual([]);
     });
   });
 
-  describe('deleteUser()', () => {
+  describe('deleting a user', () => {
+    /** Clicks the Delete User button in the table row that shows `rowText`. */
+    async function clickDeleteInRow(rowText: string) {
+      const row = screen.getByText(rowText).closest('tr');
+      if (!row) {
+        throw new Error(`No table row shows '${rowText}'`);
+      }
+      await userEvent.setup().click(within(row).getByTitle('Delete User'));
+    }
+
     /**
-     * Verifies: a confirmed prompt deletes the user by id and triggers a refresh.
-     * Interacts with: stubbed DialogService.confirm, UserService.deleteUser and getUsers.
-     * Data: confirmResult=true; deleting mockUsers[0] (Alice Smith).
+     * Verifies: clicking Delete User and confirming deletes the user by id and renders the reloaded list.
+     * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm, UserService.deleteUser and getUsers.
+     * Data: ManageUsers granted; confirmResult=true; Alice Smith's row (user-1); the reload returns Bob only.
      */
     it('deletes and refreshes when the user confirms', async () => {
-      const { fixture, stubs } = await renderAdminUserSearch({
+      const { container, stubs } = await renderAdminUserSearch({
         confirmResult: true,
+        permissions: [SystemPermission.ManageUsers],
       });
       stubs.getUsers.mockClear();
-      fixture.componentInstance.deleteUser(mockUsers[0]);
+      stubs.getUsers.mockReturnValueOnce(of(structuredClone([mockUsers[1]])));
+      await clickDeleteInRow('Alice Smith');
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Delete User?',
@@ -391,19 +401,22 @@ describe('AdminUserSearchComponent', () => {
         }),
       );
       expect(stubs.deleteUser).toHaveBeenCalledWith('user-1');
-      expect(stubs.getUsers).toHaveBeenCalled();
+      expect(stubs.getUsers).toHaveBeenCalledTimes(1);
+      expect(listedUsers(container)).toEqual(['Bob Jones']);
     });
 
     /**
      * Verifies: the confirm message uses the user id when the user has no name.
-     * Interacts with: stubbed DialogService.confirm (message argument inspected).
-     * Data: a nameless user { id: 'user-3' }; confirmResult=true.
+     * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm (message argument inspected).
+     * Data: ManageUsers granted; getUsers returns a nameless user { id: 'user-3' }; confirmResult=true.
      */
     it('falls back to the user id in the prompt when name is missing', async () => {
-      const { fixture, stubs } = await renderAdminUserSearch({
+      const { stubs } = await renderAdminUserSearch({
         confirmResult: true,
+        permissions: [SystemPermission.ManageUsers],
+        result: [{ id: 'user-3' }],
       });
-      fixture.componentInstance.deleteUser({ id: 'user-3' });
+      await clickDeleteInRow('user-3');
       expect(stubs.confirm).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Delete User?',
@@ -414,14 +427,16 @@ describe('AdminUserSearchComponent', () => {
 
     /**
      * Verifies: a declined prompt leaves deleteUser untouched.
-     * Interacts with: stubbed DialogService.confirm and UserService.deleteUser.
-     * Data: confirmResult=false.
+     * Interacts with: the rendered Delete User button; stubbed CrucibleDialogService.confirm and UserService.deleteUser.
+     * Data: ManageUsers granted; confirmResult=false.
      */
     it('does nothing when the user cancels', async () => {
-      const { fixture, stubs } = await renderAdminUserSearch({
+      const { stubs } = await renderAdminUserSearch({
         confirmResult: false,
+        permissions: [SystemPermission.ManageUsers],
       });
-      fixture.componentInstance.deleteUser(mockUsers[0]);
+      await clickDeleteInRow('Alice Smith');
+      expect(stubs.confirm).toHaveBeenCalled();
       expect(stubs.deleteUser).not.toHaveBeenCalled();
     });
   });
