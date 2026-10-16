@@ -17,6 +17,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     @if (filterString) {
       <button
         mat-icon-button
+        aria-label="Clear Search"
         matSuffix
         color="primary"
         (click)="applyFilter('')"
@@ -46,6 +47,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <td mat-cell *matCellDef="let element">
         <button
           mat-icon-button
+          [attr.aria-label]="'Copy ID of ' + element.name"
           ngxClipboard
           [cbContent]="element.id"
           (click)="$event.stopPropagation()"
@@ -83,6 +85,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         @if (canEdit$ | async) {
           <button
             mat-icon-button
+            [attr.aria-label]="'Delete user ' + element.name"
             (click)="deleteUser(element); $event.stopPropagation()"
             title="Delete User"
           >

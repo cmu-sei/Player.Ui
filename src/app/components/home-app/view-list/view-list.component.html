@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
     <span class="views-title text">My Views</span>
     @if (canCreate$ | async) {
-      <button mat-icon-button matTooltip="Add New View" (click)="create()">
+      <button mat-icon-button aria-label="Add New View" matTooltip="Add New View" (click)="create()">
         <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle"> </mat-icon>
       </button>
     }
@@ -23,6 +23,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         @if (filterString !== '') {
           <button
             mat-icon-button
+            aria-label="Clear Search"
             matSuffix
             (click)="clearFilter()"
             title="Clear Search"

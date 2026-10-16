@@ -10,6 +10,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         Permissions
         <button
           mat-icon-button
+          [attr.aria-label]="adding ? 'Cancel' : 'Add'"
           color="primary"
           (click)="addRole()"
           [disabled]="!(canEdit$ | async)"
@@ -41,6 +42,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         }
         <button
           mat-icon-button
+          aria-label="About team roles"
           color="primary"
           matTooltip="Team Roles can be set on Teams or invidivual Team Memberships. Team Permissions can be added to Team Roles or invdividual Teams."
           matTooltipShowDelay="0"
@@ -52,6 +54,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <td mat-cell *matCellDef="let permission">
         <button
           mat-icon-button
+          [attr.aria-label]="'About ' + permission.name"
           color="primary"
           [matTooltip]="permission.description"
           matTooltipShowDelay="0"
@@ -73,6 +76,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               @if (!role.immutable) {
                 <button
                   mat-icon-button
+                  [attr.aria-label]="'Rename team role ' + role.name"
                   color="primary"
                   (click)="renameRole(role)"
                   title="Rename Role"
@@ -86,6 +90,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               @if (!role.immutable) {
                 <button
                   mat-icon-button
+                  [attr.aria-label]="'Delete team role ' + role.name"
                   color="primary"
                   (click)="deleteRole(role)"
                   title="Delete Role"

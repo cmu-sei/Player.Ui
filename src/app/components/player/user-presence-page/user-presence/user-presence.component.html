@@ -19,6 +19,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <button
               matSuffix
               mat-icon-button
+              aria-label="Clear Search"
               (click)="clearFilter()"
               matTooltip="Clear Search"
             >
@@ -44,6 +45,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <span class="me-1">
       <button
         mat-icon-button
+        aria-label="Close"
         mat-dialog-close
         (click)="closeMe.emit()"
         title="Close"

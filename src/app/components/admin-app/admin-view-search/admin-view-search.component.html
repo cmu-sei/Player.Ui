@@ -26,6 +26,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         @if (filterString !== '') {
           <button
             mat-icon-button
+            aria-label="Clear Search"
             matSuffix
             color="primary"
             (click)="clearFilter()"
@@ -42,6 +43,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="ms-auto">
       <button
         mat-icon-button
+        aria-label="Add a new View"
         matTooltip="Add a new View"
         (click)="addNewView()"
       >
@@ -49,6 +51,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <button
         mat-icon-button
+        aria-label="Import Views"
         matTooltip="Import Views"
         (click)="openDialog(importDialog)"
       >
@@ -56,6 +59,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </button>
       <button
         mat-icon-button
+        aria-label="Export Views"
         matTooltip="Export Views"
         [matBadge]="
           selection.selected.length > 0 ? selection.selected.length : ''
@@ -95,6 +99,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-cell *matCellDef="let element">
         <button
           mat-icon-button
+          [attr.aria-label]="'Copy ID of ' + element.name"
           ngxClipboard
           [cbContent]="element.id"
           title="Copy:  {{ element.id }}"

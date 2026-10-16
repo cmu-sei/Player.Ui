@@ -4,14 +4,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 <mat-toolbar
   class="toolbar"
-  [style.backgroundColor]="'var(--mat-sys-primary)'"
-  [style.color]="'var(--mat-sys-on-primary)'"
+  [style.backgroundColor]="'var(--crucible-topbar-background)'"
+  [style.color]="'var(--crucible-topbar-text)'"
 >
   <mat-toolbar-row>
     <span class="margin-auto">
       <a
         mat-icon-button
-        style="outline: none; background-color: var(--mat-sys-on-primary)"
+        class="home-logo"
+        aria-label="Player home"
+        title="Home"
         [routerLink]="['/']"
       >
         <mat-icon svgIcon="ic_crucible_player"></mat-icon>
@@ -72,7 +74,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           aria-label="Menu"
         >
           <strong>{{ currentUser.profile.name }}</strong>
-          <mat-icon aria-hidden="false" fontIcon="mdi-chevron-down"></mat-icon>
+          <mat-icon fontIcon="mdi-chevron-down"></mat-icon>
         </button>
         <mat-menu
           #menu="matMenu"

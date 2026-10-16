@@ -4,11 +4,10 @@
 import { execFileSync } from 'node:child_process';
 import { defineConfig } from 'vitest/config';
 
-// `@datorama/akita` (and `@material/material-color-utilities`, when installed)
-// ship bundler-only ESM: no `"type": "module"` and extensionless relative
-// imports. Node cannot load them in the jsdom environment that
-// `@angular/build:unit-test` runs in, and the builder hardcodes
-// `externalPackages: true`, so those packages are handed to Node untouched.
+// `@datorama/akita` ships bundler-only ESM: no `"type": "module"` and
+// extensionless relative imports. Node cannot load it in the jsdom environment
+// that `@angular/build:unit-test` runs in, and the builder hardcodes
+// `externalPackages: true`, so the package is handed to Node untouched.
 // `server.deps.inline`, `ssr.noExternal` and `optimizeDeps.include` do not
 // help on this path; the files on disk have to be patched. See `patches/`.
 //

@@ -23,6 +23,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         @if (filterStr !== '') {
           <button
             mat-icon-button
+            aria-label="Clear Search"
             matSuffix
             color="primary"
             (click)="clearFilter()"
@@ -39,6 +40,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="ms-auto">
       <button
         mat-icon-button
+        aria-label="Add a new Subscription"
         matTooltip="Add a new Subscription"
         (click)="addNewSubscription()"
       >
@@ -54,6 +56,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-cell *matCellDef="let element">
         <button
           mat-icon-button
+          [attr.aria-label]="'Edit subscription ' + element.name"
           title="Edit Subscription"
           (click)="editSubscription(element)"
         >
@@ -61,6 +64,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </button>
         <button
           mat-icon-button
+          [attr.aria-label]="'Delete subscription ' + element.name"
           title="Delete Subscription"
           (click)="deleteSubscription(element)"
         >

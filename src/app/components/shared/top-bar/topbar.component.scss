@@ -41,16 +41,27 @@
   font-weight: normal;
 }
 
-.mat-mdc-button:not(:disabled),
-.mat-mdc-icon-button:not(:disabled) {
-  color: var(--mat-sys-on-primary);
+// Everything on the top bar draws in the top-bar text color, which stays the
+// brand pair in both themes. `primary` is for controls on the page surface.
+.toolbar {
+  .mat-mdc-button:not(:disabled),
+  .mat-mdc-icon-button:not(:disabled) {
+    color: var(--crucible-topbar-text);
+  }
+
+  mat-icon,
+  .mat-icon {
+    --mat-icon-color: var(--crucible-topbar-text);
+  }
 }
 
-mat-icon, .mat-icon {
-  --mat-icon-color: var(--mat-sys-on-primary);
-}
+// The logo is drawn in currentColor on a disc of the top-bar text color, so it
+// reads as a cut-out of the top bar in both themes.
+.toolbar .home-logo {
+  outline: none;
+  background-color: var(--crucible-topbar-text);
 
-.margin-auto button mat-icon,
-.margin-auto a mat-icon {
-  color: var(--mat-sys-primary);
+  mat-icon {
+    color: var(--crucible-topbar-background);
+  }
 }
