@@ -34,7 +34,7 @@ import {
 
 // The component runs over the REAL ViewsService (a default provider); only the
 // generated ViewService endpoints are stubbed. Each call returns a fresh array,
-// because ViewsService pushes created views into the array it stores.
+// as ViewsService pushes created views into the array it stores.
 async function renderViewList(
   hasCreateViews = false,
   overrides: {
@@ -80,9 +80,7 @@ async function renderViewList(
     ],
     providers: [
       ...permissionDataProviders({
-        // Denied is a near miss: every other view permission, none of which
-        // lets the API create a view (Views/Requests/Create.cs authorizes
-        // CreateViews only).
+        // Denied is a near miss: every other view permission.
         system: hasCreateViews
           ? [SystemPermission.CreateViews]
           : [
@@ -158,51 +156,42 @@ describe('ViewListComponent', () => {
       ],
     });
     expect(viewLinks()).toEqual(['Active One', 'Active Two']);
-    expect(screen.getByRole('link', { name: 'Active One' })).toHaveAttribute(
-      'href',
-      '/view/v1',
-    );
+    expect(screen.getByText('Active One')).toHaveAttribute('href', '/view/v1');
     expect(screen.queryByText('No results found')).not.toBeInTheDocument();
   });
 
   /**
    * Verifies: on init the view list is loaded once, the spinner is gone, and an empty list shows "No results found".
-   * Interacts with: the real ViewsService.loadMyViews over the ViewService.getMyViews stub; component state.
+   * Interacts with: the real ViewsService.loadMyViews over the ViewService.getMyViews stub; the rendered list.
    * Data: default renderViewList() (no views).
    */
-  it('ngOnInit loads my views and clears the loading flag', async () => {
-    const { fixture, viewApi } = await renderViewList();
+  it('loads my views once and shows an empty list', async () => {
+    const { viewApi } = await renderViewList();
     expect(viewApi.getMyViews).toHaveBeenCalledTimes(1);
-    expect(fixture.componentInstance.isLoading).toBe(false);
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    expect(fixture.componentInstance.filterString).toBe('');
     expect(screen.getByText('No results found')).toBeInTheDocument();
   });
 
   /**
-   * Verifies: applyFilter keeps the raw filterString but normalizes the dataSource filter to trimmed lowercase.
-   * Interacts with: component applyFilter, MatTableDataSource filter.
-   * Data: default renderViewList(); input '  Training  '.
+   * Verifies: typing in Search lists only matching views, ignoring case and surrounding spaces, and Clear Search lists
+   *   all again.
+   * Interacts with: the rendered Search input and Clear Search button; the table.
+   * Data: Training and Exercise views; ' TRAIN ' typed.
    */
-  it('applyFilter trims, lowercases, and sets the datasource filter', async () => {
-    const { fixture } = await renderViewList();
-    const c = fixture.componentInstance;
-    c.applyFilter('  Training  ');
-    expect(c.filterString).toBe('  Training  ');
-    expect(c.dataSource.filter).toBe('training');
-  });
-
-  /**
-   * Verifies: clearFilter empties the dataSource filter after a prior applyFilter.
-   * Interacts with: component applyFilter/clearFilter, MatTableDataSource filter.
-   * Data: default renderViewList().
-   */
-  it('clearFilter resets the datasource filter', async () => {
-    const { fixture } = await renderViewList();
-    const c = fixture.componentInstance;
-    c.applyFilter('Training');
-    c.clearFilter();
-    expect(c.dataSource.filter).toBe('');
+  it('filters by the typed text and clears the filter', async () => {
+    const user = userEvent.setup();
+    await renderViewList(false, {
+      views: [
+        { id: 'v1', name: 'Training', status: ViewStatus.Active },
+        { id: 'v2', name: 'Exercise', status: ViewStatus.Active },
+      ],
+    });
+    const search = screen.getByPlaceholderText('Search');
+    search.focus();
+    await user.type(search, ' TRAIN ', { skipClick: true });
+    expect(viewLinks()).toEqual(['Training']);
+    await user.click(screen.getByTitle('Clear Search'));
+    expect(viewLinks()).toEqual(['Exercise', 'Training']);
   });
 
   /**
@@ -214,9 +203,9 @@ describe('ViewListComponent', () => {
   it('leaves the spinner up when the views request fails', async () => {
     const errors = captureUnhandledRxErrors();
     const failure = new Error('500');
-    const { fixture } = await renderViewList(false, { viewsError: failure });
+    await renderViewList(false, { viewsError: failure });
     await flush();
-    expect(fixture.componentInstance.isLoading).toBe(true);
+    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(errors).toEqual([failure]);
   });
@@ -257,21 +246,5 @@ describe('ViewListComponent', () => {
       expect(viewApi.createView).not.toHaveBeenCalled();
       expect(viewLinks()).toEqual(['Existing']);
     });
-  });
-
-  /**
-   * Verifies: ngOnDestroy signals and completes the unsubscribe$ subject that tears down subscriptions.
-   * Interacts with: spies on component.unsubscribe$.next and complete.
-   * Data: default renderViewList().
-   */
-  it('ngOnDestroy completes the unsubscribe subject', async () => {
-    const { fixture } = await renderViewList();
-    const c = fixture.componentInstance;
-    // unsubscribe$ is private; bracket access keeps the member type-checked.
-    const next = vi.spyOn(c['unsubscribe$'], 'next');
-    const complete = vi.spyOn(c['unsubscribe$'], 'complete');
-    c.ngOnDestroy();
-    expect(next).toHaveBeenCalledWith(null);
-    expect(complete).toHaveBeenCalled();
   });
 });

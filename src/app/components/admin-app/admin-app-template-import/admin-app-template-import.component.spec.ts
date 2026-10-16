@@ -84,7 +84,7 @@ describe('AdminAppTemplateImportComponent', () => {
   it('disables the Import button until an archive is chosen', async () => {
     await renderImport();
     const importBtn = screen.getByRole('button', { name: /^Import$/ });
-    expect(importBtn).toBeDisabled();
+    expect((importBtn as HTMLButtonElement).disabled).toBe(true);
   });
 
   /**
@@ -97,7 +97,7 @@ describe('AdminAppTemplateImportComponent', () => {
     const { fixture } = await renderImport();
     await chooseArchive(user, fixture, archiveFile());
     const importBtn = screen.getByRole('button', { name: /^Import$/ });
-    expect(importBtn).not.toBeDisabled();
+    expect((importBtn as HTMLButtonElement).disabled).toBe(false);
   });
 
   /**
@@ -171,7 +171,6 @@ describe('AdminAppTemplateImportComponent', () => {
    *   as the form's archive and shows its name.
    * Interacts with: the template's (change)="onFileSelected($event)" binding on the hidden file input.
    * Data: a templates.zip File exposed through the input's files list.
-   * Why: user.upload builds the FileList jsdom cannot, then fires input and change on the element.
    */
   it('captures the file name from the file input change event', async () => {
     const user = userEvent.setup();

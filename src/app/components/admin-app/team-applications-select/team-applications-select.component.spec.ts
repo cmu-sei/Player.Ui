@@ -12,10 +12,9 @@ import {
   ApplicationTemplate,
 } from '../../../generated/player-api';
 import { ApplicationService } from '../../../generated/player-api';
-import {
-  ObjectType,
-  TeamApplicationsSelectComponent,
-} from './team-applications-select.component';
+import { TeamApplicationsSelectComponent } from './team-applications-select.component';
+import { screen, within } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDividerModule } from '@angular/material/divider';
@@ -40,6 +39,7 @@ const instA: ApplicationInstance = {
   applicationId: 'a1',
   displayOrder: 0,
   name: 'App A',
+  url: 'https://a.test',
 };
 const instB: ApplicationInstance = {
   id: 'i2',
@@ -67,8 +67,10 @@ async function renderSelect(
     confirmRemove = true,
   } = overrides;
 
-  const getTeamApplicationInstances = vi.fn(() => of(instances));
-  const getViewApplications = vi.fn(() => of(viewApps));
+  const getTeamApplicationInstances = vi.fn(() =>
+    of(structuredClone(instances)),
+  );
+  const getViewApplications = vi.fn(() => of(structuredClone(viewApps)));
   const getApplicationTemplates = vi.fn(() => of(templates));
   const createApplicationInstance = vi.fn(() => of({} as ApplicationInstance));
   const moveUpApplicationInstance = vi.fn(() => of(instances));
@@ -123,157 +125,209 @@ async function renderSelect(
   };
 }
 
+/** Titles of the team's application panels, in render order. */
+function appTitles(container: Element): string[] {
+  return Array.from(container.querySelectorAll('mat-panel-title')).map(
+    (title) => title.textContent?.trim() ?? '',
+  );
+}
+
+/** The panel of the named application. */
+function appPanel(container: Element, name: string): HTMLElement {
+  const panel = Array.from(
+    container.querySelectorAll<HTMLElement>('mat-expansion-panel'),
+  ).find(
+    (p) => p.querySelector('mat-panel-title')?.textContent?.trim() === name,
+  );
+  if (!panel) {
+    throw new Error(`No application panel for ${name}`);
+  }
+  return panel;
+}
+
 describe('TeamApplicationsSelectComponent', () => {
   /**
-   * Verifies: ngOnInit sets subjectType=Team and loads the team's application instances.
-   * Interacts with: stubbed ApplicationService.getTeamApplicationInstances.
-   * Data: default team 't1'; instances [instA, instB].
+   * Verifies: the team's applications are listed in display order with their URL and flags, and the first cannot move
+   *   up nor the last down.
+   * Interacts with: ApplicationService.getTeamApplicationInstances; the rendered panels and Move Up / Move Down buttons.
+   * Data: App A (order 0) and App B (order 1) on team Red.
    */
-  it('ngOnInit sets subjectType to Team and loads instances when team is provided', async () => {
-    const { fixture, getTeamApplicationInstances } = await renderSelect();
-    expect(fixture.componentInstance.subjectType).toBe(ObjectType.Team);
-    expect(getTeamApplicationInstances).toHaveBeenCalledWith('t1');
-    expect(fixture.componentInstance.applications).toEqual([instA, instB]);
-  });
-
-  /**
-   * Verifies: without a team the subjectType remains Unknown (no Team setup).
-   * Interacts with: ngOnInit reading the team input.
-   * Data: team override null.
-   */
-  it('ngOnInit stays Unknown when no team is provided', async () => {
-    const { fixture } = await renderSelect({ team: null });
-    expect(fixture.componentInstance.subjectType).toBe(ObjectType.Unknown);
-  });
-
-  /**
-   * Verifies: the available-view-apps list excludes apps the team already has instances of.
-   * Interacts with: getViewApplications vs the loaded instances.
-   * Data: viewApps [appA, appB, appC] with team already using appA/appB — only appC remains.
-   */
-  it('refreshViewAppsAvailable only keeps view apps not already used by the team', async () => {
-    const { fixture } = await renderSelect({
-      viewApps: [appA, appB, makeApplication({ id: 'a3', name: 'App C' })],
-    });
-    expect(fixture.componentInstance.viewApplications).toEqual([
-      makeApplication({ id: 'a3', name: 'App C' }),
+  it('lists the team applications with their move limits', async () => {
+    const { container, getTeamApplicationInstances } = await renderSelect();
+    expect(getTeamApplicationInstances).toHaveBeenCalledExactlyOnceWith('t1');
+    expect(appTitles(container)).toEqual(['App A', 'App B']);
+    const moveUp = (name: string) =>
+      within(appPanel(container, name)).getByTitle(
+        'Move Up',
+      ) as HTMLButtonElement;
+    const moveDown = (name: string) =>
+      within(appPanel(container, name)).getByTitle(
+        'Move Down',
+      ) as HTMLButtonElement;
+    expect([moveUp('App A').disabled, moveDown('App A').disabled]).toEqual([
+      true,
+      false,
     ]);
+    expect([moveUp('App B').disabled, moveDown('App B').disabled]).toEqual([
+      false,
+      true,
+    ]);
+    expect(
+      within(appPanel(container, 'App A')).getByText('https://a.test'),
+    ).toBeInTheDocument();
   });
 
   /**
-   * Verifies: addViewAppToTeam creates an instance with displayOrder = current count and reloads instances.
-   * Interacts with: stubbed ApplicationService.createApplicationInstance and getTeamApplicationInstances.
-   * Data: two existing instances, so adding appA uses displayOrder 2.
+   * Verifies: in the Add Application menu, a view application without its own name shows its template's name, and
+   *   one with neither shows no name.
+   * Interacts with: ApplicationService.getViewApplications and getApplicationTemplates; the Add Application menu.
+   * Data: team Red has App A; the view adds one application from template Chat and one with no name or template.
    */
-  it('addViewAppToTeam creates an instance with the next displayOrder and reloads', async () => {
-    const { fixture, createApplicationInstance, getTeamApplicationInstances } =
-      await renderSelect();
-    createApplicationInstance.mockClear();
-    getTeamApplicationInstances.mockClear();
-    fixture.componentInstance.addViewAppToTeam(appA);
-    expect(createApplicationInstance).toHaveBeenCalledWith('t1', {
+  it('names a view application after its template in the menu', async () => {
+    const user = userEvent.setup();
+    await renderSelect({
+      instances: [instA],
+      viewApps: [
+        appA,
+        makeApplication({ id: 'a3', applicationTemplateId: 'tm1' }),
+        makeApplication({ id: 'a4' }),
+      ],
+      templates: [{ id: 'tm1', name: 'Chat' }],
+    });
+    await user.click(screen.getByText('Add Application'));
+    const menu = document.querySelector<HTMLElement>('.mat-mdc-menu-panel')!;
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent?.trim()),
+    ).toEqual(['Chat', '']);
+  });
+
+  /**
+   * Verifies: Add Application offers only the view's applications the team does not have, and adding one creates an
+   *   instance at the end of the order and reloads the list.
+   * Interacts with: the Add Application menu; ApplicationService.getViewApplications, createApplicationInstance and
+   *   getTeamApplicationInstances.
+   * Data: team Red has App A; the view has App A and App B; App B added.
+   */
+  it('adds a view application the team does not have', async () => {
+    const user = userEvent.setup();
+    const {
+      container,
+      createApplicationInstance,
+      getTeamApplicationInstances,
+    } = await renderSelect({ instances: [instA] });
+    getTeamApplicationInstances.mockReturnValue(of([instA, instB]));
+    await user.click(screen.getByText('Add Application'));
+    const menu = document.querySelector<HTMLElement>('.mat-mdc-menu-panel')!;
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent?.trim()),
+    ).toEqual(['App B']);
+    await user.click(within(menu).getByText('App B'));
+    expect(createApplicationInstance).toHaveBeenCalledExactlyOnceWith('t1', {
       teamId: 't1',
-      applicationId: 'a1',
-      displayOrder: 2, // 2 instances already present
+      applicationId: 'a2',
+      displayOrder: 1,
     });
-    expect(getTeamApplicationInstances).toHaveBeenCalled();
+    expect(appTitles(container)).toEqual(['App A', 'App B']);
   });
 
   /**
-   * Verifies: moveAppUp calls moveUpApplicationInstance and replaces applications with the returned ordering.
-   * Interacts with: stubbed ApplicationService.moveUpApplicationInstance.
-   * Data: instance id 'i2'; service returns reordered list [instB, instA].
+   * Verifies: Add Application is not offered once the team has every view application.
+   * Interacts with: ApplicationService.getViewApplications; the rendered toolbar.
+   * Data: team Red has App A and App B, the view's only applications.
    */
-  it('moveAppUp calls moveUpApplicationInstance and stores the new list', async () => {
-    const newList: ApplicationInstance[] = [instB, instA];
-    const { fixture, moveUpApplicationInstance } = await renderSelect();
-    moveUpApplicationInstance.mockReturnValueOnce(of(newList));
-    fixture.componentInstance.moveAppUp('i2');
-    expect(moveUpApplicationInstance).toHaveBeenCalledWith('i2');
-    expect(fixture.componentInstance.applications).toEqual(newList);
+  it('offers no Add Application when the team has every view application', async () => {
+    await renderSelect();
+    expect(screen.queryByText('Add Application')).not.toBeInTheDocument();
   });
 
   /**
-   * Verifies: moveAppDown delegates to moveDownApplicationInstance with the instance id.
-   * Interacts with: stubbed ApplicationService.moveDownApplicationInstance.
-   * Data: instance id 'i1'.
+   * Verifies: Move Up and Move Down reorder the application and the list follows the order the API returns.
+   * Interacts with: the panels' Move Up / Move Down buttons; ApplicationService.moveUpApplicationInstance and
+   *   moveDownApplicationInstance.
+   * Data: one row per direction; the API returns App B before App A.
    */
-  it('moveAppDown calls moveDownApplicationInstance', async () => {
-    const { fixture, moveDownApplicationInstance } = await renderSelect();
-    fixture.componentInstance.moveAppDown('i1');
-    expect(moveDownApplicationInstance).toHaveBeenCalledWith('i1');
+  it.each<
+    [
+      string,
+      string,
+      'moveUpApplicationInstance' | 'moveDownApplicationInstance',
+      string,
+    ]
+  >([
+    ['Move Up', 'App B', 'moveUpApplicationInstance', 'i2'],
+    ['Move Down', 'App A', 'moveDownApplicationInstance', 'i1'],
+  ])('%s on %s reorders the list', async (button, name, endpoint, id) => {
+    const user = userEvent.setup();
+    const rendered = await renderSelect();
+    rendered[endpoint].mockReturnValue(
+      of([
+        { ...instB, displayOrder: 0 },
+        { ...instA, displayOrder: 1 },
+      ]),
+    );
+    const panel = appPanel(rendered.container, name);
+    await user.click(panel.querySelector('mat-expansion-panel-header')!);
+    await user.click(within(panel).getByTitle(button));
+    expect(rendered[endpoint]).toHaveBeenCalledExactlyOnceWith(id);
+    expect(appTitles(rendered.container)).toEqual(['App B', 'App A']);
   });
 
   /**
-   * Verifies: removeApplicationInstanceFromTeam deletes the instance once the user confirms.
-   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplicationInstance.
-   * Data: confirmRemove=true; instA (id 'i1').
+   * Verifies: a confirmed Remove Application deletes the instance, renumbers the ones after it, and reloads; a declined
+   *   one does nothing.
+   * Interacts with: the panel's Remove Application button; CrucibleDialogService.confirm;
+   *   ApplicationService.deleteApplicationInstance, updateApplicationInstance and getTeamApplicationInstances.
+   * Data: one row per answer; App A removed from Red, so App B moves from order 1 to 0.
    */
-  it('removeApplicationInstanceFromTeam only deletes after confirm', async () => {
-    const { fixture, deleteApplicationInstance } = await renderSelect({
-      confirmRemove: true,
+  it.each<[string, boolean, string[]]>([
+    [
+      'removes the application and renumbers the rest when confirmed',
+      true,
+      ['App B'],
+    ],
+    ['keeps the application when declined', false, ['App A', 'App B']],
+  ])('%s', async (_case, confirmRemove, remaining) => {
+    const user = userEvent.setup();
+    const r = await renderSelect({ confirmRemove });
+    r.getTeamApplicationInstances.mockReturnValue(
+      of([{ ...instB, displayOrder: 0 }]),
+    );
+    const panel = appPanel(r.container, 'App A');
+    await user.click(panel.querySelector('mat-expansion-panel-header')!);
+    await user.click(within(panel).getByText('Remove Application'));
+    expect(r.confirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          'Are you sure that you want to remove application App A from team Red?',
+      }),
+    );
+    expect(r.deleteApplicationInstance).toHaveBeenCalledTimes(
+      confirmRemove ? 1 : 0,
+    );
+    expect(r.updateApplicationInstance.mock.calls).toEqual(
+      confirmRemove
+        ? [['i2', { teamId: 't1', applicationId: 'a2', displayOrder: 0 }]]
+        : [],
+    );
+    expect(appTitles(r.container)).toEqual(remaining);
+  });
+
+  /**
+   * Verifies: without a team the select logs, requests nothing and lists nothing.
+   * Interacts with: ngOnInit's team guard; console.log; ApplicationService.getTeamApplicationInstances.
+   * Data: team null.
+   */
+  it('requests nothing without a team', async () => {
+    const logged = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { container, getTeamApplicationInstances } = await renderSelect({
+      team: null,
     });
-    fixture.componentInstance.removeApplicationInstanceFromTeam(instA);
-    expect(deleteApplicationInstance).toHaveBeenCalledWith('i1');
-  });
-
-  /**
-   * Verifies: a declined confirm leaves deleteApplicationInstance uncalled.
-   * Interacts with: stubbed CrucibleDialogService.confirm and ApplicationService.deleteApplicationInstance.
-   * Data: confirmRemove=false.
-   */
-  it('removeApplicationInstanceFromTeam is a no-op when confirm returns false', async () => {
-    const { fixture, deleteApplicationInstance } = await renderSelect({
-      confirmRemove: false,
-    });
-    fixture.componentInstance.removeApplicationInstanceFromTeam(instA);
-    expect(deleteApplicationInstance).not.toHaveBeenCalled();
-  });
-
-  /**
-   * Verifies: getAppName returns the app's own name when present.
-   * Interacts with: component.getAppName (pure method).
-   * Data: app { name: 'Named' }.
-   */
-  it('getAppName returns the app.name when set', async () => {
-    const { fixture } = await renderSelect();
-    expect(
-      fixture.componentInstance.getAppName(
-        makeApplication({ id: 'x', name: 'Named' }),
-      ),
-    ).toBe('Named');
-  });
-
-  /**
-   * Verifies: getAppName falls back to the matching template's name when the app has no name.
-   * Interacts with: component.getAppName resolving against loaded templates.
-   * Data: app with applicationTemplateId 'tmpl-1'; template named 'From Template'.
-   */
-  it('getAppName falls back to template name via applicationTemplateId', async () => {
-    const template: ApplicationTemplate = {
-      id: 'tmpl-1',
-      name: 'From Template',
-    };
-    const { fixture } = await renderSelect({ templates: [template] });
-    expect(
-      fixture.componentInstance.getAppName(
-        makeApplication({
-          id: 'x',
-          applicationTemplateId: 'tmpl-1',
-        }),
-      ),
-    ).toBe('From Template');
-  });
-
-  /**
-   * Verifies: getAppName returns null when neither a name nor a resolvable template is available.
-   * Interacts with: component.getAppName (no templates loaded).
-   * Data: app { id: 'x' } only.
-   */
-  it('getAppName returns null when neither name nor known template id is present', async () => {
-    const { fixture } = await renderSelect();
-    expect(
-      fixture.componentInstance.getAppName(makeApplication({ id: 'x' })),
-    ).toBeNull();
+    expect(getTeamApplicationInstances).not.toHaveBeenCalled();
+    expect(appTitles(container)).toEqual([]);
+    expect(logged).toHaveBeenCalledTimes(1);
   });
 });

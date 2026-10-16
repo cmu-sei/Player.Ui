@@ -142,9 +142,6 @@ describe('RolesService', () => {
      *   cached role, and publishes the grown role on roles$.
      * Interacts with: PermissionService.addPermissionToRole (vi.fn) and RoleService.getRoles stub, RolesService.addPermission, roles$ via recordEmissions.
      * Data: role r1 with empty permissions; perm('p1') added.
-     * Why: the permission is pushed onto the role object already held in the cached array, so a
-     *   post-hoc read of roles$ sees it even if the subject never re-emits. Recording emissions is
-     *   what proves subscribers were told.
      */
     it('calls the API, appends the permission to the cached role, and emits', async () => {
       const addPermissionToRole = vi.fn(() => of(undefined));
@@ -165,8 +162,6 @@ describe('RolesService', () => {
      *   target role is absent.
      * Interacts with: PermissionService.addPermissionToRole (vi.fn) and empty getRoles stub, RolesService.addPermission, roles$ via recordEmissions.
      * Data: empty role cache; addPermission targets non-existent id 'missing'.
-     * Why: asserts the API call fires regardless while the cache mutation is guarded by role presence —
-     *   the absent second emission is what makes "no-op" observable rather than inferred.
      */
     it('is a no-op on the cache when the role is not present', async () => {
       const addPermissionToRole = vi.fn(() => of(undefined));
@@ -187,8 +182,6 @@ describe('RolesService', () => {
    *   from the cached role, and publishes the trimmed role on roles$.
    * Interacts with: PermissionService.removePermissionFromRole (vi.fn) and getRoles stub, RolesService.removePermission, roles$ via recordEmissions.
    * Data: role r1 holding p1 and p2; p1 removed, expecting only p2 to remain.
-   * Why: the filtered array is assigned onto the role object already held in the cache, so a post-hoc
-   *   read of roles$ sees the removal even if the subject never re-emits.
    */
   it('removePermission() calls the API, drops the permission, and emits', async () => {
     const removePermissionFromRole = vi.fn(() => of(undefined));
@@ -213,9 +206,6 @@ describe('RolesService', () => {
      *   the updated cache onto roles$ as a new emission.
      * Interacts with: RoleService.getRoles stub, RolesService.upsert (synchronous), roles$ via recordEmissions.
      * Data: empty cache; upsert('r9', { name: 'Brand New' }).
-     * Why: upsert mutates the cached array in place and re-emits that same reference, so a post-hoc
-     *   read of roles$ passes even when the emission never happens. Recording snapshots as they
-     *   arrive is what pins the notification.
      */
     it('appends a new role when the id is absent and emits the new cache', async () => {
       const svc = createService({ getRoles: () => of([]) });

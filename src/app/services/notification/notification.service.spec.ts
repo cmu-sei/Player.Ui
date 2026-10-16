@@ -73,7 +73,6 @@ describe('NotificationService', () => {
      *   with the bearer token, starts each, and stores them on the service
      * Interacts with: mockHubConnectionBuilder (FakeHubConnections, withUrl spy); service.connectToNotificationServer
      * Data: view/team/user/token identifiers ('v1','t1','u1','tok'); NotificationsSettings.url 'https://notify.test'
-     * Why: build() returns FakeHubConnections recorded in `connections` instead of opening real WebSockets
      */
     it('builds view, team, and user connections and starts each', async () => {
       const service = createService();
@@ -97,7 +96,6 @@ describe('NotificationService', () => {
      * Verifies: after the view connection's start() resolves, the service invokes 'Join' and 'GetHistory' with the view id
      * Interacts with: FakeHubConnection.invoke spy; service.connectToNotificationServer
      * Data: view id 'v1'; flush() drains microtasks so the start().then chain runs
-     * Why: flush() (setTimeout) is needed because the Join/GetHistory calls happen inside start().then(...)
      */
     it('joins and requests history once the view connection starts', async () => {
       const service = createService();
@@ -160,7 +158,6 @@ describe('NotificationService', () => {
      * Verifies: firing the connection's onreconnected callbacks re-invokes 'Join' with the view id
      * Interacts with: FakeHubConnection.reconnect() and invoke spy; service.connectToNotificationServer
      * Data: view id 'v1'; invoke spy cleared before triggering reconnect to isolate the rejoin call
-     * Why: invoke.mockClear() drops the initial Join/GetHistory so only the reconnect-driven Join is asserted
      */
     it('rejoins on reconnect', async () => {
       const service = createService();
@@ -277,9 +274,6 @@ describe('NotificationService', () => {
      * Verifies: a rejected 'Post' is caught and logged rather than left as an unhandled rejection
      * Interacts with: FakeHubConnection.invoke spy (made to reject); the console.log spy from beforeEach
      * Data: a rejection standing in for the hub refusing the post; flush() lets the rejection reach the handler
-     * Why: the API now refuses a post from a caller without ManageView, so the invoke can reject; the logged
-     *      message is the only observable trace of the catch, so asserting it is what makes this test fail
-     *      if the catch is dropped
      */
     it('catches a rejected "Post" instead of leaving it unhandled', async () => {
       const service = createService();
@@ -301,7 +295,6 @@ describe('NotificationService', () => {
      * Verifies: with no prior connection, joinPresence builds one, invokes 'JoinPresence', and emits the returned presence list on userPresence$
      * Interacts with: mockHubConnectionBuilder; FakeHubConnection.invoke (resolves to the list); service.userPresence$
      * Data: a single-entry ViewPresence[] returned by invoke
-     * Why: invoke resolves to the presence list, and flush() drains the start().then and JoinPresence().then chains
      */
     it('builds a presence connection when none exists and emits the presence list', async () => {
       const service = createService();
@@ -345,7 +338,6 @@ describe('NotificationService', () => {
      *   so one reconnect sends JoinPresence once per earlier call (current behavior)
      * Interacts with: the presence FakeHubConnection's reconnectedCallbacks, reconnect() and invoke spy
      * Data: joinPresence('v1') three times on one service (one build, then two reuses); one reconnect
-     * Why: a view page that re-enters presence (team switch, route reuse) piles up handlers
      */
     it('registers a new onreconnected handler on every joinPresence call', async () => {
       const service = createService();
@@ -360,6 +352,7 @@ describe('NotificationService', () => {
       const joins = view.invoke.mock.calls.filter(
         ([method]) => method === 'JoinPresence',
       );
+      // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
       expect(view.reconnectedCallbacks).toHaveLength(3);
       expect(joins).toHaveLength(3);
     });
@@ -513,6 +506,7 @@ describe('NotificationService', () => {
         await flush();
 
         expect(invoked).toEqual(expectedCalls);
+        // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
         expect(rejections.map((e) => (e as Error).message)).toEqual(
           expectedCalls.map(([method]) => `${method} failed`),
         );

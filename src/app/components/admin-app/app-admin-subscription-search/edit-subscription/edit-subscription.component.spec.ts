@@ -4,10 +4,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
-import {
-  MatCheckboxChange,
-  MatCheckboxModule,
-} from '@angular/material/checkbox';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { screen } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
 import { MatSelectModule } from '@angular/material/select';
 import { CRUCIBLE_DIALOG_IMPORTS } from '@cmusei/crucible-common';
 import {
@@ -88,118 +89,149 @@ async function renderEdit(
 
 describe('EditSubscriptionComponent', () => {
   /**
-   * Verifies: with no currentSub the form's name/callbackUri/clientId/eventTypes controls initialize to null.
-   * Interacts with: the component's reactive form (getRawValue).
+   * Verifies: without a subscription the dialog is titled Add Subscription with empty fields and an editable secret.
+   * Interacts with: the rendered dialog title and fields.
    * Data: currentSub null.
-   * Why: optional-chaining on a null currentSub yields undefined, which FormBuilder stores as null.
    */
-  it('initializes empty form fields when currentSub is null', async () => {
-    const { fixture } = await renderEdit({ currentSub: null });
-    const v = fixture.componentInstance.form.getRawValue();
-    // Optional-chaining on a null currentSub yields undefined, which
-    // FormBuilder stores as null in the control value.
-    expect(v.name).toBeNull();
-    expect(v.callbackUri).toBeNull();
-    expect(v.clientId).toBeNull();
-    expect(v.eventTypes).toBeNull();
+  it('opens empty for a new subscription', async () => {
+    await renderEdit({ currentSub: null });
+    expect(screen.getByRole('heading')).toHaveTextContent('Add Subscription');
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+    const secret = screen.getByLabelText('Client Secret') as HTMLInputElement;
+    expect(secret).toHaveValue('');
+    expect(secret.disabled).toBe(false);
+    expect(screen.getByLabelText('Edit')).toBeChecked();
   });
 
   /**
-   * Verifies: when the sub already has a secret, the clientSecret control shows a redacted mask and is disabled.
-   * Interacts with: the component's reactive form clientSecret control.
-   * Data: existingSub with clientSecretSet=true.
+   * Verifies: an existing subscription is shown with its fields and a redacted, read-only secret.
+   * Interacts with: the rendered dialog title and fields.
+   * Data: Alpha, whose client secret is set.
    */
-  it('redacts the secret and disables the control when clientSecretSet is true', async () => {
-    const { fixture } = await renderEdit({ currentSub: existingSub });
-    const secret = fixture.componentInstance.form.get('clientSecret');
-    expect(secret.value).toBe('******');
+  it('shows an existing subscription with its secret redacted', async () => {
+    await renderEdit({ currentSub: existingSub });
+    expect(screen.getByRole('heading')).toHaveTextContent('Edit Subscription');
+    expect(screen.getByLabelText('Name')).toHaveValue('Alpha');
+    expect(screen.getByLabelText('Callback URL')).toHaveValue(
+      'https://example.test/wh',
+    );
+    const secret = screen.getByLabelText('Client Secret') as HTMLInputElement;
+    expect(secret).toHaveValue('******');
     expect(secret.disabled).toBe(true);
+    expect(screen.getByLabelText('Edit')).not.toBeChecked();
   });
 
   /**
-   * Verifies: toggling edit-secret on clears the masked secret and enables the control for input.
-   * Interacts with: component.editSecretChanged and the clientSecret control.
-   * Data: existingSub; checkbox change checked=true.
+   * Verifies: ticking Edit clears and unlocks the secret, and unticking redacts and locks it again, so it is not sent.
+   * Interacts with: the Edit checkbox; the Client Secret field; Save; WebhookService.partialUpdateWebhookSubscription.
+   * Data: Alpha; Edit ticked, 'new-secret' typed, Edit unticked, then Save.
    */
-  it('editSecretChanged(true) clears and enables the secret control', async () => {
-    const { fixture } = await renderEdit({ currentSub: existingSub });
-    fixture.componentInstance.editSecretChanged({
-      checked: true,
-    } as MatCheckboxChange);
-    const secret = fixture.componentInstance.form.get('clientSecret');
-    expect(secret.value).toBe('');
-    expect(secret.enabled).toBe(true);
-  });
-
-  /**
-   * Verifies: toggling edit-secret back off restores the redacted mask, re-disables, and resets the control to pristine.
-   * Interacts with: component.editSecretChanged and the clientSecret control.
-   * Data: existingSub; toggle on (and dirty) then off.
-   */
-  it('editSecretChanged(false) redacts, marks pristine, and disables the control', async () => {
-    const { fixture } = await renderEdit({ currentSub: existingSub });
-    fixture.componentInstance.editSecretChanged({
-      checked: true,
-    } as MatCheckboxChange);
-    fixture.componentInstance.form.get('clientSecret').markAsDirty();
-    fixture.componentInstance.editSecretChanged({
-      checked: false,
-    } as MatCheckboxChange);
-    const secret = fixture.componentInstance.form.get('clientSecret');
-    expect(secret.value).toBe('******');
+  it('unlocks the secret only while Edit is ticked', async () => {
+    const user = userEvent.setup();
+    const { partialUpdateWebhookSubscription } = await renderEdit({
+      currentSub: existingSub,
+    });
+    const secret = screen.getByLabelText('Client Secret') as HTMLInputElement;
+    await user.click(screen.getByLabelText('Edit'));
+    expect(secret).toHaveValue('');
+    expect(secret.disabled).toBe(false);
+    secret.focus();
+    await user.type(secret, 'new-secret', { skipClick: true });
+    await user.click(screen.getByLabelText('Edit'));
+    expect(secret).toHaveValue('******');
     expect(secret.disabled).toBe(true);
-    expect(secret.pristine).toBe(true);
+    await user.click(screen.getByText('Save'));
+    expect(partialUpdateWebhookSubscription).toHaveBeenCalledExactlyOnceWith(
+      's1',
+      {},
+    );
   });
 
   /**
-   * Verifies: with no currentSub, onSubmit creates a subscription sending only the dirty fields, then closes with false.
-   * Interacts with: stubbed WebhookService.createWebhookSubscription and MatDialogRef.close.
-   * Data: only the name control set/dirty to 'New Sub'.
-   * Why: close(false) signals success (no error) to the parent search.
+   * Verifies: saving a new subscription sends only the fields the user filled in and closes with false (no error).
+   * Interacts with: the Name and Callback URL fields; Save; WebhookService.createWebhookSubscription; MatDialogRef.close.
+   * Data: name 'Beta' and callback 'https://b.test' typed.
    */
-  it('onSubmit(create) only sends dirty fields', async () => {
-    const { fixture, createWebhookSubscription, close } = await renderEdit({
+  it('creates a subscription from the filled-in fields', async () => {
+    const user = userEvent.setup();
+    const { createWebhookSubscription, close } = await renderEdit({
       currentSub: null,
     });
-    const name = fixture.componentInstance.form.get('name');
-    name.setValue('New Sub');
-    name.markAsDirty();
-    fixture.componentInstance.onSubmit();
-    expect(createWebhookSubscription).toHaveBeenCalledWith({ name: 'New Sub' });
-    expect(close).toHaveBeenCalledWith(false);
+    await user.type(screen.getByLabelText('Name'), 'Beta');
+    await user.type(screen.getByLabelText('Callback URL'), 'https://b.test');
+    await user.click(screen.getByText('Save'));
+    expect(createWebhookSubscription).toHaveBeenCalledExactlyOnceWith({
+      name: 'Beta',
+      callbackUri: 'https://b.test',
+    });
+    expect(close).toHaveBeenCalledExactlyOnceWith(false);
   });
 
   /**
-   * Verifies: when the create call errors, onSubmit closes the dialog with true.
-   * Interacts with: WebhookService.createWebhookSubscription (throwing) and MatDialogRef.close.
-   * Data: createResult='err'; name marked dirty.
-   * Why: close(true) signals the error case so the parent skips its reload.
+   * Verifies: saving an existing subscription sends only the changed fields and closes with false (no error).
+   * Interacts with: the Client ID field; Save; WebhookService.partialUpdateWebhookSubscription; MatDialogRef.close.
+   * Data: Alpha; client id changed to 'client-b'.
    */
-  it('onSubmit(create) closes with true when the create call errors', async () => {
-    const { fixture, close } = await renderEdit({
+  it('updates only the changed fields of a subscription', async () => {
+    const user = userEvent.setup();
+    const { partialUpdateWebhookSubscription, close } = await renderEdit({
+      currentSub: existingSub,
+    });
+    const clientId = screen.getByLabelText('Client ID');
+    await user.clear(clientId);
+    await user.type(clientId, 'client-b', { skipClick: true });
+    await user.click(screen.getByText('Save'));
+    expect(partialUpdateWebhookSubscription).toHaveBeenCalledExactlyOnceWith(
+      's1',
+      { clientId: 'client-b' },
+    );
+    expect(close).toHaveBeenCalledExactlyOnceWith(false);
+  });
+
+  /**
+   * Verifies: choosing events sends them with the subscription.
+   * Interacts with: the Events select (MatSelectHarness); Save; WebhookService.createWebhookSubscription.
+   * Data: a new subscription named 'Gamma' with the first event type chosen.
+   */
+  it('sends the chosen events', async () => {
+    const user = userEvent.setup();
+    const { fixture, createWebhookSubscription } = await renderEdit({
       currentSub: null,
+    });
+    await user.type(screen.getByLabelText('Name'), 'Gamma');
+    const events =
+      await TestbedHarnessEnvironment.loader(fixture).getHarness(
+        MatSelectHarness,
+      );
+    await events.open();
+    const [first] = await events.getOptions();
+    const eventType = await first.getText();
+    await first.click();
+    await events.close();
+    await user.click(screen.getByText('Save'));
+    expect(createWebhookSubscription).toHaveBeenCalledExactlyOnceWith({
+      name: 'Gamma',
+      eventTypes: [eventType],
+    });
+  });
+
+  /**
+   * Verifies: a failed save closes the dialog with true, which the search page reads as an error.
+   * Interacts with: Save; the failing WebhookService endpoint; MatDialogRef.close.
+   * Data: one row per mode: creating (currentSub null) and updating (Alpha).
+   */
+  it.each<[string, WebhookSubscription | null]>([
+    ['creating', null],
+    ['updating', existingSub],
+  ])('closes with true when %s fails', async (_mode, currentSub) => {
+    const user = userEvent.setup();
+    const { close } = await renderEdit({
+      currentSub,
       createResult: 'err',
+      updateResult: 'err',
     });
-    fixture.componentInstance.form.get('name').markAsDirty();
-    fixture.componentInstance.onSubmit();
-    expect(close).toHaveBeenCalledWith(true);
-  });
-
-  /**
-   * Verifies: with an existing sub, onSubmit sends only the dirty fields to partialUpdate (keyed by id) and closes false.
-   * Interacts with: stubbed WebhookService.partialUpdateWebhookSubscription and MatDialogRef.close.
-   * Data: existingSub (id s1); only callbackUri changed/dirty.
-   */
-  it('onSubmit(update) calls partialUpdate with only dirty fields', async () => {
-    const { fixture, partialUpdateWebhookSubscription, close } =
-      await renderEdit({ currentSub: existingSub });
-    const callback = fixture.componentInstance.form.get('callbackUri');
-    callback.setValue('https://new.test/wh');
-    callback.markAsDirty();
-    fixture.componentInstance.onSubmit();
-    expect(partialUpdateWebhookSubscription).toHaveBeenCalledWith('s1', {
-      callbackUri: 'https://new.test/wh',
-    });
-    expect(close).toHaveBeenCalledWith(false);
+    await user.type(screen.getByLabelText('Name'), 'x');
+    await user.click(screen.getByText('Save'));
+    expect(close).toHaveBeenCalledExactlyOnceWith(true);
   });
 });

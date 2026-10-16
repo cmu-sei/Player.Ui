@@ -41,7 +41,6 @@ describe('FocusedAppComponent', () => {
    * Verifies: focusedAppUrl$ emits the source URL unchanged when it carries no theme query param.
    * Interacts with: focusedAppUrl$ stream combining FocusedAppService.focusedAppUrl and userTheme$.
    * Data: renderFocused override url 'https://example.test/app'.
-   * Why: unwraps the DomSanitizer-bypassed value via its internal changingThisBreaksApplicationSecurity field to assert the string.
    */
   it('emits the URL as-is when it has no ?theme= placeholder', async () => {
     const { fixture } = await renderFocused({

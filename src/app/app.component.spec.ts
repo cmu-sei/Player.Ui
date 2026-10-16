@@ -244,8 +244,6 @@ describe('AppComponent', () => {
    * Verifies: theme subscription is torn down on destroy so later userTheme$ emits are ignored.
    * Interacts with: fixture.destroy(), ComnAuthQuery.userTheme$ subject, setUserTheme spy.
    * Data: default setup(); asserts call count is unchanged after a post-destroy emit.
-   * Why: emits 'dark-theme' after destroy and compares against the pre-destroy call count
-   *       to prove no leaked subscription, rather than asserting an absolute count.
    */
   it('cleans up subscriptions on destroy', async () => {
     const ctx = setup();

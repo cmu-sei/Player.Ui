@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { Observable, of, throwError } from 'rxjs';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { FileService } from '../../../generated/player-api';
 import { OpenFileComponent } from './open-file.component';
 import { renderComponent } from '../../../test-utils/render-component';
@@ -87,7 +87,6 @@ describe('OpenFileComponent', () => {
    * Verifies: a non-image/pdf file is saved as an attachment by setting the anchor download name and clicking it.
    * Interacts with: FileService.download, URL.createObjectURL spy, anchor stub via createElement.
    * Data: fileName 'doc.txt'; expects download attribute set to 'doc.txt' and a click.
-   * Why: replaces the created anchor with a stub exposing download setter/click spies to avoid real jsdom navigation.
    */
   it('downloads as attachment for non-image/pdf files', async () => {
     const { setDownload, click } = stubDownloadAnchor();

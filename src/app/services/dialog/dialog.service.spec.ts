@@ -77,7 +77,6 @@ describe('DialogService', () => {
    * Verifies: addRemoveUsersToTeam() sets the title and invokes the instance's loadTeam(team) method rather than setting a plain input
    * Interacts with: MatDialog.open stub; the fake instance's loadTeam vi.fn; service.addRemoveUsersToTeam
    * Data: a Team fixture { id: 't1', name: 'Red' } and configData { width: '600px' }
-   * Why: the fake componentInstance is pre-seeded with a loadTeam spy so the method call can be asserted without a real component
    */
   it('addRemoveUsersToTeam() sets the title and calls loadTeam with the team', () => {
     const { service, open, componentInstance } = setup();
@@ -96,7 +95,6 @@ describe('DialogService', () => {
    * Verifies: addRemoveUsersToTeam() defaults canManageRoles to true when the caller omits it.
    * Interacts with: MatDialog.open stub; service.addRemoveUsersToTeam.
    * Data: a Team fixture, no canManageRoles argument.
-   * Why: the flag gates every role-editing control in the dialog, so the default has to be pinned separately from the explicit-false path.
    */
   it('addRemoveUsersToTeam() grants role management by default', () => {
     const { service, componentInstance } = setup();
@@ -108,7 +106,6 @@ describe('DialogService', () => {
    * Verifies: addRemoveUsersToTeam() forwards canManageRoles: false onto the dialog instance.
    * Interacts with: MatDialog.open stub; service.addRemoveUsersToTeam.
    * Data: a Team fixture with canManageRoles passed as false.
-   * Why: manage-teams passes false for scoped-team users; if this assignment is lost they silently regain role management.
    */
   it('addRemoveUsersToTeam() forwards canManageRoles: false', () => {
     const { service, componentInstance } = setup();
