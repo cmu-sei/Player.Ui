@@ -24,7 +24,6 @@ import {
   provideCrucibleTheme,
   ComnSettingsModule,
   ComnAuthModule,
-  ComnHeaderBarModule,
 } from '@cmusei/crucible-common';
 import { ErrorService } from './app/services/error/error.service';
 import {
@@ -35,19 +34,14 @@ import {
   provideHttpClient,
   withInterceptorsFromDi,
 } from '@angular/common/http';
-import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatNativeDateModule } from '@angular/material/core';
 import { provideRouter } from '@angular/router';
 import { ROUTES } from './app/app.routes';
-import { ApiModule as SwaggerCodegenApiModule } from './app/generated/player-api/api.module';
-import { ClipboardModule } from 'ngx-clipboard';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { A11yModule } from '@angular/cdk/a11y';
-import { TableVirtualScrollModule } from 'ng-table-virtual-scroll';
-import { ResizableModule } from 'angular-resizable-element';
 import { AppComponent } from './app/app.component';
 
 if (environment.production) {
@@ -75,21 +69,13 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideZoneChangeDetection(),
     importProvidersFrom(
-      BrowserModule,
       BrowserAnimationsModule,
-      FormsModule,
       MatNativeDateModule,
-      ReactiveFormsModule,
-      SwaggerCodegenApiModule,
-      ClipboardModule,
       environment.production ? [] : AkitaNgDevtools.forRoot(),
       AkitaNgRouterStoreModule,
       ComnSettingsModule.forRoot(),
       ComnAuthModule.forRoot(),
-      ComnHeaderBarModule,
       A11yModule,
-      TableVirtualScrollModule,
-      ResizableModule,
     ),
     FocusedAppService,
     NotificationService,
