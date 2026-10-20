@@ -19,13 +19,16 @@ import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { XApiService } from '../../../services/xapi/xapi.service';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatButton } from '@angular/material/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'app-application-list',
-    templateUrl: './application-list.component.html',
-    styleUrls: ['./application-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'app-application-list',
+  templateUrl: './application-list.component.html',
+  styleUrls: ['./application-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MatList, MatListItem, MatButton, AsyncPipe],
 })
 export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   @Input() viewId: string;
@@ -44,7 +47,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     private authService: ComnAuthService,
     private sanitizer: DomSanitizer,
     private authQuery: ComnAuthQuery,
-    private xapiService: XApiService
+    private xapiService: XApiService,
   ) {}
 
   ngOnInit() {
@@ -69,14 +72,14 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     this.applications$ = combineLatest([
       this.authQuery.userTheme$,
       this.applicationsService.getApplicationsByTeam(
-        this.teams.find((t) => t.isPrimary).id
+        this.teams.find((t) => t.isPrimary).id,
       ),
     ]).pipe(
       map(([theme, apps]) => {
         apps.forEach((app) => {
           app.themedUrl = this.insertThemeToUrl(app.url, theme);
           app.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-            app.themedUrl
+            app.themedUrl,
           );
         });
         return apps;
@@ -88,7 +91,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
             : this.openInFocusedApp(this.currentApp);
         }
       }),
-      takeUntil(this.unsubscribe$)
+      takeUntil(this.unsubscribe$),
     );
   }
 
@@ -97,7 +100,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     this.authService.isAuthenticated().then((isAuthenticated) => {
       if (!isAuthenticated) {
         console.log(
-          'User is not authenticated and must not have been redirected to login.'
+          'User is not authenticated and must not have been redirected to login.',
         );
         window.location.reload();
       } else {

@@ -12,12 +12,15 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
-    selector: 'app-file-browse',
-    templateUrl: './file-browse.component.html',
-    styleUrls: ['./file-browse.component.scss'],
-    standalone: false
+  selector: 'app-file-browse',
+  templateUrl: './file-browse.component.html',
+  styleUrls: ['./file-browse.component.scss'],
+  imports: [MatButton, MatList, MatListItem, MatIconButton, MatIcon],
 })
 export class FileBrowseComponent implements OnInit {
   public files = new Array<FileModel>();
@@ -27,7 +30,7 @@ export class FileBrowseComponent implements OnInit {
   constructor(
     private fileService: FileService,
     private teamService: TeamService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -43,7 +46,7 @@ export class FileBrowseComponent implements OnInit {
       },
       (err) => {
         console.log('Error fetching files ' + err);
-      }
+      },
     );
     this.teamService.getMyViewTeams(viewId).subscribe(
       (data) => {
@@ -53,7 +56,7 @@ export class FileBrowseComponent implements OnInit {
       },
       (err) => {
         console.log('Error fetching teams ' + err);
-      }
+      },
     );
   }
 
@@ -76,7 +79,7 @@ export class FileBrowseComponent implements OnInit {
       },
       () => {
         console.log('Got a next value');
-      }
+      },
     );
   }
 

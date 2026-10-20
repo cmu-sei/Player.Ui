@@ -50,6 +50,8 @@ import {
   captureUnhandledRxErrors,
   flush,
 } from '../../../test-utils/unhandled-rx-errors';
+import { AdminAppViewExportComponent } from '../admin-app-view-export/admin-app-view-export.component';
+import { AdminAppViewImportComponent } from '../admin-app-view-import/admin-app-view-import.component';
 
 const training: View = {
   id: 'view-1',
@@ -166,7 +168,11 @@ async function renderAdminViewSearch(
   };
 
   const result = await renderComponent(AdminViewSearchComponent, {
-    declarations: [AdminViewSearchComponent],
+    childStubs: [
+      { replace: AdminViewEditComponent, with: AdminViewEditStubComponent },
+      { replace: AdminAppViewExportComponent, with: ViewExportStubComponent },
+      { replace: AdminAppViewImportComponent, with: ViewImportStubComponent },
+    ],
     imports: [
       MatCardModule,
       MatFormFieldModule,
@@ -182,9 +188,6 @@ async function renderAdminViewSearch(
       MatBadgeModule,
       MatDialogModule,
       ClipboardModule,
-      AdminViewEditStubComponent,
-      ViewExportStubComponent,
-      ViewImportStubComponent,
     ],
     providers: [
       ...permissionDataProviders({ system: permissions }),

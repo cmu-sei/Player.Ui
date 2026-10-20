@@ -12,6 +12,7 @@ import { AdminUserEditComponent } from './admin-user-edit.component';
 import { renderComponent } from '../../../../test-utils/render-component';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiStub } from '../../../../test-utils/api-stub';
+import { RolesPermissionsSelectComponent } from '../../roles-permissions-select/roles-permissions-select.component';
 
 const user: User = {
   id: 'u1',
@@ -35,7 +36,12 @@ async function renderEdit(overrides: { user?: User; roles?: Role[] } = {}) {
   const updateUser = vi.fn((_id: string, next: User) => of(next));
 
   const rendered = await renderComponent(AdminUserEditComponent, {
-    declarations: [AdminUserEditComponent],
+    childStubs: [
+      {
+        replace: RolesPermissionsSelectComponent,
+        with: RolesPermissionsSelectStubComponent,
+      },
+    ],
     imports: [MatButtonModule, RolesPermissionsSelectStubComponent],
     componentProperties: { user: u, roles: rs },
     providers: [

@@ -11,6 +11,17 @@ import {
   ApplicationTemplate,
 } from '../../../generated/player-api';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { MatDivider } from '@angular/material/list';
+import { NgClass } from '@angular/common';
+import { MatIcon } from '@angular/material/icon';
 
 export enum ObjectType {
   Unknown,
@@ -22,7 +33,20 @@ export enum ObjectType {
   selector: 'app-team-applications-select',
   templateUrl: './team-applications-select.component.html',
   styleUrls: ['./team-applications-select.component.scss'],
-  standalone: false,
+  imports: [
+    MatButton,
+    MatMenuTrigger,
+    MatMenu,
+    MatMenuItem,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatDivider,
+    MatIconButton,
+    NgClass,
+    MatIcon,
+  ],
 })
 export class TeamApplicationsSelectComponent implements OnInit {
   @Input() team: Team;

@@ -12,12 +12,15 @@ import {
   TemplateRef,
   ViewChild,
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
   ComnAuthQuery,
   ComnAuthService,
   CrucibleDialogService,
   Theme,
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
 } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
 import { combineLatest, Observable, Subject } from 'rxjs';
@@ -32,13 +35,43 @@ import {
   SystemPermission,
   ViewPermission,
 } from '../../../generated/player-api';
+import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
+import { MatIcon } from '@angular/material/icon';
+import { ClipboardModule } from 'ngx-clipboard';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatLabel } from '@angular/material/input';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-topbar',
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false,
+  imports: [
+    MatToolbar,
+    MatToolbarRow,
+    MatIconButton,
+    RouterLink,
+    MatIcon,
+    ClipboardModule,
+    MatTooltip,
+    MatButton,
+    MatMenuTrigger,
+    MatMenu,
+    MatMenuItem,
+    MatSlideToggle,
+    MatLabel,
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    UserPresenceComponent,
+    CrucibleDialogActionsDirective,
+    MatDialogClose,
+    AsyncPipe,
+  ],
 })
 export class TopbarComponent implements OnInit, OnDestroy {
   @Input() title?: string;

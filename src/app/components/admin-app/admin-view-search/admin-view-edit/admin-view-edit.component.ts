@@ -11,13 +11,15 @@ import {
   inject,
 } from '@angular/core';
 import { ErrorStateMatcher } from '@angular/material/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { MatStepper } from '@angular/material/stepper';
+import { MatDialogRef, MatDialogContent } from '@angular/material/dialog';
+import { MatStepper, MatStepperIcon, MatStep } from '@angular/material/stepper';
 import {
   UntypedFormControl,
   FormGroupDirective,
   NgForm,
   Validators,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
 import {
   View,
@@ -36,7 +38,13 @@ import {
 } from '../../../../generated/player-api';
 import { User } from '../../../../generated/player-api';
 import { DialogService } from '../../../../services/dialog/dialog.service';
-import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  CrucibleDialogService,
+  CrucibleDialogComponent,
+  CrucibleDialogTitleDirective,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
 import { take } from 'rxjs/operators';
 import { ViewApplicationsSelectComponent } from '../../view-applications-select/view-applications-select.component';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -45,6 +53,34 @@ import { HttpEventType, HttpResponse } from '@angular/common/http';
 import { TeamPermissionsService } from '../../../../services/permissions/team-permissions.service';
 import { TeamRolesService } from '../../../../services/roles/team-roles.service';
 import { forkJoin } from 'rxjs';
+import { NgTemplateOutlet } from '@angular/common';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { MatIcon } from '@angular/material/icon';
+import {
+  MatFormField,
+  MatLabel,
+  MatInput,
+  MatError,
+} from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { ClipboardModule } from 'ngx-clipboard';
+import { RolesPermissionsSelectComponent } from '../../roles-permissions-select/roles-permissions-select.component';
+import { MatBadge } from '@angular/material/badge';
+import { TeamApplicationsSelectComponent } from '../../team-applications-select/team-applications-select.component';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatProgressBar } from '@angular/material/progress-bar';
 
 /** Team node with related user and application information */
 export class TeamUserApp {
@@ -59,7 +95,46 @@ export class TeamUserApp {
   selector: 'app-admin-view-edit',
   templateUrl: './admin-view-edit.component.html',
   styleUrls: ['./admin-view-edit.component.scss'],
-  standalone: false,
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogTitleDirective,
+    NgTemplateOutlet,
+    CrucibleDialogContentDirective,
+    CrucibleDialogActionsDirective,
+    MatButton,
+    CdkScrollable,
+    MatDialogContent,
+    MatIconButton,
+    MatIcon,
+    MatStepper,
+    MatStepperIcon,
+    MatStep,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    FormsModule,
+    ReactiveFormsModule,
+    MatError,
+    MatSelect,
+    MatOption,
+    MatCheckbox,
+    MatTooltip,
+    MatMenuTrigger,
+    MatMenu,
+    MatMenuItem,
+    ViewApplicationsSelectComponent,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    ClipboardModule,
+    RolesPermissionsSelectComponent,
+    MatBadge,
+    TeamApplicationsSelectComponent,
+    MatCard,
+    MatProgressSpinner,
+    MatProgressBar,
+  ],
 })
 export class AdminViewEditComponent implements OnInit {
   private readonly matDialogRef = inject<MatDialogRef<AdminViewEditComponent>>(

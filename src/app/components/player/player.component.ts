@@ -13,8 +13,13 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
-import { Router } from '@angular/router';
+import {
+  MatDrawerMode,
+  MatSidenav,
+  MatSidenavContainer,
+  MatSidenavContent,
+} from '@angular/material/sidenav';
+import { Router, RouterLink } from '@angular/router';
 import {
   ComnAuthQuery,
   ComnSettingsService,
@@ -39,24 +44,53 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-import {
-  Team,
-  TeamMembershipService,
-  View,
-} from '../../generated/player-api';
+import { Team, TeamMembershipService, View } from '../../generated/player-api';
 import { ViewService } from '../../generated/player-api/api/view.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { SystemMessageService } from '../../services/system-message/system-message.service';
 import { ViewsService } from '../../services/views/views.service';
 import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
+import {
+  ResizableDirective,
+  ResizeHandleDirective,
+} from 'angular-resizable-element';
+import { NgClass, NgStyle, AsyncPipe } from '@angular/common';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem, MatDivider } from '@angular/material/list';
+import { ApplicationListComponent } from './application-list/application-list.component';
+import { MatIconButton } from '@angular/material/button';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FocusedAppComponent } from './focused-app/focused-app.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 @Component({
   selector: 'app-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false,
+  imports: [
+    MatSidenavContainer,
+    MatSidenav,
+    ResizableDirective,
+    NgClass,
+    NgStyle,
+    MatToolbar,
+    RouterLink,
+    MatIcon,
+    MatList,
+    MatListItem,
+    MatDivider,
+    ApplicationListComponent,
+    MatIconButton,
+    ResizeHandleDirective,
+    MatSidenavContent,
+    TopbarComponent,
+    FocusedAppComponent,
+    NotificationsComponent,
+    AsyncPipe,
+  ],
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
@@ -108,7 +142,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
           if (!data.team) {
             return EMPTY;
           }
-          return this.permissionsService.loadTeamPermissions(null, data.team.id, true);
+          return this.permissionsService.loadTeamPermissions(
+            null,
+            data.team.id,
+            true,
+          );
         }),
       )
       .subscribe();

@@ -55,6 +55,10 @@ import { ApiStub } from '../../test-utils/api-stub';
 import type { User as AuthUser } from 'oidc-client-ts';
 import { dialogRefStub } from '../../test-utils/dialog-refs';
 import { recordEmissions } from '../../test-utils/record-emissions';
+import { ApplicationListComponent } from './application-list/application-list.component';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FocusedAppComponent } from './focused-app/focused-app.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 @Component({ selector: 'app-application-list', template: '' })
 class ApplicationListStubComponent {
@@ -161,12 +165,13 @@ async function renderPlayer(
       MatToolbarModule,
       MatButtonModule,
       ResizableModule,
-      ApplicationListStubComponent,
-      TopbarStubComponent,
-      FocusedAppStubComponent,
-      NotificationsStubComponent,
     ],
-    declarations: [PlayerComponent],
+    childStubs: [
+      { replace: ApplicationListComponent, with: ApplicationListStubComponent },
+      { replace: TopbarComponent, with: TopbarStubComponent },
+      { replace: FocusedAppComponent, with: FocusedAppStubComponent },
+      { replace: NotificationsComponent, with: NotificationsStubComponent },
+    ],
     providers: [
       { provide: RouterQuery, useValue: routerQuery },
       {

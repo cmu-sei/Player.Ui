@@ -72,6 +72,8 @@ import {
   captureUnhandledRxErrors,
   flush,
 } from '../../../../test-utils/unhandled-rx-errors';
+import { RolesPermissionsSelectComponent } from '../../roles-permissions-select/roles-permissions-select.component';
+import { TeamApplicationsSelectComponent } from '../../team-applications-select/team-applications-select.component';
 
 const demoView: View = {
   id: 'v1',
@@ -211,11 +213,21 @@ async function renderEdit(
       MatButtonModule,
       ...CRUCIBLE_DIALOG_IMPORTS,
       ClipboardModule,
-      ViewApplicationsSelectStubComponent,
-      RolesPermissionsSelectStubComponent,
-      TeamApplicationsSelectStubComponent,
     ],
-    declarations: [AdminViewEditComponent],
+    childStubs: [
+      {
+        replace: ViewApplicationsSelectComponent,
+        with: ViewApplicationsSelectStubComponent,
+      },
+      {
+        replace: RolesPermissionsSelectComponent,
+        with: RolesPermissionsSelectStubComponent,
+      },
+      {
+        replace: TeamApplicationsSelectComponent,
+        with: TeamApplicationsSelectStubComponent,
+      },
+    ],
     on: { editComplete },
     providers: [
       ...permissionDataProviders({ system: permissions }),

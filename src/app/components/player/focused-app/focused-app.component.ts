@@ -7,12 +7,13 @@ import { SafeUrl, DomSanitizer } from '@angular/platform-browser';
 import { combineLatest, Observable, Subject } from 'rxjs';
 import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'app-focused-app',
-    templateUrl: './focused-app.component.html',
-    styleUrls: ['./focused-app.component.scss'],
-    standalone: false
+  selector: 'app-focused-app',
+  templateUrl: './focused-app.component.html',
+  styleUrls: ['./focused-app.component.scss'],
+  imports: [AsyncPipe],
 })
 export class FocusedAppComponent implements OnDestroy {
   public focusedAppUrl$: Observable<SafeUrl>;
@@ -22,7 +23,7 @@ export class FocusedAppComponent implements OnDestroy {
   constructor(
     private focusedAppService: FocusedAppService,
     private sanitizer: DomSanitizer,
-    private authQuery: ComnAuthQuery
+    private authQuery: ComnAuthQuery,
   ) {
     this.focusedAppUrl$ = combineLatest([
       this.focusedAppService.focusedAppUrl,
@@ -50,8 +51,8 @@ export class FocusedAppComponent implements OnDestroy {
       shareReplay(1),
       distinctUntilChanged(),
       map((themedUrl) =>
-        this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl)
-      )
+        this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl),
+      ),
     );
   }
 

@@ -8,6 +8,8 @@ import { HomeAppComponent } from './home-app.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { ComnSettingsService } from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { ViewListComponent } from './view-list/view-list.component';
 
 @Component({ selector: 'app-topbar', template: '' })
 class TopbarStubComponent {
@@ -22,7 +24,10 @@ async function renderHome(overrides: { appTopBarText?: string } = {}) {
   const { appTopBarText = 'Player' } = overrides;
 
   return renderComponent(HomeAppComponent, {
-    declarations: [HomeAppComponent],
+    childStubs: [
+      { replace: TopbarComponent, with: TopbarStubComponent },
+      { replace: ViewListComponent, with: ViewListStubComponent },
+    ],
     imports: [TopbarStubComponent, ViewListStubComponent],
     providers: [
       {

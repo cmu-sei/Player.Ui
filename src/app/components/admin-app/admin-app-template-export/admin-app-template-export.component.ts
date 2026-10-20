@@ -14,18 +14,46 @@ import {
   UntypedFormBuilder,
   Validators,
   AbstractControl,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
 import { ApplicationService, ArchiveType } from '../../../generated/player-api';
 import FileDownloadUtils from '../../../utilities/file-download-utils';
 import HttpHeaderUtils from '../../../utilities/http-header-utils';
 import { BehaviorSubject, finalize, map } from 'rxjs';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
+import { MatButton } from '@angular/material/button';
+import { MatFormField, MatLabel } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatTooltip } from '@angular/material/tooltip';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-admin-app-template-export',
   templateUrl: './admin-app-template-export.component.html',
   styleUrls: ['./admin-app-template-export.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false,
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    CrucibleDialogActionsDirective,
+    MatButton,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
+    MatSlideToggle,
+    MatTooltip,
+    AsyncPipe,
+  ],
 })
 export class AdminAppTemplateExportComponent {
   @Input() ids: string[];

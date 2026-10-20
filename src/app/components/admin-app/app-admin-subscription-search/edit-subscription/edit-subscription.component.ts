@@ -4,8 +4,13 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import { MatCheckboxChange } from '@angular/material/checkbox';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { MatCheckboxChange, MatCheckbox } from '@angular/material/checkbox';
 import { MatDialogRef } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
 import {
@@ -14,12 +19,32 @@ import {
   WebhookSubscription,
   WebhookSubscriptionForm,
 } from '../../../../generated/player-api';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+} from '@cmusei/crucible-common';
+import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
 
 @Component({
-    selector: 'app-edit-subscription',
-    templateUrl: './edit-subscription.component.html',
-    styleUrls: ['./edit-subscription.component.scss'],
-    standalone: false
+  selector: 'app-edit-subscription',
+  templateUrl: './edit-subscription.component.html',
+  styleUrls: ['./edit-subscription.component.scss'],
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatTooltip,
+    MatCheckbox,
+    MatSelect,
+    MatOption,
+  ],
 })
 export class EditSubscriptionComponent implements OnInit {
   @Input() currentSub: WebhookSubscription;
@@ -32,7 +57,7 @@ export class EditSubscriptionComponent implements OnInit {
   constructor(
     private webhookService: WebhookService,
     private formBuilder: UntypedFormBuilder,
-    private dialogRef: MatDialogRef<EditSubscriptionComponent>
+    private dialogRef: MatDialogRef<EditSubscriptionComponent>,
   ) {}
 
   ngOnInit(): void {

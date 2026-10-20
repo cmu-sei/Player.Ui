@@ -12,7 +12,13 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { MatAccordion } from '@angular/material/expansion';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+  MatExpansionPanelDescription,
+} from '@angular/material/expansion';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { debounceTime, map, shareReplay, switchMap } from 'rxjs/operators';
 import {
@@ -25,12 +31,45 @@ import {
 } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
+import {
+  MatFormField,
+  MatPrefix,
+  MatInput,
+  MatSuffix,
+} from '@angular/material/input';
+import { MatIcon } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatDialogClose } from '@angular/material/dialog';
+import { TeamUserPresenceComponent } from '../team-user-presence/team-user-presence.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-user-presence',
   templateUrl: './user-presence.component.html',
   styleUrls: ['./user-presence.component.scss'],
-  standalone: false,
+  imports: [
+    MatFormField,
+    MatIcon,
+    MatPrefix,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatTooltip,
+    MatButton,
+    MatCheckbox,
+    MatDialogClose,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    TeamUserPresenceComponent,
+    AsyncPipe,
+  ],
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
   @Input() viewId: string;

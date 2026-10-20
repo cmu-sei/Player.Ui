@@ -12,12 +12,47 @@ import { NotificationService } from '../../../services/notification/notification
 import { ViewService } from '../../../generated/player-api/api/view.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { NgClass, DatePipe } from '@angular/common';
+import { MatBadge } from '@angular/material/badge';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem } from '@angular/material/list';
+import { FormsModule } from '@angular/forms';
+import {
+  MatFormField,
+  MatInput,
+  MatHint,
+  MatSuffix,
+} from '@angular/material/input';
+import { MatButton } from '@angular/material/button';
+import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
 
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
-  standalone: false,
+  imports: [
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    NgClass,
+    MatExpansionPanelTitle,
+    MatBadge,
+    MatIcon,
+    MatList,
+    MatListItem,
+    FormsModule,
+    MatFormField,
+    MatInput,
+    MatHint,
+    MatButton,
+    MatSuffix,
+    DatePipe,
+    TimeZoneAbbrPipe,
+  ],
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   @Input() viewGuid: string;

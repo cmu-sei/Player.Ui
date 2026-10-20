@@ -29,6 +29,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiStub } from '../../../../test-utils/api-stub';
+import { TeamUserPresenceComponent } from '../team-user-presence/team-user-presence.component';
 
 // Alpha is the user's primary team and is scoped onto Beta; Gamma is another
 // team in the view that nothing scopes the user onto. The API lists them in
@@ -108,9 +109,13 @@ async function renderPresence(
       MatInputModule,
       MatTooltipModule,
       MatButtonModule,
-      TeamUserPresenceStubComponent,
     ],
-    declarations: [UserPresenceComponent],
+    childStubs: [
+      {
+        replace: TeamUserPresenceComponent,
+        with: TeamUserPresenceStubComponent,
+      },
+    ],
     componentProperties: { viewId: 'view-1', showCloseButton },
     on: { closeMe },
     providers: [

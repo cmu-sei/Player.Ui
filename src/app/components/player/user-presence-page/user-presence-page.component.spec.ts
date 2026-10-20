@@ -7,6 +7,7 @@ import { By } from '@angular/platform-browser';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { UserPresencePageComponent } from './user-presence-page.component';
 import { renderComponent } from '../../../test-utils/render-component';
+import { UserPresenceComponent } from './user-presence/user-presence.component';
 
 @Component({ selector: 'app-user-presence', template: '' })
 class UserPresenceStubComponent {
@@ -17,7 +18,9 @@ async function renderPage(overrides: { viewId?: string | null } = {}) {
   const { viewId = 'view-1' } = overrides;
   return renderComponent(UserPresencePageComponent, {
     imports: [UserPresenceStubComponent],
-    declarations: [UserPresencePageComponent],
+    childStubs: [
+      { replace: UserPresenceComponent, with: UserPresenceStubComponent },
+    ],
     providers: [
       {
         provide: RouterQuery,

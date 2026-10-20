@@ -1,9 +1,21 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnDestroy, OnInit, ViewChild, ElementRef, AfterViewInit, Renderer2 } from '@angular/core';
-import { MatSidenav } from '@angular/material/sidenav';
-import { Router } from '@angular/router';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  Renderer2,
+} from '@angular/core';
+import {
+  MatSidenav,
+  MatSidenavContainer,
+  MatSidenavContent,
+} from '@angular/material/sidenav';
+import { Router, RouterLink } from '@angular/router';
 import {
   ComnSettingsService,
   Theme,
@@ -16,12 +28,40 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 import { SystemPermission } from '../../generated/player-api';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatButton } from '@angular/material/button';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { AdminViewSearchComponent } from './admin-view-search/admin-view-search.component';
+import { AdminUserSearchComponent } from './admin-user-search/admin-user-search.component';
+import { AdminAppTemplateSearchComponent } from './admin-app-template-search/admin-app-template-search.component';
+import { AdminRolesComponent } from './admin-roles/admin-roles.component';
+import { AppAdminSubscriptionSearchComponent } from './app-admin-subscription-search/app-admin-subscription-search.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'app-admin-app',
-    templateUrl: './admin-app.component.html',
-    styleUrls: ['./admin-app.component.scss'],
-    standalone: false
+  selector: 'app-admin-app',
+  templateUrl: './admin-app.component.html',
+  styleUrls: ['./admin-app.component.scss'],
+  imports: [
+    MatSidenavContainer,
+    MatSidenav,
+    MatToolbar,
+    RouterLink,
+    MatIcon,
+    MatList,
+    MatListItem,
+    MatButton,
+    MatSidenavContent,
+    TopbarComponent,
+    AdminViewSearchComponent,
+    AdminUserSearchComponent,
+    AdminAppTemplateSearchComponent,
+    AdminRolesComponent,
+    AppAdminSubscriptionSearchComponent,
+    AsyncPipe,
+  ],
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav: MatSidenav;
@@ -84,11 +124,11 @@ export class AdminAppComponent implements OnInit, OnDestroy {
         return queryParam as Section;
       } else {
         const sectionItem = this.sectionItems.find((x) =>
-          permissions.includes(x.permission)
+          permissions.includes(x.permission),
         );
         return sectionItem?.section;
       }
-    })
+    }),
   );
 
   constructor(
@@ -118,7 +158,6 @@ export class AdminAppComponent implements OnInit, OnDestroy {
           //this.sectionChangedFn(Section.ADMIN_VIEWS);
         }
       });
-
   }
 
   addParam(params: any): void {

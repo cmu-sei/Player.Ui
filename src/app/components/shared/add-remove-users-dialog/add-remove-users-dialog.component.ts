@@ -4,8 +4,20 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
-import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import {
   User,
   UserService,
@@ -21,7 +33,29 @@ import { forkJoin, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
-import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  CrucibleDialogService,
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
+import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
+import {
+  MatFormField,
+  MatLabel,
+  MatPrefix,
+  MatInput,
+  MatSuffix,
+} from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatChipSet, MatChip } from '@angular/material/chips';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -29,14 +63,49 @@ export class TeamUser {
     public name: string,
     public user: User,
     public teamMembership: TeamMembership,
-  ) { }
+  ) {}
 }
 
 @Component({
   selector: 'app-add-remove-users-dialog',
   templateUrl: './add-remove-users-dialog.component.html',
   styleUrls: ['./add-remove-users-dialog.component.scss'],
-  standalone: false,
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    MatToolbar,
+    MatToolbarRow,
+    MatIcon,
+    MatFormField,
+    MatLabel,
+    MatPrefix,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatChipSet,
+    MatChip,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatCard,
+    MatProgressSpinner,
+    MatPaginator,
+    MatButton,
+    MatSelect,
+    MatOption,
+    CrucibleDialogActionsDirective,
+  ],
 })
 export class AddRemoveUsersDialogComponent implements OnInit {
   public title: string;
@@ -412,9 +481,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     }
     console.log(
       'Update Team Membership: ' +
-      teamUser.name +
-      '   role: ' +
-      teamUser.teamMembership.roleId,
+        teamUser.name +
+        '   role: ' +
+        teamUser.teamMembership.roleId,
     );
 
     this.teamMembershipService

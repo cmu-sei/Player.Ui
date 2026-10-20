@@ -36,6 +36,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiStub } from '../../../test-utils/api-stub';
+import { AdminTemplateDetailsComponent } from './admin-template-details/admin-template-details.component';
+import { AdminAppTemplateExportComponent } from '../admin-app-template-export/admin-app-template-export.component';
+import { AdminAppTemplateImportComponent } from '../admin-app-template-import/admin-app-template-import.component';
 
 const alpha: ApplicationTemplate = {
   id: 't1',
@@ -91,7 +94,20 @@ async function renderSearch(
   );
 
   const rendered = await renderComponent(AdminAppTemplateSearchComponent, {
-    declarations: [AdminAppTemplateSearchComponent],
+    childStubs: [
+      {
+        replace: AdminTemplateDetailsComponent,
+        with: AdminTemplateDetailsStubComponent,
+      },
+      {
+        replace: AdminAppTemplateExportComponent,
+        with: TemplateExportStubComponent,
+      },
+      {
+        replace: AdminAppTemplateImportComponent,
+        with: TemplateImportStubComponent,
+      },
+    ],
     imports: [
       MatExpansionModule,
       MatFormFieldModule,
@@ -105,9 +121,6 @@ async function renderSearch(
       MatIconModule,
       MatBadgeModule,
       MatDialogModule,
-      AdminTemplateDetailsStubComponent,
-      TemplateExportStubComponent,
-      TemplateImportStubComponent,
     ],
     providers: [
       ...permissionDataProviders({ system: permissions }),

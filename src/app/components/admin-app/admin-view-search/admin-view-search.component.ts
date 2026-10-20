@@ -3,8 +3,20 @@
 
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
@@ -13,6 +25,18 @@ import { map } from 'rxjs';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatIcon } from '@angular/material/icon';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatBadge } from '@angular/material/badge';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { ClipboardModule } from 'ngx-clipboard';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { AdminAppViewExportComponent } from '../admin-app-view-export/admin-app-view-export.component';
+import { AdminAppViewImportComponent } from '../admin-app-view-import/admin-app-view-import.component';
 
 export interface Action {
   Value: string;
@@ -23,7 +47,37 @@ export interface Action {
   selector: 'app-admin-view-search',
   templateUrl: './admin-view-search.component.html',
   styleUrls: ['./admin-view-search.component.scss'],
-  standalone: false,
+  imports: [
+    AdminViewEditComponent,
+    MatIcon,
+    MatFormField,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatTooltip,
+    MatBadge,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCheckbox,
+    MatCellDef,
+    MatCell,
+    MatSortHeader,
+    ClipboardModule,
+    MatButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    MatCard,
+    MatProgressSpinner,
+    AdminAppViewExportComponent,
+    AdminAppViewImportComponent,
+  ],
 })
 export class AdminViewSearchComponent implements OnInit {
   @ViewChild(AdminViewEditComponent, { static: true })

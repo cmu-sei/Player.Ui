@@ -4,15 +4,46 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, Input } from '@angular/core';
-import { TableVirtualScrollDataSource } from 'ng-table-virtual-scroll';
+import {
+  TableVirtualScrollDataSource,
+  TableVirtualScrollModule,
+} from 'ng-table-virtual-scroll';
 import { Team } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
+import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { NgStyle } from '@angular/common';
+import {
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 
 @Component({
-    selector: 'app-team-user-presence',
-    templateUrl: './team-user-presence.component.html',
-    styleUrls: ['./team-user-presence.component.scss'],
-    standalone: false
+  selector: 'app-team-user-presence',
+  templateUrl: './team-user-presence.component.html',
+  styleUrls: ['./team-user-presence.component.scss'],
+  imports: [
+    CdkVirtualScrollViewport,
+    TableVirtualScrollModule,
+    NgStyle,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCellDef,
+    MatCell,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+  ],
 })
 export class TeamUserPresenceComponent {
   @Input() team: Team = null;
@@ -36,7 +67,7 @@ export class TeamUserPresenceComponent {
   private hideInactiveInternal = false;
 
   public userDatasource = new TableVirtualScrollDataSource<ViewPresence>(
-    new Array<ViewPresence>()
+    new Array<ViewPresence>(),
   );
   public displayedColumns: string[] = ['user-name', 'online'];
   public itemSize = 48;
@@ -47,7 +78,7 @@ export class TeamUserPresenceComponent {
   constructor() {
     this.userDatasource.filterPredicate = (
       data: ViewPresence,
-      filter: string
+      filter: string,
     ) => {
       return data.userName.toLowerCase().indexOf(filter.toLowerCase()) !== -1;
     };

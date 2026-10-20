@@ -13,15 +13,42 @@ import {
   FormGroupDirective,
   NgForm,
   Validators,
+  FormsModule,
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { MatButton } from '@angular/material/button';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-view-applications-select',
   templateUrl: './view-applications-select.component.html',
   styleUrls: ['./view-applications-select.component.scss'],
-  standalone: false,
+  imports: [
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatSelect,
+    FormsModule,
+    MatOption,
+    MatButton,
+    MatCard,
+    MatProgressSpinner,
+  ],
 })
 export class ViewApplicationsSelectComponent implements OnInit {
   @Input() view: View;

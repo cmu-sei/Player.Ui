@@ -10,8 +10,20 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import { ViewData } from '../../../models/view-data';
 import { ViewsService } from '../../../services/views/views.service';
 import { forkJoin, Observable, Subject } from 'rxjs';
@@ -20,12 +32,47 @@ import { DialogService } from '../../../services/dialog/dialog.service';
 import { SystemPermission, View } from '../../../generated/player-api';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { MatIcon } from '@angular/material/icon';
+import { MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { AsyncPipe, DatePipe } from '@angular/common';
 
 @Component({
-    selector: 'app-view-list',
-    templateUrl: './view-list.component.html',
-    styleUrls: ['./view-list.component.scss'],
-    standalone: false
+  selector: 'app-view-list',
+  templateUrl: './view-list.component.html',
+  styleUrls: ['./view-list.component.scss'],
+  imports: [
+    MatIcon,
+    MatIconButton,
+    MatTooltip,
+    MatFormField,
+    MatInput,
+    FormsModule,
+    MatSuffix,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    RouterLink,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatCard,
+    MatProgressSpinner,
+    MatPaginator,
+    AsyncPipe,
+    DatePipe,
+  ],
 })
 export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
   private viewsService = inject(ViewsService);
@@ -43,7 +90,7 @@ export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
   private unsubscribe$: Subject<null> = new Subject<null>();
 
   canCreate$ = this.userPermissionsService.hasPermission(
-    SystemPermission.CreateViews
+    SystemPermission.CreateViews,
   );
 
   constructor() {
@@ -51,7 +98,7 @@ export class ViewListComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(
         map((x) => x.filter((y) => y.status == 'Active')),
         tap((x) => (this.dataSource.data = x)),
-        takeUntilDestroyed()
+        takeUntilDestroyed(),
       )
       .subscribe();
   }

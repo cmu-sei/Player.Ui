@@ -9,15 +9,33 @@ DM20-0181
 */
 
 import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { FileService } from '../../../generated/player-api';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+} from '@cmusei/crucible-common';
+import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
 
 @Component({
-    selector: 'app-edit-file',
-    templateUrl: './edit-file-dialog.component.html',
-    styleUrls: ['./edit-file-dialog.component.scss'],
-    standalone: false
+  selector: 'app-edit-file',
+  templateUrl: './edit-file-dialog.component.html',
+  styleUrls: ['./edit-file-dialog.component.scss'],
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatInput,
+  ],
 })
 export class EditFileDialogComponent implements OnInit {
   form: UntypedFormGroup;
@@ -32,7 +50,7 @@ export class EditFileDialogComponent implements OnInit {
   constructor(
     private fileService: FileService,
     private formBuilder: UntypedFormBuilder,
-    private dialogRef: MatDialogRef<EditFileDialogComponent>
+    private dialogRef: MatDialogRef<EditFileDialogComponent>,
   ) {}
 
   ngOnInit(): void {
@@ -62,8 +80,7 @@ export class EditFileDialogComponent implements OnInit {
       },
       (err) => {
         console.log('Error updating file: ' + err);
-      }
+      },
     );
   }
-
 }

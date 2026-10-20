@@ -5,17 +5,17 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 import { Component, OnInit } from '@angular/core';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
+import { UserPresenceComponent } from './user-presence/user-presence.component';
 
 @Component({
-    templateUrl: './user-presence-page.component.html',
-    styleUrls: ['./user-presence-page.component.scss'],
-    standalone: false
+  templateUrl: './user-presence-page.component.html',
+  styleUrls: ['./user-presence-page.component.scss'],
+  imports: [UserPresenceComponent],
 })
 export class UserPresencePageComponent implements OnInit {
-
   viewId: string;
 
-  constructor(private routerQuery: RouterQuery) { }
+  constructor(private routerQuery: RouterQuery) {}
 
   ngOnInit(): void {
     this.viewId = this.routerQuery.getParams('id');

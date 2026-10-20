@@ -13,15 +13,14 @@ import { ActivatedRoute } from '@angular/router';
 import { FileService } from '../../../generated/player-api';
 
 @Component({
-    selector: 'app-open-file',
-    templateUrl: './open-file.component.html',
-    styleUrls: ['./open-file.component.scss'],
-    standalone: false
+  selector: 'app-open-file',
+  templateUrl: './open-file.component.html',
+  styleUrls: ['./open-file.component.scss'],
 })
 export class OpenFileComponent implements OnInit {
   constructor(
     private fileService: FileService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -43,7 +42,7 @@ export class OpenFileComponent implements OnInit {
       },
       () => {
         console.log('Got a next value');
-      }
+      },
     );
   }
 

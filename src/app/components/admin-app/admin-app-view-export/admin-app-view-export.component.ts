@@ -8,17 +8,41 @@ import {
   UntypedFormBuilder,
   UntypedFormGroup,
   Validators,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
 import { ArchiveType } from '../../../generated/player-api';
 import { BehaviorSubject, finalize } from 'rxjs';
 import { ViewsService } from '../../../services/views/views.service';
 import FileDownloadUtils from '../../../utilities/file-download-utils';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
+import { MatButton } from '@angular/material/button';
+import { MatFormField, MatLabel } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'app-admin-app-view-export',
-    templateUrl: './admin-app-view-export.component.html',
-    styleUrls: ['./admin-app-view-export.component.scss'],
-    standalone: false
+  selector: 'app-admin-app-view-export',
+  templateUrl: './admin-app-view-export.component.html',
+  styleUrls: ['./admin-app-view-export.component.scss'],
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    CrucibleDialogActionsDirective,
+    MatButton,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
+    AsyncPipe,
+  ],
 })
 export class AdminAppViewExportComponent {
   @Input() ids: string[];
@@ -34,7 +58,7 @@ export class AdminAppViewExportComponent {
 
   constructor(
     private viewService: ViewsService,
-    formBuilder: UntypedFormBuilder
+    formBuilder: UntypedFormBuilder,
   ) {
     this.form = formBuilder.group({
       archiveType: [this.archiveTypes[0]],

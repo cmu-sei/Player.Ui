@@ -12,6 +12,8 @@ import {
   UntypedFormGroup,
   UntypedFormBuilder,
   Validators,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import {
@@ -19,13 +21,33 @@ import {
   ImportApplicationTemplatesResult,
 } from '../../../generated/player-api';
 import { BehaviorSubject, finalize, tap } from 'rxjs';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
+import { MatButton } from '@angular/material/button';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatTooltip } from '@angular/material/tooltip';
+import { AsyncPipe, TitleCasePipe } from '@angular/common';
 
 @Component({
-    selector: 'app-admin-app-template-import',
-    templateUrl: './admin-app-template-import.component.html',
-    styleUrls: ['./admin-app-template-import.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'app-admin-app-template-import',
+  templateUrl: './admin-app-template-import.component.html',
+  styleUrls: ['./admin-app-template-import.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    CrucibleDialogActionsDirective,
+    MatButton,
+    FormsModule,
+    ReactiveFormsModule,
+    MatSlideToggle,
+    MatTooltip,
+    AsyncPipe,
+    TitleCasePipe,
+  ],
 })
 export class AdminAppTemplateImportComponent {
   @Output() complete = new EventEmitter<boolean>();
@@ -47,7 +69,7 @@ export class AdminAppTemplateImportComponent {
     private applicationService: ApplicationService,
     formBuilder: UntypedFormBuilder,
     @Optional()
-    private dialogRef?: MatDialogRef<AdminAppTemplateImportComponent>
+    private dialogRef?: MatDialogRef<AdminAppTemplateImportComponent>,
   ) {
     this.form = formBuilder.group({
       archive: [null, Validators.required],
@@ -88,7 +110,7 @@ export class AdminAppTemplateImportComponent {
         finalize(() => {
           this.finished.next(true);
           this.loading = false;
-        })
+        }),
       )
       .subscribe();
   }

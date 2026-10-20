@@ -23,12 +23,14 @@ import {
   NgForm,
   Validators,
 } from '@angular/forms';
+import { RolesPermissionsSelectComponent } from '../../roles-permissions-select/roles-permissions-select.component';
+import { MatButton } from '@angular/material/button';
 
 @Component({
-    selector: 'app-admin-user-edit',
-    templateUrl: './admin-user-edit.component.html',
-    styleUrls: ['./admin-user-edit.component.scss'],
-    standalone: false
+  selector: 'app-admin-user-edit',
+  templateUrl: './admin-user-edit.component.html',
+  styleUrls: ['./admin-user-edit.component.scss'],
+  imports: [RolesPermissionsSelectComponent, MatButton],
 })
 export class AdminUserEditComponent implements OnChanges {
   @Input() user: User;
@@ -85,7 +87,7 @@ export class AdminUserEditComponent implements OnChanges {
       this.user.roleName = null;
     } else {
       this.user.roleName = this.roles.find(
-        (x) => x.id === this.user.roleId
+        (x) => x.id === this.user.roleId,
       ).name;
     }
     this.userService.updateUser(this.user.id, this.user).subscribe();
@@ -96,7 +98,7 @@ export class AdminUserEditComponent implements OnChanges {
 export class UserErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
     control: UntypedFormControl | null,
-    form: FormGroupDirective | NgForm | null
+    form: FormGroupDirective | NgForm | null,
   ): boolean {
     const isSubmitted = form && form.submitted;
     return !!(control && control.invalid && (control.dirty || isSubmitted));
