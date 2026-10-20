@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { enableAkitaProdMode, persistState } from '@datorama/akita';
-import { getBasePath, myCustomTooltipDefaults } from './app/app.module';
 import { environment } from './environments/environment';
 import { FocusedAppService } from './app/services/focused-app/focused-app.service';
 import { NotificationService } from './app/services/notification/notification.service';
@@ -41,7 +40,8 @@ import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatNativeDateModule } from '@angular/material/core';
-import { AppRoutingModule } from './app/app-routing.module';
+import { provideRouter } from '@angular/router';
+import { ROUTES } from './app/app.routes';
 import { ApiModule as SwaggerCodegenApiModule } from './app/generated/player-api/api.module';
 import { ClipboardModule } from 'ngx-clipboard';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
@@ -54,6 +54,17 @@ import { AppComponent } from './app/app.component';
 if (environment.production) {
   enableProdMode();
   enableAkitaProdMode();
+}
+
+/** Custom options to configure the tooltip's default show/hide delays. */
+export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
+  showDelay: 1000,
+  hideDelay: 0,
+  touchendHideDelay: 1000,
+};
+
+export function getBasePath(settingsSvc: ComnSettingsService) {
+  return settingsSvc.settings.ApiUrl;
 }
 
 export const storage = persistState({
@@ -69,7 +80,6 @@ bootstrapApplication(AppComponent, {
       FormsModule,
       MatNativeDateModule,
       ReactiveFormsModule,
-      AppRoutingModule,
       SwaggerCodegenApiModule,
       ClipboardModule,
       environment.production ? [] : AkitaNgDevtools.forRoot(),
@@ -100,6 +110,7 @@ bootstrapApplication(AppComponent, {
       useClass: ErrorService,
     },
     { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
+    provideRouter(ROUTES),
     provideHttpClient(withInterceptorsFromDi()),
     provideCrucibleTheme({ brand: { color: '#3B62A5', text: '#FFFFFF' } }),
   ],
