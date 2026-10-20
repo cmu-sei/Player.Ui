@@ -11,7 +11,7 @@ import {
 import { Team } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
-import { NgStyle } from '@angular/common';
+
 import {
   MatTable,
   MatColumnDef,
@@ -32,7 +32,6 @@ import {
   imports: [
     CdkVirtualScrollViewport,
     TableVirtualScrollModule,
-    NgStyle,
     MatTable,
     MatColumnDef,
     MatHeaderCellDef,

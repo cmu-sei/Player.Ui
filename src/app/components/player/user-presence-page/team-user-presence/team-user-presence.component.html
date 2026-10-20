@@ -6,7 +6,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <cdk-virtual-scroll-viewport
   tvsItemSize="itemSize"
   headerHeight="headerSize"
-  [ngStyle]="{ height: tableHeight }"
+  [style.height]="tableHeight"
 >
   <mat-table [dataSource]="userDatasource" class="mat-elevation-z8">
     <!-- Name Column -->
