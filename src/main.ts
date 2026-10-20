@@ -25,7 +25,6 @@ import {
   ComnSettingsModule,
   ComnAuthModule,
   ComnHeaderBarModule,
-  CRUCIBLE_DIALOG_IMPORTS,
 } from '@cmusei/crucible-common';
 import { ErrorService } from './app/services/error/error.service';
 import {
@@ -88,7 +87,6 @@ bootstrapApplication(AppComponent, {
       ComnAuthModule.forRoot(),
       ComnHeaderBarModule,
       A11yModule,
-      ...CRUCIBLE_DIALOG_IMPORTS,
       TableVirtualScrollModule,
       ResizableModule,
     ),
