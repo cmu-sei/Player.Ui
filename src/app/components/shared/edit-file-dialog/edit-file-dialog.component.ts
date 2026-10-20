@@ -8,7 +8,7 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -38,6 +38,11 @@ import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
   ],
 })
 export class EditFileDialogComponent implements OnInit {
+  private fileService = inject(FileService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private dialogRef =
+    inject<MatDialogRef<EditFileDialogComponent>>(MatDialogRef);
+
   form: UntypedFormGroup;
 
   @Input() fileId: string;
@@ -46,12 +51,6 @@ export class EditFileDialogComponent implements OnInit {
   @Input() oldTeams: string[];
 
   extension: string;
-
-  constructor(
-    private fileService: FileService,
-    private formBuilder: UntypedFormBuilder,
-    private dialogRef: MatDialogRef<EditFileDialogComponent>,
-  ) {}
 
   ngOnInit(): void {
     const nameSplit = this.oldName.split('.');

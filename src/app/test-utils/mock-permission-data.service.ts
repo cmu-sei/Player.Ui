@@ -6,7 +6,7 @@
 // (system permission first, then team and view permissions carried in team
 // claims) instead of a re-implementation that can drift from them.
 
-import { inject, Provider } from '@angular/core';
+import { Provider } from '@angular/core';
 import { vi } from 'vitest';
 import { of } from 'rxjs';
 import {
@@ -52,10 +52,9 @@ export function permissionDataProviders(
     {
       provide: UserPermissionsService,
       useFactory: () => {
-        const service = new UserPermissionsService(
-          inject(PermissionService),
-          inject(TeamPermissionService),
-        );
+        // Runs in the factory's injection context, so the service's inject()
+        // calls resolve the two stubs above.
+        const service = new UserPermissionsService();
         // The app loads both on login (LoggedInUserService) and on entering a
         // view (PlayerComponent); components assume they are already loaded.
         service.load().subscribe();

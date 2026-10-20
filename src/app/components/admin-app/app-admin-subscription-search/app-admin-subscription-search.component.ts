@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -59,6 +59,10 @@ import { MatTooltip } from '@angular/material/tooltip';
   ],
 })
 export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
+  private webhookService = inject(WebhookService);
+  private dialogService = inject(DialogService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
@@ -71,12 +75,6 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
   public editing = false;
   public filterStr = '';
   public unsubscribe$: Subject<null> = new Subject<null>();
-
-  constructor(
-    private webhookService: WebhookService,
-    private dialogService: DialogService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
   ngOnInit(): void {
     // Initialize table
     this.dataSource = new MatTableDataSource<WebhookSubscription>(

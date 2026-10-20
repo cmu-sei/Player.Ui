@@ -1,7 +1,7 @@
 // Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer, Title } from '@angular/platform-browser';
 import {
@@ -23,21 +23,24 @@ import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
   imports: [ComnHeaderBarModule, RouterOutlet],
 })
 export class AppComponent implements OnDestroy {
+  private iconRegistry = inject(MatIconRegistry);
+  private sanitizer = inject(DomSanitizer);
+  private authQuery = inject(ComnAuthQuery);
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  private authService = inject(ComnAuthService);
+  private settingsService = inject(ComnSettingsService);
+  private titleService = inject(Title);
+  private themeService = inject(CrucibleThemeService);
+
   theme$: Observable<Theme> = this.authQuery.userTheme$;
   private paramTheme;
   unsubscribe$: Subject<null> = new Subject<null>();
 
-  constructor(
-    private iconRegistry: MatIconRegistry,
-    private sanitizer: DomSanitizer,
-    private authQuery: ComnAuthQuery,
-    private activatedRoute: ActivatedRoute,
-    private router: Router,
-    private authService: ComnAuthService,
-    private settingsService: ComnSettingsService,
-    private titleService: Title,
-    private themeService: CrucibleThemeService,
-  ) {
+  constructor() {
+    const settingsService = this.settingsService;
+    const titleService = this.titleService;
+
     this.theme$.pipe(takeUntil(this.unsubscribe$)).subscribe((theme) => {
       if (this.paramTheme && this.paramTheme !== theme) {
         this.router.navigate([], {

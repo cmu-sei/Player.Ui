@@ -7,6 +7,7 @@ import {
   Input,
   Output,
   EventEmitter,
+  inject,
 } from '@angular/core';
 import {
   User,
@@ -33,6 +34,8 @@ import { MatButton } from '@angular/material/button';
   imports: [RolesPermissionsSelectComponent, MatButton],
 })
 export class AdminUserEditComponent implements OnChanges {
+  private userService = inject(UserService);
+
   @Input() user: User;
   @Output() editComplete = new EventEmitter<boolean>();
 
@@ -46,8 +49,6 @@ export class AdminUserEditComponent implements OnChanges {
   public permissions: Permission[] = [];
   public selectedPermissions: string[] = [];
   public roles: Role[] = [];
-
-  constructor(private userService: UserService) {}
 
   /**
    * Called when the form changes

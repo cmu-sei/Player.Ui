@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Optional, Output } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -43,6 +43,12 @@ import { AsyncPipe, TitleCasePipe } from '@angular/common';
   ],
 })
 export class AdminAppViewImportComponent {
+  private viewService = inject(ViewsService);
+  private dialogRef = inject<MatDialogRef<AdminAppViewImportComponent>>(
+    MatDialogRef,
+    { optional: true },
+  );
+
   @Output() complete = new EventEmitter<boolean>();
 
   form: UntypedFormGroup;
@@ -58,12 +64,9 @@ export class AdminAppViewImportComponent {
     this.form.patchValue({ archive: event.target.files[0] ?? null });
   }
 
-  constructor(
-    private viewService: ViewsService,
-    formBuilder: UntypedFormBuilder,
-    @Optional()
-    private dialogRef?: MatDialogRef<AdminAppViewImportComponent>,
-  ) {
+  constructor() {
+    const formBuilder = inject(UntypedFormBuilder);
+
     this.form = formBuilder.group({
       archive: [null, Validators.required],
       matchApplicationTemplatesByName: [false, Validators.required],

@@ -1,7 +1,13 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  inject,
+} from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import {
@@ -79,6 +85,11 @@ interface UserAttributeColumn {
   ],
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
+  private userService = inject(UserService);
+  private rolesService = inject(RolesService);
+  private userPermissionsService = inject(UserPermissionsService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
   public displayedColumns: string[] = ['id', 'name', 'role'];
   public attributeColumns: UserAttributeColumn[] = [];
   public filterString = '';
@@ -93,13 +104,6 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
 
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
-
-  constructor(
-    private userService: UserService,
-    private rolesService: RolesService,
-    private userPermissionsService: UserPermissionsService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
 
   /**
    * Initialization

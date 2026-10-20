@@ -8,7 +8,7 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
@@ -23,15 +23,13 @@ import { MatIcon } from '@angular/material/icon';
   imports: [MatButton, MatList, MatListItem, MatIconButton, MatIcon],
 })
 export class FileBrowseComponent implements OnInit {
+  private fileService = inject(FileService);
+  private teamService = inject(TeamService);
+  private route = inject(ActivatedRoute);
+
   public files = new Array<FileModel>();
   public teams = new Set<Team>();
   public currentTeam = '';
-
-  constructor(
-    private fileService: FileService,
-    private teamService: TeamService,
-    private route: ActivatedRoute,
-  ) {}
 
   ngOnInit(): void {
     this.getFiles();

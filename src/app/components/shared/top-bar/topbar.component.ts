@@ -11,6 +11,7 @@ import {
   Output,
   TemplateRef,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
@@ -74,6 +75,14 @@ import { AsyncPipe } from '@angular/common';
   ],
 })
 export class TopbarComponent implements OnInit, OnDestroy {
+  private authService = inject(ComnAuthService);
+  private loggedInUserService = inject(LoggedInUserService);
+  private authQuery = inject(ComnAuthQuery);
+  private dialog = inject(MatDialog);
+  private confirmDialogService = inject(CrucibleDialogService);
+  private snackbar = inject(MatSnackBar);
+  private permissionsService = inject(UserPermissionsService);
+
   @Input() title?: string;
   @Input() sidenav?;
   @Input() teams?;
@@ -106,16 +115,6 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   @ViewChild('userPresenceDialog')
   userPresenceDialog: TemplateRef<UserPresenceComponent>;
-
-  constructor(
-    private authService: ComnAuthService,
-    private loggedInUserService: LoggedInUserService,
-    private authQuery: ComnAuthQuery,
-    private dialog: MatDialog,
-    private confirmDialogService: CrucibleDialogService,
-    private snackbar: MatSnackBar,
-    private permissionsService: UserPermissionsService,
-  ) {}
 
   ngOnInit() {
     this.currentUser$ = this.loggedInUserService.loggedInUser$.pipe(

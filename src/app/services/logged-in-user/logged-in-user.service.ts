@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { ComnAuthQuery } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
 import { BehaviorSubject, forkJoin, Subject } from 'rxjs';
@@ -17,19 +17,19 @@ export const SUPER_USER = 'Super User';
 
 @Injectable({ providedIn: 'root' })
 export class LoggedInUserService implements OnDestroy {
+  private userService = inject(UserService);
+  private authQuery = inject(ComnAuthQuery);
+  private permissionsService = inject(UserPermissionsService);
+
   public loggedInUser$: BehaviorSubject<AuthUser> = new BehaviorSubject(null);
   public isSuperUser$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   unsubscribe$: Subject<null> = new Subject<null>();
 
-  constructor(
-    private userService: UserService,
-    private authQuery: ComnAuthQuery,
-    private permissionsService: UserPermissionsService
-  ) {
+  constructor() {
     this.authQuery.user$
       .pipe(
         filter((user: AuthUser) => user != null),
-        takeUntil(this.unsubscribe$)
+        takeUntil(this.unsubscribe$),
       )
       .subscribe((user) => {
         this.setLoggedInUser(user);
@@ -49,7 +49,7 @@ export class LoggedInUserService implements OnDestroy {
           authUser.profile = { ...authUser.profile, ...playerUser };
           this.loggedInUser$.next(authUser);
         }),
-        takeUntil(this.unsubscribe$)
+        takeUntil(this.unsubscribe$),
       ),
     ]).subscribe();
   }

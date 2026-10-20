@@ -11,6 +11,7 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -93,6 +94,18 @@ import { NotificationsComponent } from './notifications/notifications.component'
   ],
 })
 export class PlayerComponent implements OnInit, OnDestroy {
+  private router = inject(Router);
+  private routerQuery = inject(RouterQuery);
+  private viewsService = inject(ViewsService);
+  private viewService = inject(ViewService);
+  private loggedInUserService = inject(LoggedInUserService);
+  private teamMembershipService = inject(TeamMembershipService);
+  private settingsService = inject(ComnSettingsService);
+  private dialog = inject(MatDialog);
+  private messageService = inject(SystemMessageService);
+  private authQuery = inject(ComnAuthQuery);
+  private permissionsService = inject(UserPermissionsService);
+
   @ViewChild('sidenav') sidenav: MatSidenav;
 
   public data$: Observable<any>;
@@ -117,19 +130,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public sidenavMode: MatDrawerMode = 'side';
   public autosizeSidenav = true;
 
-  constructor(
-    private router: Router,
-    private routerQuery: RouterQuery,
-    private viewsService: ViewsService,
-    private viewService: ViewService,
-    private loggedInUserService: LoggedInUserService,
-    private teamMembershipService: TeamMembershipService,
-    private settingsService: ComnSettingsService,
-    private dialog: MatDialog,
-    private messageService: SystemMessageService,
-    private authQuery: ComnAuthQuery,
-    private permissionsService: UserPermissionsService,
-  ) {
+  constructor() {
     this.theme$ = this.authQuery.userTheme$;
   }
 

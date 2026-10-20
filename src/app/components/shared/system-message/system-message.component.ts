@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   MAT_BOTTOM_SHEET_DATA,
   MatBottomSheetRef,
@@ -16,13 +16,16 @@ import { MatIcon } from '@angular/material/icon';
   imports: [MatIconButton, MatIcon],
 })
 export class SystemMessageComponent {
+  messageSheet =
+    inject<MatBottomSheetRef<SystemMessageComponent>>(MatBottomSheetRef);
+  data = inject(MAT_BOTTOM_SHEET_DATA);
+
   public displayTitle: string;
   public displayMessage: string;
 
-  constructor(
-    public messageSheet: MatBottomSheetRef<SystemMessageComponent>,
-    @Inject(MAT_BOTTOM_SHEET_DATA) public data: any,
-  ) {
+  constructor() {
+    const data = this.data;
+
     this.displayTitle = data.title;
     this.displayMessage = data.message;
   }

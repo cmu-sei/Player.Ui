@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -47,18 +47,17 @@ import { MatOption } from '@angular/material/autocomplete';
   ],
 })
 export class EditSubscriptionComponent implements OnInit {
+  private webhookService = inject(WebhookService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private dialogRef =
+    inject<MatDialogRef<EditSubscriptionComponent>>(MatDialogRef);
+
   @Input() currentSub: WebhookSubscription;
 
   public form: UntypedFormGroup;
   public eventTypes = Object.keys(EventType);
 
   private readonly redactedSecret = '******';
-
-  constructor(
-    private webhookService: WebhookService,
-    private formBuilder: UntypedFormBuilder,
-    private dialogRef: MatDialogRef<EditSubscriptionComponent>,
-  ) {}
 
   ngOnInit(): void {
     this.form = this.formBuilder.group({

@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -45,6 +45,8 @@ import { AsyncPipe } from '@angular/common';
   ],
 })
 export class AdminAppViewExportComponent {
+  private viewService = inject(ViewsService);
+
   @Input() ids: string[];
 
   @Output() complete = new EventEmitter<boolean>();
@@ -56,10 +58,9 @@ export class AdminAppViewExportComponent {
   hasErrors = new BehaviorSubject(false);
   hasErrors$ = this.hasErrors.asObservable();
 
-  constructor(
-    private viewService: ViewsService,
-    formBuilder: UntypedFormBuilder,
-  ) {
+  constructor() {
+    const formBuilder = inject(UntypedFormBuilder);
+
     this.form = formBuilder.group({
       archiveType: [this.archiveTypes[0]],
     });

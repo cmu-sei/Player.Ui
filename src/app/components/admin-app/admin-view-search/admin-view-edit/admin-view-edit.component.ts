@@ -137,6 +137,18 @@ export class TeamUserApp {
   ],
 })
 export class AdminViewEditComponent implements OnInit {
+  viewService = inject(ViewService);
+  teamService = inject(TeamService);
+  dialogService = inject(DialogService);
+  private confirmDialogService = inject(CrucibleDialogService);
+  userService = inject(UserService);
+  fileService = inject(FileService);
+  applicationService = inject(ApplicationService);
+  zone = inject(NgZone);
+  clipboard = inject(Clipboard);
+  teamPermissionsService = inject(TeamPermissionsService);
+  teamRolesService = inject(TeamRolesService);
+
   private readonly matDialogRef = inject<MatDialogRef<AdminViewEditComponent>>(
     MatDialogRef,
     { optional: true },
@@ -191,20 +203,6 @@ export class AdminViewEditComponent implements OnInit {
   public viewFiles: FileModel[];
   public currentFile: FileModel;
   public appNames: string[];
-
-  constructor(
-    public viewService: ViewService,
-    public teamService: TeamService,
-    public dialogService: DialogService,
-    private confirmDialogService: CrucibleDialogService,
-    public userService: UserService,
-    public fileService: FileService,
-    public applicationService: ApplicationService,
-    public zone: NgZone,
-    public clipboard: Clipboard,
-    public teamPermissionsService: TeamPermissionsService,
-    public teamRolesService: TeamRolesService,
-  ) {}
 
   /**
    * Initialize component

@@ -9,6 +9,7 @@ import {
   OnDestroy,
   OnInit,
   SimpleChanges,
+  inject,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
@@ -31,6 +32,13 @@ import { AsyncPipe } from '@angular/common';
   imports: [MatList, MatListItem, MatButton, AsyncPipe],
 })
 export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
+  private applicationsService = inject(ApplicationsService);
+  private focusedAppService = inject(FocusedAppService);
+  private authService = inject(ComnAuthService);
+  private sanitizer = inject(DomSanitizer);
+  private authQuery = inject(ComnAuthQuery);
+  private xapiService = inject(XApiService);
+
   @Input() viewId: string;
   @Input() teams: TeamData[];
   @Input() mini: boolean;
@@ -40,15 +48,6 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   public titleText: string;
   private unsubscribe$: Subject<null> = new Subject<null>();
   private currentApp: ApplicationData;
-
-  constructor(
-    private applicationsService: ApplicationsService,
-    private focusedAppService: FocusedAppService,
-    private authService: ComnAuthService,
-    private sanitizer: DomSanitizer,
-    private authQuery: ComnAuthQuery,
-    private xapiService: XApiService,
-  ) {}
 
   ngOnInit() {
     this.refreshApps();

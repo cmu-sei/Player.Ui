@@ -7,7 +7,7 @@
 // <app-roles-permissions-select [user]="userObject"></app-roles-permissions-select>
 // <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import {
   User,
   Team,
@@ -54,6 +54,13 @@ export enum ObjectType {
   ],
 })
 export class RolesPermissionsSelectComponent implements OnInit {
+  private rolesService = inject(RolesService);
+  private userService = inject(UserService);
+  private teamService = inject(TeamService);
+  private teamRolesService = inject(TeamRolesService);
+  private teamPermissionsService = inject(TeamPermissionsService);
+  private teamPermissionScopesService = inject(TeamPermissionScopesService);
+
   @Input() user: User;
   @Input() team: Team;
   @Input() canEdit = true;
@@ -68,15 +75,6 @@ export class RolesPermissionsSelectComponent implements OnInit {
   public subjectType = ObjectType.Unknown;
   public subject: any;
   public showPermissions = false;
-
-  constructor(
-    private rolesService: RolesService,
-    private userService: UserService,
-    private teamService: TeamService,
-    private teamRolesService: TeamRolesService,
-    private teamPermissionsService: TeamPermissionsService,
-    private teamPermissionScopesService: TeamPermissionScopesService,
-  ) {}
 
   /**
    * The other Teams in the View that this Team's permissions can be scoped onto.

@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -38,17 +38,16 @@ import { MatOption } from '@angular/material/autocomplete';
   ],
 })
 export class CreateApplicationDialogComponent implements OnInit {
+  formBuilder = inject(UntypedFormBuilder);
+  private applicationService = inject(ApplicationService);
+  private dialogRef =
+    inject<MatDialogRef<CreateApplicationDialogComponent>>(MatDialogRef);
+
   @Input() applicationId: string;
   @Input() file: FileModel;
   @Input() currentTeams: TeamUserApp[];
 
   form: UntypedFormGroup;
-
-  constructor(
-    public formBuilder: UntypedFormBuilder,
-    private applicationService: ApplicationService,
-    private dialogRef: MatDialogRef<CreateApplicationDialogComponent>,
-  ) {}
 
   ngOnInit(): void {
     this.form = this.formBuilder.group({

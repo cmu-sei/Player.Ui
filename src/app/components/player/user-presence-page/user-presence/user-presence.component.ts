@@ -11,6 +11,7 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
+  inject,
 } from '@angular/core';
 import {
   MatAccordion,
@@ -72,6 +73,10 @@ import { AsyncPipe } from '@angular/common';
   ],
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
+  private notificationService = inject(NotificationService);
+  private teamService = inject(TeamService);
+  private teamPermissionService = inject(TeamPermissionService);
+
   @Input() viewId: string;
   @Input() teamId?: string;
   @Input() showCloseButton = true;
@@ -80,12 +85,6 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   public _teams: Observable<Array<Team>>;
   public hideInactive = false;
   private presenceTeamId?: string;
-
-  constructor(
-    private notificationService: NotificationService,
-    private teamService: TeamService,
-    private teamPermissionService: TeamPermissionService,
-  ) {}
 
   ngOnInit(): void {
     this._teams = this.teamService.getMyViewTeams(this.viewId).pipe(

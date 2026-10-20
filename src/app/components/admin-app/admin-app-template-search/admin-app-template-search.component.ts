@@ -7,6 +7,7 @@ import {
   OnInit,
   TemplateRef,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
@@ -84,6 +85,9 @@ export interface Action {
   ],
 })
 export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
+  private applicationService = inject(ApplicationService);
+  private dialog = inject(MatDialog);
+
   public appTemplateDataSource: MatTableDataSource<ApplicationTemplate>;
   public appTemplateColumns: string[] = ['select', 'name', 'url'];
   public filterString: string;
@@ -101,11 +105,6 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   private dialogRef: MatDialogRef<any>;
-
-  constructor(
-    private applicationService: ApplicationService,
-    private dialog: MatDialog,
-  ) {}
 
   /**
    * Initialization

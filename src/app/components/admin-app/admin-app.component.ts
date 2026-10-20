@@ -9,6 +9,7 @@ import {
   ElementRef,
   AfterViewInit,
   Renderer2,
+  inject,
 } from '@angular/core';
 import {
   MatSidenav,
@@ -64,6 +65,13 @@ import { AsyncPipe } from '@angular/common';
   ],
 })
 export class AdminAppComponent implements OnInit, OnDestroy {
+  private settingsService = inject(ComnSettingsService);
+  private router = inject(Router);
+  private routerQuery = inject(RouterQuery);
+  private authQuery = inject(ComnAuthQuery);
+  loggedInUserService = inject(LoggedInUserService);
+  permissionsService = inject(UserPermissionsService);
+
   @ViewChild('sidenav') sidenav: MatSidenav;
 
   public TopbarView = TopbarView;
@@ -131,14 +139,7 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     }),
   );
 
-  constructor(
-    private settingsService: ComnSettingsService,
-    private router: Router,
-    private routerQuery: RouterQuery,
-    private authQuery: ComnAuthQuery,
-    public loggedInUserService: LoggedInUserService,
-    public permissionsService: UserPermissionsService,
-  ) {
+  constructor() {
     this.theme$ = this.authQuery.userTheme$;
   }
 

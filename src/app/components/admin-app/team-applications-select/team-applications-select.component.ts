@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject } from '@angular/core';
 import {
   Team,
   ApplicationService,
@@ -49,6 +49,9 @@ export enum ObjectType {
   ],
 })
 export class TeamApplicationsSelectComponent implements OnInit {
+  applicationService = inject(ApplicationService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
   @Input() team: Team;
   @Input() view: View;
 
@@ -60,11 +63,6 @@ export class TeamApplicationsSelectComponent implements OnInit {
   public subjectType = ObjectType.Unknown;
   public subject: any;
   public currentApp: Application;
-
-  constructor(
-    public applicationService: ApplicationService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
 
   /**
    * Initialization

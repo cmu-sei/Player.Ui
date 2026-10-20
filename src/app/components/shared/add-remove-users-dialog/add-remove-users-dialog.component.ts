@@ -1,7 +1,13 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ElementRef,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
@@ -108,6 +114,15 @@ export class TeamUser {
   ],
 })
 export class AddRemoveUsersDialogComponent implements OnInit {
+  private dialogRef =
+    inject<MatDialogRef<AddRemoveUsersDialogComponent>>(MatDialogRef);
+  userService = inject(UserService);
+  teamService = inject(TeamService);
+  teamMembershipService = inject(TeamMembershipService);
+  roleService = inject(TeamRolesService);
+  private confirmService = inject(CrucibleDialogService);
+  private loggedInUserService = inject(LoggedInUserService);
+
   public title: string;
   public team: Team;
 
@@ -145,15 +160,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   @ViewChild('teamPaginator', { static: true }) teamPaginator: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private dialogRef: MatDialogRef<AddRemoveUsersDialogComponent>,
-    public userService: UserService,
-    public teamService: TeamService,
-    public teamMembershipService: TeamMembershipService,
-    public roleService: TeamRolesService,
-    private confirmService: CrucibleDialogService,
-    private loggedInUserService: LoggedInUserService,
-  ) {
+  constructor() {
     this.isLoading = false;
     this.isBusy = false;
     this.filterString = '';

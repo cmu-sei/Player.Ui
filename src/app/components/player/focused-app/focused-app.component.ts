@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { SafeUrl, DomSanitizer } from '@angular/platform-browser';
 import { combineLatest, Observable, Subject } from 'rxjs';
@@ -16,15 +16,15 @@ import { AsyncPipe } from '@angular/common';
   imports: [AsyncPipe],
 })
 export class FocusedAppComponent implements OnDestroy {
+  private focusedAppService = inject(FocusedAppService);
+  private sanitizer = inject(DomSanitizer);
+  private authQuery = inject(ComnAuthQuery);
+
   public focusedAppUrl$: Observable<SafeUrl>;
   public theme$: Observable<Theme>;
   private unsubscribe$ = new Subject<null>();
 
-  constructor(
-    private focusedAppService: FocusedAppService,
-    private sanitizer: DomSanitizer,
-    private authQuery: ComnAuthQuery,
-  ) {
+  constructor() {
     this.focusedAppUrl$ = combineLatest([
       this.focusedAppService.focusedAppUrl,
       this.authQuery.userTheme$,

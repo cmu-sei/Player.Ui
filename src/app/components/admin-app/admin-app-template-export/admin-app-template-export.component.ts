@@ -8,6 +8,7 @@ import {
   ChangeDetectionStrategy,
   Output,
   EventEmitter,
+  inject,
 } from '@angular/core';
 import {
   UntypedFormGroup,
@@ -56,6 +57,8 @@ import { AsyncPipe } from '@angular/common';
   ],
 })
 export class AdminAppTemplateExportComponent {
+  private applicationService = inject(ApplicationService);
+
   @Input() ids: string[];
 
   @Output() complete = new EventEmitter<boolean>();
@@ -69,10 +72,9 @@ export class AdminAppTemplateExportComponent {
   hasErrors$ = this.hasErrors.asObservable();
   isArchiveable = true;
 
-  constructor(
-    private applicationService: ApplicationService,
-    formBuilder: UntypedFormBuilder,
-  ) {
+  constructor() {
+    const formBuilder = inject(UntypedFormBuilder);
+
     this.form = formBuilder.group({
       archiveType: [this.archiveTypes[0]],
       includeIcons: [false, Validators.required],

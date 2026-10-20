@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, inject } from '@angular/core';
 import {
   View,
   ApplicationTemplate,
@@ -51,6 +51,9 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
   ],
 })
 export class ViewApplicationsSelectComponent implements OnInit {
+  applicationService = inject(ApplicationService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
   @Input() view: View;
   @ViewChild(ViewApplicationsSelectComponent) child;
 
@@ -69,11 +72,6 @@ export class ViewApplicationsSelectComponent implements OnInit {
   public applicationTemplates = new Array<ApplicationTemplate>();
   public currentApp: Application;
   public isLoading: boolean;
-
-  constructor(
-    public applicationService: ApplicationService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
 
   /**
    * Initialization

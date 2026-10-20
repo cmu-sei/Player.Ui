@@ -1,7 +1,13 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  TemplateRef,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
@@ -80,6 +86,13 @@ export interface Action {
   ],
 })
 export class AdminViewSearchComponent implements OnInit {
+  private viewService = inject(ViewService);
+  loggedInUserService = inject(LoggedInUserService);
+  private confirmDialogService = inject(CrucibleDialogService);
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+  private dialog = inject(MatDialog);
+
   @ViewChild(AdminViewEditComponent, { static: true })
   adminViewEditComponent: AdminViewEditComponent;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -105,15 +118,6 @@ export class AdminViewSearchComponent implements OnInit {
 
   private dialogRef: MatDialogRef<any>;
   selection = new SelectionModel<string>(true, []);
-
-  constructor(
-    private viewService: ViewService,
-    public loggedInUserService: LoggedInUserService,
-    private confirmDialogService: CrucibleDialogService,
-    public route: ActivatedRoute,
-    public router: Router,
-    private dialog: MatDialog,
-  ) {}
 
   /**
    * Initialization

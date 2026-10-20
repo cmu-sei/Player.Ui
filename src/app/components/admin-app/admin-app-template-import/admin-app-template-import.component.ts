@@ -6,7 +6,7 @@ import {
   ChangeDetectionStrategy,
   Output,
   EventEmitter,
-  Optional,
+  inject,
 } from '@angular/core';
 import {
   UntypedFormGroup,
@@ -50,6 +50,12 @@ import { AsyncPipe, TitleCasePipe } from '@angular/common';
   ],
 })
 export class AdminAppTemplateImportComponent {
+  private applicationService = inject(ApplicationService);
+  private dialogRef = inject<MatDialogRef<AdminAppTemplateImportComponent>>(
+    MatDialogRef,
+    { optional: true },
+  );
+
   @Output() complete = new EventEmitter<boolean>();
 
   form: UntypedFormGroup;
@@ -65,12 +71,9 @@ export class AdminAppTemplateImportComponent {
     this.form.patchValue({ archive: event.target.files[0] ?? null });
   }
 
-  constructor(
-    private applicationService: ApplicationService,
-    formBuilder: UntypedFormBuilder,
-    @Optional()
-    private dialogRef?: MatDialogRef<AdminAppTemplateImportComponent>,
-  ) {
+  constructor() {
+    const formBuilder = inject(UntypedFormBuilder);
+
     this.form = formBuilder.group({
       archive: [null, Validators.required],
       overwriteExisting: [false, Validators.required],

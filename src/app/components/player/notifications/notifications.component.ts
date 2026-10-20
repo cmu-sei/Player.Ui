@@ -1,7 +1,14 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Input, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnDestroy,
+  OnInit,
+  signal,
+  inject,
+} from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import {
   ComnSettingsService,
@@ -55,6 +62,12 @@ import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
   ],
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
+  private notificationService = inject(NotificationService);
+  private settingsService = inject(ComnSettingsService);
+  private confirmDialogService = inject(CrucibleDialogService);
+  private viewService = inject(ViewService);
+  private titleService = inject(Title);
+
   @Input() viewGuid: string;
   @Input() teamGuid: string;
   @Input() userGuid: string;
@@ -74,13 +87,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public useBeep = false;
   private unsubscribe$: Subject<null> = new Subject<null>();
 
-  public constructor(
-    private notificationService: NotificationService,
-    private settingsService: ComnSettingsService,
-    private confirmDialogService: CrucibleDialogService,
-    private viewService: ViewService,
-    private titleService: Title,
-  ) {
+  public constructor() {
     this.useBadge =
       this.settingsService.settings.NotificationsSettings.useBadge;
     this.useBlink =
