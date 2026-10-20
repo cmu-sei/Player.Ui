@@ -4,15 +4,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
   Input,
   OnDestroy,
   OnInit,
-  Output,
   TemplateRef,
   ViewChild,
   inject,
   input,
+  output,
 } from '@angular/core';
 import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
@@ -91,9 +90,9 @@ export class TopbarComponent implements OnInit, OnDestroy {
   readonly topbarView = input<TopbarView>(undefined);
   readonly viewId = input<string>(undefined);
   readonly mini = input<boolean>(undefined);
-  @Output() sidenavToggle?: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() setTeam?: EventEmitter<string> = new EventEmitter<string>();
-  @Output() editView?: EventEmitter<any> = new EventEmitter<any>();
+  readonly sidenavToggle = output<boolean>();
+  readonly setTeam = output<string>();
+  readonly editView = output<any>();
   currentUser$: Observable<AuthUser>;
   theme$: Observable<Theme>;
   unsubscribe$: Subject<null> = new Subject<null>();

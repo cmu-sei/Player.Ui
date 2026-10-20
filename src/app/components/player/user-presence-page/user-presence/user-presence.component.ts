@@ -5,13 +5,12 @@
 
 import {
   Component,
-  EventEmitter,
-  Output,
   OnDestroy,
   OnInit,
   ViewChild,
   inject,
   input,
+  output,
 } from '@angular/core';
 import {
   MatAccordion,
@@ -80,7 +79,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   readonly viewId = input<string>(undefined);
   readonly teamId = input<string>(undefined);
   readonly showCloseButton = input(true);
-  @Output() closeMe = new EventEmitter<any>();
+  readonly closeMe = output<any>();
 
   public _teams: Observable<Array<Team>>;
   public hideInactive = false;

@@ -2,13 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import {
-  Component,
-  EventEmitter,
-  getDebugNode,
-  Output,
-  input,
-} from '@angular/core';
+import { Component, getDebugNode, input, output } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
@@ -60,18 +54,18 @@ const beta: ApplicationTemplate = {
 @Component({ selector: 'app-admin-template-details', template: '' })
 class AdminTemplateDetailsStubComponent {
   readonly appTemplate = input.required<ApplicationTemplate>();
-  @Output() refresh = new EventEmitter<boolean>();
+  readonly refresh = output<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-template-export', template: '' })
 class TemplateExportStubComponent {
   readonly ids = input.required<string[]>();
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-template-import', template: '' })
 class TemplateImportStubComponent {
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 }
 
 async function renderSearch(

@@ -5,10 +5,9 @@ import {
   Component,
   OnInit,
   ChangeDetectionStrategy,
-  Output,
-  EventEmitter,
   inject,
   input,
+  output,
 } from '@angular/core';
 import {
   UntypedFormGroup,
@@ -61,7 +60,7 @@ export class AdminAppTemplateExportComponent {
 
   readonly ids = input<string[]>(undefined);
 
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 
   form: UntypedFormGroup;
   archiveTypes = Object.keys(ArchiveType);

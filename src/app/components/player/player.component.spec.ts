@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi, beforeEach, MockInstance } from 'vitest';
-import { Component, EventEmitter, Output, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
@@ -76,9 +76,9 @@ class TopbarStubComponent {
   readonly topbarView = input<TopbarView>(undefined);
   readonly viewId = input.required<string>();
   readonly mini = input.required<boolean>();
-  @Output() sidenavToggle = new EventEmitter<boolean>();
-  @Output() setTeam = new EventEmitter<string>();
-  @Output() editView = new EventEmitter<unknown>();
+  readonly sidenavToggle = output<boolean>();
+  readonly setTeam = output<string>();
+  readonly editView = output<unknown>();
 }
 
 @Component({ selector: 'app-focused-app', template: '' })

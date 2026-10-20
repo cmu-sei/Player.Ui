@@ -4,9 +4,8 @@
 import {
   Component,
   ChangeDetectionStrategy,
-  Output,
-  EventEmitter,
   inject,
+  output,
 } from '@angular/core';
 import {
   UntypedFormGroup,
@@ -56,7 +55,7 @@ export class AdminAppTemplateImportComponent {
     { optional: true },
   );
 
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 
   form: UntypedFormGroup;
   typeString = 'Application Templates';

@@ -1,14 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import {
-  Component,
-  OnChanges,
-  Input,
-  Output,
-  EventEmitter,
-  inject,
-} from '@angular/core';
+import { Component, OnChanges, Input, inject, output } from '@angular/core';
 import {
   User,
   UserService,
@@ -37,7 +30,7 @@ export class AdminUserEditComponent implements OnChanges {
   private userService = inject(UserService);
 
   @Input() user: User;
-  @Output() editComplete = new EventEmitter<boolean>();
+  readonly editComplete = output<boolean>();
 
   public nameFormControl = new UntypedFormControl('', [
     Validators.required,

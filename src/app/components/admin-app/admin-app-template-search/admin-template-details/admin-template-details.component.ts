@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, inject, output } from '@angular/core';
 import {
   ApplicationTemplate,
   ApplicationService,
@@ -30,7 +30,7 @@ export class AdminTemplateDetailsComponent {
   private confirmDialogService = inject(CrucibleDialogService);
 
   @Input() appTemplate: ApplicationTemplate;
-  @Output() refresh = new EventEmitter<boolean>();
+  readonly refresh = output<boolean>();
 
   /**
    * Edit an application template

@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
@@ -49,7 +49,7 @@ export class AdminAppViewImportComponent {
     { optional: true },
   );
 
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 
   form: UntypedFormGroup;
   typeString = 'Views';

@@ -4,11 +4,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   Component,
-  EventEmitter,
   forwardRef,
   getDebugNode,
-  Output,
   input,
+  output,
 } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -87,7 +86,7 @@ class AdminViewEditStubComponent implements Pick<
   | 'setView'
   | 'updateViewTeams'
 > {
-  @Output() editComplete = new EventEmitter<string>();
+  readonly editComplete = output<string>();
   resetStepper = vi.fn();
   updateView = vi.fn();
   updateApplicationTemplates = vi.fn();
@@ -98,12 +97,12 @@ class AdminViewEditStubComponent implements Pick<
 @Component({ selector: 'app-admin-app-view-export', template: '' })
 class ViewExportStubComponent {
   readonly ids = input.required<string[]>();
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-view-import', template: '' })
 class ViewImportStubComponent {
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 }
 
 /** The header button whose matTooltip carries the message. */

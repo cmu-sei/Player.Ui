@@ -4,11 +4,10 @@
 import {
   Component,
   OnInit,
-  EventEmitter,
-  Output,
   NgZone,
   ViewChild,
   inject,
+  output,
 } from '@angular/core';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { MatDialogRef, MatDialogContent } from '@angular/material/dialog';
@@ -156,7 +155,7 @@ export class AdminViewEditComponent implements OnInit {
 
   public readonly isDialog = this.matDialogRef !== null;
 
-  @Output() editComplete = new EventEmitter<string>();
+  readonly editComplete = output<string>();
   @ViewChild(ViewApplicationsSelectComponent)
   viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
   @ViewChild(AdminViewEditComponent) child;
