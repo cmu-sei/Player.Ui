@@ -114,50 +114,6 @@ import { AdminAppTemplateImportComponent } from './components/admin-app/admin-ap
 import { AdminAppViewExportComponent } from './components/admin-app/admin-app-view-export/admin-app-view-export.component';
 import { AdminAppViewImportComponent } from './components/admin-app/admin-app-view-import/admin-app-view-import.component';
 
-@NgModule({
-  exports: [
-    CdkTableModule,
-    MatAutocompleteModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatStepperModule,
-    MatDatepickerModule,
-    MatDialogModule,
-    MatExpansionModule,
-    MatGridListModule,
-    MatIconModule,
-    MatInputModule,
-    MatListModule,
-    MatMenuModule,
-    MatNativeDateModule,
-    MatPaginatorModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatRadioModule,
-    MatRippleModule,
-    MatSelectModule,
-    MatSidenavModule,
-    MatSliderModule,
-    MatSlideToggleModule,
-    MatSnackBarModule,
-    MatSortModule,
-    MatTableModule,
-    MatTabsModule,
-    MatToolbarModule,
-    MatTooltipModule,
-    MatBottomSheetModule,
-    MatTreeModule,
-    MatBadgeModule,
-    ScrollingModule,
-  ],
-  imports: [],
-  declarations: [],
-})
-export class AngularMaterialModule {}
-
 /** Custom options to configure the tooltip's default show/hide delays. */
 export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
   showDelay: 1000,
@@ -173,7 +129,6 @@ export const myCustomTooltipDefaults: MatTooltipDefaultOptions = {
     TimeZoneAbbrPipe,
     BrowserAnimationsModule,
     FormsModule,
-    AngularMaterialModule,
     MatNativeDateModule,
     ReactiveFormsModule,
     AppRoutingModule,
