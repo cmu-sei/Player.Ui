@@ -3,60 +3,81 @@
 
 import { Routes } from '@angular/router';
 import { ComnAuthGuardService } from '@cmusei/crucible-common';
-import { AdminAppComponent } from './components/admin-app/admin-app.component';
-import { HomeAppComponent } from './components/home-app/home-app.component';
-import { FileBrowseComponent } from './components/player/file-browse/file-browse.component';
-import { OpenFileComponent } from './components/player/open-file/open-file.component';
-import { PlayerComponent } from './components/player/player.component';
-import { UserPresencePageComponent } from './components/player/user-presence-page/user-presence-page.component';
 
 export const ROUTES: Routes = [
   {
     path: '',
-    component: HomeAppComponent,
+    loadComponent: () =>
+      import('./components/home-app/home-app.component').then(
+        (m) => m.HomeAppComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   {
     path: 'exercise-player/:id',
-    component: PlayerComponent,
+    loadComponent: () =>
+      import('./components/player/player.component').then(
+        (m) => m.PlayerComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   }, // TODO: deprecated, remove when safe to do so
   {
     path: 'view/:id',
-    component: PlayerComponent,
+    loadComponent: () =>
+      import('./components/player/player.component').then(
+        (m) => m.PlayerComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   {
     path: 'home-app',
-    component: HomeAppComponent,
+    loadComponent: () =>
+      import('./components/home-app/home-app.component').then(
+        (m) => m.HomeAppComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   {
     path: 'admin',
-    component: AdminAppComponent,
+    loadComponent: () =>
+      import('./components/admin-app/admin-app.component').then(
+        (m) => m.AdminAppComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   // These are needed for embedding a file brower application and for downloading files respectively
   {
     path: 'view/:id/files',
-    component: FileBrowseComponent,
+    loadComponent: () =>
+      import('./components/player/file-browse/file-browse.component').then(
+        (m) => m.FileBrowseComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   {
     // deprecated: viewId is not used in this component, use /file instead
     // leaving route for backwards compatibility for now.
     path: 'view/:id/file',
-    component: OpenFileComponent,
+    loadComponent: () =>
+      import('./components/player/open-file/open-file.component').then(
+        (m) => m.OpenFileComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   {
     path: 'file',
-    component: OpenFileComponent,
+    loadComponent: () =>
+      import('./components/player/open-file/open-file.component').then(
+        (m) => m.OpenFileComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
   {
     path: 'view/:id/presence',
-    component: UserPresencePageComponent,
+    loadComponent: () =>
+      import('./components/player/user-presence-page/user-presence-page.component').then(
+        (m) => m.UserPresencePageComponent,
+      ),
     canActivate: [ComnAuthGuardService],
   },
 ];
