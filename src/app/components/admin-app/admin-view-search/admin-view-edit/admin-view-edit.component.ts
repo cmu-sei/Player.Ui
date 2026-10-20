@@ -5,9 +5,9 @@ import {
   Component,
   OnInit,
   NgZone,
-  ViewChild,
   inject,
   output,
+  viewChild,
 } from '@angular/core';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { MatDialogRef, MatDialogContent } from '@angular/material/dialog';
@@ -156,12 +156,12 @@ export class AdminViewEditComponent implements OnInit {
   public readonly isDialog = this.matDialogRef !== null;
 
   readonly editComplete = output<string>();
-  @ViewChild(ViewApplicationsSelectComponent)
-  viewApplicationsSelectComponent: ViewApplicationsSelectComponent;
-  @ViewChild(AdminViewEditComponent) child;
-  @ViewChild('stepper') stepper: MatStepper;
-  @ViewChild(EditFileDialogComponent)
-  editFileComponent: EditFileDialogComponent;
+  readonly viewApplicationsSelectComponent = viewChild(
+    ViewApplicationsSelectComponent,
+  );
+  readonly child = viewChild(AdminViewEditComponent);
+  readonly stepper = viewChild<MatStepper>('stepper');
+  readonly editFileComponent = viewChild(EditFileDialogComponent);
 
   public viewNameFormControl = new UntypedFormControl('', [
     Validators.required,
@@ -292,9 +292,11 @@ export class AdminViewEditComponent implements OnInit {
    */
   updateView(): void {
     if (this.view !== undefined && this.view.id !== undefined) {
-      this.viewApplicationsSelectComponent.view = this.view;
-      this.viewApplicationsSelectComponent.updateApplications();
-      this.viewApplicationsSelectComponent.currentApp = undefined;
+      const viewApplicationsSelectComponent =
+        this.viewApplicationsSelectComponent();
+      viewApplicationsSelectComponent.view = this.view;
+      viewApplicationsSelectComponent.updateApplications();
+      viewApplicationsSelectComponent.currentApp = undefined;
     }
   }
 
@@ -302,8 +304,9 @@ export class AdminViewEditComponent implements OnInit {
    * Returns the stepper to zero index
    */
   resetStepper() {
-    if (this.stepper) {
-      this.stepper.selectedIndex = 0;
+    const stepper = this.stepper();
+    if (stepper) {
+      stepper.selectedIndex = 0;
       this.view = undefined;
     }
   }
@@ -337,8 +340,8 @@ export class AdminViewEditComponent implements OnInit {
       .pipe(take(1))
       .subscribe((rslt) => {
         console.log('Application added');
-        this.viewApplicationsSelectComponent.updateApplications();
-        this.viewApplicationsSelectComponent.currentApp = rslt;
+        this.viewApplicationsSelectComponent().updateApplications();
+        this.viewApplicationsSelectComponent().currentApp = rslt;
       });
   }
 
@@ -520,7 +523,7 @@ export class AdminViewEditComponent implements OnInit {
     } else if (event.selectedIndex === 1) {
       // Clicked away from teams
       this.updateApplicationTemplates();
-      this.viewApplicationsSelectComponent.updateApplications();
+      this.viewApplicationsSelectComponent().updateApplications();
     }
   }
 

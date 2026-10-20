@@ -6,8 +6,8 @@ import {
   Component,
   OnInit,
   TemplateRef,
-  ViewChild,
   inject,
+  viewChild,
 } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
@@ -101,8 +101,8 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
 
   selection = new SelectionModel<string>(true, []);
 
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  readonly paginator = viewChild(MatPaginator);
+  readonly sort = viewChild(MatSort);
 
   private dialogRef: MatDialogRef<any>;
 
@@ -118,8 +118,8 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
     this.appTemplateDataSource = new MatTableDataSource<ApplicationTemplate>(
       new Array<ApplicationTemplate>(),
     );
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
-    this.appTemplateDataSource.sort = this.sort;
+    this.sort().sort(<MatSortable>{ id: 'name', start: 'asc' });
+    this.appTemplateDataSource.sort = this.sort();
     this.filterString = '';
     this.refresh(false);
   }
@@ -128,7 +128,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
    * Called after the components initialized
    */
   ngAfterViewInit() {
-    this.appTemplateDataSource.paginator = this.paginator;
+    this.appTemplateDataSource.paginator = this.paginator();
   }
 
   /**
@@ -159,7 +159,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
     this.applicationService
       .createApplicationTemplate(newAppTemplate)
       .subscribe((newApp) => {
-        this.paginator.lastPage();
+        this.paginator().lastPage();
         this.applicationService
           .getApplicationTemplates()
           .subscribe((appTemplates) => {

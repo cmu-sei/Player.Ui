@@ -4,9 +4,9 @@
 import {
   Component,
   OnInit,
-  ViewChild,
   AfterViewInit,
   inject,
+  viewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
@@ -102,14 +102,14 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
     SystemPermission.ManageUsers,
   );
 
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  readonly paginator = viewChild(MatPaginator);
+  readonly sort = viewChild(MatSort);
 
   /**
    * Initialization
    */
   ngOnInit() {
-    this.userDataSource.sort = this.sort;
+    this.userDataSource.sort = this.sort();
     this.userDataSource.sortingDataAccessor = (user, columnId) =>
       this.getColumnValue(user, columnId);
     this.userDataSource.filterPredicate = (user, filter) =>
@@ -128,7 +128,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * Called after the components initialized
    */
   ngAfterViewInit() {
-    this.userDataSource.paginator = this.paginator;
+    this.userDataSource.paginator = this.paginator();
   }
 
   /**

@@ -28,10 +28,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           }
         </mat-form-field>
       </div>
-      <button mat-raised-button color="primary" (click)="accordion.openAll()">
+      <button mat-raised-button color="primary" (click)="accordion().openAll()">
         Expand All
       </button>
-      <button mat-raised-button color="primary" (click)="accordion.closeAll()">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="accordion().closeAll()"
+      >
         Collapse All
       </button>
       <mat-checkbox

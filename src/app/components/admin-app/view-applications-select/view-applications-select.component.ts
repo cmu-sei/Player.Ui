@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, Input, inject, viewChild } from '@angular/core';
 import {
   View,
   ApplicationTemplate,
@@ -55,7 +55,7 @@ export class ViewApplicationsSelectComponent implements OnInit {
   private confirmDialogService = inject(CrucibleDialogService);
 
   @Input() view: View;
-  @ViewChild(ViewApplicationsSelectComponent) child;
+  readonly child = viewChild(ViewApplicationsSelectComponent);
 
   public nameFormControl = new UntypedFormControl('', [
     Validators.required,

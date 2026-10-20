@@ -10,8 +10,8 @@ import {
   Component,
   OnDestroy,
   OnInit,
-  ViewChild,
   inject,
+  viewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -106,7 +106,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private authQuery = inject(ComnAuthQuery);
   private permissionsService = inject(UserPermissionsService);
 
-  @ViewChild('sidenav') sidenav: MatSidenav;
+  readonly sidenav = viewChild<MatSidenav>('sidenav');
 
   public data$: Observable<any>;
 
@@ -312,7 +312,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   sidenavToggleFn() {
-    if (this.sidenav.opened) {
+    if (this.sidenav().opened) {
       if (this.miniSubject.getValue()) {
         this.miniSubject.next(false);
         this.openedSubject.next(false);
@@ -350,7 +350,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   resizingFn(event) {
     if (!this.miniSubject.getValue()) {
       this.autosizeSidenav = false;
-      this.sidenav.mode = 'push';
+      this.sidenav().mode = 'push';
       this.sidenavWidth = event.rectangle.width;
       this.setResizeStyle();
     }
@@ -381,7 +381,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   setSidenavMode() {
-    this.sidenav.mode = this.sidenavMode;
+    this.sidenav().mode = this.sidenavMode;
   }
 
   updateUIState(width?: number, opened?: boolean, mini?: boolean) {

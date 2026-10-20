@@ -5,11 +5,11 @@ import {
   Component,
   OnDestroy,
   OnInit,
-  ViewChild,
   ElementRef,
   AfterViewInit,
   Renderer2,
   inject,
+  viewChild,
 } from '@angular/core';
 import {
   MatSidenav,
@@ -72,7 +72,7 @@ export class AdminAppComponent implements OnInit, OnDestroy {
   loggedInUserService = inject(LoggedInUserService);
   permissionsService = inject(UserPermissionsService);
 
-  @ViewChild('sidenav') sidenav: MatSidenav;
+  readonly sidenav = viewChild<MatSidenav>('sidenav');
 
   public TopbarView = TopbarView;
   public queryParams: any;

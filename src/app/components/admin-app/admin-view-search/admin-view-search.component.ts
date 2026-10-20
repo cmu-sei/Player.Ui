@@ -5,8 +5,8 @@ import {
   Component,
   OnInit,
   TemplateRef,
-  ViewChild,
   inject,
+  viewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
@@ -93,10 +93,9 @@ export class AdminViewSearchComponent implements OnInit {
   router = inject(Router);
   private dialog = inject(MatDialog);
 
-  @ViewChild(AdminViewEditComponent, { static: true })
-  adminViewEditComponent: AdminViewEditComponent;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  readonly adminViewEditComponent = viewChild(AdminViewEditComponent);
+  readonly sort = viewChild(MatSort);
+  readonly paginator = viewChild(MatPaginator);
 
   public defaultPageSize = 10;
 
@@ -127,9 +126,9 @@ export class AdminViewSearchComponent implements OnInit {
 
     // Initial datasource
     this.viewDataSource = new MatTableDataSource<View>(new Array<View>());
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
-    this.viewDataSource.sort = this.sort;
-    this.viewDataSource.paginator = this.paginator;
+    this.sort().sort(<MatSortable>{ id: 'name', start: 'asc' });
+    this.viewDataSource.sort = this.sort();
+    this.viewDataSource.paginator = this.paginator();
     this.showEditScreen = false;
     this.filterString = '';
 
@@ -153,16 +152,16 @@ export class AdminViewSearchComponent implements OnInit {
       case 'edit': {
         // Edit view
         this.viewService.getView(viewGuid).subscribe((view) => {
-          this.adminViewEditComponent.resetStepper();
+          this.adminViewEditComponent().resetStepper();
 
-          this.adminViewEditComponent.updateView();
-          this.adminViewEditComponent.updateApplicationTemplates();
+          this.adminViewEditComponent().updateView();
+          this.adminViewEditComponent().updateApplicationTemplates();
 
           // Get teams for the view now so user does not have to expand teams section before uploading files
           if (view) {
-            this.adminViewEditComponent.setView(view);
+            this.adminViewEditComponent().setView(view);
           }
-          this.adminViewEditComponent.updateViewTeams();
+          this.adminViewEditComponent().updateViewTeams();
 
           this.showEditScreen = true;
         });

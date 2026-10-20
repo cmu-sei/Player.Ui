@@ -8,10 +8,10 @@ import {
   OnDestroy,
   OnInit,
   TemplateRef,
-  ViewChild,
   inject,
   input,
   output,
+  viewChild,
 } from '@angular/core';
 import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
@@ -113,8 +113,8 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.showEditView$,
   ]).pipe(map(([canManageTeam, canEditView]) => canManageTeam && !canEditView));
 
-  @ViewChild('userPresenceDialog')
-  userPresenceDialog: TemplateRef<UserPresenceComponent>;
+  readonly userPresenceDialog =
+    viewChild<TemplateRef<UserPresenceComponent>>('userPresenceDialog');
 
   ngOnInit() {
     this.currentUser$ = this.loggedInUserService.loggedInUser$.pipe(
@@ -166,7 +166,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   openUserPresence(): void {
-    this.dialog.open(this.userPresenceDialog, {
+    this.dialog.open(this.userPresenceDialog(), {
       height: '75%',
       width: 'auto',
       maxWidth: '100vw',

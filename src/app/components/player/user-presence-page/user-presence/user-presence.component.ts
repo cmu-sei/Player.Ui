@@ -7,10 +7,10 @@ import {
   Component,
   OnDestroy,
   OnInit,
-  ViewChild,
   inject,
   input,
   output,
+  viewChild,
 } from '@angular/core';
 import {
   MatAccordion,
@@ -116,7 +116,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
     );
   }
 
-  @ViewChild(MatAccordion) accordion: MatAccordion;
+  readonly accordion = viewChild(MatAccordion);
 
   public searchTerm = '';
   public searchTermSubject = new BehaviorSubject('');

@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -63,7 +63,7 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
   private dialogService = inject(DialogService);
   private confirmDialogService = inject(CrucibleDialogService);
 
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  readonly sort = viewChild(MatSort);
 
   public dataSource: MatTableDataSource<WebhookSubscription>;
   public displayedColumns: string[] = [
@@ -80,8 +80,8 @@ export class AppAdminSubscriptionSearchComponent implements OnInit, OnDestroy {
     this.dataSource = new MatTableDataSource<WebhookSubscription>(
       new Array<WebhookSubscription>(),
     );
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
-    this.dataSource.sort = this.sort;
+    this.sort().sort(<MatSortable>{ id: 'name', start: 'asc' });
+    this.dataSource.sort = this.sort();
 
     this.refreshSubs();
   }

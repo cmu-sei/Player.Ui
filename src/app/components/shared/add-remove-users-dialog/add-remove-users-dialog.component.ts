@@ -5,8 +5,8 @@ import {
   Component,
   OnInit,
   ElementRef,
-  ViewChild,
   inject,
+  viewChild,
 } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
@@ -155,10 +155,10 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   // before they remove themselves from the team.
   public currentUserId: string;
 
-  @ViewChild('searchBox') searchBox: ElementRef<HTMLInputElement>;
-  @ViewChild('paginator', { static: true }) paginator: MatPaginator;
-  @ViewChild('teamPaginator', { static: true }) teamPaginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  readonly searchBox = viewChild<ElementRef<HTMLInputElement>>('searchBox');
+  readonly paginator = viewChild<MatPaginator>('paginator');
+  readonly teamPaginator = viewChild<MatPaginator>('teamPaginator');
+  readonly sort = viewChild(MatSort);
 
   constructor() {
     this.isLoading = false;
@@ -174,13 +174,13 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     this.currentUserId = this.loggedInUserService.loggedInUser$.value?.profile
       ?.sub as string;
 
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
-    this.userDataSource.sort = this.sort;
-    this.userDataSource.paginator = this.paginator;
+    this.sort().sort(<MatSortable>{ id: 'name', start: 'asc' });
+    this.userDataSource.sort = this.sort();
+    this.userDataSource.paginator = this.paginator();
 
     // The team users list is a separate data source with its own paginator
     // and search. Match by user name/id since TeamUser nests the user object.
-    this.teamUserDataSource.paginator = this.teamPaginator;
+    this.teamUserDataSource.paginator = this.teamPaginator();
     this.teamUserDataSource.filterPredicate = (
       data: TeamUser,
       filter: string,
@@ -405,7 +405,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       allUsers.splice(i, 1);
     }
     this.userDataSource.data = allUsers;
-    this.searchBox.nativeElement.focus();
+    this.searchBox().nativeElement.focus();
     this.isBusy = false;
   }
 
@@ -472,7 +472,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
         const allUsers = this.userDataSource.data.slice(0);
         allUsers.push(tuser.user);
         this.userDataSource.data = allUsers;
-        this.searchBox.nativeElement.focus();
+        this.searchBox().nativeElement.focus();
         this.isBusy = false;
       },
       error: (err) => {
