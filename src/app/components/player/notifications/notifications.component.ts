@@ -3,11 +3,11 @@
 
 import {
   Component,
-  Input,
   OnDestroy,
   OnInit,
   signal,
   inject,
+  input,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import {
@@ -68,11 +68,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   private viewService = inject(ViewService);
   private titleService = inject(Title);
 
-  @Input() viewGuid: string;
-  @Input() teamGuid: string;
-  @Input() userGuid: string;
-  @Input() userToken: string;
-  @Input() userName: string;
+  readonly viewGuid = input<string>(undefined);
+  readonly teamGuid = input<string>(undefined);
+  readonly userGuid = input<string>(undefined);
+  readonly userToken = input<string>(undefined);
+  readonly userName = input<string>(undefined);
   public notification: NotificationDataStatus;
   public messageToSend: string;
   public userData: any;
@@ -171,10 +171,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       });
 
     this.notificationService.connectToNotificationServer(
-      this.viewGuid,
-      this.teamGuid,
-      this.userGuid,
-      this.userToken,
+      this.viewGuid(),
+      this.teamGuid(),
+      this.userGuid(),
+      this.userToken(),
     );
   }
 
@@ -200,7 +200,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
               this.messageToSend = this.messageToSend.trim().substring(0, 225);
             }
             this.notificationService.sendNotification(
-              this.viewGuid,
+              this.viewGuid(),
               this.messageToSend,
             );
             this.messageToSend = '';
@@ -252,7 +252,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.viewService
-            .deleteNotification(this.viewGuid, notification.key)
+            .deleteNotification(this.viewGuid(), notification.key)
             .subscribe(() => {
               const index = this.notificationsHistory.findIndex(
                 (n) => n.key === notification.key,
@@ -279,7 +279,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.viewService
-            .deleteViewNotifications(this.viewGuid)
+            .deleteViewNotifications(this.viewGuid())
             .subscribe(() => {
               this.notificationsHistory.length = 0;
             });

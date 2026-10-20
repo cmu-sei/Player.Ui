@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input, inject } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import {
   Team,
   ApplicationService,
@@ -52,8 +52,8 @@ export class TeamApplicationsSelectComponent implements OnInit {
   applicationService = inject(ApplicationService);
   private confirmDialogService = inject(CrucibleDialogService);
 
-  @Input() team: Team;
-  @Input() view: View;
+  readonly team = input<Team>(undefined);
+  readonly view = input<View>(undefined);
 
   public viewApplications: Array<Application>;
   public applications: Array<ApplicationInstance>;
@@ -68,7 +68,8 @@ export class TeamApplicationsSelectComponent implements OnInit {
    * Initialization
    */
   ngOnInit() {
-    if (!this.team) {
+    const team = this.team();
+    if (!team) {
       // a team must be provided or will not be functional
       console.log(
         'The applications select component requires a team, therefore will be non-functional.',
@@ -76,7 +77,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
       return;
     } else {
       this.subjectType = ObjectType.Team;
-      this.subject = this.team;
+      this.subject = team;
       this.refreshTeamApplications();
     }
   }
@@ -86,7 +87,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
    */
   refreshViewAppsAvailable(): void {
     this.applicationService
-      .getViewApplications(this.view.id)
+      .getViewApplications(this.view().id)
       .subscribe((apps) => {
         this.viewApplications = new Array<Application>();
         apps.forEach((app) => {
@@ -109,7 +110,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
    */
   refreshTeamApplications(): void {
     this.applicationService
-      .getTeamApplicationInstances(this.team.id)
+      .getTeamApplicationInstances(this.team().id)
       .subscribe((appInsts) => {
         this.applications = appInsts;
         this.refreshViewAppsAvailable();
@@ -122,8 +123,8 @@ export class TeamApplicationsSelectComponent implements OnInit {
    */
   addViewAppToTeam(app: Application): void {
     this.applicationService
-      .createApplicationInstance(this.team.id, {
-        teamId: this.team.id,
+      .createApplicationInstance(this.team().id, {
+        teamId: this.team().id,
         applicationId: app.id,
         displayOrder: this.applications.length,
       })
@@ -156,7 +157,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
           'Are you sure that you want to remove application ' +
           app.name +
           ' from team ' +
-          this.team.name +
+          this.team().name +
           '?',
         confirmText: 'Remove',
         cancelText: 'Cancel',
@@ -174,7 +175,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
                 if (a.displayOrder !== index) {
                   this.applicationService
                     .updateApplicationInstance(a.id, {
-                      teamId: this.team.id,
+                      teamId: this.team().id,
                       applicationId: a.applicationId,
                       displayOrder: index,
                     })

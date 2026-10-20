@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect } from 'vitest';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { UserPresencePageComponent } from './user-presence-page.component';
@@ -11,7 +11,7 @@ import { UserPresenceComponent } from './user-presence/user-presence.component';
 
 @Component({ selector: 'app-user-presence', template: '' })
 class UserPresenceStubComponent {
-  @Input() viewId!: string;
+  readonly viewId = input.required<string>();
 }
 
 async function renderPage(overrides: { viewId?: string | null } = {}) {
@@ -46,7 +46,7 @@ describe('UserPresencePageComponent', () => {
     const presence = fixture.debugElement.query(
       By.directive(UserPresenceStubComponent),
     ).componentInstance as UserPresenceStubComponent;
-    expect(presence.viewId).toBe('my-view');
+    expect(presence.viewId()).toBe('my-view');
   });
 
   /**

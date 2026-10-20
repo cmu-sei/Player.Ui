@@ -86,7 +86,7 @@ async function renderNotifications(
       TimeZoneAbbrPipe,
     ],
     declarations: [NotificationsComponent],
-    componentProperties: {
+    inputs: {
       viewGuid: 'v1',
       teamGuid: 't1',
       userGuid: 'u1',

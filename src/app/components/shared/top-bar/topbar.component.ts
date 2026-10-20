@@ -12,6 +12,7 @@ import {
   TemplateRef,
   ViewChild,
   inject,
+  input,
 } from '@angular/core';
 import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
@@ -83,13 +84,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
   private snackbar = inject(MatSnackBar);
   private permissionsService = inject(UserPermissionsService);
 
-  @Input() title?: string;
+  readonly title = input<string>(undefined);
   @Input() sidenav?;
   @Input() teams?;
   @Input() team?;
-  @Input() topbarView?: TopbarView;
-  @Input() viewId: string;
-  @Input() mini: boolean;
+  readonly topbarView = input<TopbarView>(undefined);
+  readonly viewId = input<string>(undefined);
+  readonly mini = input<boolean>(undefined);
   @Output() sidenavToggle?: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() setTeam?: EventEmitter<string> = new EventEmitter<string>();
   @Output() editView?: EventEmitter<any> = new EventEmitter<any>();
@@ -142,7 +143,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   openManageTeams() {
     this.dialog.open(ManageTeamsComponent, {
-      data: { viewId: this.viewId },
+      data: { viewId: this.viewId() },
       maxWidth: '100vw',
       width: 'auto',
       autoFocus: 'dialog',
@@ -178,7 +179,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   getEditViewUrl() {
-    return `${document.baseURI}/admin?section=views&view=${this.viewId}`;
+    return `${document.baseURI}/admin?section=views&view=${this.viewId()}`;
   }
 
   resetUI() {

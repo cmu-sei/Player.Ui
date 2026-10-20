@@ -6,8 +6,8 @@ import {
   Component,
   EventEmitter,
   getDebugNode,
-  Input,
   Output,
+  input,
 } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -59,13 +59,13 @@ const beta: ApplicationTemplate = {
 
 @Component({ selector: 'app-admin-template-details', template: '' })
 class AdminTemplateDetailsStubComponent {
-  @Input() appTemplate!: ApplicationTemplate;
+  readonly appTemplate = input.required<ApplicationTemplate>();
   @Output() refresh = new EventEmitter<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-template-export', template: '' })
 class TemplateExportStubComponent {
-  @Input() ids!: string[];
+  readonly ids = input.required<string[]>();
   @Output() complete = new EventEmitter<boolean>();
 }
 
@@ -251,7 +251,7 @@ describe('AdminAppTemplateSearchComponent', () => {
     const dialog = dialogStub<TemplateExportStubComponent>(
       'app-admin-app-template-export',
     );
-    expect(dialog.ids).toEqual(['t2']);
+    expect(dialog.ids()).toEqual(['t2']);
     dialog.complete.emit(true);
     await fixture.whenStable();
     expect(document.querySelector('app-admin-app-template-export')).toBeNull();

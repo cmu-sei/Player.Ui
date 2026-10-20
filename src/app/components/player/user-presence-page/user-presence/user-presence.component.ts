@@ -6,12 +6,12 @@
 import {
   Component,
   EventEmitter,
-  Input,
   Output,
   OnDestroy,
   OnInit,
   ViewChild,
   inject,
+  input,
 } from '@angular/core';
 import {
   MatAccordion,
@@ -77,9 +77,9 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   private teamService = inject(TeamService);
   private teamPermissionService = inject(TeamPermissionService);
 
-  @Input() viewId: string;
-  @Input() teamId?: string;
-  @Input() showCloseButton = true;
+  readonly viewId = input<string>(undefined);
+  readonly teamId = input<string>(undefined);
+  readonly showCloseButton = input(true);
   @Output() closeMe = new EventEmitter<any>();
 
   public _teams: Observable<Array<Team>>;
@@ -87,7 +87,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   private presenceTeamId?: string;
 
   ngOnInit(): void {
-    this._teams = this.teamService.getMyViewTeams(this.viewId).pipe(
+    this._teams = this.teamService.getMyViewTeams(this.viewId()).pipe(
       switchMap((teams) => {
         const activeTeam = this.getActiveTeam(teams);
         if (!activeTeam?.id) {
@@ -95,7 +95,10 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
         }
 
         this.presenceTeamId = activeTeam.id;
-        this.notificationService.joinPresence(this.viewId, this.presenceTeamId);
+        this.notificationService.joinPresence(
+          this.viewId(),
+          this.presenceTeamId,
+        );
 
         return this.teamPermissionService
           .getMyTeamPermissions(undefined, activeTeam.id, false)
@@ -214,7 +217,10 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.presenceTeamId) {
-      this.notificationService.leavePresence(this.viewId, this.presenceTeamId);
+      this.notificationService.leavePresence(
+        this.viewId(),
+        this.presenceTeamId,
+      );
     }
   }
 }

@@ -28,7 +28,8 @@ async function renderPresence(
   return renderComponent(TeamUserPresenceComponent, {
     imports: [MatTableModule, ScrollingModule, TableVirtualScrollModule],
     declarations: [TeamUserPresenceComponent],
-    componentProperties: { team, users: u, hideInactive },
+    componentProperties: { users: u, hideInactive },
+    inputs: { team },
   });
 }
 

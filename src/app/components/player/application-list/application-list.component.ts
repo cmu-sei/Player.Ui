@@ -4,12 +4,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  Input,
   OnChanges,
   OnDestroy,
   OnInit,
   SimpleChanges,
   inject,
+  input,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
@@ -39,9 +39,9 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   private authQuery = inject(ComnAuthQuery);
   private xapiService = inject(XApiService);
 
-  @Input() viewId: string;
-  @Input() teams: TeamData[];
-  @Input() mini: boolean;
+  readonly viewId = input<string>(undefined);
+  readonly teams = input<TeamData[]>(undefined);
+  readonly mini = input<boolean>(undefined);
 
   public applications$: Observable<ApplicationData[]>;
   public viewGUID: string;
@@ -71,7 +71,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     this.applications$ = combineLatest([
       this.authQuery.userTheme$,
       this.applicationsService.getApplicationsByTeam(
-        this.teams.find((t) => t.isPrimary).id,
+        this.teams().find((t) => t.isPrimary).id,
       ),
     ]).pipe(
       map(([theme, apps]) => {
@@ -105,7 +105,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
       } else {
         this.focusedAppService.focusedAppUrl.next(app.themedUrl);
         this.xapiService
-          .applicationSwitched(this.viewId, app.name, app.url)
+          .applicationSwitched(this.viewId(), app.name, app.url)
           .subscribe();
       }
     });

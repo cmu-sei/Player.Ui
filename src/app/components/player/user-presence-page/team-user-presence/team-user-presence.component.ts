@@ -3,7 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, Input } from '@angular/core';
+import { Component, Input, input } from '@angular/core';
 import {
   TableVirtualScrollDataSource,
   TableVirtualScrollModule,
@@ -45,7 +45,7 @@ import {
   ],
 })
 export class TeamUserPresenceComponent {
-  @Input() team: Team = null;
+  readonly team = input<Team>(null);
 
   @Input() set hideInactive(val: boolean) {
     this.hideInactiveInternal = val;

@@ -7,8 +7,8 @@ import {
   EventEmitter,
   forwardRef,
   getDebugNode,
-  Input,
   Output,
+  input,
 } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -97,7 +97,7 @@ class AdminViewEditStubComponent implements Pick<
 
 @Component({ selector: 'app-admin-app-view-export', template: '' })
 class ViewExportStubComponent {
-  @Input() ids!: string[];
+  readonly ids = input.required<string[]>();
   @Output() complete = new EventEmitter<boolean>();
 }
 
@@ -415,7 +415,7 @@ describe('AdminViewSearchComponent', () => {
     const dialog = dialogStub<ViewExportStubComponent>(
       'app-admin-app-view-export',
     );
-    expect([...dialog.ids].sort()).toEqual(['view-1', 'view-2']);
+    expect([...dialog.ids()].sort()).toEqual(['view-1', 'view-2']);
     dialog.complete.emit(true);
     await fixture.whenStable();
     expect(document.querySelector('app-admin-app-view-export')).toBeNull();

@@ -153,12 +153,14 @@ async function renderTopbar(
     ],
     on: overrides.on,
     componentProperties: {
-      title,
-      topbarView,
-      viewId,
       sidenav,
       teams,
       team,
+    },
+    inputs: {
+      title,
+      topbarView,
+      viewId,
       mini,
     },
   });

@@ -41,22 +41,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >Hide Offline</mat-checkbox
       >
     </span>
-    @if (showCloseButton) {
-    <span class="me-1">
-      <button
-        mat-icon-button
-        aria-label="Close"
-        mat-dialog-close
-        (click)="closeMe.emit()"
-        title="Close"
-        tabindex="-1"
-      >
-        <mat-icon
-          class="mdi-24px self-center"
-          fontIcon="mdi-close-circle-outline"
-        ></mat-icon>
-      </button>
-    </span>
+    @if (showCloseButton()) {
+      <span class="me-1">
+        <button
+          mat-icon-button
+          aria-label="Close"
+          mat-dialog-close
+          (click)="closeMe.emit()"
+          title="Close"
+          tabindex="-1"
+        >
+          <mat-icon
+            class="mdi-24px self-center"
+            fontIcon="mdi-close-circle-outline"
+          ></mat-icon>
+        </button>
+      </span>
     }
   </div>
 

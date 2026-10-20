@@ -4,11 +4,11 @@
 import {
   Component,
   OnInit,
-  Input,
   ChangeDetectionStrategy,
   Output,
   EventEmitter,
   inject,
+  input,
 } from '@angular/core';
 import {
   UntypedFormGroup,
@@ -59,7 +59,7 @@ import { AsyncPipe } from '@angular/common';
 export class AdminAppTemplateExportComponent {
   private applicationService = inject(ApplicationService);
 
-  @Input() ids: string[];
+  readonly ids = input<string[]>(undefined);
 
   @Output() complete = new EventEmitter<boolean>();
 
@@ -95,7 +95,7 @@ export class AdminAppTemplateExportComponent {
 
   export() {
     this.onExport(
-      this.ids,
+      this.ids(),
       ArchiveType[this.form.value.archiveType],
       this.form.value.includeIcons,
       this.includeIcons.value ? this.form.value.embedIcons : false,

@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { Component, forwardRef, Input } from '@angular/core';
+import { Component, forwardRef, input } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { EMPTY, firstValueFrom, NEVER, Observable, of, throwError } from 'rxjs';
@@ -105,21 +105,21 @@ class ViewApplicationsSelectStubComponent implements Pick<
   ViewApplicationsSelectComponent,
   'currentApp'
 > {
-  @Input() view!: View;
+  readonly view = input.required<View>();
   currentApp: Application;
   updateApplications = vi.fn();
 }
 
 @Component({ selector: 'app-roles-permissions-select', template: '' })
 class RolesPermissionsSelectStubComponent {
-  @Input() team!: Team;
-  @Input() allTeams!: Team[];
+  readonly team = input.required<Team>();
+  readonly allTeams = input.required<Team[]>();
 }
 
 @Component({ selector: 'app-team-applications-select', template: '' })
 class TeamApplicationsSelectStubComponent {
-  @Input() view!: View;
-  @Input() team!: Team;
+  readonly view = input.required<View>();
+  readonly team = input.required<Team>();
 }
 
 async function renderEdit(
@@ -707,7 +707,7 @@ describe('AdminViewEditComponent', () => {
      */
     it('reloads templates and applications on the Applications step', async () => {
       const r = await renderEdit();
-      expect(appsSelect(r.fixture).view).toEqual(demoView);
+      expect(appsSelect(r.fixture).view()).toEqual(demoView);
       expect(r.stubs.getApplicationTemplates).toHaveBeenCalledTimes(1);
       await goToStep(r, 'Applications');
       expect(r.stubs.getApplicationTemplates).toHaveBeenCalledTimes(2);
@@ -777,14 +777,14 @@ describe('AdminViewEditComponent', () => {
         .map(
           (de) => de.componentInstance as RolesPermissionsSelectStubComponent,
         );
-      expect(roles.map((r) => r.team.name)).toEqual(['Alpha', 'Red']);
-      expect(roles[0].allTeams.map((t) => t.name)).toEqual(['Alpha', 'Red']);
+      expect(roles.map((r) => r.team().name)).toEqual(['Alpha', 'Red']);
+      expect(roles[0].allTeams().map((t) => t.name)).toEqual(['Alpha', 'Red']);
       const apps = fixture.debugElement
         .queryAll(By.directive(TeamApplicationsSelectStubComponent))
         .map(
           (de) => de.componentInstance as TeamApplicationsSelectStubComponent,
         );
-      expect(apps.map((a) => [a.view.id, a.team.name])).toEqual([
+      expect(apps.map((a) => [a.view().id, a.team().name])).toEqual([
         ['v1', 'Alpha'],
         ['v1', 'Red'],
       ]);

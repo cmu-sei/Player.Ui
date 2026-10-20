@@ -7,7 +7,7 @@
 // <app-roles-permissions-select [user]="userObject"></app-roles-permissions-select>
 // <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 
-import { Component, OnInit, Input, inject } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import {
   User,
   Team,
@@ -61,11 +61,11 @@ export class RolesPermissionsSelectComponent implements OnInit {
   private teamPermissionsService = inject(TeamPermissionsService);
   private teamPermissionScopesService = inject(TeamPermissionScopesService);
 
-  @Input() user: User;
-  @Input() team: Team;
-  @Input() canEdit = true;
+  readonly user = input<User>(undefined);
+  readonly team = input<Team>(undefined);
+  readonly canEdit = input(true);
   // Other Teams in the View, used to scope this Team's permissions onto them.
-  @Input() allTeams: Team[] = [];
+  readonly allTeams = input<Team[]>([]);
 
   public permissions$: any;
   public roles$: any;
@@ -80,22 +80,24 @@ export class RolesPermissionsSelectComponent implements OnInit {
    * The other Teams in the View that this Team's permissions can be scoped onto.
    */
   get scopeTargetTeams(): Team[] {
-    return (this.allTeams ?? []).filter((t) => t.id !== this.team?.id);
+    return (this.allTeams() ?? []).filter((t) => t.id !== this.team()?.id);
   }
 
   /**
    * Initialization
    */
   ngOnInit() {
-    if ((!!this.team && !!this.user) || (!this.team && !this.user)) {
+    const team = this.team();
+    const user = this.user();
+    if ((!!team && !!user) || (!team && !user)) {
       // either a team or a user must be provided, so roles and permissions will not be functional
       console.log(
         'The roles and permissions component requires either a user or a team, therefore the dropdowns will be non-functional.',
       );
       return;
-    } else if (this.team) {
+    } else if (team) {
       this.subjectType = ObjectType.Team;
-      this.subject = this.team;
+      this.subject = team;
       this.showPermissions = true;
 
       this.permissions$ = this.teamPermissionsService.teamPermissions$;
@@ -108,10 +110,10 @@ export class RolesPermissionsSelectComponent implements OnInit {
         });
       }
 
-      this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
-    } else if (this.user) {
+      this.selectedScopedTeams = [...(team.scopedTeamIds ?? [])];
+    } else if (user) {
       this.subjectType = ObjectType.User;
-      this.subject = this.user;
+      this.subject = user;
       this.roles$ = this.rolesService.roles$;
     }
 
@@ -141,14 +143,14 @@ export class RolesPermissionsSelectComponent implements OnInit {
           }
 
           this.teamPermissionsService
-            .addToTeam(this.team.id, permission.id)
+            .addToTeam(this.team().id, permission.id)
             .subscribe();
         } else {
           this.subject.permissions = permissions.filter(
             (x) => x.id !== permission.id,
           );
           this.teamPermissionsService
-            .removeFromTeam(this.team.id, permission.id)
+            .removeFromTeam(this.team().id, permission.id)
             .subscribe();
         }
         break;
@@ -170,31 +172,32 @@ export class RolesPermissionsSelectComponent implements OnInit {
 
     if (checked) {
       this.teamPermissionScopesService
-        .addScope(this.team.id, targetTeam.id)
+        .addScope(this.team().id, targetTeam.id)
         .subscribe({
           next: () => {
-            if (!this.team.scopedTeamIds) {
-              this.team.scopedTeamIds = [];
+            const team = this.team();
+            if (!team.scopedTeamIds) {
+              team.scopedTeamIds = [];
             }
-            if (!this.team.scopedTeamIds.includes(targetTeam.id)) {
-              this.team.scopedTeamIds.push(targetTeam.id);
+            if (!team.scopedTeamIds.includes(targetTeam.id)) {
+              team.scopedTeamIds.push(targetTeam.id);
             }
           },
           error: () => {
-            this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
+            this.selectedScopedTeams = [...(this.team().scopedTeamIds ?? [])];
           },
         });
     } else {
       this.teamPermissionScopesService
-        .removeScope(this.team.id, targetTeam.id)
+        .removeScope(this.team().id, targetTeam.id)
         .subscribe({
           next: () => {
-            this.team.scopedTeamIds = (this.team.scopedTeamIds ?? []).filter(
-              (id) => id !== targetTeam.id,
-            );
+            this.team().scopedTeamIds = (
+              this.team().scopedTeamIds ?? []
+            ).filter((id) => id !== targetTeam.id);
           },
           error: () => {
-            this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
+            this.selectedScopedTeams = [...(this.team().scopedTeamIds ?? [])];
           },
         });
     }

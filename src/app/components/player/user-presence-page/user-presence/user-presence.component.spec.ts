@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { ComponentFixture } from '@angular/core/testing';
 import { screen } from '@testing-library/angular';
@@ -72,10 +72,10 @@ function claim(
 
 @Component({ selector: 'app-team-user-presence', template: '' })
 class TeamUserPresenceStubComponent {
-  @Input() team!: Team;
-  @Input() users!: ViewPresence[] | null;
-  @Input() searchTerm!: string | null;
-  @Input() hideInactive!: boolean;
+  readonly team = input.required<Team>();
+  readonly users = input.required<ViewPresence[] | null>();
+  readonly searchTerm = input.required<string | null>();
+  readonly hideInactive = input.required<boolean>();
 }
 
 async function renderPresence(
@@ -116,7 +116,7 @@ async function renderPresence(
         with: TeamUserPresenceStubComponent,
       },
     ],
-    componentProperties: { viewId: 'view-1', showCloseButton },
+    inputs: { viewId: 'view-1', showCloseButton },
     on: { closeMe },
     providers: [
       {
@@ -301,13 +301,13 @@ describe('UserPresenceComponent', () => {
   it('passes each team its users, online first and then by name', async () => {
     const { fixture, container } = await renderPresence();
     const [alphaStub, betaStub, gammaStub] = teamStubs(fixture);
-    expect(alphaStub.users?.map((p) => p.userName)).toEqual([
+    expect(alphaStub.users()?.map((p) => p.userName)).toEqual([
       'Alice',
       'Zoe',
       'Bob',
     ]);
-    expect(betaStub.users?.map((p) => p.userName)).toEqual(['Carol']);
-    expect(gammaStub.users).toEqual([]);
+    expect(betaStub.users()?.map((p) => p.userName)).toEqual(['Carol']);
+    expect(gammaStub.users()).toEqual([]);
     expect(panelCounts(container)).toEqual([
       'Count: 3',
       'Count: 1',
@@ -330,7 +330,7 @@ describe('UserPresenceComponent', () => {
     await user.type(search, 'ALI', { skipClick: true });
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(teamStubs(fixture).map((s) => s.searchTerm)).toEqual([
+      expect(teamStubs(fixture).map((s) => s.searchTerm())).toEqual([
         'ali',
         'ali',
         'ali',
@@ -362,13 +362,13 @@ describe('UserPresenceComponent', () => {
   it('hides offline users when Hide Offline is ticked', async () => {
     const user = userEvent.setup();
     const { fixture, container } = await renderPresence();
-    expect(teamStubs(fixture).map((s) => s.hideInactive)).toEqual([
+    expect(teamStubs(fixture).map((s) => s.hideInactive())).toEqual([
       false,
       false,
       false,
     ]);
     await user.click(screen.getByLabelText('Hide Offline'));
-    expect(teamStubs(fixture).map((s) => s.hideInactive)).toEqual([
+    expect(teamStubs(fixture).map((s) => s.hideInactive())).toEqual([
       true,
       true,
       true,

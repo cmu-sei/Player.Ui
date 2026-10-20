@@ -48,7 +48,7 @@ async function renderList(
   const rendered = await renderComponent(ApplicationListComponent, {
     imports: [MatListModule, MatButtonModule],
     declarations: [ApplicationListComponent],
-    componentProperties: { viewId: 'v1', teams: t, mini: false },
+    inputs: { viewId: 'v1', teams: t, mini: false },
     providers: [
       {
         provide: ApplicationsService,
@@ -264,7 +264,7 @@ describe('ApplicationListComponent', () => {
   it('shows icon links in mini mode', async () => {
     const { container, rerender } = await renderList();
     await rerender({
-      componentProperties: { mini: true },
+      inputs: { mini: true },
       partialUpdate: true,
     });
     const [link] = appLinks(container);
@@ -281,7 +281,7 @@ describe('ApplicationListComponent', () => {
   it('reloads the applications when the teams change', async () => {
     const { rerender, getApplicationsByTeam } = await renderList();
     await rerender({
-      componentProperties: {
+      inputs: {
         teams: [
           { ...teams[0], isPrimary: false },
           { ...teams[1], isPrimary: true },
