@@ -35,14 +35,14 @@ import {
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatNativeDateModule } from '@angular/material/core';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideRouter } from '@angular/router';
 import { ROUTES } from './app/app.routes';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { A11yModule } from '@angular/cdk/a11y';
 import { AppComponent } from './app/app.component';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 if (environment.production) {
   enableProdMode();
@@ -69,8 +69,6 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideZoneChangeDetection(),
     importProvidersFrom(
-      BrowserAnimationsModule,
-      MatNativeDateModule,
       environment.production ? [] : AkitaNgDevtools.forRoot(),
       AkitaNgRouterStoreModule,
       ComnSettingsModule.forRoot(),
@@ -96,6 +94,8 @@ bootstrapApplication(AppComponent, {
     },
     { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
     provideRouter(ROUTES),
+    provideNativeDateAdapter(),
+    provideAnimationsAsync(),
     provideHttpClient(withInterceptorsFromDi()),
     provideCrucibleTheme({ brand: { color: '#3B62A5', text: '#FFFFFF' } }),
   ],
