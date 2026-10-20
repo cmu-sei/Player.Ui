@@ -32,7 +32,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <mat-icon
               style="transform: scale(0.85)"
               svgIcon="ic_cancel_circle"
-            ></mat-icon>
+            />
           </button>
         }
       </mat-form-field>
@@ -44,7 +44,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Add a new Subscription"
         (click)="addNewSubscription()"
       >
-        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
       </button>
     </div>
   </div>
@@ -52,7 +52,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-table #table [dataSource]="dataSource" matSort>
     <!-- Actions column -->
     <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-header-cell *matHeaderCellDef />
       <mat-cell *matCellDef="let element">
         <button
           mat-icon-button
@@ -60,7 +60,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           title="Edit Subscription"
           (click)="editSubscription(element)"
         >
-          <mat-icon style="transform: scale(0.85)" svgIcon="ic_edit"></mat-icon>
+          <mat-icon style="transform: scale(0.85)" svgIcon="ic_edit" />
         </button>
         <button
           mat-icon-button
@@ -68,7 +68,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           title="Delete Subscription"
           (click)="deleteSubscription(element)"
         >
-          <mat-icon style="transform: scale(0.85)" svgIcon="ic_delete"></mat-icon>
+          <mat-icon style="transform: scale(0.85)" svgIcon="ic_delete" />
         </button>
       </mat-cell>
     </ng-container>
@@ -101,9 +101,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-cell>
     </ng-container>
 
-    <mat-header-row
-      *matHeaderRowDef="displayedColumns; sticky: true"
-    ></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" />
+    <mat-row *matRowDef="let row; columns: displayedColumns" />
   </mat-table>
 </div>

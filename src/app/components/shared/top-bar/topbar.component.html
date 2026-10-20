@@ -16,7 +16,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         title="Home"
         [routerLink]="['/']"
       >
-        <mat-icon svgIcon="ic_crucible_player"></mat-icon>
+        <mat-icon svgIcon="ic_crucible_player" />
       </a>
     </span>
     <span class="view-text">{{ title() }}</span>
@@ -39,7 +39,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             matTooltip="Select a Team"
             aria-label="Select a Team"
           >
-            <mat-icon svgIcon="ic_expand_more_white_24px"></mat-icon>
+            <mat-icon svgIcon="ic_expand_more_white_24px" />
           </button>
           <mat-menu #teamMenu="matMenu" [overlapTrigger]="false">
             @for (val of teams; track val) {
@@ -58,10 +58,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Users"
         (click)="openUserPresence()"
       >
-        <mat-icon
-          class="mdi-24px"
-          fontIcon="mdi-account-multiple-outline"
-        ></mat-icon>
+        <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple-outline" />
       </button>
     }
     <span class="spacer"></span>
@@ -74,7 +71,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           aria-label="Menu"
         >
           <strong>{{ currentUser.profile.name }}</strong>
-          <mat-icon fontIcon="mdi-chevron-down"></mat-icon>
+          <mat-icon fontIcon="mdi-chevron-down" />
         </button>
         <mat-menu
           #menu="matMenu"
@@ -133,7 +130,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         [teamId]="team?.id"
         [showCloseButton]="false"
         (closeMe)="closeUserPresence()"
-      ></app-user-presence>
+      />
     </div>
     <ng-container crucibleDialogActions>
       <button matButton="filled" mat-dialog-close>Close</button>
