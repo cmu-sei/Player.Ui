@@ -73,6 +73,7 @@ export const storage = persistState({
 
 bootstrapApplication(AppComponent, {
   providers: [
+    provideZoneChangeDetection(),
     importProvidersFrom(
       BrowserModule,
       BrowserAnimationsModule,
