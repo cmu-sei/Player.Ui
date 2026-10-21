@@ -29,6 +29,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ApiStub } from '../../../test-utils/api-stub';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
 import { TestBed } from '@angular/core/testing';
+import { ChangeDetectionStrategy } from '@angular/core';
 import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
 
 function makeNotification(
@@ -46,7 +47,8 @@ function makeNotification(
   } as NotificationDataStatus;
 }
 
-async function renderNotifications(
+/** Stubs for everything the component injects, and the spies behind them. */
+function notificationStubs(
   overrides: {
     confirm?: boolean;
     viewAdmin?: boolean;
@@ -74,81 +76,72 @@ async function renderNotifications(
   const deleteViewNotification = vi.fn(() => of(undefined));
   const deleteViewNotifications = vi.fn(() => of(undefined));
 
-  const rendered = await renderComponent(NotificationsComponent, {
-    imports: [
-      MatExpansionModule,
-      MatListModule,
-      MatFormFieldModule,
-      MatIconModule,
-      MatInputModule,
-      MatBadgeModule,
-      MatButtonModule,
-      TimeZoneAbbrPipe,
-    ],
-    declarations: [NotificationsComponent],
-    componentProperties: {
-      viewGuid: 'v1',
-      teamGuid: 't1',
-      userGuid: 'u1',
-      userToken: 'tok',
-      userName: 'Alice',
-    },
-    providers: [
-      {
-        provide: NotificationService,
-        useValue: {
-          canSendMessage,
-          notificationHistory,
-          viewNotification,
-          deleteNotification,
-          connectToNotificationServer,
-          sendNotification,
-        } satisfies Pick<
-          NotificationService,
-          | 'canSendMessage'
-          | 'notificationHistory'
-          | 'viewNotification'
-          | 'deleteNotification'
-          | 'connectToNotificationServer'
-          | 'sendNotification'
-        >,
-      },
-      {
-        provide: ComnSettingsService,
-        useValue: {
-          settings: {
-            AppTitle: 'Player',
-            NotificationsSettings: {
-              useBadge: true,
-              useBlink: true,
-              useBeep,
+  return {
+    renderOptions: {
+      imports: [
+        MatExpansionModule,
+        MatListModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatInputModule,
+        MatBadgeModule,
+        MatButtonModule,
+        TimeZoneAbbrPipe,
+      ],
+      declarations: [NotificationsComponent],
+      providers: [
+        {
+          provide: NotificationService,
+          useValue: {
+            canSendMessage,
+            notificationHistory,
+            viewNotification,
+            deleteNotification,
+            connectToNotificationServer,
+            sendNotification,
+          } satisfies Pick<
+            NotificationService,
+            | 'canSendMessage'
+            | 'notificationHistory'
+            | 'viewNotification'
+            | 'deleteNotification'
+            | 'connectToNotificationServer'
+            | 'sendNotification'
+          >,
+        },
+        {
+          provide: ComnSettingsService,
+          useValue: {
+            settings: {
+              AppTitle: 'Player',
+              NotificationsSettings: {
+                useBadge: true,
+                useBlink: true,
+                useBeep,
+              },
             },
           },
         },
-      },
-      {
-        provide: CrucibleDialogService,
-        useValue: { confirm: confirmDialog } satisfies Pick<
-          CrucibleDialogService,
-          'confirm'
-        >,
-      },
-      {
-        provide: ViewService,
-        useValue: {
-          deleteNotification: deleteViewNotification,
-          deleteViewNotifications,
-        } satisfies ApiStub<ViewService>,
-      },
-      {
-        provide: Title,
-        useValue: { setTitle } satisfies Pick<Title, 'setTitle'>,
-      },
-    ],
-  });
-
-  return {
-    ...rendered,
+        {
+          provide: CrucibleDialogService,
+          useValue: { confirm: confirmDialog } satisfies Pick<
+            CrucibleDialogService,
+            'confirm'
+          >,
+        },
+        {
+          provide: ViewService,
+          useValue: {
+            deleteNotification: deleteViewNotification,
+            deleteViewNotifications,
+          } satisfies ApiStub<ViewService>,
+        },
+        {
+          provide: Title,
+          useValue: { setTitle } satisfies Pick<Title, 'setTitle'>,
+        },
+      ],
+    },
     canSendMessage,
     notificationHistory,
     viewNotification,
@@ -160,6 +153,49 @@ async function renderNotifications(
     deleteViewNotification,
     deleteViewNotifications,
   };
+}
+
+async function renderNotifications(
+  overrides: Parameters<typeof notificationStubs>[0] = {},
+) {
+  const { renderOptions, ...stubs } = notificationStubs(overrides);
+  const rendered = await renderComponent(NotificationsComponent, {
+    ...renderOptions,
+    componentProperties: {
+      viewGuid: 'v1',
+      teamGuid: 't1',
+      userGuid: 'u1',
+      userToken: 'tok',
+      userName: 'Alice',
+    },
+  });
+  return { ...rendered, ...stubs };
+}
+
+/**
+ * Renders the component with OnPush change detection. PlayerComponent, which
+ * hosts it, is OnPush, so in the app it re-renders only once something has
+ * marked it; this reproduces that here.
+ */
+async function renderAsOnPush(
+  overrides: Parameters<typeof notificationStubs>[0] = {},
+) {
+  const { renderOptions, ...stubs } = notificationStubs(overrides);
+  const rendered = await renderComponent(NotificationsComponent, {
+    ...renderOptions,
+    componentProperties: {
+      viewGuid: 'v1',
+      teamGuid: 't1',
+      userGuid: 'u1',
+      userToken: 'tok',
+      userName: 'Alice',
+    },
+    configureTestBed: (testBed) =>
+      testBed.overrideComponent(NotificationsComponent, {
+        set: { changeDetection: ChangeDetectionStrategy.OnPush },
+      }),
+  });
+  return { ...rendered, ...stubs };
 }
 
 /** Texts of the rendered notifications, in render order. */
@@ -257,7 +293,7 @@ describe('NotificationsComponent', () => {
     await user.click(screen.getByText('Notifications'));
     expect(setTitle).toHaveBeenLastCalledWith('Player');
     expect(header).not.toHaveClass('blink');
-    expect(fixture.componentInstance.notificationsHistory[0].wasSeen).toBe(
+    expect(fixture.componentInstance.notificationsHistory()[0].wasSeen).toBe(
       true,
     );
   });
@@ -553,5 +589,41 @@ describe('NotificationsComponent', () => {
       formatDate(broadcastTime, 'HH:mm', 'en-US'),
     );
     expect(within(time).getByText(zone)).toHaveClass('zone');
+  });
+
+  describe('with OnPush change detection, as under PlayerComponent', () => {
+    /**
+     * Verifies: the send form appears when the hub grants posting after the user has opened the panel, with no
+     *   further interaction (the race behind the flaky "Send System Notification" e2e test).
+     * Interacts with: renderAsOnPush; NotificationService.canSendMessage; fixture.detectChanges, which skips an
+     *   OnPush view nothing has marked.
+     * Data: viewAdmin false until after the panel is opened, then canSendMessage emits true.
+     */
+    it('shows the send form when posting is granted after the panel opens', async () => {
+      const { fixture, container, canSendMessage } = await renderAsOnPush();
+      await userEvent.setup().click(screen.getByText('Notifications'));
+      expect(container.querySelector('form')).toBeNull();
+
+      canSendMessage.next(true);
+      fixture.detectChanges();
+      expect(
+        screen.getByPlaceholderText('Send system wide notification'),
+      ).toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: history that arrives after the panel opens is rendered without further interaction.
+     * Interacts with: renderAsOnPush; NotificationService.notificationHistory; fixture.detectChanges.
+     * Data: one notification 'late history' emitted after the panel is opened.
+     */
+    it('renders history that arrives after the panel opens', async () => {
+      const { fixture, container, notificationHistory } =
+        await renderAsOnPush();
+      await userEvent.setup().click(screen.getByText('Notifications'));
+
+      notificationHistory.next([makeNotification({ text: 'late history' })]);
+      fixture.detectChanges();
+      expect(renderedMessages(container)).toEqual(['late history']);
+    });
   });
 });
