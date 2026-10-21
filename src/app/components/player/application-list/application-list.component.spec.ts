@@ -14,6 +14,10 @@ import { ApplicationListComponent } from './application-list.component';
 import { renderComponent } from '../../../test-utils/render-component';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 const teams: TeamData[] = [
   { id: 'team-a', name: 'Primary', isPrimary: true } as TeamData,
@@ -230,6 +234,34 @@ describe('ApplicationListComponent', () => {
       'app-a2',
       'https://b.test/app',
     );
+  });
+
+  /**
+   * Verifies: a failed authentication check leaves the previous application focused and reports the rejection.
+   * Interacts with: the rendered application link, ComnAuthService.isAuthenticated, real FocusedAppService,
+   *   XApiService.applicationSwitched, and captureUnhandledRxErrors.
+   * Data: a1 is focused; selecting a2 fails with a storage SecurityError.
+   */
+  it('keeps the previous application focused when authentication rejects', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new DOMException('Storage access denied', 'SecurityError');
+    const { container, fixture, isAuth, focusedAppUrl, applicationSwitched } =
+      await renderList({
+        apps: [
+          makeApp('a1', 'https://a.test/app'),
+          makeApp('a2', 'https://b.test/app'),
+        ],
+      });
+    await fixture.whenStable();
+    isAuth.mockImplementationOnce(() => Promise.reject(failure));
+    applicationSwitched.mockClear();
+
+    expect(await clickLink(container, appLinks(container)[1])).toBe(true);
+    await flush();
+
+    expect(focusedAppUrl.value).toBe('https://a.test/app');
+    expect(applicationSwitched).not.toHaveBeenCalled();
+    expect(errors).toEqual([failure]);
   });
 
   /**
