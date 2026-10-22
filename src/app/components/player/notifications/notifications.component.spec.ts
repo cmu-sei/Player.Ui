@@ -1,7 +1,7 @@
 // Copyright 2026 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, onTestFinished } from 'vitest';
 import { formatDate } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { screen, within } from '@testing-library/angular';
@@ -31,6 +31,11 @@ import { dialogRefStub } from '../../../test-utils/dialog-refs';
 import { TestBed } from '@angular/core/testing';
 import { ChangeDetectionStrategy } from '@angular/core';
 import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
+import { NgZone } from '@angular/core';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 function makeNotification(
   overrides: Partial<NotificationDataStatus> = {},
@@ -380,6 +385,46 @@ describe('NotificationsComponent', () => {
       expect(play).toHaveBeenCalledTimes(beeps);
     },
   );
+
+  /**
+   * Verifies: a live notification stays visible and counted when audio playback rejects, and the rejection escapes.
+   * Interacts with: NotificationService.viewNotification, HTMLMediaElement.play, Title, and captureUnhandledRxErrors.
+   * Data: useBeep true; a live message arrives in Angular's zone; playback refuses autoplay with NotAllowedError.
+   */
+  it('keeps the live notification and reports rejected audio playback', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new DOMException('Autoplay refused', 'NotAllowedError');
+    const prototype = window.HTMLMediaElement.prototype;
+    const originalPlay = Object.getOwnPropertyDescriptor(prototype, 'play')!;
+    const sources: string[] = [];
+    // A plain function leaves the returned promise's settlement unobserved.
+    Object.defineProperty(prototype, 'play', {
+      configurable: true,
+      writable: true,
+      value: function (this: HTMLMediaElement): Promise<void> {
+        sources.push(this.getAttribute('src')!);
+        return Promise.reject(failure);
+      },
+    });
+    onTestFinished(() => {
+      Object.defineProperty(prototype, 'play', originalPlay);
+    });
+    const { fixture, container, viewNotification, setTitle } =
+      await renderNotifications({ useBeep: true });
+
+    TestBed.inject(NgZone).run(() => {
+      viewNotification.next(makeNotification({ key: 9, text: 'new alert' }));
+    });
+    await fixture.whenStable();
+    await flush();
+    fixture.detectChanges();
+
+    expect(sources).toEqual(['assets/sounds/beep.mp3']);
+    expect(renderedMessages(container)).toEqual(['new alert']);
+    expect(setTitle).toHaveBeenLastCalledWith('Player (1 Alert)');
+    expect(container.querySelector('.mat-badge-content')).toHaveTextContent('1');
+    expect(errors).toEqual([failure]);
+  });
 
   describe('admin actions in the open panel', () => {
     /**
