@@ -329,3 +329,6 @@ CLAUDE.md
 
 # Git worktrees
 .worktrees/
+
+# Local-only assets, e.g. a licensed landing background copied in by the dev AppHost
+/src/assets/local/

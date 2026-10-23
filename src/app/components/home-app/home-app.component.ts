@@ -14,6 +14,11 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 export class HomeAppComponent implements OnInit {
   public title: string;
   TopbarView = TopbarView;
+  // An optional image URL from settings, so a site can brand the page
+  // without shipping the image in this repo.
+  backgroundImage = this.settingsService.settings.AppLandingBackgroundImage
+    ? `url("${this.settingsService.settings.AppLandingBackgroundImage}")`
+    : null;
 
   constructor(private settingsService: ComnSettingsService,) {}
 

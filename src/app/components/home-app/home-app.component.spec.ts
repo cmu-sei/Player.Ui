@@ -18,8 +18,8 @@ class TopbarStubComponent {
 @Component({ selector: 'app-view-list', template: '' })
 class ViewListStubComponent {}
 
-async function renderHome(overrides: { appTopBarText?: string } = {}) {
-  const { appTopBarText = 'Player' } = overrides;
+async function renderHome(overrides: { appTopBarText?: string; background?: string } = {}) {
+  const { appTopBarText = 'Player', background } = overrides;
 
   return renderComponent(HomeAppComponent, {
     declarations: [HomeAppComponent],
@@ -33,6 +33,7 @@ async function renderHome(overrides: { appTopBarText?: string } = {}) {
             AppTopBarText: appTopBarText,
             AppTopBarHexColor: '#0F1D47',
             AppTopBarHexTextColor: '#FFFFFF',
+            AppLandingBackgroundImage: background,
           },
         },
       },
@@ -84,5 +85,21 @@ describe('HomeAppComponent', () => {
       .componentInstance as TopbarStubComponent;
     expect(topbar.title()).toBe('My Player');
     expect(topbar.topbarView()).toBe(TopbarView.PLAYER_HOME);
+  });
+
+  /**
+   * Verifies: the page shows the background image named in settings, and none without the setting.
+   * Interacts with: ComnSettingsService.settings (stub), HomeAppComponent template.
+   * Data: AppLandingBackgroundImage set to a relative asset URL, or unset.
+   */
+  it.each([
+    { label: 'with', background: '/assets/local/landing-background.jpg', expected: 'url("/assets/local/landing-background.jpg")' },
+    { label: 'without', background: undefined, expected: '' },
+  ])('shows the landing background $label the setting', async ({ background, expected }) => {
+    const { container } = await renderHome({ background });
+
+    const page = container.querySelector('.container') as HTMLElement;
+    expect(page.style.getPropertyValue('--landing-background')).toBe(expected);
+    expect(page.classList.contains('has-background')).toBe(!!background);
   });
 });
