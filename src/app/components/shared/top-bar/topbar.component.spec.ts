@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi, Mock } from 'vitest';
-import { screen } from '@testing-library/angular';
+import { screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { BehaviorSubject, of } from 'rxjs';
 import { TopbarComponent } from './topbar.component';
@@ -37,6 +37,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { ClipboardModule } from 'ngx-clipboard';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
 import type { User as AuthUser } from 'oidc-client-ts';
+import {
+  captureUnhandledRxErrors,
+  flush,
+} from '../../../test-utils/unhandled-rx-errors';
 
 const mockLogout = vi.fn();
 
@@ -62,6 +66,7 @@ async function renderTopbar(
     systemPermissions?: SystemPermission[];
     teamClaims?: TeamPermissionsClaim[];
     confirmResult?: boolean;
+    logout?: Pick<ComnAuthService, 'logout'>['logout'];
     theme?: string;
     on?: Partial<Record<'setTeam' | 'editView' | 'sidenavToggle', Mock>>;
   } = {},
@@ -124,7 +129,7 @@ async function renderTopbar(
         provide: ComnAuthService,
         // TopbarComponent calls only these two.
         useValue: {
-          logout: mockLogout,
+          logout: overrides.logout ?? mockLogout,
           setUserTheme,
         } satisfies Pick<ComnAuthService, 'logout' | 'setUserTheme'>,
       },
@@ -235,6 +240,30 @@ describe('TopbarComponent', () => {
     const user = await openUserMenu();
     await user.click(screen.getByText('Logout'));
     expect(mockLogout).toHaveBeenCalled();
+  });
+
+  /**
+   * Verifies: a rejected logout closes the menu, leaves the user displayed, and reports the rejection.
+   * Interacts with: rendered user menu, ComnAuthService.logout, and captureUnhandledRxErrors.
+   * Data: the sign-out discovery document has no end session endpoint.
+   */
+  it('leaves the user displayed and reports a rejected logout', async () => {
+    const errors = captureUnhandledRxErrors();
+    const failure = new Error('No end session endpoint');
+    const { fixture } = await renderTopbar({
+      logout: () => Promise.reject(failure),
+    });
+    const user = await openUserMenu();
+
+    await user.click(
+      within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Logout' }),
+    );
+    await flush();
+    fixture.detectChanges();
+
+    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(errors).toEqual([failure]);
   });
 
   /**

@@ -77,10 +77,12 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public messageToSend: string;
   public userData: any;
   public showSystemNotifications: boolean;
-  public hasViewAdmin: boolean;
+  // Signals, because the hub sets these outside any event in this component and
+  // the OnPush player view above it would otherwise skip the re-render.
+  public hasViewAdmin = signal<boolean>(false);
   public sendMessagePlaceholder: string;
   public notificationsList: Array<NotificationDataStatus>;
-  public notificationsHistory: Array<NotificationDataStatus>;
+  public notificationsHistory = signal<Array<NotificationDataStatus>>([]);
   public newNotificationCount = signal<number>(0);
   public useBadge = false;
   public useBlink = false;
@@ -99,26 +101,26 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.showSystemNotifications = false;
     this.notification = undefined;
     this.messageToSend = '';
-    this.notificationsHistory = new Array<NotificationDataStatus>();
-    this.hasViewAdmin = false;
+    this.notificationsHistory.set([]);
+    this.hasViewAdmin.set(false);
     this.sendMessagePlaceholder = 'Send system wide notification';
 
     this.notificationService.canSendMessage
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((data) => {
-        this.hasViewAdmin = data;
+        this.hasViewAdmin.set(data);
       });
 
     this.notificationService.notificationHistory
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((data) => {
         if (data != undefined && data.length > 0) {
-          this.notificationsHistory = this.notificationsHistory.concat(
-            <Array<NotificationDataStatus>>data,
-          );
-          this.notificationsHistory = this.notificationsHistory.sort(
-            (a: NotificationDataStatus, b: NotificationDataStatus) =>
-              a.broadcastTime < b.broadcastTime ? 1 : -1,
+          this.notificationsHistory.update((history) =>
+            history
+              .concat(<Array<NotificationDataStatus>>data)
+              .sort((a: NotificationDataStatus, b: NotificationDataStatus) =>
+                a.broadcastTime < b.broadcastTime ? 1 : -1,
+              ),
           );
         }
       });
@@ -129,7 +131,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         // Check to see if a valid notification came across.
         if (msg.broadcastTime != undefined) {
           this.notification = msg as NotificationDataStatus;
-          this.notificationsHistory.unshift(this.notification);
+          this.notificationsHistory.update((history) => [
+            this.notification,
+            ...history,
+          ]);
           this.setNewNotificationCount(this.newNotificationCount() + 1);
           this.playBeep();
 
@@ -159,14 +164,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((key: string) => {
         if (key === 'all') {
-          this.notificationsHistory.length = 0;
+          this.notificationsHistory.set([]);
         } else {
-          const index = this.notificationsHistory.findIndex(
-            (n) => n.key === +key,
-          );
-          if (index > -1) {
-            this.notificationsHistory.splice(index, 1);
-          }
+          this.removeFromHistory(+key);
         }
       });
 
@@ -212,9 +212,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   notificationPanelToggle(state: string) {
     this.showSystemNotifications = state === 'open';
     if (state === 'close') {
-      this.notificationsHistory.forEach((n) => {
-        n.wasSeen = true;
-      });
+      this.notificationsHistory.update((history) =>
+        history.map((n) => ({ ...n, wasSeen: true })),
+      );
       this.setNewNotificationCount(0);
     }
   }
@@ -254,12 +254,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
           this.viewService
             .deleteNotification(this.viewGuid(), notification.key)
             .subscribe(() => {
-              const index = this.notificationsHistory.findIndex(
-                (n) => n.key === notification.key,
-              );
-              if (index > -1) {
-                this.notificationsHistory.splice(index, 1);
-              }
+              this.removeFromHistory(notification.key);
               this.setNewNotificationCount(0);
             });
         }
@@ -281,10 +276,16 @@ export class NotificationsComponent implements OnInit, OnDestroy {
           this.viewService
             .deleteViewNotifications(this.viewGuid())
             .subscribe(() => {
-              this.notificationsHistory.length = 0;
+              this.notificationsHistory.set([]);
             });
         }
       });
+  }
+
+  private removeFromHistory(key: number): void {
+    this.notificationsHistory.update((history) =>
+      history.filter((n) => n.key !== key),
+    );
   }
 
   setNewNotificationCount(count: number) {

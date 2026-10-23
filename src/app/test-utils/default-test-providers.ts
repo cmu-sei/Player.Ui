@@ -9,6 +9,7 @@ import {
   ComnAuthService,
   ComnSettingsService,
   CrucibleDialogService,
+  CrucibleThemeService,
 } from '@cmusei/crucible-common';
 import { AnyProvider, mergeProviders, unstubbed } from './unstubbed';
 
@@ -112,6 +113,7 @@ export function getDefaultProviders(
     // Common library. CrucibleDialogService is root-provided: without this
     // placeholder the real confirm dialog would open in every spec.
     unstubbed(CrucibleDialogService),
+    unstubbed(CrucibleThemeService),
     {
       provide: ComnSettingsService,
       useValue: {

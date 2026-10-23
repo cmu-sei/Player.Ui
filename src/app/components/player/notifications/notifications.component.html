@@ -26,9 +26,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <b> Notifications </b>
       </span>
       @if (
-        hasViewAdmin &&
+        hasViewAdmin() &&
         showSystemNotifications &&
-        notificationsHistory.length > 0
+        notificationsHistory().length > 0
       ) {
         <mat-icon
           fontIcon="mdi-trash-can"
@@ -38,9 +38,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       }
     </mat-panel-title>
   </mat-expansion-panel-header>
-  @if (notificationsHistory != undefined) {
+  @if (notificationsHistory() != undefined) {
     <mat-list>
-      @for (notif of notificationsHistory; track notif) {
+      @for (notif of notificationsHistory(); track notif) {
         <mat-list-item>
           <div id="wrapper">
             <div
@@ -68,7 +68,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <div id="message">
               {{ notif.text }}
             </div>
-            @if (hasViewAdmin) {
+            @if (hasViewAdmin()) {
               <div id="deleteButton">
                 <mat-icon
                   fontIcon="mdi-trash-can"
@@ -83,7 +83,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </mat-list>
   }
 
-  @if (hasViewAdmin) {
+  @if (hasViewAdmin()) {
     <div class="send-message">
       <form #notificationForm="ngForm" (ngSubmit)="sendMessage()">
         <mat-form-field class="input-message">
