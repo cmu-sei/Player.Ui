@@ -79,7 +79,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
   readonly viewId = input<string>(undefined);
   readonly teamId = input<string>(undefined);
   readonly showCloseButton = input(true);
-  readonly closeMe = output<any>();
+  readonly closeMe = output<void>();
 
   public _teams: Observable<Array<Team>>;
   public hideInactive = false;
