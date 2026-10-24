@@ -2,13 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import {
-  Component,
-  EventEmitter,
-  getDebugNode,
-  Input,
-  Output,
-} from '@angular/core';
+import { Component, getDebugNode, input, output } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
@@ -36,6 +30,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ApiStub } from '../../../test-utils/api-stub';
+import { AdminTemplateDetailsComponent } from './admin-template-details/admin-template-details.component';
+import { AdminAppTemplateExportComponent } from '../admin-app-template-export/admin-app-template-export.component';
+import { AdminAppTemplateImportComponent } from '../admin-app-template-import/admin-app-template-import.component';
 
 const alpha: ApplicationTemplate = {
   id: 't1',
@@ -56,19 +53,19 @@ const beta: ApplicationTemplate = {
 
 @Component({ selector: 'app-admin-template-details', template: '' })
 class AdminTemplateDetailsStubComponent {
-  @Input() appTemplate!: ApplicationTemplate;
-  @Output() refresh = new EventEmitter<boolean>();
+  readonly appTemplate = input.required<ApplicationTemplate>();
+  readonly refresh = output<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-template-export', template: '' })
 class TemplateExportStubComponent {
-  @Input() ids!: string[];
-  @Output() complete = new EventEmitter<boolean>();
+  readonly ids = input.required<string[]>();
+  readonly complete = output<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-template-import', template: '' })
 class TemplateImportStubComponent {
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 }
 
 async function renderSearch(
@@ -91,7 +88,20 @@ async function renderSearch(
   );
 
   const rendered = await renderComponent(AdminAppTemplateSearchComponent, {
-    declarations: [AdminAppTemplateSearchComponent],
+    childStubs: [
+      {
+        replace: AdminTemplateDetailsComponent,
+        with: AdminTemplateDetailsStubComponent,
+      },
+      {
+        replace: AdminAppTemplateExportComponent,
+        with: TemplateExportStubComponent,
+      },
+      {
+        replace: AdminAppTemplateImportComponent,
+        with: TemplateImportStubComponent,
+      },
+    ],
     imports: [
       MatExpansionModule,
       MatFormFieldModule,
@@ -105,9 +115,6 @@ async function renderSearch(
       MatIconModule,
       MatBadgeModule,
       MatDialogModule,
-      AdminTemplateDetailsStubComponent,
-      TemplateExportStubComponent,
-      TemplateImportStubComponent,
     ],
     providers: [
       ...permissionDataProviders({ system: permissions }),
@@ -238,7 +245,7 @@ describe('AdminAppTemplateSearchComponent', () => {
     const dialog = dialogStub<TemplateExportStubComponent>(
       'app-admin-app-template-export',
     );
-    expect(dialog.ids).toEqual(['t2']);
+    expect(dialog.ids()).toEqual(['t2']);
     dialog.complete.emit(true);
     await fixture.whenStable();
     expect(document.querySelector('app-admin-app-template-export')).toBeNull();

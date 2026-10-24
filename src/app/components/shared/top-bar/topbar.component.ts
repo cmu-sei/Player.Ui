@@ -4,20 +4,24 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
   Input,
   OnDestroy,
   OnInit,
-  Output,
   TemplateRef,
-  ViewChild,
+  inject,
+  input,
+  output,
+  viewChild,
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
   ComnAuthQuery,
   ComnAuthService,
   CrucibleDialogService,
   Theme,
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
 } from '@cmusei/crucible-common';
 import { User as AuthUser } from 'oidc-client-ts';
 import { combineLatest, Observable, Subject } from 'rxjs';
@@ -32,25 +36,63 @@ import {
   SystemPermission,
   ViewPermission,
 } from '../../../generated/player-api';
+import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
+import { MatIcon } from '@angular/material/icon';
+import { ClipboardModule } from 'ngx-clipboard';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
+import { MatLabel } from '@angular/material/input';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-topbar',
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false,
+  imports: [
+    MatToolbar,
+    MatToolbarRow,
+    MatIconButton,
+    RouterLink,
+    MatIcon,
+    ClipboardModule,
+    MatTooltip,
+    MatButton,
+    MatMenuTrigger,
+    MatMenu,
+    MatMenuItem,
+    MatSlideToggle,
+    MatLabel,
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    UserPresenceComponent,
+    CrucibleDialogActionsDirective,
+    MatDialogClose,
+    AsyncPipe,
+  ],
 })
 export class TopbarComponent implements OnInit, OnDestroy {
-  @Input() title?: string;
+  private authService = inject(ComnAuthService);
+  private loggedInUserService = inject(LoggedInUserService);
+  private authQuery = inject(ComnAuthQuery);
+  private dialog = inject(MatDialog);
+  private confirmDialogService = inject(CrucibleDialogService);
+  private snackbar = inject(MatSnackBar);
+  private permissionsService = inject(UserPermissionsService);
+
+  readonly title = input<string>(undefined);
   @Input() sidenav?;
   @Input() teams?;
   @Input() team?;
-  @Input() topbarView?: TopbarView;
-  @Input() viewId: string;
-  @Input() mini: boolean;
-  @Output() sidenavToggle?: EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() setTeam?: EventEmitter<string> = new EventEmitter<string>();
-  @Output() editView?: EventEmitter<any> = new EventEmitter<any>();
+  readonly topbarView = input<TopbarView>(undefined);
+  readonly viewId = input<string>(undefined);
+  readonly mini = input<boolean>(undefined);
+  readonly sidenavToggle = output<boolean>();
+  readonly setTeam = output<string>();
+  readonly editView = output<any>();
   currentUser$: Observable<AuthUser>;
   theme$: Observable<Theme>;
   unsubscribe$: Subject<null> = new Subject<null>();
@@ -71,18 +113,8 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.showEditView$,
   ]).pipe(map(([canManageTeam, canEditView]) => canManageTeam && !canEditView));
 
-  @ViewChild('userPresenceDialog')
-  userPresenceDialog: TemplateRef<UserPresenceComponent>;
-
-  constructor(
-    private authService: ComnAuthService,
-    private loggedInUserService: LoggedInUserService,
-    private authQuery: ComnAuthQuery,
-    private dialog: MatDialog,
-    private confirmDialogService: CrucibleDialogService,
-    private snackbar: MatSnackBar,
-    private permissionsService: UserPermissionsService,
-  ) {}
+  readonly userPresenceDialog =
+    viewChild<TemplateRef<UserPresenceComponent>>('userPresenceDialog');
 
   ngOnInit() {
     this.currentUser$ = this.loggedInUserService.loggedInUser$.pipe(
@@ -110,7 +142,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   openManageTeams() {
     this.dialog.open(ManageTeamsComponent, {
-      data: { viewId: this.viewId },
+      data: { viewId: this.viewId() },
       maxWidth: '100vw',
       width: 'auto',
       autoFocus: 'dialog',
@@ -134,7 +166,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   openUserPresence(): void {
-    this.dialog.open(this.userPresenceDialog, {
+    this.dialog.open(this.userPresenceDialog(), {
       height: '75%',
       width: 'auto',
       maxWidth: '100vw',
@@ -146,7 +178,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   getEditViewUrl() {
-    return `${document.baseURI}/admin?section=views&view=${this.viewId}`;
+    return `${document.baseURI}/admin?section=views&view=${this.viewId()}`;
   }
 
   resetUI() {

@@ -8,21 +8,18 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FileService } from '../../../generated/player-api';
 
 @Component({
-    selector: 'app-open-file',
-    templateUrl: './open-file.component.html',
-    styleUrls: ['./open-file.component.scss'],
-    standalone: false
+  selector: 'app-open-file',
+  templateUrl: './open-file.component.html',
+  styleUrls: ['./open-file.component.scss'],
 })
 export class OpenFileComponent implements OnInit {
-  constructor(
-    private fileService: FileService,
-    private route: ActivatedRoute
-  ) {}
+  private fileService = inject(FileService);
+  private route = inject(ActivatedRoute);
 
   ngOnInit(): void {
     const fileId = this.route.snapshot.queryParamMap.get('id');
@@ -43,7 +40,7 @@ export class OpenFileComponent implements OnInit {
       },
       () => {
         console.log('Got a next value');
-      }
+      },
     );
   }
 

@@ -3,7 +3,7 @@
 
 import { Observable } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AddRemoveUsersDialogComponent } from '../../components/shared/add-remove-users-dialog/add-remove-users-dialog.component';
 import {
   FileModel,
@@ -18,7 +18,7 @@ import { NameDialogComponent } from '../../components/shared/name-dialog/name-di
 
 @Injectable()
 export class DialogService {
-  constructor(private dialog: MatDialog) {}
+  private dialog = inject(MatDialog);
 
   public name(title: string, message: string, data?: any): Observable<any> {
     const dialogRef = this.dialog.open(NameDialogComponent, {

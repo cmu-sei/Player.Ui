@@ -59,7 +59,7 @@ async function renderExport(
       MatSelectModule,
       ...CRUCIBLE_DIALOG_IMPORTS,
     ],
-    componentProperties: { ids },
+    inputs: { ids },
     providers: [
       {
         provide: ApplicationService,

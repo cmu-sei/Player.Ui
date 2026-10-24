@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-expansion-panel
       [expanded]="currentApp !== undefined && app.id === currentApp.id"
       (opened)="currentApp = app"
-      >
+    >
       <mat-expansion-panel-header>
         <mat-panel-title>
           <div class="d-flex align-items-center">
@@ -16,7 +16,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               class="app-icon"
               src="{{ getAppIcon(app) }}"
               alt="{{ getAppName(app) }} Icon"
-              />
+            />
             {{ getAppName(app) }}
           </div>
         </mat-panel-title>
@@ -30,142 +30,121 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 matInput
                 (change)="saveApplicationName($event.target.value, app.id)"
                 value="{{ app.name }}"
-                />
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Application URL</mat-label>
-            <input
-              matInput
-              (change)="saveApplicationUrl($event.target.value, app.id)"
-              value="{{ app.url }}"
-              [errorStateMatcher]="matcher"
               />
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Icon Path</mat-label>
-          <input
-            matInput
-            (change)="saveApplicationIcon($event.target.value, app.id)"
-            value="{{ app.icon }}"
-            [errorStateMatcher]="matcher"
-            />
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Embeddable</mat-label>
-        <mat-select
-          (selectionChange)="saveApplicationEmbeddable(app)"
-          [(ngModel)]="app.embeddable"
-          >
-          <mat-option [value]="null">Inherit from Template</mat-option>
-          <mat-option [value]="true">True</mat-option>
-          <mat-option [value]="false">False</mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Load in Background</mat-label>
-        <mat-select
-          (selectionChange)="saveApplicationLoadInBackground(app)"
-          [(ngModel)]="app.loadInBackground"
-          >
-          <mat-option [value]="null">Inherit from Template</mat-option>
-          <mat-option [value]="true">True</mat-option>
-          <mat-option [value]="false">False</mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Application Template</mat-label>
-        <mat-select
-          (selectionChange)="saveApplicationTemplateId(app)"
-          [(ngModel)]="app.applicationTemplateId"
-          >
-          <mat-option [value]="null">None</mat-option>
-          @for (template of applicationTemplates; track template.id) {
-            <mat-option
-              [value]="template.id"
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Application URL</mat-label>
+              <input
+                matInput
+                (change)="saveApplicationUrl($event.target.value, app.id)"
+                value="{{ app.url }}"
+                [errorStateMatcher]="matcher"
+              />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Icon Path</mat-label>
+              <input
+                matInput
+                (change)="saveApplicationIcon($event.target.value, app.id)"
+                value="{{ app.icon }}"
+                [errorStateMatcher]="matcher"
+              />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Embeddable</mat-label>
+              <mat-select
+                (selectionChange)="saveApplicationEmbeddable(app)"
+                [(ngModel)]="app.embeddable"
               >
-              {{ template.name }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-  </div>
-</div>
-@if (
-  app.applicationTemplateId &&
-  getTemplate(app.applicationTemplateId); as template
-  ) {
-  <div
-    class="d-flex"
-    >
-    <div class="d-flex w-100 justify-content-center">
-      <div class="d-flex flex-column app-form-section">
-        <mat-form-field>
-          <mat-label>Template Application Name</mat-label>
-          <input
-            matInput
-            [disabled]="true"
-            value="{{ template.name }}"
-            />
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Template Application URL</mat-label>
-          <input
-            matInput
-            [disabled]="true"
-            value="{{ template.url }}"
-            />
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Template Icon Path</mat-label>
-          <input
-            matInput
-            [disabled]="true"
-            value="{{ template.icon }}"
-            />
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Template Embeddable</mat-label>
-          <mat-select
-            [disabled]="true"
-            [(ngModel)]="template.embeddable"
-            >
-            <mat-option [value]="null">Inherit from Template</mat-option>
-            <mat-option [value]="true">True</mat-option>
-            <mat-option [value]="false">False</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Template Load in Background</mat-label>
-          <mat-select
-            [disabled]="true"
-            [(ngModel)]="template.loadInBackground"
-            >
-            <mat-option [value]="null">Inherit from Template</mat-option>
-            <mat-option [value]="true">True</mat-option>
-            <mat-option [value]="false">False</mat-option>
-          </mat-select>
-        </mat-form-field>
+                <mat-option [value]="null">Inherit from Template</mat-option>
+                <mat-option [value]="true">True</mat-option>
+                <mat-option [value]="false">False</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Load in Background</mat-label>
+              <mat-select
+                (selectionChange)="saveApplicationLoadInBackground(app)"
+                [(ngModel)]="app.loadInBackground"
+              >
+                <mat-option [value]="null">Inherit from Template</mat-option>
+                <mat-option [value]="true">True</mat-option>
+                <mat-option [value]="false">False</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Application Template</mat-label>
+              <mat-select
+                (selectionChange)="saveApplicationTemplateId(app)"
+                [(ngModel)]="app.applicationTemplateId"
+              >
+                <mat-option [value]="null">None</mat-option>
+                @for (template of applicationTemplates; track template.id) {
+                  <mat-option [value]="template.id">
+                    {{ template.name }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-}
-<div class="bottom-button d-flex justify-content-end">
-  <button mat-stroked-button (click)="deleteViewApplication(app)">
-    Delete Application
-  </button>
-</div>
-</mat-expansion-panel>
-}
+      @if (
+        app.applicationTemplateId && getTemplate(app.applicationTemplateId);
+        as template
+      ) {
+        <div class="d-flex">
+          <div class="d-flex w-100 justify-content-center">
+            <div class="d-flex flex-column app-form-section">
+              <mat-form-field>
+                <mat-label>Template Application Name</mat-label>
+                <input matInput [disabled]="true" value="{{ template.name }}" />
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Template Application URL</mat-label>
+                <input matInput [disabled]="true" value="{{ template.url }}" />
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Template Icon Path</mat-label>
+                <input matInput [disabled]="true" value="{{ template.icon }}" />
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Template Embeddable</mat-label>
+                <mat-select [disabled]="true" [(ngModel)]="template.embeddable">
+                  <mat-option [value]="null">Inherit from Template</mat-option>
+                  <mat-option [value]="true">True</mat-option>
+                  <mat-option [value]="false">False</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Template Load in Background</mat-label>
+                <mat-select
+                  [disabled]="true"
+                  [(ngModel)]="template.loadInBackground"
+                >
+                  <mat-option [value]="null">Inherit from Template</mat-option>
+                  <mat-option [value]="true">True</mat-option>
+                  <mat-option [value]="false">False</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      }
+      <div class="bottom-button d-flex justify-content-end">
+        <button mat-stroked-button (click)="deleteViewApplication(app)">
+          Delete Application
+        </button>
+      </div>
+    </mat-expansion-panel>
+  }
 </mat-accordion>
 
 @if (isLoading) {
-  <mat-card appearance="outlined"
+  <mat-card
+    appearance="outlined"
     class="d-flex justify-content-center align-items-center"
-    >
-    <mat-progress-spinner
-      color="primary"
-      mode="indeterminate"
-    ></mat-progress-spinner>
+  >
+    <mat-progress-spinner color="primary" mode="indeterminate" />
   </mat-card>
 }

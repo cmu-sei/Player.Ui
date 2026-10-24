@@ -1,7 +1,7 @@
 // Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { XApiService as GeneratedXApiService } from '../../generated/player-api';
@@ -11,12 +11,12 @@ import { ComnSettingsService } from '@cmusei/crucible-common';
   providedIn: 'root',
 })
 export class XApiService {
+  private generatedXApiService = inject(GeneratedXApiService);
+  private settingsService = inject(ComnSettingsService);
+
   private enabled: boolean;
 
-  constructor(
-    private generatedXApiService: GeneratedXApiService,
-    private settingsService: ComnSettingsService
-  ) {
+  constructor() {
     this.enabled = this.settingsService.settings.XApiEnabled ?? false;
   }
 
@@ -31,7 +31,7 @@ export class XApiService {
       catchError((error) => {
         console.error('xAPI tracking error:', error);
         return of(null);
-      })
+      }),
     );
   }
 
@@ -41,17 +41,19 @@ export class XApiService {
   applicationSwitched(
     viewId: string,
     applicationName: string,
-    applicationUrl: string
+    applicationUrl: string,
   ): Observable<any> {
     if (!this.enabled) {
       return of(null);
     }
-    return this.generatedXApiService.applicationSwitched(viewId, applicationName, applicationUrl).pipe(
-      catchError((error) => {
-        console.error('xAPI tracking error:', error);
-        return of(null); // Fail silently - xAPI errors shouldn't break UI
-      })
-    );
+    return this.generatedXApiService
+      .applicationSwitched(viewId, applicationName, applicationUrl)
+      .pipe(
+        catchError((error) => {
+          console.error('xAPI tracking error:', error);
+          return of(null); // Fail silently - xAPI errors shouldn't break UI
+        }),
+      );
   }
 
   /**
@@ -65,7 +67,7 @@ export class XApiService {
       catchError((error) => {
         console.error('xAPI tracking error:', error);
         return of(null);
-      })
+      }),
     );
   }
 
@@ -79,11 +81,13 @@ export class XApiService {
     // Note: sendBeacon approach removed - using generated client for consistency
     // If sendBeacon is needed for reliability on page unload, consider implementing
     // at the component level before calling this service
-    return this.generatedXApiService.viewTerminated(viewId, durationSeconds).pipe(
-      catchError((error) => {
-        console.error('xAPI tracking error:', error);
-        return of(null);
-      })
-    );
+    return this.generatedXApiService
+      .viewTerminated(viewId, durationSeconds)
+      .pipe(
+        catchError((error) => {
+          console.error('xAPI tracking error:', error);
+          return of(null);
+        }),
+      );
   }
 }

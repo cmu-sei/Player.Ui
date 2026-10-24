@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi, beforeEach, MockInstance } from 'vitest';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
@@ -55,26 +55,30 @@ import { ApiStub } from '../../test-utils/api-stub';
 import type { User as AuthUser } from 'oidc-client-ts';
 import { dialogRefStub } from '../../test-utils/dialog-refs';
 import { recordEmissions } from '../../test-utils/record-emissions';
+import { ApplicationListComponent } from './application-list/application-list.component';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FocusedAppComponent } from './focused-app/focused-app.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 @Component({ selector: 'app-application-list', template: '' })
 class ApplicationListStubComponent {
-  @Input() viewId!: string;
-  @Input() teams!: TeamData[];
-  @Input() mini!: boolean;
+  readonly viewId = input.required<string>();
+  readonly teams = input.required<TeamData[]>();
+  readonly mini = input.required<boolean>();
 }
 
 @Component({ selector: 'app-topbar', template: '' })
 class TopbarStubComponent {
-  @Input() sidenav?: unknown;
-  @Input() title?: string;
-  @Input() teams?: Team[];
-  @Input() team?: Team;
-  @Input() topbarView?: TopbarView;
-  @Input() viewId!: string;
-  @Input() mini!: boolean;
-  @Output() sidenavToggle = new EventEmitter<boolean>();
-  @Output() setTeam = new EventEmitter<string>();
-  @Output() editView = new EventEmitter<unknown>();
+  readonly sidenav = input<unknown>(undefined);
+  readonly title = input<string>(undefined);
+  readonly teams = input<Team[]>(undefined);
+  readonly team = input<Team>(undefined);
+  readonly topbarView = input<TopbarView>(undefined);
+  readonly viewId = input.required<string>();
+  readonly mini = input.required<boolean>();
+  readonly sidenavToggle = output<boolean>();
+  readonly setTeam = output<string>();
+  readonly editView = output<unknown>();
 }
 
 @Component({ selector: 'app-focused-app', template: '' })
@@ -82,11 +86,11 @@ class FocusedAppStubComponent {}
 
 @Component({ selector: 'app-notifications', template: '' })
 class NotificationsStubComponent {
-  @Input() viewGuid!: string;
-  @Input() teamGuid!: string;
-  @Input() userGuid!: string;
-  @Input() userToken!: string;
-  @Input() userName!: string;
+  readonly viewGuid = input.required<string>();
+  readonly teamGuid = input.required<string>();
+  readonly userGuid = input.required<string>();
+  readonly userToken = input.required<string>();
+  readonly userName = input.required<string>();
 }
 
 const teamA: TeamMembership = {
@@ -161,12 +165,13 @@ async function renderPlayer(
       MatToolbarModule,
       MatButtonModule,
       ResizableModule,
-      ApplicationListStubComponent,
-      TopbarStubComponent,
-      FocusedAppStubComponent,
-      NotificationsStubComponent,
     ],
-    declarations: [PlayerComponent],
+    childStubs: [
+      { replace: ApplicationListComponent, with: ApplicationListStubComponent },
+      { replace: TopbarComponent, with: TopbarStubComponent },
+      { replace: FocusedAppComponent, with: FocusedAppStubComponent },
+      { replace: NotificationsComponent, with: NotificationsStubComponent },
+    ],
     providers: [
       { provide: RouterQuery, useValue: routerQuery },
       {
@@ -265,24 +270,24 @@ describe('PlayerComponent', () => {
       { id: 'team-b', name: 'Team B', isMember: true, isPrimary: false },
     ];
     const topbar = stub(fixture, TopbarStubComponent)!;
-    expect(topbar.title).toBe('Demo');
-    expect(topbar.teams).toEqual(teams);
-    expect(topbar.team).toEqual(teams[0]);
-    expect(topbar.viewId).toBe('view-1');
-    expect(topbar.topbarView).toBe('player-player');
+    expect(topbar.title()).toBe('Demo');
+    expect(topbar.teams()).toEqual(teams);
+    expect(topbar.team()).toEqual(teams[0]);
+    expect(topbar.viewId()).toBe('view-1');
+    expect(topbar.topbarView()).toBe('player-player');
     const apps = stub(fixture, ApplicationListStubComponent)!;
-    expect([apps.viewId, apps.teams, apps.mini]).toEqual([
+    expect([apps.viewId(), apps.teams(), apps.mini()]).toEqual([
       'view-1',
       teams,
       false,
     ]);
     const notifications = stub(fixture, NotificationsStubComponent)!;
     expect([
-      notifications.viewGuid,
-      notifications.teamGuid,
-      notifications.userGuid,
-      notifications.userToken,
-      notifications.userName,
+      notifications.viewGuid(),
+      notifications.teamGuid(),
+      notifications.userGuid(),
+      notifications.userToken(),
+      notifications.userName(),
     ]).toEqual(['view-1', 'team-a', 'u1', 'tok', 'Alice']);
   });
 
@@ -365,8 +370,8 @@ describe('PlayerComponent', () => {
     };
     await user.click(screen.getByTitle('Collapse to Icons Only'));
     expect(bounds()).toEqual(['', '']);
-    expect(stub(fixture, ApplicationListStubComponent)!.mini).toBe(true);
-    expect(stub(fixture, TopbarStubComponent)!.mini).toBe(true);
+    expect(stub(fixture, ApplicationListStubComponent)!.mini()).toBe(true);
+    expect(stub(fixture, TopbarStubComponent)!.mini()).toBe(true);
     expect(JSON.parse(localStorage.getItem('team-a')!)).toEqual({
       width: null,
       opened: true,
@@ -374,7 +379,7 @@ describe('PlayerComponent', () => {
     });
     await user.click(screen.getByTitle('Expand Navigation Panel'));
     expect(bounds()).toEqual(['250px', '33vw']);
-    expect(stub(fixture, ApplicationListStubComponent)!.mini).toBe(false);
+    expect(stub(fixture, ApplicationListStubComponent)!.mini()).toBe(false);
     expect(JSON.parse(localStorage.getItem('team-a')!)).toEqual({
       width: null,
       opened: true,
@@ -396,7 +401,7 @@ describe('PlayerComponent', () => {
     };
     const state = () => [
       sidenav(fixture).opened,
-      stub(fixture, ApplicationListStubComponent)!.mini,
+      stub(fixture, ApplicationListStubComponent)!.mini(),
     ];
     expect(state()).toEqual([true, false]);
     toggle();
@@ -430,7 +435,7 @@ describe('PlayerComponent', () => {
   ])('restores %s', async (_case, savedState, mini, size) => {
     const { container, fixture } = await renderPlayer({ savedState });
     expect(sidenav(fixture).opened).toBe(true);
-    expect(stub(fixture, ApplicationListStubComponent)!.mini).toBe(mini);
+    expect(stub(fixture, ApplicationListStubComponent)!.mini()).toBe(mini);
     const { width, minWidth, maxWidth } = sidenavElement(container).style;
     expect([width, minWidth, maxWidth]).toEqual(size);
   });

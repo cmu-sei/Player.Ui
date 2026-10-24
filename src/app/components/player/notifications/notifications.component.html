@@ -7,7 +7,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   class="notifications-container"
   (opened)="notificationPanelToggle('open')"
   (closed)="notificationPanelToggle('close')"
-  >
+>
   <mat-expansion-panel-header [ngClass]="notificationDisplayClass()">
     <mat-panel-title>
       @if (useBadge) {
@@ -19,7 +19,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           matBadgePosition="before"
           matBadgeHidden="{{ newNotificationCount() < 1 }}"
           matBadgeSize="small"
-          >
+        >
         </span>
       }
       <span class="notification-panel-title">
@@ -29,12 +29,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         hasViewAdmin() &&
         showSystemNotifications &&
         notificationsHistory().length > 0
-        ) {
+      ) {
         <mat-icon
           fontIcon="mdi-trash-can"
           title="Delete ALL notifications"
           (click)="deleteViewNotifications()"
-        ></mat-icon>
+        />
       }
     </mat-panel-title>
   </mat-expansion-panel-header>
@@ -45,9 +45,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <div id="wrapper">
             <div
               id="time"
-              title="{{ notif.broadcastTime | date : 'MM/dd/yyyy HH:mm' }} {{ notif.broadcastTime | timeZoneAbbr }}"
-              >
-              <b>{{ notif.broadcastTime | date : 'HH:mm' }}</b>
+              title="{{ notif.broadcastTime | date: 'MM/dd/yyyy HH:mm' }} {{
+                notif.broadcastTime | timeZoneAbbr
+              }}"
+            >
+              <b>{{ notif.broadcastTime | date: 'HH:mm' }}</b>
               <span class="zone">{{ notif.broadcastTime | timeZoneAbbr }}</span>
             </div>
             <div id="from">
@@ -60,51 +62,51 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   target="_blank"
                   title="Goto:  {{ notif.link }}"
                   >Open</a
-                  >
-                }
-              </div>
-              <div id="message">
-                {{ notif.text }}
-              </div>
-              @if (hasViewAdmin()) {
-                <div id="deleteButton">
-                  <mat-icon
-                    fontIcon="mdi-trash-can"
-                    title="Delete notification"
-                    (click)="deleteNotification(notif)"
-                  ></mat-icon>
-                </div>
+                >
               }
             </div>
-          </mat-list-item>
-        }
-      </mat-list>
-    }
+            <div id="message">
+              {{ notif.text }}
+            </div>
+            @if (hasViewAdmin()) {
+              <div id="deleteButton">
+                <mat-icon
+                  fontIcon="mdi-trash-can"
+                  title="Delete notification"
+                  (click)="deleteNotification(notif)"
+                />
+              </div>
+            }
+          </div>
+        </mat-list-item>
+      }
+    </mat-list>
+  }
 
-    @if (hasViewAdmin()) {
-      <div class="send-message">
-        <form #notificationForm="ngForm" (ngSubmit)="sendMessage()">
-          <mat-form-field class="input-message">
-            <input
-              matInput
-              #msgtext
-              type="text"
-              placeholder="{{ sendMessagePlaceholder }}"
-              name="messageToSend"
-              [(ngModel)]="messageToSend"
-              />
-            <mat-hint align="end">{{ msgtext.value.length }} / 225</mat-hint>
-            <button
-              mat-button
-              type="submit"
-              matSuffix
-              aria-label="Send"
-              [disabled]="!notificationForm.form.valid"
-              >
-              Send
-            </button>
-          </mat-form-field>
-        </form>
-      </div>
-    }
-  </mat-expansion-panel>
+  @if (hasViewAdmin()) {
+    <div class="send-message">
+      <form #notificationForm="ngForm" (ngSubmit)="sendMessage()">
+        <mat-form-field class="input-message">
+          <input
+            matInput
+            #msgtext
+            type="text"
+            placeholder="{{ sendMessagePlaceholder }}"
+            name="messageToSend"
+            [(ngModel)]="messageToSend"
+          />
+          <mat-hint align="end">{{ msgtext.value.length }} / 225</mat-hint>
+          <button
+            mat-button
+            type="submit"
+            matSuffix
+            aria-label="Send"
+            [disabled]="!notificationForm.form.valid"
+          >
+            Send
+          </button>
+        </mat-form-field>
+      </form>
+    </div>
+  }
+</mat-expansion-panel>

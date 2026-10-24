@@ -7,7 +7,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <mat-sidenav-container
     class="appcontent-container"
     [autosize]="autosizeSidenav"
-    >
+  >
     <mat-sidenav
       #sidenav
       [ngClass]="
@@ -19,14 +19,21 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       (resizing)="resizingFn($event)"
       (resizeEnd)="resizeEnd($event)"
       [ngStyle]="resizeStyle"
-      >
+    >
       <div class="grid">
         <div class="sidebar-content">
           @if (!(mini$ | async)) {
-            <mat-toolbar class="sidenav-header" title="Return to Home" [routerLink]="['/']">
+            <mat-toolbar
+              class="sidenav-header"
+              title="Return to Home"
+              [routerLink]="['/']"
+            >
               <a class="nolink" [routerLink]="['/']">
                 <div class="d-flex align-items-center">
-                  <mat-icon class="icon-35px player-icon-header" svgIcon="ic_crucible_player"></mat-icon>
+                  <mat-icon
+                    class="icon-35px player-icon-header"
+                    svgIcon="ic_crucible_player"
+                  />
                   <h2 class="icon-text">{{ data.title }}</h2>
                 </div>
               </a>
@@ -34,26 +41,41 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           } @else {
             <mat-list>
               <mat-list-item class="player-title-mini">
-                <a [routerLink]="['/']" title="Return to Home" aria-label="Return to Home" class="home-link-mini">
-                  <mat-icon class="mat-list-item-icon mdi-24px" svgIcon="ic_crucible_player"></mat-icon>
+                <a
+                  [routerLink]="['/']"
+                  title="Return to Home"
+                  aria-label="Return to Home"
+                  class="home-link-mini"
+                >
+                  <mat-icon
+                    class="mat-list-item-icon mdi-24px"
+                    svgIcon="ic_crucible_player"
+                  />
                 </a>
               </mat-list-item>
             </mat-list>
           }
-          <mat-divider></mat-divider>
+          <mat-divider />
           <app-application-list
             [viewId]="data.view.id"
             [teams]="data.teams"
             [mini]="mini$ | async"
-          ></app-application-list>
+          />
           @if (!(mini$ | async)) {
             <div class="bottom-div">
               <div class="admin-and-collapse">
-                <div class="admin-section">
-                </div>
+                <div class="admin-section"></div>
                 <div class="collapse-section">
-                  <button mat-icon-button aria-label="Collapse to Icons Only" title="Collapse to Icons Only" (click)="toggleMini()">
-                    <mat-icon class="mdi-24px" fontIcon="mdi-chevron-double-left"></mat-icon>
+                  <button
+                    mat-icon-button
+                    aria-label="Collapse to Icons Only"
+                    title="Collapse to Icons Only"
+                    (click)="toggleMini()"
+                  >
+                    <mat-icon
+                      class="mdi-24px"
+                      fontIcon="mdi-chevron-double-left"
+                    />
                   </button>
                 </div>
               </div>
@@ -69,8 +91,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             </div>
           } @else {
             <div class="bottom-div">
-              <button mat-icon-button aria-label="Expand Navigation Panel" title="Expand Navigation Panel" (click)="toggleMini()">
-                <mat-icon class="mdi-24px" fontIcon="mdi-chevron-double-right"></mat-icon>
+              <button
+                mat-icon-button
+                aria-label="Expand Navigation Panel"
+                title="Expand Navigation Panel"
+                (click)="toggleMini()"
+              >
+                <mat-icon
+                  class="mdi-24px"
+                  fontIcon="mdi-chevron-double-right"
+                />
               </button>
               <img
                 alt="crucible logo"
@@ -105,8 +135,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         (setTeam)="setPrimaryTeam($event)"
         (sidenavToggle)="sidenavToggleFn($event)"
         (editView)="editViewFn($event)"
-      ></app-topbar>
-      <app-focused-app></app-focused-app>
+      />
+      <app-focused-app />
       @if (user$ | async; as user) {
         <app-notifications
           [viewGuid]="data.view.id"
@@ -115,8 +145,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [userToken]="user.access_token"
           [userName]="user.profile.name"
           class="notification-height"
-          >
-        </app-notifications>
+        />
       } @else {
         LOADING
       }

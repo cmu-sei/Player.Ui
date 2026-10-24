@@ -1,13 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import {
-  Component,
-  OnChanges,
-  Input,
-  Output,
-  EventEmitter,
-} from '@angular/core';
+import { Component, OnChanges, Input, inject, output } from '@angular/core';
 import {
   User,
   UserService,
@@ -23,16 +17,20 @@ import {
   NgForm,
   Validators,
 } from '@angular/forms';
+import { RolesPermissionsSelectComponent } from '../../roles-permissions-select/roles-permissions-select.component';
+import { MatButton } from '@angular/material/button';
 
 @Component({
-    selector: 'app-admin-user-edit',
-    templateUrl: './admin-user-edit.component.html',
-    styleUrls: ['./admin-user-edit.component.scss'],
-    standalone: false
+  selector: 'app-admin-user-edit',
+  templateUrl: './admin-user-edit.component.html',
+  styleUrls: ['./admin-user-edit.component.scss'],
+  imports: [RolesPermissionsSelectComponent, MatButton],
 })
 export class AdminUserEditComponent implements OnChanges {
+  private userService = inject(UserService);
+
   @Input() user: User;
-  @Output() editComplete = new EventEmitter<boolean>();
+  readonly editComplete = output<boolean>();
 
   public nameFormControl = new UntypedFormControl('', [
     Validators.required,
@@ -44,8 +42,6 @@ export class AdminUserEditComponent implements OnChanges {
   public permissions: Permission[] = [];
   public selectedPermissions: string[] = [];
   public roles: Role[] = [];
-
-  constructor(private userService: UserService) {}
 
   /**
    * Called when the form changes
@@ -85,7 +81,7 @@ export class AdminUserEditComponent implements OnChanges {
       this.user.roleName = null;
     } else {
       this.user.roleName = this.roles.find(
-        (x) => x.id === this.user.roleId
+        (x) => x.id === this.user.roleId,
       ).name;
     }
     this.userService.updateUser(this.user.id, this.user).subscribe();
@@ -96,7 +92,7 @@ export class AdminUserEditComponent implements OnChanges {
 export class UserErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
     control: UntypedFormControl | null,
-    form: FormGroupDirective | NgForm | null
+    form: FormGroupDirective | NgForm | null,
   ): boolean {
     const isSubmitted = form && form.submitted;
     return !!(control && control.invalid && (control.dirty || isSubmitted));

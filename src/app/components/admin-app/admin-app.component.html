@@ -13,7 +13,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-toolbar class="sidenav-header">
       <a class="nolink" [routerLink]="['/']" title="Exit Administration">
         <div class="cssLayoutRowStartCenter">
-          <mat-icon class="icon-35px player-icon-header" svgIcon="ic_crucible_player"></mat-icon>
+          <mat-icon
+            class="icon-35px player-icon-header"
+            svgIcon="ic_crucible_player"
+          />
           <h2 class="icon-text">Administration</h2>
         </div>
       </a>
@@ -34,7 +37,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                       <mat-icon
                         class="player-icon-small"
                         svgIcon="{{ sectionItem.icon }}"
-                      ></mat-icon>
+                      />
                     }
                     @if (!sectionItem.svgIcon) {
                       <img
@@ -64,27 +67,24 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   </mat-sidenav>
   <!-- MAIN CONTENT -->
   <mat-sidenav-content>
-    <app-topbar
-      [topbarView]="TopbarView.PLAYER_ADMIN"
-      [title]="title"
-    ></app-topbar>
+    <app-topbar [topbarView]="TopbarView.PLAYER_ADMIN" [title]="title" />
 
     <div class="d-flex justify-content-center">
       @switch (section$ | async) {
         @case (Section.ADMIN_VIEWS) {
-          <app-admin-view-search></app-admin-view-search>
+          <app-admin-view-search />
         }
         @case (Section.ADMIN_USERS) {
-          <app-admin-user-search></app-admin-user-search>
+          <app-admin-user-search />
         }
         @case (Section.ADMIN_APP_TEMP) {
-          <app-admin-app-template-search></app-admin-app-template-search>
+          <app-admin-app-template-search />
         }
         @case (Section.ADMIN_ROLE_PERM) {
-          <app-admin-roles class="w-100"></app-admin-roles>
+          <app-admin-roles class="w-100" />
         }
         @case (Section.ADMIN_SUBS) {
-          <app-admin-subscription-search></app-admin-subscription-search>
+          <app-admin-subscription-search />
         }
       }
     </div>

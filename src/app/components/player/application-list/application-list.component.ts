@@ -4,11 +4,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  Input,
   OnChanges,
   OnDestroy,
   OnInit,
   SimpleChanges,
+  inject,
+  input,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
@@ -19,33 +20,34 @@ import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
 import { XApiService } from '../../../services/xapi/xapi.service';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatButton } from '@angular/material/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'app-application-list',
-    templateUrl: './application-list.component.html',
-    styleUrls: ['./application-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'app-application-list',
+  templateUrl: './application-list.component.html',
+  styleUrls: ['./application-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [MatList, MatListItem, MatButton, AsyncPipe],
 })
 export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() viewId: string;
-  @Input() teams: TeamData[];
-  @Input() mini: boolean;
+  private applicationsService = inject(ApplicationsService);
+  private focusedAppService = inject(FocusedAppService);
+  private authService = inject(ComnAuthService);
+  private sanitizer = inject(DomSanitizer);
+  private authQuery = inject(ComnAuthQuery);
+  private xapiService = inject(XApiService);
+
+  readonly viewId = input<string>(undefined);
+  readonly teams = input<TeamData[]>(undefined);
+  readonly mini = input<boolean>(undefined);
 
   public applications$: Observable<ApplicationData[]>;
   public viewGUID: string;
   public titleText: string;
   private unsubscribe$: Subject<null> = new Subject<null>();
   private currentApp: ApplicationData;
-
-  constructor(
-    private applicationsService: ApplicationsService,
-    private focusedAppService: FocusedAppService,
-    private authService: ComnAuthService,
-    private sanitizer: DomSanitizer,
-    private authQuery: ComnAuthQuery,
-    private xapiService: XApiService
-  ) {}
 
   ngOnInit() {
     this.refreshApps();
@@ -69,14 +71,14 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     this.applications$ = combineLatest([
       this.authQuery.userTheme$,
       this.applicationsService.getApplicationsByTeam(
-        this.teams.find((t) => t.isPrimary).id
+        this.teams().find((t) => t.isPrimary).id,
       ),
     ]).pipe(
       map(([theme, apps]) => {
         apps.forEach((app) => {
           app.themedUrl = this.insertThemeToUrl(app.url, theme);
           app.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-            app.themedUrl
+            app.themedUrl,
           );
         });
         return apps;
@@ -88,7 +90,7 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
             : this.openInFocusedApp(this.currentApp);
         }
       }),
-      takeUntil(this.unsubscribe$)
+      takeUntil(this.unsubscribe$),
     );
   }
 
@@ -97,13 +99,13 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     this.authService.isAuthenticated().then((isAuthenticated) => {
       if (!isAuthenticated) {
         console.log(
-          'User is not authenticated and must not have been redirected to login.'
+          'User is not authenticated and must not have been redirected to login.',
         );
         window.location.reload();
       } else {
         this.focusedAppService.focusedAppUrl.next(app.themedUrl);
         this.xapiService
-          .applicationSwitched(this.viewId, app.name, app.url)
+          .applicationSwitched(this.viewId(), app.name, app.url)
           .subscribe();
       }
     });

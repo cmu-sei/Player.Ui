@@ -7,13 +7,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   @if (isDialog) {
     <crucible-dialog [hideDefaultActions]="true">
       <div crucibleDialogTitle class="d-flex title">
-        <ng-container *ngTemplateOutlet="viewTitleControls"></ng-container>
+        <ng-container *ngTemplateOutlet="viewTitleControls" />
         <div>
           <span class="header-text ms-2">Edit View: {{ view.name }}</span>
         </div>
       </div>
       <div crucibleDialogContent class="view-container scroll-container">
-        <ng-container *ngTemplateOutlet="viewEditor"></ng-container>
+        <ng-container *ngTemplateOutlet="viewEditor" />
       </div>
       <ng-container crucibleDialogActions>
         <button
@@ -30,13 +30,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   } @else {
     <div class="view-container mat-elevation-z8 scroll-container">
       <div class="d-flex title">
-        <ng-container *ngTemplateOutlet="viewTitleControls"></ng-container>
+        <ng-container *ngTemplateOutlet="viewTitleControls" />
         <div>
           <h4 class="header-text ms-2">Edit View: {{ view.name }}</h4>
         </div>
       </div>
       <mat-dialog-content>
-        <ng-container *ngTemplateOutlet="viewEditor"></ng-container>
+        <ng-container *ngTemplateOutlet="viewEditor" />
       </mat-dialog-content>
       <div class="bottom-button d-flex justify-content-center">
         <button
@@ -62,7 +62,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       aria-label="Return"
       (click)="returnToViewSearch()"
     >
-      <mat-icon svgIcon="ic_back_arrow"></mat-icon>
+      <mat-icon svgIcon="ic_back_arrow" />
     </button>
   </div>
 </ng-template>
@@ -176,214 +176,215 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           }
         </mat-menu>
       </div>
-      <app-view-applications-select
-        #viewAppSelect
-        [view]="view"
-      ></app-view-applications-select>
+      <app-view-applications-select #viewAppSelect [view]="view" />
     </mat-step>
-        <mat-step label="Teams">
-          @if (!isLoadingTeams) {
-            <mat-accordion>
-              <div class="top-button d-flex justify-content-end">
-                <button mat-stroked-button (click)="addNewTeam()">
-                  Add New Team
-                </button>
-              </div>
-              @for (teamContainer of teams; track teamContainer.team.id) {
-                <mat-expansion-panel
-                  [expanded]="
-                    currentTeam !== undefined &&
-                    teamContainer.team.id === currentTeam.team.id
-                  "
-                  (opened)="selectTeam(teamContainer)"
-                >
-                  <mat-expansion-panel-header>
-                    <mat-panel-title>
-                      {{ teamContainer.name }}
-                      @if (view.defaultTeamId === teamContainer.team.id) {
-                        <span class="default-badge">DEFAULT</span>
-                      }
-                    </mat-panel-title>
-                  </mat-expansion-panel-header>
-                  <div class="d-flex align-items-start gap-4">
-                    <div class="d-flex w-50 justify-content-center">
-                      <div class="w-100">
-                        <div class="d-flex align-items-center">
-                          <button
-                            mat-icon-button
-                            [attr.aria-label]="'Copy ID of ' + teamContainer.team.name"
-                            ngxClipboard
-                            [cbContent]="teamContainer.team.id"
-                            title="Copy:  {{ teamContainer.team.id }}"
-                          >
-                            <mat-icon
-                              style="transform: scale(0.85)"
-                              svgIcon="ic_clipboard_copy"
-                            ></mat-icon>
-                          </button>
-                          <span style="font-size: xx-small">
-                            {{ teamContainer.team.id }}
-                          </span>
-                        </div>
-                        <mat-form-field class="w-100">
-                          <mat-label>Team Name (required)</mat-label>
-                          <input
-                            id="teamName{{ teamContainer.team.id }}"
-                            matInput
-                            [formControl]="teamNameFormControl"
-                            (change)="saveTeamName(teamContainer)"
-                            [errorStateMatcher]="matcher"
-                          />
-                          @if (
-                            teamNameFormControl.hasError('minlength') &&
-                            !teamNameFormControl.hasError('required')
-                          ) {
-                            <mat-error>
-                              Must contain 3 or more characters
-                            </mat-error>
-                          }
-                          @if (teamNameFormControl.hasError('required')) {
-                            <mat-error>
-                              Name is <strong>required</strong>
-                            </mat-error>
-                          }
-                        </mat-form-field>
-                        <app-roles-permissions-select
-                          [team]="teamContainer.team"
-                          [allTeams]="allTeams"
-                        ></app-roles-permissions-select>
-                        <div>
-                          <mat-checkbox
-                            color="primary"
-                            [checked]="
-                              view.defaultTeamId === teamContainer.team.id
-                            "
-                            (change)="
-                              setDefaultTeam(
-                                view.defaultTeamId !== teamContainer.team.id
-                                  ? teamContainer.team.id
-                                  : null
-                              )
-                            "
-                            matTooltip="Users will be assigned to this team when deployed as an on-demand event"
-                          >
-                            Default
-                          </mat-checkbox>
-                        </div>
-                        <div class="d-flex justify-content-center">
-                          <div class="d-flex flex-column align-items-center">
-                            <button
-                              mat-button
-                              (click)="openUsersDialog(teamContainer.team)"
-                            >
-                              <span
-                                class="d-inline-block"
-                                matBadge="{{ teamContainer.users.length }}"
-                                matBadgePosition="above after"
-                                matBadgeColor="accent"
-                              >
-                                <img
-                                  class="left-icon"
-                                  src="assets/img/SP_Icon_User.png"
-                                  alt="Users"
-                                />
-                              </span>
-                            </button>
-                            <span>Users</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="team-applications-column">
-                      <app-team-applications-select
-                        [view]="view"
-                        [team]="teamContainer.team"
-                      ></app-team-applications-select>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="delete-button d-flex justify-content-end">
+    <mat-step label="Teams">
+      @if (!isLoadingTeams) {
+        <mat-accordion>
+          <div class="top-button d-flex justify-content-end">
+            <button mat-stroked-button (click)="addNewTeam()">
+              Add New Team
+            </button>
+          </div>
+          @for (teamContainer of teams; track teamContainer.team.id) {
+            <mat-expansion-panel
+              [expanded]="
+                currentTeam !== undefined &&
+                teamContainer.team.id === currentTeam.team.id
+              "
+              (opened)="selectTeam(teamContainer)"
+            >
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  {{ teamContainer.name }}
+                  @if (view.defaultTeamId === teamContainer.team.id) {
+                    <span class="default-badge">DEFAULT</span>
+                  }
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="d-flex align-items-start gap-4">
+                <div class="d-flex w-50 justify-content-center">
+                  <div class="w-100">
+                    <div class="d-flex align-items-center">
                       <button
-                        mat-stroked-button
-                        (click)="deleteTeam(teamContainer.team)"
+                        mat-icon-button
+                        [attr.aria-label]="
+                          'Copy ID of ' + teamContainer.team.name
+                        "
+                        ngxClipboard
+                        [cbContent]="teamContainer.team.id"
+                        title="Copy:  {{ teamContainer.team.id }}"
                       >
-                        Delete Team
+                        <mat-icon
+                          style="transform: scale(0.85)"
+                          svgIcon="ic_clipboard_copy"
+                        />
                       </button>
+                      <span style="font-size: xx-small">
+                        {{ teamContainer.team.id }}
+                      </span>
                     </div>
-                  </div>
-                </mat-expansion-panel>
-              }
-            </mat-accordion>
-          }
-          @if (isLoadingTeams) {
-            <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
-              <mat-progress-spinner
-                color="primary"
-                mode="indeterminate"
-              ></mat-progress-spinner>
-            </mat-card>
-          }
-        </mat-step>
-        <mat-step label="Files">
-          <mat-accordion>
-            <input
-              hidden
-              (change)="selectFile($event.target.files)"
-              #fileInput
-              type="file"
-            />
-            <div class="top-button d-flex justify-content-end">
-              <button mat-stroked-button (click)="fileInput.click()">
-                Add New File
-              </button>
-            </div>
-            @if (staged.length !== 0) {
-              <mat-expansion-panel [expanded]="true">
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <div class="d-flex align-items-center">
-                      <img
-                        height="25"
-                        src="assets/img/SP_Icon_Intel.png"
-                        alt="File"
-                      />{{ staged[0].file.name }}
-                    </div>
-                  </mat-panel-title>
-                </mat-expansion-panel-header>
-                <div>
-                  <div class="d-flex flex-column align-items-center">
-                    <div class="d-flex align-items-center">
+                    <mat-form-field class="w-100">
+                      <mat-label>Team Name (required)</mat-label>
+                      <input
+                        id="teamName{{ teamContainer.team.id }}"
+                        matInput
+                        [formControl]="teamNameFormControl"
+                        (change)="saveTeamName(teamContainer)"
+                        [errorStateMatcher]="matcher"
+                      />
+                      @if (
+                        teamNameFormControl.hasError('minlength') &&
+                        !teamNameFormControl.hasError('required')
+                      ) {
+                        <mat-error>
+                          Must contain 3 or more characters
+                        </mat-error>
+                      }
+                      @if (teamNameFormControl.hasError('required')) {
+                        <mat-error>
+                          Name is <strong>required</strong>
+                        </mat-error>
+                      }
+                    </mat-form-field>
+                    <app-roles-permissions-select
+                      [team]="teamContainer.team"
+                      [allTeams]="allTeams"
+                    />
+                    <div>
                       <mat-checkbox
                         color="primary"
-                        [(ngModel)]="selectAllTeamsForFile"
-                        (change)="toggleAllTeamsForFile($event.checked)"
-                        class="me-3"
+                        [checked]="view.defaultTeamId === teamContainer.team.id"
+                        (change)="
+                          setDefaultTeam(
+                            view.defaultTeamId !== teamContainer.team.id
+                              ? teamContainer.team.id
+                              : null
+                          )
+                        "
+                        matTooltip="Users will be assigned to this team when deployed as an on-demand event"
                       >
-                        Select All Teams
+                        Default
                       </mat-checkbox>
-                      <mat-form-field id="teamSelect" style="width: 600px">
-                        <mat-label>Teams with Access</mat-label>
-                        <mat-select multiple [(ngModel)]="teamsForFile" (selectionChange)="onTeamsForFileChange()">
-                          @for (teamWrapper of teams; track teamWrapper.team.id) {
-                            <mat-option [value]="teamWrapper.team.id">{{
-                              teamWrapper.team.name
-                            }}</mat-option>
-                          }
-                        </mat-select>
-                      </mat-form-field>
                     </div>
-                    @if (teamsForFile.length === 0) {
-                      <div class="team-warning">
-                        At least one team must be selected
+                    <div class="d-flex justify-content-center">
+                      <div class="d-flex flex-column align-items-center">
+                        <button
+                          mat-button
+                          (click)="openUsersDialog(teamContainer.team)"
+                        >
+                          <span
+                            class="d-inline-block"
+                            matBadge="{{ teamContainer.users.length }}"
+                            matBadgePosition="above after"
+                            matBadgeColor="accent"
+                          >
+                            <img
+                              class="left-icon"
+                              src="assets/img/SP_Icon_User.png"
+                              alt="Users"
+                            />
+                          </span>
+                        </button>
+                        <span>Users</span>
                       </div>
-                    }
+                    </div>
                   </div>
-                  @if (uploading) {
-                    <mat-progress-bar
-                      mode="determinate"
-                      [value]="uploadProgess"
-                      class="mb-3"
-                    ></mat-progress-bar>
+                </div>
+                <div class="team-applications-column">
+                  <app-team-applications-select
+                    [view]="view"
+                    [team]="teamContainer.team"
+                  />
+                </div>
+              </div>
+              <div>
+                <div class="delete-button d-flex justify-content-end">
+                  <button
+                    mat-stroked-button
+                    (click)="deleteTeam(teamContainer.team)"
+                  >
+                    Delete Team
+                  </button>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      }
+      @if (isLoadingTeams) {
+        <mat-card
+          appearance="outlined"
+          class="d-flex justify-content-center align-items-center"
+        >
+          <mat-progress-spinner color="primary" mode="indeterminate" />
+        </mat-card>
+      }
+    </mat-step>
+    <mat-step label="Files">
+      <mat-accordion>
+        <input
+          hidden
+          (change)="selectFile($event.target.files)"
+          #fileInput
+          type="file"
+        />
+        <div class="top-button d-flex justify-content-end">
+          <button mat-stroked-button (click)="fileInput.click()">
+            Add New File
+          </button>
+        </div>
+        @if (staged.length !== 0) {
+          <mat-expansion-panel [expanded]="true">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <div class="d-flex align-items-center">
+                  <img
+                    height="25"
+                    src="assets/img/SP_Icon_Intel.png"
+                    alt="File"
+                  />{{ staged[0].file.name }}
+                </div>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div>
+              <div class="d-flex flex-column align-items-center">
+                <div class="d-flex align-items-center">
+                  <mat-checkbox
+                    color="primary"
+                    [(ngModel)]="selectAllTeamsForFile"
+                    (change)="toggleAllTeamsForFile($event.checked)"
+                    class="me-3"
+                  >
+                    Select All Teams
+                  </mat-checkbox>
+                  <mat-form-field id="teamSelect" style="width: 600px">
+                    <mat-label>Teams with Access</mat-label>
+                    <mat-select
+                      multiple
+                      [(ngModel)]="teamsForFile"
+                      (selectionChange)="onTeamsForFileChange()"
+                    >
+                      @for (teamWrapper of teams; track teamWrapper.team.id) {
+                        <mat-option [value]="teamWrapper.team.id">{{
+                          teamWrapper.team.name
+                        }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                @if (teamsForFile.length === 0) {
+                  <div class="team-warning">
+                    At least one team must be selected
+                  </div>
+                }
+              </div>
+              @if (uploading) {
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="uploadProgess"
+                  class="mb-3"
+                />
               }
               <div class="delete-button d-flex justify-content-end">
                 <button mat-stroked-button (click)="removeFile(staged[0])">
@@ -463,7 +464,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <mat-icon
                     style="transform: scale(0.85)"
                     svgIcon="ic_get_app"
-                  ></mat-icon>
+                  />
                 </button>
                 <button
                   mat-stroked-button
@@ -474,7 +475,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <mat-icon
                     style="transform: scale(0.85)"
                     svgIcon="ic_delete"
-                  ></mat-icon>
+                  />
                 </button>
                 <button
                   mat-stroked-button
@@ -485,7 +486,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <mat-icon
                     style="transform: scale(0.85)"
                     svgIcon="ic_clipboard_copy"
-                  ></mat-icon>
+                  />
                 </button>
                 <button
                   mat-stroked-button
@@ -495,10 +496,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   title="Edit"
                 >
                   Edit Name
-                  <mat-icon
-                    style="transform: scale(0.85)"
-                    svgIcon="ic_edit"
-                  ></mat-icon>
+                  <mat-icon style="transform: scale(0.85)" svgIcon="ic_edit" />
                 </button>
                 @if (!appNames.includes(viewFile.name)) {
                   <button
@@ -507,10 +505,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                     title="Add as Application"
                   >
                     Add as App
-                    <mat-icon
-                      style="transform: scale(0.85)"
-                      svgIcon="ic_add"
-                    ></mat-icon>
+                    <mat-icon style="transform: scale(0.85)" svgIcon="ic_add" />
                   </button>
                 }
               </div>

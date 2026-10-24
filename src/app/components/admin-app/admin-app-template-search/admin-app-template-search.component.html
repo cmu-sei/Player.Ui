@@ -35,7 +35,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <mat-icon
               style="transform: scale(0.85)"
               svgIcon="ic_cancel_circle"
-            ></mat-icon>
+            />
           </button>
         }
       </mat-form-field>
@@ -47,7 +47,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Add a new Application Template"
         (click)="addAppTemplate()"
       >
-        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
       </button>
       <button
         mat-icon-button
@@ -55,7 +55,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Import Application Templates"
         (click)="openDialog(importDialog)"
       >
-        <mat-icon fontIcon="mdi-file-import" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-file-import" class="mdi-24px" />
       </button>
       <button
         mat-icon-button
@@ -66,7 +66,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         "
         (click)="openDialog(exportDialog)"
       >
-        <mat-icon fontIcon="mdi-file-export" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-file-export" class="mdi-24px" />
       </button>
     </div>
   </div>
@@ -78,16 +78,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (change)="$event ? toggleAllRows() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
-        >
-        </mat-checkbox>
+        />
       </mat-header-cell>
       <mat-cell *matCellDef="let row">
         <mat-checkbox
           (click)="$event.stopPropagation()"
           (change)="$event ? selection.toggle(row.id) : null"
           [checked]="selection.isSelected(row.id)"
-        >
-        </mat-checkbox>
+        />
       </mat-cell>
     </ng-container>
 
@@ -124,14 +122,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <app-admin-template-details
               (refresh)="refresh($event)"
               [appTemplate]="element"
-            ></app-admin-template-details>
+            />
           </mat-expansion-panel>
         </div>
       </mat-cell>
     </ng-container>
 
-    <mat-header-row *matHeaderRowDef="appTemplateColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: appTemplateColumns"></mat-row>
+    <mat-header-row *matHeaderRowDef="appTemplateColumns" />
+    <mat-row *matRowDef="let row; columns: appTemplateColumns" />
   </mat-table>
   @if (appTemplateDataSource.filteredData.length === 0) {
     <div>No Application Templates found</div>
@@ -142,19 +140,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     [pageSizeOptions]="[10, 20, 30]"
     [showFirstLastButtons]="true"
     (page)="pageEvent = $event"
-  >
-  </mat-paginator>
+  />
 </div>
 
 <ng-template #exportDialog>
   <app-admin-app-template-export
     [ids]="selection.selected"
     (complete)="closeDialog()"
-  ></app-admin-app-template-export>
+  />
 </ng-template>
 
 <ng-template #importDialog>
-  <app-admin-app-template-import
-    (complete)="importComplete()"
-  ></app-admin-app-template-import>
+  <app-admin-app-template-import (complete)="importComplete()" />
 </ng-template>

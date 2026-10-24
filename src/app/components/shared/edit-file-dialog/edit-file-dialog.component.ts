@@ -8,18 +8,41 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { FileService } from '../../../generated/player-api';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+} from '@cmusei/crucible-common';
+import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
 
 @Component({
-    selector: 'app-edit-file',
-    templateUrl: './edit-file-dialog.component.html',
-    styleUrls: ['./edit-file-dialog.component.scss'],
-    standalone: false
+  selector: 'app-edit-file',
+  templateUrl: './edit-file-dialog.component.html',
+  styleUrls: ['./edit-file-dialog.component.scss'],
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatInput,
+  ],
 })
 export class EditFileDialogComponent implements OnInit {
+  private fileService = inject(FileService);
+  private formBuilder = inject(UntypedFormBuilder);
+  private dialogRef =
+    inject<MatDialogRef<EditFileDialogComponent>>(MatDialogRef);
+
   form: UntypedFormGroup;
 
   @Input() fileId: string;
@@ -28,12 +51,6 @@ export class EditFileDialogComponent implements OnInit {
   @Input() oldTeams: string[];
 
   extension: string;
-
-  constructor(
-    private fileService: FileService,
-    private formBuilder: UntypedFormBuilder,
-    private dialogRef: MatDialogRef<EditFileDialogComponent>
-  ) {}
 
   ngOnInit(): void {
     const nameSplit = this.oldName.split('.');
@@ -62,8 +79,7 @@ export class EditFileDialogComponent implements OnInit {
       },
       (err) => {
         console.log('Error updating file: ' + err);
-      }
+      },
     );
   }
-
 }

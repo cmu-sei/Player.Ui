@@ -20,11 +20,11 @@ to use this component, add one of the following lines to the html of your edit p
     <mat-label>Role</mat-label>
     <mat-select
       [value]="subject.roleId ?? ''"
-      [disabled]="!canEdit"
+      [disabled]="!canEdit()"
       name="userRole"
       (selectionChange)="updateRole($event.value)"
     >
-      @if (user) {
+      @if (user()) {
         <mat-option value="">None</mat-option>
       }
       @for (role of roles ?? []; track role.id) {
@@ -89,7 +89,7 @@ to use this component, add one of the following lines to the html of your edit p
           aria-label="Scoped Teams help"
           (click)="$event.stopPropagation()"
         >
-          <mat-icon fontIcon="mdi-information-outline"></mat-icon>
+          <mat-icon fontIcon="mdi-information-outline" />
         </button>
         <mat-select
           [(ngModel)]="selectedScopedTeams"

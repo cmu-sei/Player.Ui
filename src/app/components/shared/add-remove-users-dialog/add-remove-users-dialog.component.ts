@@ -1,11 +1,29 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ElementRef,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { PageEvent, MatPaginator } from '@angular/material/paginator';
-import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import {
   User,
   UserService,
@@ -21,7 +39,29 @@ import { forkJoin, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
-import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  CrucibleDialogService,
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
+import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
+import {
+  MatFormField,
+  MatLabel,
+  MatPrefix,
+  MatInput,
+  MatSuffix,
+} from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatChipSet, MatChip } from '@angular/material/chips';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -29,16 +69,60 @@ export class TeamUser {
     public name: string,
     public user: User,
     public teamMembership: TeamMembership,
-  ) { }
+  ) {}
 }
 
 @Component({
   selector: 'app-add-remove-users-dialog',
   templateUrl: './add-remove-users-dialog.component.html',
   styleUrls: ['./add-remove-users-dialog.component.scss'],
-  standalone: false,
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    MatToolbar,
+    MatToolbarRow,
+    MatIcon,
+    MatFormField,
+    MatLabel,
+    MatPrefix,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    MatChipSet,
+    MatChip,
+    MatTooltip,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatCard,
+    MatProgressSpinner,
+    MatPaginator,
+    MatButton,
+    MatSelect,
+    MatOption,
+    CrucibleDialogActionsDirective,
+  ],
 })
 export class AddRemoveUsersDialogComponent implements OnInit {
+  private dialogRef =
+    inject<MatDialogRef<AddRemoveUsersDialogComponent>>(MatDialogRef);
+  userService = inject(UserService);
+  teamService = inject(TeamService);
+  teamMembershipService = inject(TeamMembershipService);
+  roleService = inject(TeamRolesService);
+  private confirmService = inject(CrucibleDialogService);
+  private loggedInUserService = inject(LoggedInUserService);
+
   public title: string;
   public team: Team;
 
@@ -71,20 +155,12 @@ export class AddRemoveUsersDialogComponent implements OnInit {
   // before they remove themselves from the team.
   public currentUserId: string;
 
-  @ViewChild('searchBox') searchBox: ElementRef<HTMLInputElement>;
-  @ViewChild('paginator', { static: true }) paginator: MatPaginator;
-  @ViewChild('teamPaginator', { static: true }) teamPaginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
+  readonly searchBox = viewChild<ElementRef<HTMLInputElement>>('searchBox');
+  readonly paginator = viewChild<MatPaginator>('paginator');
+  readonly teamPaginator = viewChild<MatPaginator>('teamPaginator');
+  readonly sort = viewChild(MatSort);
 
-  constructor(
-    private dialogRef: MatDialogRef<AddRemoveUsersDialogComponent>,
-    public userService: UserService,
-    public teamService: TeamService,
-    public teamMembershipService: TeamMembershipService,
-    public roleService: TeamRolesService,
-    private confirmService: CrucibleDialogService,
-    private loggedInUserService: LoggedInUserService,
-  ) {
+  constructor() {
     this.isLoading = false;
     this.isBusy = false;
     this.filterString = '';
@@ -98,13 +174,13 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     this.currentUserId = this.loggedInUserService.loggedInUser$.value?.profile
       ?.sub as string;
 
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
-    this.userDataSource.sort = this.sort;
-    this.userDataSource.paginator = this.paginator;
+    this.sort().sort(<MatSortable>{ id: 'name', start: 'asc' });
+    this.userDataSource.sort = this.sort();
+    this.userDataSource.paginator = this.paginator();
 
     // The team users list is a separate data source with its own paginator
     // and search. Match by user name/id since TeamUser nests the user object.
-    this.teamUserDataSource.paginator = this.teamPaginator;
+    this.teamUserDataSource.paginator = this.teamPaginator();
     this.teamUserDataSource.filterPredicate = (
       data: TeamUser,
       filter: string,
@@ -329,7 +405,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
       allUsers.splice(i, 1);
     }
     this.userDataSource.data = allUsers;
-    this.searchBox.nativeElement.focus();
+    this.searchBox().nativeElement.focus();
     this.isBusy = false;
   }
 
@@ -396,7 +472,7 @@ export class AddRemoveUsersDialogComponent implements OnInit {
         const allUsers = this.userDataSource.data.slice(0);
         allUsers.push(tuser.user);
         this.userDataSource.data = allUsers;
-        this.searchBox.nativeElement.focus();
+        this.searchBox().nativeElement.focus();
         this.isBusy = false;
       },
       error: (err) => {
@@ -412,9 +488,9 @@ export class AddRemoveUsersDialogComponent implements OnInit {
     }
     console.log(
       'Update Team Membership: ' +
-      teamUser.name +
-      '   role: ' +
-      teamUser.teamMembership.roleId,
+        teamUser.name +
+        '   role: ' +
+        teamUser.teamMembership.roleId,
     );
 
     this.teamMembershipService

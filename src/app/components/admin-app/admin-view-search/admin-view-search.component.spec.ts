@@ -4,11 +4,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   Component,
-  EventEmitter,
   forwardRef,
   getDebugNode,
-  Input,
-  Output,
+  input,
+  output,
 } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -50,6 +49,8 @@ import {
   captureUnhandledRxErrors,
   flush,
 } from '../../../test-utils/unhandled-rx-errors';
+import { AdminAppViewExportComponent } from '../admin-app-view-export/admin-app-view-export.component';
+import { AdminAppViewImportComponent } from '../admin-app-view-import/admin-app-view-import.component';
 
 const training: View = {
   id: 'view-1',
@@ -85,7 +86,7 @@ class AdminViewEditStubComponent implements Pick<
   | 'setView'
   | 'updateViewTeams'
 > {
-  @Output() editComplete = new EventEmitter<string>();
+  readonly editComplete = output<string>();
   resetStepper = vi.fn();
   updateView = vi.fn();
   updateApplicationTemplates = vi.fn();
@@ -95,13 +96,13 @@ class AdminViewEditStubComponent implements Pick<
 
 @Component({ selector: 'app-admin-app-view-export', template: '' })
 class ViewExportStubComponent {
-  @Input() ids!: string[];
-  @Output() complete = new EventEmitter<boolean>();
+  readonly ids = input.required<string[]>();
+  readonly complete = output<boolean>();
 }
 
 @Component({ selector: 'app-admin-app-view-import', template: '' })
 class ViewImportStubComponent {
-  @Output() complete = new EventEmitter<boolean>();
+  readonly complete = output<boolean>();
 }
 
 /** The header button whose matTooltip carries the message. */
@@ -166,7 +167,11 @@ async function renderAdminViewSearch(
   };
 
   const result = await renderComponent(AdminViewSearchComponent, {
-    declarations: [AdminViewSearchComponent],
+    childStubs: [
+      { replace: AdminViewEditComponent, with: AdminViewEditStubComponent },
+      { replace: AdminAppViewExportComponent, with: ViewExportStubComponent },
+      { replace: AdminAppViewImportComponent, with: ViewImportStubComponent },
+    ],
     imports: [
       MatCardModule,
       MatFormFieldModule,
@@ -182,9 +187,6 @@ async function renderAdminViewSearch(
       MatBadgeModule,
       MatDialogModule,
       ClipboardModule,
-      AdminViewEditStubComponent,
-      ViewExportStubComponent,
-      ViewImportStubComponent,
     ],
     providers: [
       ...permissionDataProviders({ system: permissions }),
@@ -412,7 +414,7 @@ describe('AdminViewSearchComponent', () => {
     const dialog = dialogStub<ViewExportStubComponent>(
       'app-admin-app-view-export',
     );
-    expect([...dialog.ids].sort()).toEqual(['view-1', 'view-2']);
+    expect([...dialog.ids()].sort()).toEqual(['view-1', 'view-2']);
     dialog.complete.emit(true);
     await fixture.whenStable();
     expect(document.querySelector('app-admin-app-view-export')).toBeNull();

@@ -5,19 +5,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <div class="top-button d-flex justify-content-end">
   @if (viewApplications != null && viewApplications.length > 0) {
-    <button
-      mat-stroked-button
-      [matMenuTriggerFor]="teamAppsMenu"
-      >
+    <button mat-stroked-button [matMenuTriggerFor]="teamAppsMenu">
       Add Application
     </button>
   }
   <mat-menu #teamAppsMenu="matMenu">
     @for (a of viewApplications; track a) {
-      <button
-        mat-menu-item
-        (click)="addViewAppToTeam(a)"
-        >
+      <button mat-menu-item (click)="addViewAppToTeam(a)">
         {{ getAppName(a) }}
       </button>
     }
@@ -28,7 +22,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-expansion-panel
       [expanded]="currentApp !== undefined && app.id === currentApp.id"
       (opened)="currentApp = app"
-      >
+    >
       <mat-expansion-panel-header>
         <mat-panel-title>
           <div class="d-flex align-items-center">
@@ -36,7 +30,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               class="app-icon"
               src="{{ app.icon }}"
               alt="{{ getAppName(app) }} Icon"
-              />
+            />
             {{ getAppName(app) }}
           </div>
         </mat-panel-title>
@@ -46,9 +40,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <div class="wrap">
             <b>{{ app.url }}</b>
           </div>
-          <mat-divider></mat-divider>
+          <mat-divider />
           Embeddable: <b>{{ app.embeddable }}</b>
-          <mat-divider></mat-divider>
+          <mat-divider />
           Load In Background: <b>{{ app.loadInBackground }}</b>
         </div>
       </div>
@@ -63,16 +57,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               aria-label="Move Up"
               title="Move Up"
               (click)="moveAppUp(app.id)"
-              >
+            >
               <mat-icon
                 svgIcon="ic_expand_more_black_24px"
                 style="transform: rotate(180deg)"
-              ></mat-icon>
+              />
             </button>
           }
-          @if ({
-            disabled: app.displayOrder >= applications.length - 1
-            }; as moveDown) {
+          @if (
+            {
+              disabled: app.displayOrder >= applications.length - 1,
+            };
+            as moveDown
+          ) {
             <button
               [disabled]="moveDown.disabled"
               [ngClass]="moveDown.disabled ? 'disabled-button' : null"
@@ -80,15 +77,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               mat-icon-button
               aria-label="Move Down"
               (click)="moveAppDown(app.id)"
-              >
-              <mat-icon svgIcon="ic_expand_more_black_24px"></mat-icon>
+            >
+              <mat-icon svgIcon="ic_expand_more_black_24px" />
             </button>
           }
         </div>
         <button
           mat-stroked-button
           (click)="removeApplicationInstanceFromTeam(app)"
-          >
+        >
           Remove Application
         </button>
       </div>

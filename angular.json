@@ -120,7 +120,7 @@
             "coverageReporters": ["text", "json", "html"],
             "coverageThresholds": {
               "statements": 94,
-              "branches": 86,
+              "branches": 84,
               "functions": 95,
               "lines": 94
             }

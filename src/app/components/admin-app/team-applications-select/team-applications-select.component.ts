@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import {
   Team,
   ApplicationService,
@@ -11,6 +11,17 @@ import {
   ApplicationTemplate,
 } from '../../../generated/player-api';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { MatDivider } from '@angular/material/list';
+import { NgClass } from '@angular/common';
+import { MatIcon } from '@angular/material/icon';
 
 export enum ObjectType {
   Unknown,
@@ -22,11 +33,27 @@ export enum ObjectType {
   selector: 'app-team-applications-select',
   templateUrl: './team-applications-select.component.html',
   styleUrls: ['./team-applications-select.component.scss'],
-  standalone: false,
+  imports: [
+    MatButton,
+    MatMenuTrigger,
+    MatMenu,
+    MatMenuItem,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatDivider,
+    MatIconButton,
+    NgClass,
+    MatIcon,
+  ],
 })
 export class TeamApplicationsSelectComponent implements OnInit {
-  @Input() team: Team;
-  @Input() view: View;
+  applicationService = inject(ApplicationService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
+  readonly team = input<Team>(undefined);
+  readonly view = input<View>(undefined);
 
   public viewApplications: Array<Application>;
   public applications: Array<ApplicationInstance>;
@@ -37,16 +64,12 @@ export class TeamApplicationsSelectComponent implements OnInit {
   public subject: any;
   public currentApp: Application;
 
-  constructor(
-    public applicationService: ApplicationService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
-
   /**
    * Initialization
    */
   ngOnInit() {
-    if (!this.team) {
+    const team = this.team();
+    if (!team) {
       // a team must be provided or will not be functional
       console.log(
         'The applications select component requires a team, therefore will be non-functional.',
@@ -54,7 +77,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
       return;
     } else {
       this.subjectType = ObjectType.Team;
-      this.subject = this.team;
+      this.subject = team;
       this.refreshTeamApplications();
     }
   }
@@ -64,7 +87,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
    */
   refreshViewAppsAvailable(): void {
     this.applicationService
-      .getViewApplications(this.view.id)
+      .getViewApplications(this.view().id)
       .subscribe((apps) => {
         this.viewApplications = new Array<Application>();
         apps.forEach((app) => {
@@ -87,7 +110,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
    */
   refreshTeamApplications(): void {
     this.applicationService
-      .getTeamApplicationInstances(this.team.id)
+      .getTeamApplicationInstances(this.team().id)
       .subscribe((appInsts) => {
         this.applications = appInsts;
         this.refreshViewAppsAvailable();
@@ -100,8 +123,8 @@ export class TeamApplicationsSelectComponent implements OnInit {
    */
   addViewAppToTeam(app: Application): void {
     this.applicationService
-      .createApplicationInstance(this.team.id, {
-        teamId: this.team.id,
+      .createApplicationInstance(this.team().id, {
+        teamId: this.team().id,
         applicationId: app.id,
         displayOrder: this.applications.length,
       })
@@ -134,7 +157,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
           'Are you sure that you want to remove application ' +
           app.name +
           ' from team ' +
-          this.team.name +
+          this.team().name +
           '?',
         confirmText: 'Remove',
         cancelText: 'Cancel',
@@ -152,7 +175,7 @@ export class TeamApplicationsSelectComponent implements OnInit {
                 if (a.displayOrder !== index) {
                   this.applicationService
                     .updateApplicationInstance(a.id, {
-                      teamId: this.team.id,
+                      teamId: this.team().id,
                       applicationId: a.applicationId,
                       displayOrder: index,
                     })

@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import {
@@ -17,18 +17,16 @@ import {
   providedIn: 'root',
 })
 export class UserPermissionsService {
+  private permissionsApi = inject(PermissionService);
+  private teamPermissionsApi = inject(TeamPermissionService);
+
   private permissionsSubject = new BehaviorSubject<string[]>([]);
   public permissions$ = this.permissionsSubject.asObservable();
 
   private teamPermissionsSubject = new BehaviorSubject<TeamPermissionsClaim[]>(
-    []
+    [],
   );
   public teamPermissions$ = this.teamPermissionsSubject.asObservable();
-
-  constructor(
-    private permissionsApi: PermissionService,
-    private teamPermissionsApi: TeamPermissionService
-  ) {}
 
   load(): Observable<string[]> {
     return this.permissionsApi
@@ -39,7 +37,7 @@ export class UserPermissionsService {
   canViewAdminstration() {
     return this.permissions$.pipe(
       map((x) => x.filter((y) => y.startsWith('View'))),
-      map((x) => x.length > 0)
+      map((x) => x.length > 0),
     );
   }
 
@@ -50,7 +48,7 @@ export class UserPermissionsService {
   loadTeamPermissions(
     viewId?: string,
     teamId?: string,
-    includeAllViewTeams?: boolean
+    includeAllViewTeams?: boolean,
   ) {
     return this.teamPermissionsApi
       .getMyTeamPermissions(viewId, teamId, includeAllViewTeams)
@@ -61,7 +59,7 @@ export class UserPermissionsService {
   // claims enumerate every team the user can manage in the view — whether reached
   // via direct membership or a cross-team permission scope.
   public manageableTeamIds$ = this.teamPermissions$.pipe(
-    map((claims) => this.getManageableTeamIds(claims))
+    map((claims) => this.getManageableTeamIds(claims)),
   );
 
   // Pure helper: team ids from the given claims that include the ManageTeam
@@ -71,8 +69,8 @@ export class UserPermissionsService {
     return claims
       .filter((claim) =>
         this.toTeamPermissions(claim.permissionValues ?? []).includes(
-          TeamPermission.ManageTeam
-        )
+          TeamPermission.ManageTeam,
+        ),
       )
       .map((claim) => claim.teamId)
       .filter((teamId): teamId is string => teamId != null);
@@ -80,14 +78,14 @@ export class UserPermissionsService {
 
   // True when the user can manage at least one team.
   public canManageAnyTeam$ = this.manageableTeamIds$.pipe(
-    map((ids) => ids.length > 0)
+    map((ids) => ids.length > 0),
   );
 
   can(
     permission: SystemPermission,
     teamId?: string,
     teamPermission?: TeamPermission,
-    viewPermission?: ViewPermission
+    viewPermission?: ViewPermission,
   ) {
     return combineLatest([this.permissions$, this.teamPermissions$]).pipe(
       map(([permissions, teamPermissionClaims]) => {
@@ -99,18 +97,18 @@ export class UserPermissionsService {
 
           if (teamId != null) {
             const teamPermissionClaim = teamPermissionClaims.find(
-              (x) => x.teamId == teamId
+              (x) => x.teamId == teamId,
             );
 
             teamPermissions = this.toTeamPermissions(
-              teamPermissionClaim.permissionValues
+              teamPermissionClaim.permissionValues,
             );
             viewPermissions = this.toViewPermissions(
-              teamPermissionClaim.permissionValues
+              teamPermissionClaim.permissionValues,
             );
           } else {
             const permissions = teamPermissionClaims.flatMap(
-              (x) => x.permissionValues
+              (x) => x.permissionValues,
             );
 
             teamPermissions = this.toTeamPermissions(permissions);
@@ -127,19 +125,19 @@ export class UserPermissionsService {
         }
 
         return false;
-      })
+      }),
     );
   }
 
   private toTeamPermissions(permissions: string[]): TeamPermission[] {
     return permissions.filter((permission): permission is TeamPermission =>
-      Object.values(TeamPermission).includes(permission as TeamPermission)
+      Object.values(TeamPermission).includes(permission as TeamPermission),
     );
   }
 
   private toViewPermissions(permissions: string[]): ViewPermission[] {
     return permissions.filter((permission): permission is ViewPermission =>
-      Object.values(ViewPermission).includes(permission as ViewPermission)
+      Object.values(ViewPermission).includes(permission as ViewPermission),
     );
   }
 }

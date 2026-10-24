@@ -3,31 +3,51 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, Input, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
+import { Component, Input, OnInit, inject } from '@angular/core';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { take } from 'rxjs/operators';
 import { ApplicationService, FileModel } from '../../../generated/player-api';
 import { TeamUserApp } from '../../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+} from '@cmusei/crucible-common';
+import { MatFormField, MatLabel } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-create-application-dialog',
   templateUrl: './create-application-dialog.component.html',
   styleUrls: ['./create-application-dialog.component.scss'],
-  standalone: false,
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
+  ],
 })
 export class CreateApplicationDialogComponent implements OnInit {
+  formBuilder = inject(UntypedFormBuilder);
+  private applicationService = inject(ApplicationService);
+  private dialogRef =
+    inject<MatDialogRef<CreateApplicationDialogComponent>>(MatDialogRef);
+
   @Input() applicationId: string;
   @Input() file: FileModel;
   @Input() currentTeams: TeamUserApp[];
 
   form: UntypedFormGroup;
-
-  constructor(
-    public formBuilder: UntypedFormBuilder,
-    private applicationService: ApplicationService,
-    private dialogRef: MatDialogRef<CreateApplicationDialogComponent>,
-  ) {}
 
   ngOnInit(): void {
     this.form = this.formBuilder.group({

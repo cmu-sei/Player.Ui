@@ -1,10 +1,28 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import {
   SystemPermission,
   UserDirectoryEntry,
@@ -14,6 +32,15 @@ import {
 import { RolesService } from '../../../services/roles/roles.service';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatIcon } from '@angular/material/icon';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton } from '@angular/material/button';
+import { ClipboardModule } from 'ngx-clipboard';
+import { RolesPermissionsSelectComponent } from '../roles-permissions-select/roles-permissions-select.component';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { AsyncPipe } from '@angular/common';
 
 export interface Action {
   Value: string;
@@ -30,9 +57,39 @@ interface UserAttributeColumn {
   selector: 'app-admin-user-search',
   templateUrl: './admin-user-search.component.html',
   styleUrls: ['./admin-user-search.component.scss'],
-  standalone: false,
+  imports: [
+    MatIcon,
+    MatFormField,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatPaginator,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatSortHeader,
+    MatCellDef,
+    MatCell,
+    ClipboardModule,
+    RolesPermissionsSelectComponent,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatCard,
+    MatProgressSpinner,
+    AsyncPipe,
+  ],
 })
 export class AdminUserSearchComponent implements OnInit, AfterViewInit {
+  private userService = inject(UserService);
+  private rolesService = inject(RolesService);
+  private userPermissionsService = inject(UserPermissionsService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
   public displayedColumns: string[] = ['id', 'name', 'role'];
   public attributeColumns: UserAttributeColumn[] = [];
   public filterString = '';
@@ -45,21 +102,14 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
     SystemPermission.ManageUsers,
   );
 
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
-
-  constructor(
-    private userService: UserService,
-    private rolesService: RolesService,
-    private userPermissionsService: UserPermissionsService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
+  readonly paginator = viewChild(MatPaginator);
+  readonly sort = viewChild(MatSort);
 
   /**
    * Initialization
    */
   ngOnInit() {
-    this.userDataSource.sort = this.sort;
+    this.userDataSource.sort = this.sort();
     this.userDataSource.sortingDataAccessor = (user, columnId) =>
       this.getColumnValue(user, columnId);
     this.userDataSource.filterPredicate = (user, filter) =>
@@ -78,7 +128,7 @@ export class AdminUserSearchComponent implements OnInit, AfterViewInit {
    * Called after the components initialized
    */
   ngAfterViewInit() {
-    this.userDataSource.paginator = this.paginator;
+    this.userDataSource.paginator = this.paginator();
   }
 
   /**

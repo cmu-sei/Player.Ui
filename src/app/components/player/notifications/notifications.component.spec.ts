@@ -166,7 +166,7 @@ async function renderNotifications(
   const { renderOptions, ...stubs } = notificationStubs(overrides);
   const rendered = await renderComponent(NotificationsComponent, {
     ...renderOptions,
-    componentProperties: {
+    inputs: {
       viewGuid: 'v1',
       teamGuid: 't1',
       userGuid: 'u1',
@@ -188,7 +188,7 @@ async function renderAsOnPush(
   const { renderOptions, ...stubs } = notificationStubs(overrides);
   const rendered = await renderComponent(NotificationsComponent, {
     ...renderOptions,
-    componentProperties: {
+    inputs: {
       viewGuid: 'v1',
       teamGuid: 't1',
       userGuid: 'u1',
