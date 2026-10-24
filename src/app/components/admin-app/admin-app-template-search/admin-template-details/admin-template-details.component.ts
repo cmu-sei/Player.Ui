@@ -1,27 +1,36 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, inject, output } from '@angular/core';
 import {
   ApplicationTemplate,
   ApplicationService,
 } from '../../../../generated/player-api';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-admin-template-details',
   templateUrl: './admin-template-details.component.html',
   styleUrls: ['./admin-template-details.component.scss'],
-  standalone: false,
+  imports: [
+    MatFormField,
+    MatLabel,
+    MatInput,
+    FormsModule,
+    MatCheckbox,
+    MatButton,
+  ],
 })
 export class AdminTemplateDetailsComponent {
-  @Input() appTemplate: ApplicationTemplate;
-  @Output() refresh = new EventEmitter<boolean>();
+  applicationService = inject(ApplicationService);
+  private confirmDialogService = inject(CrucibleDialogService);
 
-  constructor(
-    public applicationService: ApplicationService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
+  @Input() appTemplate: ApplicationTemplate;
+  readonly refresh = output<boolean>();
 
   /**
    * Edit an application template

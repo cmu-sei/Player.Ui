@@ -4,9 +4,21 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import { map, take } from 'rxjs/operators';
-import { MatCheckboxChange } from '@angular/material/checkbox';
+import { MatCheckboxChange, MatCheckbox } from '@angular/material/checkbox';
 import { forkJoin } from 'rxjs';
 import { RolesService } from '../../../../services/roles/roles.service';
 import { DialogService } from '../../../../services/dialog/dialog.service';
@@ -18,12 +30,33 @@ import {
 import { UserPermissionsService } from '../../../../services/permissions/user-permissions.service';
 import { PermissionsService } from '../../../../services/permissions/permissions.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.component.html',
   styleUrls: ['./roles.component.scss'],
-  standalone: false,
+  imports: [
+    MatTable,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatIconButton,
+    MatTooltip,
+    MatIcon,
+    MatButton,
+    MatCellDef,
+    MatCell,
+    MatCheckbox,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    AsyncPipe,
+  ],
 })
 export class SystemRolesComponent implements OnInit, OnDestroy {
   private roleService = inject(RolesService);

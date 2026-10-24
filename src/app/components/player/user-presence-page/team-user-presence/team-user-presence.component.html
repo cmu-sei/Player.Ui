@@ -6,7 +6,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <cdk-virtual-scroll-viewport
   tvsItemSize="itemSize"
   headerHeight="headerSize"
-  [ngStyle]="{ height: tableHeight }"
+  [style.height]="tableHeight"
 >
   <mat-table [dataSource]="userDatasource" class="mat-elevation-z8">
     <!-- Name Column -->
@@ -29,7 +29,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-cell>
     </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    <mat-header-row *matHeaderRowDef="displayedColumns" />
+    <mat-row *matRowDef="let row; columns: displayedColumns" />
   </mat-table>
 </cdk-virtual-scroll-viewport>

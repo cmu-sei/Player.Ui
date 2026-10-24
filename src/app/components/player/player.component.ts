@@ -10,11 +10,17 @@ import {
   Component,
   OnDestroy,
   OnInit,
-  ViewChild,
+  inject,
+  viewChild,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
-import { Router } from '@angular/router';
+import {
+  MatDrawerMode,
+  MatSidenav,
+  MatSidenavContainer,
+  MatSidenavContent,
+} from '@angular/material/sidenav';
+import { Router, RouterLink } from '@angular/router';
 import {
   ComnAuthQuery,
   ComnSettingsService,
@@ -39,27 +45,68 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-import {
-  Team,
-  TeamMembershipService,
-  View,
-} from '../../generated/player-api';
+import { Team, TeamMembershipService, View } from '../../generated/player-api';
 import { ViewService } from '../../generated/player-api/api/view.service';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { SystemMessageService } from '../../services/system-message/system-message.service';
 import { ViewsService } from '../../services/views/views.service';
 import { AdminViewEditComponent } from '../admin-app/admin-view-search/admin-view-edit/admin-view-edit.component';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
+import {
+  ResizableDirective,
+  ResizeHandleDirective,
+} from 'angular-resizable-element';
+import { NgClass, NgStyle, AsyncPipe } from '@angular/common';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem, MatDivider } from '@angular/material/list';
+import { ApplicationListComponent } from './application-list/application-list.component';
+import { MatIconButton } from '@angular/material/button';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FocusedAppComponent } from './focused-app/focused-app.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 @Component({
   selector: 'app-player',
   templateUrl: './player.component.html',
   styleUrls: ['./player.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false,
+  imports: [
+    MatSidenavContainer,
+    MatSidenav,
+    ResizableDirective,
+    NgClass,
+    NgStyle,
+    MatToolbar,
+    RouterLink,
+    MatIcon,
+    MatList,
+    MatListItem,
+    MatDivider,
+    ApplicationListComponent,
+    MatIconButton,
+    ResizeHandleDirective,
+    MatSidenavContent,
+    TopbarComponent,
+    FocusedAppComponent,
+    NotificationsComponent,
+    AsyncPipe,
+  ],
 })
 export class PlayerComponent implements OnInit, OnDestroy {
-  @ViewChild('sidenav') sidenav: MatSidenav;
+  private router = inject(Router);
+  private routerQuery = inject(RouterQuery);
+  private viewsService = inject(ViewsService);
+  private viewService = inject(ViewService);
+  private loggedInUserService = inject(LoggedInUserService);
+  private teamMembershipService = inject(TeamMembershipService);
+  private settingsService = inject(ComnSettingsService);
+  private dialog = inject(MatDialog);
+  private messageService = inject(SystemMessageService);
+  private authQuery = inject(ComnAuthQuery);
+  private permissionsService = inject(UserPermissionsService);
+
+  readonly sidenav = viewChild<MatSidenav>('sidenav');
 
   public data$: Observable<any>;
 
@@ -83,19 +130,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   public sidenavMode: MatDrawerMode = 'side';
   public autosizeSidenav = true;
 
-  constructor(
-    private router: Router,
-    private routerQuery: RouterQuery,
-    private viewsService: ViewsService,
-    private viewService: ViewService,
-    private loggedInUserService: LoggedInUserService,
-    private teamMembershipService: TeamMembershipService,
-    private settingsService: ComnSettingsService,
-    private dialog: MatDialog,
-    private messageService: SystemMessageService,
-    private authQuery: ComnAuthQuery,
-    private permissionsService: UserPermissionsService,
-  ) {
+  constructor() {
     this.theme$ = this.authQuery.userTheme$;
   }
 
@@ -108,7 +143,11 @@ export class PlayerComponent implements OnInit, OnDestroy {
           if (!data.team) {
             return EMPTY;
           }
-          return this.permissionsService.loadTeamPermissions(null, data.team.id, true);
+          return this.permissionsService.loadTeamPermissions(
+            null,
+            data.team.id,
+            true,
+          );
         }),
       )
       .subscribe();
@@ -273,7 +312,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   sidenavToggleFn() {
-    if (this.sidenav.opened) {
+    if (this.sidenav().opened) {
       if (this.miniSubject.getValue()) {
         this.miniSubject.next(false);
         this.openedSubject.next(false);
@@ -311,7 +350,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   resizingFn(event) {
     if (!this.miniSubject.getValue()) {
       this.autosizeSidenav = false;
-      this.sidenav.mode = 'push';
+      this.sidenav().mode = 'push';
       this.sidenavWidth = event.rectangle.width;
       this.setResizeStyle();
     }
@@ -342,7 +381,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   }
 
   setSidenavMode() {
-    this.sidenav.mode = this.sidenavMode;
+    this.sidenav().mode = this.sidenavMode;
   }
 
   updateUIState(width?: number, opened?: boolean, mini?: boolean) {

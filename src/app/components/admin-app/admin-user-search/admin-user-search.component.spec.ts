@@ -36,6 +36,7 @@ import {
   captureUnhandledRxErrors,
   flush,
 } from '../../../test-utils/unhandled-rx-errors';
+import { RolesPermissionsSelectComponent } from '../roles-permissions-select/roles-permissions-select.component';
 
 const mockUsers: UserDirectoryEntry[] = [
   {
@@ -94,7 +95,12 @@ async function renderAdminUserSearch(
   };
 
   const rendered = await renderComponent(AdminUserSearchComponent, {
-    declarations: [AdminUserSearchComponent],
+    childStubs: [
+      {
+        replace: RolesPermissionsSelectComponent,
+        with: RolesPermissionsSelectStubComponent,
+      },
+    ],
     imports: [
       MatCardModule,
       MatFormFieldModule,
@@ -106,7 +112,6 @@ async function renderAdminUserSearch(
       MatSortModule,
       MatPaginatorModule,
       ClipboardModule,
-      RolesPermissionsSelectStubComponent,
     ],
     providers: [
       {

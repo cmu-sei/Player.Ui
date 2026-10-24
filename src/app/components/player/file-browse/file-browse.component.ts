@@ -8,27 +8,28 @@ Carnegie Mellon(R) and CERT(R) are registered in the U.S. Patent and Trademark O
 DM20-0181
 */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FileService, Team, TeamService } from '../../../generated/player-api';
 import { FileModel } from '../../../generated/player-api/model/fileModel';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
-    selector: 'app-file-browse',
-    templateUrl: './file-browse.component.html',
-    styleUrls: ['./file-browse.component.scss'],
-    standalone: false
+  selector: 'app-file-browse',
+  templateUrl: './file-browse.component.html',
+  styleUrls: ['./file-browse.component.scss'],
+  imports: [MatButton, MatList, MatListItem, MatIconButton, MatIcon],
 })
 export class FileBrowseComponent implements OnInit {
+  private fileService = inject(FileService);
+  private teamService = inject(TeamService);
+  private route = inject(ActivatedRoute);
+
   public files = new Array<FileModel>();
   public teams = new Set<Team>();
   public currentTeam = '';
-
-  constructor(
-    private fileService: FileService,
-    private teamService: TeamService,
-    private route: ActivatedRoute
-  ) {}
 
   ngOnInit(): void {
     this.getFiles();
@@ -43,7 +44,7 @@ export class FileBrowseComponent implements OnInit {
       },
       (err) => {
         console.log('Error fetching files ' + err);
-      }
+      },
     );
     this.teamService.getMyViewTeams(viewId).subscribe(
       (data) => {
@@ -53,7 +54,7 @@ export class FileBrowseComponent implements OnInit {
       },
       (err) => {
         console.log('Error fetching teams ' + err);
-      }
+      },
     );
   }
 
@@ -76,7 +77,7 @@ export class FileBrowseComponent implements OnInit {
       },
       () => {
         console.log('Got a next value');
-      }
+      },
     );
   }
 

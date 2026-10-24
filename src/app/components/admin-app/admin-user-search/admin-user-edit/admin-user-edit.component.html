@@ -4,9 +4,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 @if (user != undefined) {
-  <div
-    class="user-container mat-elevation-z8 scroll-container"
-    >
+  <div class="user-container mat-elevation-z8 scroll-container">
     <div class="d-flex title">
       <div class="ms-4">
         <h4>Edit User {{ user.name }}</h4>
@@ -14,9 +12,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </div>
     <div class="d-flex">
       <div class="align-items-center">
-        <app-roles-permissions-select
-          [user]="user"
-        ></app-roles-permissions-select>
+        <app-roles-permissions-select [user]="user" />
       </div>
     </div>
     <div class="d-flex bottom-button">

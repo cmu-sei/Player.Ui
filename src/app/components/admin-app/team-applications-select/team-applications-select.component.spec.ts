@@ -90,7 +90,7 @@ async function renderSelect(
       MatButtonModule,
     ],
     declarations: [TeamApplicationsSelectComponent],
-    componentProperties: { team: t, view: v },
+    inputs: { team: t, view: v },
     providers: [
       {
         provide: ApplicationService,

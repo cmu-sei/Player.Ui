@@ -1,10 +1,28 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  TemplateRef,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
-import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
+import {
+  MatTableDataSource,
+  MatTable,
+  MatColumnDef,
+  MatHeaderCellDef,
+  MatHeaderCell,
+  MatCellDef,
+  MatCell,
+  MatHeaderRowDef,
+  MatHeaderRow,
+  MatRowDef,
+  MatRow,
+} from '@angular/material/table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { View, ViewService, ViewStatus } from '../../../generated/player-api';
 import { LoggedInUserService } from '../../../services/logged-in-user/logged-in-user.service';
@@ -13,6 +31,18 @@ import { map } from 'rxjs';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import { MatIcon } from '@angular/material/icon';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatBadge } from '@angular/material/badge';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { ClipboardModule } from 'ngx-clipboard';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { AdminAppViewExportComponent } from '../admin-app-view-export/admin-app-view-export.component';
+import { AdminAppViewImportComponent } from '../admin-app-view-import/admin-app-view-import.component';
 
 export interface Action {
   Value: string;
@@ -23,13 +53,49 @@ export interface Action {
   selector: 'app-admin-view-search',
   templateUrl: './admin-view-search.component.html',
   styleUrls: ['./admin-view-search.component.scss'],
-  standalone: false,
+  imports: [
+    AdminViewEditComponent,
+    MatIcon,
+    MatFormField,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatTooltip,
+    MatBadge,
+    MatTable,
+    MatSort,
+    MatColumnDef,
+    MatHeaderCellDef,
+    MatHeaderCell,
+    MatCheckbox,
+    MatCellDef,
+    MatCell,
+    MatSortHeader,
+    ClipboardModule,
+    MatButton,
+    MatHeaderRowDef,
+    MatHeaderRow,
+    MatRowDef,
+    MatRow,
+    MatPaginator,
+    MatCard,
+    MatProgressSpinner,
+    AdminAppViewExportComponent,
+    AdminAppViewImportComponent,
+  ],
 })
 export class AdminViewSearchComponent implements OnInit {
-  @ViewChild(AdminViewEditComponent, { static: true })
-  adminViewEditComponent: AdminViewEditComponent;
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
-  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  private viewService = inject(ViewService);
+  loggedInUserService = inject(LoggedInUserService);
+  private confirmDialogService = inject(CrucibleDialogService);
+  route = inject(ActivatedRoute);
+  router = inject(Router);
+  private dialog = inject(MatDialog);
+
+  readonly adminViewEditComponent = viewChild(AdminViewEditComponent);
+  readonly sort = viewChild(MatSort);
+  readonly paginator = viewChild(MatPaginator);
 
   public defaultPageSize = 10;
 
@@ -52,15 +118,6 @@ export class AdminViewSearchComponent implements OnInit {
   private dialogRef: MatDialogRef<any>;
   selection = new SelectionModel<string>(true, []);
 
-  constructor(
-    private viewService: ViewService,
-    public loggedInUserService: LoggedInUserService,
-    private confirmDialogService: CrucibleDialogService,
-    public route: ActivatedRoute,
-    public router: Router,
-    private dialog: MatDialog,
-  ) {}
-
   /**
    * Initialization
    */
@@ -69,9 +126,9 @@ export class AdminViewSearchComponent implements OnInit {
 
     // Initial datasource
     this.viewDataSource = new MatTableDataSource<View>(new Array<View>());
-    this.sort.sort(<MatSortable>{ id: 'name', start: 'asc' });
-    this.viewDataSource.sort = this.sort;
-    this.viewDataSource.paginator = this.paginator;
+    this.sort().sort(<MatSortable>{ id: 'name', start: 'asc' });
+    this.viewDataSource.sort = this.sort();
+    this.viewDataSource.paginator = this.paginator();
     this.showEditScreen = false;
     this.filterString = '';
 
@@ -95,16 +152,16 @@ export class AdminViewSearchComponent implements OnInit {
       case 'edit': {
         // Edit view
         this.viewService.getView(viewGuid).subscribe((view) => {
-          this.adminViewEditComponent.resetStepper();
+          this.adminViewEditComponent().resetStepper();
 
-          this.adminViewEditComponent.updateView();
-          this.adminViewEditComponent.updateApplicationTemplates();
+          this.adminViewEditComponent().updateView();
+          this.adminViewEditComponent().updateApplicationTemplates();
 
           // Get teams for the view now so user does not have to expand teams section before uploading files
           if (view) {
-            this.adminViewEditComponent.setView(view);
+            this.adminViewEditComponent().setView(view);
           }
-          this.adminViewEditComponent.updateViewTeams();
+          this.adminViewEditComponent().updateViewTeams();
 
           this.showEditScreen = true;
         });

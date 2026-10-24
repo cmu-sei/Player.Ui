@@ -1,7 +1,14 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, Input, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  signal,
+  inject,
+  input,
+} from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import {
   ComnSettingsService,
@@ -12,19 +19,60 @@ import { NotificationService } from '../../../services/notification/notification
 import { ViewService } from '../../../generated/player-api/api/view.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import {
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { NgClass, DatePipe } from '@angular/common';
+import { MatBadge } from '@angular/material/badge';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem } from '@angular/material/list';
+import { FormsModule } from '@angular/forms';
+import {
+  MatFormField,
+  MatInput,
+  MatHint,
+  MatSuffix,
+} from '@angular/material/input';
+import { MatButton } from '@angular/material/button';
+import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
 
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
-  standalone: false,
+  imports: [
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    NgClass,
+    MatExpansionPanelTitle,
+    MatBadge,
+    MatIcon,
+    MatList,
+    MatListItem,
+    FormsModule,
+    MatFormField,
+    MatInput,
+    MatHint,
+    MatButton,
+    MatSuffix,
+    DatePipe,
+    TimeZoneAbbrPipe,
+  ],
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
-  @Input() viewGuid: string;
-  @Input() teamGuid: string;
-  @Input() userGuid: string;
-  @Input() userToken: string;
-  @Input() userName: string;
+  private notificationService = inject(NotificationService);
+  private settingsService = inject(ComnSettingsService);
+  private confirmDialogService = inject(CrucibleDialogService);
+  private viewService = inject(ViewService);
+  private titleService = inject(Title);
+
+  readonly viewGuid = input<string>(undefined);
+  readonly teamGuid = input<string>(undefined);
+  readonly userGuid = input<string>(undefined);
+  readonly userToken = input<string>(undefined);
+  readonly userName = input<string>(undefined);
   public notification: NotificationDataStatus;
   public messageToSend: string;
   public userData: any;
@@ -41,13 +89,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public useBeep = false;
   private unsubscribe$: Subject<null> = new Subject<null>();
 
-  public constructor(
-    private notificationService: NotificationService,
-    private settingsService: ComnSettingsService,
-    private confirmDialogService: CrucibleDialogService,
-    private viewService: ViewService,
-    private titleService: Title,
-  ) {
+  public constructor() {
     this.useBadge =
       this.settingsService.settings.NotificationsSettings.useBadge;
     this.useBlink =
@@ -129,10 +171,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       });
 
     this.notificationService.connectToNotificationServer(
-      this.viewGuid,
-      this.teamGuid,
-      this.userGuid,
-      this.userToken,
+      this.viewGuid(),
+      this.teamGuid(),
+      this.userGuid(),
+      this.userToken(),
     );
   }
 
@@ -158,7 +200,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
               this.messageToSend = this.messageToSend.trim().substring(0, 225);
             }
             this.notificationService.sendNotification(
-              this.viewGuid,
+              this.viewGuid(),
               this.messageToSend,
             );
             this.messageToSend = '';
@@ -210,7 +252,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.viewService
-            .deleteNotification(this.viewGuid, notification.key)
+            .deleteNotification(this.viewGuid(), notification.key)
             .subscribe(() => {
               this.removeFromHistory(notification.key);
               this.setNewNotificationCount(0);
@@ -232,7 +274,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       .subscribe((confirmed) => {
         if (confirmed) {
           this.viewService
-            .deleteViewNotifications(this.viewGuid)
+            .deleteViewNotifications(this.viewGuid())
             .subscribe(() => {
               this.notificationsHistory.set([]);
             });

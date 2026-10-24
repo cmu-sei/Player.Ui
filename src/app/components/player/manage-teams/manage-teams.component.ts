@@ -1,7 +1,6 @@
 // Copyright 2025 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { CommonModule } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -38,7 +37,6 @@ interface ManageableTeam {
   templateUrl: './manage-teams.component.html',
   styleUrls: ['./manage-teams.component.scss'],
   imports: [
-    CommonModule,
     MatButtonModule,
     MatCardModule,
     MatDialogModule,

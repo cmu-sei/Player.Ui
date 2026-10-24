@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <span class="d-flex align-items-center flex-grow-1 gap-4">
       <div class="d-flex align-items-center">
         <mat-form-field subscriptSizing="dynamic">
-          <mat-icon svgIcon="ic_magnify_search" matPrefix></mat-icon>
+          <mat-icon svgIcon="ic_magnify_search" matPrefix />
           <input
             matInput
             [(ngModel)]="searchTerm"
@@ -23,15 +23,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               (click)="clearFilter()"
               matTooltip="Clear Search"
             >
-              <mat-icon svgIcon="ic_cancel_circle"></mat-icon>
+              <mat-icon svgIcon="ic_cancel_circle" />
             </button>
           }
         </mat-form-field>
       </div>
-      <button mat-raised-button color="primary" (click)="accordion.openAll()">
+      <button mat-raised-button color="primary" (click)="accordion().openAll()">
         Expand All
       </button>
-      <button mat-raised-button color="primary" (click)="accordion.closeAll()">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="accordion().closeAll()"
+      >
         Collapse All
       </button>
       <mat-checkbox
@@ -41,22 +45,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >Hide Offline</mat-checkbox
       >
     </span>
-    @if (showCloseButton) {
-    <span class="me-1">
-      <button
-        mat-icon-button
-        aria-label="Close"
-        mat-dialog-close
-        (click)="closeMe.emit()"
-        title="Close"
-        tabindex="-1"
-      >
-        <mat-icon
-          class="mdi-24px self-center"
-          fontIcon="mdi-close-circle-outline"
-        ></mat-icon>
-      </button>
-    </span>
+    @if (showCloseButton()) {
+      <span class="me-1">
+        <button
+          mat-icon-button
+          aria-label="Close"
+          mat-dialog-close
+          (click)="closeMe.emit()"
+          title="Close"
+          tabindex="-1"
+        >
+          <mat-icon
+            class="mdi-24px self-center"
+            fontIcon="mdi-close-circle-outline"
+          />
+        </button>
+      </span>
     }
   </div>
 
@@ -79,7 +83,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [users]="users"
           [searchTerm]="currentSearchTerm"
           [hideInactive]="hideInactive"
-        ></app-team-user-presence>
+        />
       </mat-expansion-panel>
     }
   </mat-accordion>

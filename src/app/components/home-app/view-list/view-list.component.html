@@ -5,11 +5,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <div class="view-list-container mat-elevation-z8">
   <div class="icon-text-container">
-    <mat-icon class="player-icon" svgIcon="ic_crucible_player"></mat-icon>
+    <mat-icon class="player-icon" svgIcon="ic_crucible_player" />
     <span class="views-title text">My Views</span>
     @if (canCreate$ | async) {
-      <button mat-icon-button aria-label="Add New View" matTooltip="Add New View" (click)="create()">
-        <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle"> </mat-icon>
+      <button
+        mat-icon-button
+        aria-label="Add New View"
+        matTooltip="Add New View"
+        (click)="create()"
+      >
+        <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle" />
       </button>
     }
     <div class="searchBox">
@@ -31,7 +36,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <mat-icon
               style="transform: scale(0.85)"
               fontIcon="mdi-close-circle-outline"
-            ></mat-icon>
+            />
           </button>
         }
       </mat-form-field>
@@ -53,10 +58,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         Name
       </mat-header-cell>
       <mat-cell *matCellDef="let element">
-        <a
-          [routerLink]="['/view', element.id]"
-          >{{ element.name }}</a
-        >
+        <a [routerLink]="['/view', element.id]">{{ element.name }}</a>
         @if (element.isTemplate) {
           <span class="template-badge">TEMPLATE</span>
         }
@@ -65,7 +67,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
     <!-- Description Column -->
     <ng-container matColumnDef="description">
-      <mat-header-cell *matHeaderCellDef mat-sort-header> Description </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Description
+      </mat-header-cell>
       <mat-cell *matCellDef="let element">
         {{ element.description }}
       </mat-cell>
@@ -73,29 +77,33 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
     <!-- Date Created Column -->
     <ng-container matColumnDef="dateCreated">
-      <mat-header-cell *matHeaderCellDef mat-sort-header> Created </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Created
+      </mat-header-cell>
       <mat-cell *matCellDef="let element">
-        {{ element.dateCreated | date:'yyyy-MM-dd HH:mm' }}
+        {{ element.dateCreated | date: 'yyyy-MM-dd HH:mm' }}
       </mat-cell>
     </ng-container>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    <mat-header-row *matHeaderRowDef="displayedColumns" />
+    <mat-row *matRowDef="let row; columns: displayedColumns" />
   </mat-table>
   @if (dataSource.filteredData.length === 0) {
     <div class="text no-results">No results found</div>
   }
 
   @if (isLoading) {
-    <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
-      <mat-progress-spinner color="primary" mode="indeterminate">
-      </mat-progress-spinner>
+    <mat-card
+      appearance="outlined"
+      class="d-flex justify-content-center align-items-center"
+    >
+      <mat-progress-spinner color="primary" mode="indeterminate" />
     </mat-card>
   }
 
   <mat-paginator
     [pageSizeOptions]="[10, 25, 50, 100]"
     showFirstLastButtons
-    aria-label="Select page of views">
-  </mat-paginator>
+    aria-label="Select page of views"
+  />
 </div>

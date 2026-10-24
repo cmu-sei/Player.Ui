@@ -20,6 +20,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
+import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { AdminViewSearchComponent } from './admin-view-search/admin-view-search.component';
+import { AdminUserSearchComponent } from './admin-user-search/admin-user-search.component';
+import { AdminAppTemplateSearchComponent } from './admin-app-template-search/admin-app-template-search.component';
+import { AdminRolesComponent } from './admin-roles/admin-roles.component';
+import { AppAdminSubscriptionSearchComponent } from './app-admin-subscription-search/app-admin-subscription-search.component';
 
 @Component({ selector: 'app-topbar', template: '' })
 class TopbarStubComponent {
@@ -49,19 +55,26 @@ async function renderAdmin(
   const section$ = new BehaviorSubject<string | null>(section);
 
   const rendered = await renderComponent(AdminAppComponent, {
-    declarations: [AdminAppComponent],
+    childStubs: [
+      { replace: TopbarComponent, with: TopbarStubComponent },
+      { replace: AdminViewSearchComponent, with: AdminViewSearchStubComponent },
+      { replace: AdminUserSearchComponent, with: AdminUserSearchStubComponent },
+      {
+        replace: AdminAppTemplateSearchComponent,
+        with: AdminAppTemplateSearchStubComponent,
+      },
+      { replace: AdminRolesComponent, with: AdminRolesStubComponent },
+      {
+        replace: AppAdminSubscriptionSearchComponent,
+        with: AdminSubscriptionSearchStubComponent,
+      },
+    ],
     imports: [
       MatListModule,
       MatIconModule,
       MatSidenavModule,
       MatToolbarModule,
       MatButtonModule,
-      TopbarStubComponent,
-      AdminViewSearchStubComponent,
-      AdminUserSearchStubComponent,
-      AdminAppTemplateSearchStubComponent,
-      AdminRolesStubComponent,
-      AdminSubscriptionSearchStubComponent,
     ],
     providers: [
       ...permissionDataProviders({ system: permissions }),

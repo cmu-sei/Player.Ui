@@ -20,7 +20,7 @@ import { AnyProvider, mergeProviders, unstubbed } from './unstubbed';
 //    `providedIn: 'root'` and are not listed, so specs get the real service
 //    over the generated API placeholders below (gate tests prime
 //    UserPermissionsService with permissionDataProviders()). ViewsService is
-//    provided by AppModule rather than root, so it is listed as its real
+//    provided in app.config.ts rather than root, so it is listed as its real
 //    class. ApplicationsService and TeamsService hold no state and call
 //    HttpClient directly, so they stay placeholders.
 import { ApplicationsService } from '../services/applications/applications.service';
@@ -65,7 +65,7 @@ export function getDefaultProviders(
     unstubbed(ApplicationsService),
     unstubbed(DialogService),
     { provide: ErrorService, useValue: { handleError: () => {} } },
-    // Real, as in AppModule: a BehaviorSubject state service with no dependencies.
+    // Real, as in app.config.ts: a BehaviorSubject state service with no dependencies.
     FocusedAppService,
     {
       provide: LoggedInUserService,
@@ -77,7 +77,7 @@ export function getDefaultProviders(
     unstubbed(NotificationService),
     unstubbed(SystemMessageService),
     unstubbed(TeamsService),
-    // Real, as in AppModule: it reads the ViewService/TeamService stubs.
+    // Real, as in app.config.ts: it reads the ViewService/TeamService stubs.
     ViewsService,
     unstubbed(AppXApiService, 'XApiService (services/xapi)'),
     unstubbed(TeamPermissionScopesService),

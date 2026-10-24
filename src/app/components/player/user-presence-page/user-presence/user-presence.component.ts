@@ -5,14 +5,20 @@
 
 import {
   Component,
-  EventEmitter,
-  Input,
-  Output,
   OnDestroy,
   OnInit,
-  ViewChild,
+  inject,
+  input,
+  output,
+  viewChild,
 } from '@angular/core';
-import { MatAccordion } from '@angular/material/expansion';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+  MatExpansionPanelDescription,
+} from '@angular/material/expansion';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { debounceTime, map, shareReplay, switchMap } from 'rxjs/operators';
 import {
@@ -25,31 +31,62 @@ import {
 } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
+import {
+  MatFormField,
+  MatPrefix,
+  MatInput,
+  MatSuffix,
+} from '@angular/material/input';
+import { MatIcon } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatDialogClose } from '@angular/material/dialog';
+import { TeamUserPresenceComponent } from '../team-user-presence/team-user-presence.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-user-presence',
   templateUrl: './user-presence.component.html',
   styleUrls: ['./user-presence.component.scss'],
-  standalone: false,
+  imports: [
+    MatFormField,
+    MatIcon,
+    MatPrefix,
+    MatInput,
+    FormsModule,
+    MatIconButton,
+    MatSuffix,
+    MatTooltip,
+    MatButton,
+    MatCheckbox,
+    MatDialogClose,
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatExpansionPanelDescription,
+    TeamUserPresenceComponent,
+    AsyncPipe,
+  ],
 })
 export class UserPresenceComponent implements OnInit, OnDestroy {
-  @Input() viewId: string;
-  @Input() teamId?: string;
-  @Input() showCloseButton = true;
-  @Output() closeMe = new EventEmitter<any>();
+  private notificationService = inject(NotificationService);
+  private teamService = inject(TeamService);
+  private teamPermissionService = inject(TeamPermissionService);
+
+  readonly viewId = input<string>(undefined);
+  readonly teamId = input<string>(undefined);
+  readonly showCloseButton = input(true);
+  readonly closeMe = output<void>();
 
   public _teams: Observable<Array<Team>>;
   public hideInactive = false;
   private presenceTeamId?: string;
 
-  constructor(
-    private notificationService: NotificationService,
-    private teamService: TeamService,
-    private teamPermissionService: TeamPermissionService,
-  ) {}
-
   ngOnInit(): void {
-    this._teams = this.teamService.getMyViewTeams(this.viewId).pipe(
+    this._teams = this.teamService.getMyViewTeams(this.viewId()).pipe(
       switchMap((teams) => {
         const activeTeam = this.getActiveTeam(teams);
         if (!activeTeam?.id) {
@@ -57,7 +94,10 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
         }
 
         this.presenceTeamId = activeTeam.id;
-        this.notificationService.joinPresence(this.viewId, this.presenceTeamId);
+        this.notificationService.joinPresence(
+          this.viewId(),
+          this.presenceTeamId,
+        );
 
         return this.teamPermissionService
           .getMyTeamPermissions(undefined, activeTeam.id, false)
@@ -76,7 +116,7 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
     );
   }
 
-  @ViewChild(MatAccordion) accordion: MatAccordion;
+  readonly accordion = viewChild(MatAccordion);
 
   public searchTerm = '';
   public searchTermSubject = new BehaviorSubject('');
@@ -176,7 +216,10 @@ export class UserPresenceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.presenceTeamId) {
-      this.notificationService.leavePresence(this.viewId, this.presenceTeamId);
+      this.notificationService.leavePresence(
+        this.viewId(),
+        this.presenceTeamId,
+      );
     }
   }
 }

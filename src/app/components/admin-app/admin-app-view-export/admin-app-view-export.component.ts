@@ -3,27 +3,53 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import {
   UntypedFormBuilder,
   UntypedFormGroup,
   Validators,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
 import { ArchiveType } from '../../../generated/player-api';
 import { BehaviorSubject, finalize } from 'rxjs';
 import { ViewsService } from '../../../services/views/views.service';
 import FileDownloadUtils from '../../../utilities/file-download-utils';
+import {
+  CrucibleDialogComponent,
+  CrucibleDialogContentDirective,
+  CrucibleDialogActionsDirective,
+} from '@cmusei/crucible-common';
+import { MatButton } from '@angular/material/button';
+import { MatFormField, MatLabel } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
-    selector: 'app-admin-app-view-export',
-    templateUrl: './admin-app-view-export.component.html',
-    styleUrls: ['./admin-app-view-export.component.scss'],
-    standalone: false
+  selector: 'app-admin-app-view-export',
+  templateUrl: './admin-app-view-export.component.html',
+  styleUrls: ['./admin-app-view-export.component.scss'],
+  imports: [
+    CrucibleDialogComponent,
+    CrucibleDialogContentDirective,
+    CrucibleDialogActionsDirective,
+    MatButton,
+    FormsModule,
+    ReactiveFormsModule,
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
+    AsyncPipe,
+  ],
 })
 export class AdminAppViewExportComponent {
-  @Input() ids: string[];
+  private viewService = inject(ViewsService);
 
-  @Output() complete = new EventEmitter<boolean>();
+  readonly ids = input<string[]>(undefined);
+
+  readonly complete = output<boolean>();
 
   form: UntypedFormGroup;
   archiveTypes = Object.keys(ArchiveType);
@@ -32,17 +58,16 @@ export class AdminAppViewExportComponent {
   hasErrors = new BehaviorSubject(false);
   hasErrors$ = this.hasErrors.asObservable();
 
-  constructor(
-    private viewService: ViewsService,
-    formBuilder: UntypedFormBuilder
-  ) {
+  constructor() {
+    const formBuilder = inject(UntypedFormBuilder);
+
     this.form = formBuilder.group({
       archiveType: [this.archiveTypes[0]],
     });
   }
 
   export() {
-    this.onExport(this.ids, ArchiveType[this.form.value.archiveType]);
+    this.onExport(this.ids(), ArchiveType[this.form.value.archiveType]);
   }
 
   cancel() {

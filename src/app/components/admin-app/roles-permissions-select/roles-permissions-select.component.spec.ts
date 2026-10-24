@@ -108,7 +108,7 @@ async function renderSelect(
       MatSelectModule,
       FormsModule,
     ],
-    componentProperties: { user, team, canEdit, allTeams },
+    inputs: { user, team, canEdit, allTeams },
     providers: [
       {
         provide: UserService,

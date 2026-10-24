@@ -6,14 +6,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <app-admin-view-edit
   [class.hidden]="!showEditScreen"
   (editComplete)="onEditComplete($event)"
-></app-admin-view-edit>
+/>
 
 <div
   [class.hidden]="showEditScreen"
   class="view-list-container mat-elevation-z8"
 >
   <div class="d-flex align-items-center gap-1">
-    <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon>
+    <mat-icon class="player-icon-small" svgIcon="ic_crucible_player" />
     <h3 class="header-text ms-2">Views</h3>
     <div class="ms-5">
       <mat-form-field style="width: 320px" subscriptSizing="dynamic">
@@ -35,7 +35,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <mat-icon
               style="transform: scale(0.85)"
               svgIcon="ic_cancel_circle"
-            ></mat-icon>
+            />
           </button>
         }
       </mat-form-field>
@@ -47,7 +47,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Add a new View"
         (click)="addNewView()"
       >
-        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
       </button>
       <button
         mat-icon-button
@@ -55,7 +55,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         matTooltip="Import Views"
         (click)="openDialog(importDialog)"
       >
-        <mat-icon fontIcon="mdi-file-import" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-file-import" class="mdi-24px" />
       </button>
       <button
         mat-icon-button
@@ -66,7 +66,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         "
         (click)="openDialog(exportDialog)"
       >
-        <mat-icon fontIcon="mdi-file-export" class="mdi-24px"></mat-icon>
+        <mat-icon fontIcon="mdi-file-export" class="mdi-24px" />
       </button>
     </div>
   </div>
@@ -78,16 +78,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (change)="$event ? toggleAllRows() : null"
           [checked]="selection.hasValue() && isAllSelected()"
           [indeterminate]="selection.hasValue() && !isAllSelected()"
-        >
-        </mat-checkbox>
+        />
       </mat-header-cell>
       <mat-cell *matCellDef="let row">
         <mat-checkbox
           (click)="$event.stopPropagation()"
           (change)="$event ? selection.toggle(row.id) : null"
           [checked]="selection.isSelected(row.id)"
-        >
-        </mat-checkbox>
+        />
       </mat-cell>
     </ng-container>
 
@@ -107,7 +105,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-icon
             style="transform: scale(0.85)"
             svgIcon="ic_clipboard_copy"
-          ></mat-icon>
+          />
         </button>
         <button
           mat-button
@@ -124,7 +122,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
     <!-- Description Column -->
     <ng-container matColumnDef="description">
-      <mat-header-cell *matHeaderCellDef mat-sort-header> Description </mat-header-cell>
+      <mat-header-cell *matHeaderCellDef mat-sort-header>
+        Description
+      </mat-header-cell>
       <mat-cell *matCellDef="let element">
         <div class="description-text" style="margin: 5px">
           {{ element.description }}
@@ -142,10 +142,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-cell>
     </ng-container>
 
-    <mat-header-row
-      *matHeaderRowDef="displayedColumns; sticky: true"
-    ></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" />
+    <mat-row *matRowDef="let row; columns: displayedColumns" />
   </mat-table>
   @if (viewDataSource.filteredData.length === 0) {
     <div>No results found</div>
@@ -155,13 +153,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     [pageSize]="defaultPageSize"
     [pageSizeOptions]="[10, 20, 30]"
     [showFirstLastButtons]="true"
-  >
-  </mat-paginator>
+  />
 
   @if (isLoading) {
-    <mat-card appearance="outlined" class="d-flex justify-content-center align-items-center">
-      <mat-progress-spinner color="primary" mode="indeterminate">
-      </mat-progress-spinner>
+    <mat-card
+      appearance="outlined"
+      class="d-flex justify-content-center align-items-center"
+    >
+      <mat-progress-spinner color="primary" mode="indeterminate" />
     </mat-card>
   }
 </div>
@@ -170,11 +169,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <app-admin-app-view-export
     [ids]="selection.selected"
     (complete)="closeDialog()"
-  ></app-admin-app-view-export>
+  />
 </ng-template>
 
 <ng-template #importDialog>
-  <app-admin-app-view-import
-    (complete)="importComplete()"
-  ></app-admin-app-view-import>
+  <app-admin-app-view-import (complete)="importComplete()" />
 </ng-template>

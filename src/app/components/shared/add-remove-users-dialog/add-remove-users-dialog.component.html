@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="user-list-container mat-elevation-z8">
       <mat-toolbar class="background">
         <mat-toolbar-row>
-          <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple"></mat-icon>
+          <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple" />
           <p>All Users</p>
         </mat-toolbar-row>
         <mat-toolbar-row>
@@ -22,7 +22,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 margin-left: 10px;
               "
               svgIcon="ic_magnify_search"
-            ></mat-icon>
+            />
             <input
               matInput
               [(ngModel)]="filterString"
@@ -40,7 +40,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 <mat-icon
                   style="transform: scale(0.85)"
                   svgIcon="ic_cancel_circle"
-                ></mat-icon>
+                />
               </button>
             }
           </mat-form-field>
@@ -78,7 +78,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <div>
               <button
                 mat-icon-button
-                [attr.aria-label]="'Add ' + (element.name ?? element.id) + ' to team'"
+                [attr.aria-label]="
+                  'Add ' + (element.name ?? element.id) + ' to team'
+                "
                 [matTooltip]="
                   'Add ' + (element.name ?? element.id) + ' to team'
                 "
@@ -87,16 +89,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 <mat-icon
                   class="mdi-24px self-center"
                   fontIcon="mdi-plus-circle-outline"
-                ></mat-icon>
+                />
               </button>
             </div>
           </mat-cell>
         </ng-container>
 
-        <mat-header-row
-          *matHeaderRowDef="displayedUserColumns"
-        ></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedUserColumns"></mat-row>
+        <mat-header-row *matHeaderRowDef="displayedUserColumns" />
+        <mat-row *matRowDef="let row; columns: displayedUserColumns" />
       </mat-table>
 
       @if (isLoading) {
@@ -104,8 +104,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           appearance="outlined"
           class="d-flex justify-content-center align-items-center"
         >
-          <mat-progress-spinner color="primary" mode="indeterminate">
-          </mat-progress-spinner>
+          <mat-progress-spinner color="primary" mode="indeterminate" />
         </mat-card>
       }
 
@@ -118,8 +117,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         [hidePageSize]="true"
         [showFirstLastButtons]="true"
         (page)="pageEvent = $event"
-      >
-      </mat-paginator>
+      />
     </div>
 
     <div class="team-list-wrapper">
@@ -127,10 +125,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-toolbar class="background">
           <mat-toolbar-row id="userImport">
             <div class="d-flex align-items-center gap-2">
-              <mat-icon
-                class="mdi-24px"
-                fontIcon="mdi-account-group"
-              ></mat-icon>
+              <mat-icon class="mdi-24px" fontIcon="mdi-account-group" />
               <p>Team Users</p>
             </div>
             @if (canManageRoles) {
@@ -161,7 +156,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   margin-left: 10px;
                 "
                 svgIcon="ic_magnify_search"
-              ></mat-icon>
+              />
               <input
                 matInput
                 [(ngModel)]="teamFilterString"
@@ -178,7 +173,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <mat-icon
                     style="transform: scale(0.85)"
                     svgIcon="ic_cancel_circle"
-                  ></mat-icon>
+                  />
                 </button>
               }
             </mat-form-field>
@@ -236,7 +231,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               <div>
                 <button
                   mat-icon-button
-                  [attr.aria-label]="'Remove ' + (element.user.name ?? element.user.id) + ' from team'"
+                  [attr.aria-label]="
+                    'Remove ' +
+                    (element.user.name ?? element.user.id) +
+                    ' from team'
+                  "
                   [matTooltip]="
                     'Remove ' +
                     (element.user.name ?? element.user.id) +
@@ -247,18 +246,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   <mat-icon
                     class="mdi-24px self-center"
                     fontIcon="mdi-minus-circle-outline"
-                  ></mat-icon>
+                  />
                 </button>
               </div>
             </mat-cell>
           </ng-container>
 
-          <mat-header-row
-            *matHeaderRowDef="displayedTeamColumns"
-          ></mat-header-row>
-          <mat-row
-            *matRowDef="let row; columns: displayedTeamColumns"
-          ></mat-row>
+          <mat-header-row *matHeaderRowDef="displayedTeamColumns" />
+          <mat-row *matRowDef="let row; columns: displayedTeamColumns" />
         </mat-table>
 
         @if (isLoading) {
@@ -266,8 +261,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             appearance="outlined"
             class="d-flex justify-content-center align-items-center"
           >
-            <mat-progress-spinner color="primary" mode="indeterminate">
-            </mat-progress-spinner>
+            <mat-progress-spinner color="primary" mode="indeterminate" />
           </mat-card>
         }
 
@@ -279,8 +273,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [pageSize]="defaultPageSize"
           [hidePageSize]="true"
           [showFirstLastButtons]="true"
-        >
-        </mat-paginator>
+        />
       </div>
     </div>
   </div>

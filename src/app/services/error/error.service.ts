@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Injectable, Injector, ErrorHandler } from '@angular/core';
+import { Injectable, Injector, ErrorHandler, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SystemMessageService } from '../system-message/system-message.service';
 
@@ -9,7 +9,7 @@ import { SystemMessageService } from '../system-message/system-message.service';
   providedIn: 'root',
 })
 export class ErrorService implements ErrorHandler {
-  constructor(private injector: Injector) {}
+  private injector = inject(Injector);
 
   handleError(err) {
     console.log(err);
@@ -22,7 +22,7 @@ export class ErrorService implements ErrorHandler {
       ) {
         messageService.displayMessage(
           'API Error',
-          'The API could not be reached.'
+          'The API could not be reached.',
         );
         console.log('API Error', 'The API could not be reached.');
       } else if (err.error && err.error.title) {
@@ -36,7 +36,7 @@ export class ErrorService implements ErrorHandler {
       if (err.rejection.message === 'Network Error') {
         messageService.displayMessage(
           'Identity Server Error',
-          'The Identity Server could not be reached for user authentication.'
+          'The Identity Server could not be reached for user authentication.',
         );
       } else {
         messageService.displayMessage('Error', err.rejection.message);

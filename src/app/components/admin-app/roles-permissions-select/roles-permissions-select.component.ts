@@ -7,7 +7,7 @@
 // <app-roles-permissions-select [user]="userObject"></app-roles-permissions-select>
 // <app-roles-permissions-select [team]="teamObject"></app-roles-permissions-select>
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import {
   User,
   Team,
@@ -20,6 +20,14 @@ import { TeamRolesService } from '../../../services/roles/team-roles.service';
 import { TeamPermissionsService } from '../../../services/permissions/team-permissions.service';
 import { TeamPermissionScopesService } from '../../../services/permissions/team-permission-scopes.service';
 import { RolesService } from '../../../services/roles/roles.service';
+import { MatFormField, MatLabel, MatPrefix } from '@angular/material/input';
+import { MatSelect, MatSelectTrigger } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { FormsModule } from '@angular/forms';
+import { MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { AsyncPipe } from '@angular/common';
 
 export enum ObjectType {
   Unknown,
@@ -31,14 +39,33 @@ export enum ObjectType {
   selector: 'app-roles-permissions-select',
   templateUrl: './roles-permissions-select.component.html',
   styleUrls: ['./roles-permissions-select.component.scss'],
-  standalone: false,
+  imports: [
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
+    FormsModule,
+    MatSelectTrigger,
+    MatIconButton,
+    MatPrefix,
+    MatTooltip,
+    MatIcon,
+    AsyncPipe,
+  ],
 })
 export class RolesPermissionsSelectComponent implements OnInit {
-  @Input() user: User;
-  @Input() team: Team;
-  @Input() canEdit = true;
+  private rolesService = inject(RolesService);
+  private userService = inject(UserService);
+  private teamService = inject(TeamService);
+  private teamRolesService = inject(TeamRolesService);
+  private teamPermissionsService = inject(TeamPermissionsService);
+  private teamPermissionScopesService = inject(TeamPermissionScopesService);
+
+  readonly user = input<User>(undefined);
+  readonly team = input<Team>(undefined);
+  readonly canEdit = input(true);
   // Other Teams in the View, used to scope this Team's permissions onto them.
-  @Input() allTeams: Team[] = [];
+  readonly allTeams = input<Team[]>([]);
 
   public permissions$: any;
   public roles$: any;
@@ -49,35 +76,28 @@ export class RolesPermissionsSelectComponent implements OnInit {
   public subject: any;
   public showPermissions = false;
 
-  constructor(
-    private rolesService: RolesService,
-    private userService: UserService,
-    private teamService: TeamService,
-    private teamRolesService: TeamRolesService,
-    private teamPermissionsService: TeamPermissionsService,
-    private teamPermissionScopesService: TeamPermissionScopesService
-  ) {}
-
   /**
    * The other Teams in the View that this Team's permissions can be scoped onto.
    */
   get scopeTargetTeams(): Team[] {
-    return (this.allTeams ?? []).filter((t) => t.id !== this.team?.id);
+    return (this.allTeams() ?? []).filter((t) => t.id !== this.team()?.id);
   }
 
   /**
    * Initialization
    */
   ngOnInit() {
-    if ((!!this.team && !!this.user) || (!this.team && !this.user)) {
+    const team = this.team();
+    const user = this.user();
+    if ((!!team && !!user) || (!team && !user)) {
       // either a team or a user must be provided, so roles and permissions will not be functional
       console.log(
-        'The roles and permissions component requires either a user or a team, therefore the dropdowns will be non-functional.'
+        'The roles and permissions component requires either a user or a team, therefore the dropdowns will be non-functional.',
       );
       return;
-    } else if (this.team) {
+    } else if (team) {
       this.subjectType = ObjectType.Team;
-      this.subject = this.team;
+      this.subject = team;
       this.showPermissions = true;
 
       this.permissions$ = this.teamPermissionsService.teamPermissions$;
@@ -90,10 +110,10 @@ export class RolesPermissionsSelectComponent implements OnInit {
         });
       }
 
-      this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
-    } else if (this.user) {
+      this.selectedScopedTeams = [...(team.scopedTeamIds ?? [])];
+    } else if (user) {
       this.subjectType = ObjectType.User;
-      this.subject = this.user;
+      this.subject = user;
       this.roles$ = this.rolesService.roles$;
     }
 
@@ -123,14 +143,14 @@ export class RolesPermissionsSelectComponent implements OnInit {
           }
 
           this.teamPermissionsService
-            .addToTeam(this.team.id, permission.id)
+            .addToTeam(this.team().id, permission.id)
             .subscribe();
         } else {
           this.subject.permissions = permissions.filter(
-            (x) => x.id !== permission.id
+            (x) => x.id !== permission.id,
           );
           this.teamPermissionsService
-            .removeFromTeam(this.team.id, permission.id)
+            .removeFromTeam(this.team().id, permission.id)
             .subscribe();
         }
         break;
@@ -152,31 +172,32 @@ export class RolesPermissionsSelectComponent implements OnInit {
 
     if (checked) {
       this.teamPermissionScopesService
-        .addScope(this.team.id, targetTeam.id)
+        .addScope(this.team().id, targetTeam.id)
         .subscribe({
           next: () => {
-            if (!this.team.scopedTeamIds) {
-              this.team.scopedTeamIds = [];
+            const team = this.team();
+            if (!team.scopedTeamIds) {
+              team.scopedTeamIds = [];
             }
-            if (!this.team.scopedTeamIds.includes(targetTeam.id)) {
-              this.team.scopedTeamIds.push(targetTeam.id);
+            if (!team.scopedTeamIds.includes(targetTeam.id)) {
+              team.scopedTeamIds.push(targetTeam.id);
             }
           },
           error: () => {
-            this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
+            this.selectedScopedTeams = [...(this.team().scopedTeamIds ?? [])];
           },
         });
     } else {
       this.teamPermissionScopesService
-        .removeScope(this.team.id, targetTeam.id)
+        .removeScope(this.team().id, targetTeam.id)
         .subscribe({
           next: () => {
-            this.team.scopedTeamIds = (this.team.scopedTeamIds ?? []).filter(
-              (id) => id !== targetTeam.id
-            );
+            this.team().scopedTeamIds = (
+              this.team().scopedTeamIds ?? []
+            ).filter((id) => id !== targetTeam.id);
           },
           error: () => {
-            this.selectedScopedTeams = [...(this.team.scopedTeamIds ?? [])];
+            this.selectedScopedTeams = [...(this.team().scopedTeamIds ?? [])];
           },
         });
     }
@@ -205,7 +226,7 @@ export class RolesPermissionsSelectComponent implements OnInit {
 
   getSelectedRolePermissions(
     roles: TeamRole[],
-    permissions: TeamPermissionModel[]
+    permissions: TeamPermissionModel[],
   ): TeamPermissionModel[] {
     const selectedRole = roles.find((role) => role.id === this.subject?.roleId);
 
@@ -218,19 +239,19 @@ export class RolesPermissionsSelectComponent implements OnInit {
 
   isPermissionGrantedByRole(
     permission: TeamPermissionModel,
-    rolePermissions: TeamPermissionModel[]
+    rolePermissions: TeamPermissionModel[],
   ): boolean {
     return rolePermissions.some((rolePermission) =>
       permission.id
         ? rolePermission.id === permission.id
-        : rolePermission.name === permission.name
+        : rolePermission.name === permission.name,
     );
   }
 
   getSelectedPermissionNames(permissions: TeamPermissionModel[]): string[] {
     return this.selectedPermissions
       .map((permissionId) =>
-        permissions.find((permission) => permission.id === permissionId)
+        permissions.find((permission) => permission.id === permissionId),
       )
       .filter((permission): permission is TeamPermissionModel => !!permission)
       .map((permission) => permission.name)
@@ -238,10 +259,10 @@ export class RolesPermissionsSelectComponent implements OnInit {
   }
 
   private sortPermissions(
-    permissions: TeamPermissionModel[]
+    permissions: TeamPermissionModel[],
   ): TeamPermissionModel[] {
     return [...permissions].sort((a, b) =>
-      (a.name ?? '').localeCompare(b.name ?? '')
+      (a.name ?? '').localeCompare(b.name ?? ''),
     );
   }
 }

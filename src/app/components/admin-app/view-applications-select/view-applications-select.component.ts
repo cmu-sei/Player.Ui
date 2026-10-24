@@ -1,7 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, inject, viewChild } from '@angular/core';
 import {
   View,
   ApplicationTemplate,
@@ -13,19 +13,49 @@ import {
   FormGroupDirective,
   NgForm,
   Validators,
+  FormsModule,
 } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
+import {
+  MatAccordion,
+  MatExpansionPanel,
+  MatExpansionPanelHeader,
+  MatExpansionPanelTitle,
+} from '@angular/material/expansion';
+import { MatFormField, MatLabel, MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/autocomplete';
+import { MatButton } from '@angular/material/button';
+import { MatCard } from '@angular/material/card';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-view-applications-select',
   templateUrl: './view-applications-select.component.html',
   styleUrls: ['./view-applications-select.component.scss'],
-  standalone: false,
+  imports: [
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatExpansionPanelTitle,
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatSelect,
+    FormsModule,
+    MatOption,
+    MatButton,
+    MatCard,
+    MatProgressSpinner,
+  ],
 })
 export class ViewApplicationsSelectComponent implements OnInit {
+  applicationService = inject(ApplicationService);
+  private confirmDialogService = inject(CrucibleDialogService);
+
   @Input() view: View;
-  @ViewChild(ViewApplicationsSelectComponent) child;
+  readonly child = viewChild(ViewApplicationsSelectComponent);
 
   public nameFormControl = new UntypedFormControl('', [
     Validators.required,
@@ -42,11 +72,6 @@ export class ViewApplicationsSelectComponent implements OnInit {
   public applicationTemplates = new Array<ApplicationTemplate>();
   public currentApp: Application;
   public isLoading: boolean;
-
-  constructor(
-    public applicationService: ApplicationService,
-    private confirmDialogService: CrucibleDialogService,
-  ) {}
 
   /**
    * Initialization

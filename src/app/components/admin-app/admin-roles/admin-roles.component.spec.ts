@@ -7,6 +7,8 @@ import { screen } from '@testing-library/angular';
 import { AdminRolesComponent } from './admin-roles.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { MatTabsModule } from '@angular/material/tabs';
+import { SystemRolesComponent } from './roles/roles.component';
+import { TeamRolesComponent } from './team-roles/team-roles.component';
 
 @Component({ selector: 'app-roles', template: '' })
 class RolesStubComponent {}
@@ -16,7 +18,10 @@ class TeamRolesStubComponent {}
 
 async function renderAdminRoles() {
   return renderComponent(AdminRolesComponent, {
-    declarations: [AdminRolesComponent],
+    childStubs: [
+      { replace: SystemRolesComponent, with: RolesStubComponent },
+      { replace: TeamRolesComponent, with: TeamRolesStubComponent },
+    ],
     imports: [MatTabsModule, RolesStubComponent, TeamRolesStubComponent],
   });
 }
