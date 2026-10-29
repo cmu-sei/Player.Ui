@@ -1,7 +1,7 @@
 // Copyright 2024 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Component, input } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { HomeAppComponent } from './home-app.component';
@@ -19,6 +19,17 @@ class TopbarStubComponent {
 
 @Component({ selector: 'app-view-list', template: '' })
 class ViewListStubComponent {}
+
+// The test DOM never loads images, so tests fire load or error themselves.
+class FakeImage {
+  static last: FakeImage | undefined;
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  src = '';
+  constructor() {
+    FakeImage.last = this;
+  }
+}
 
 async function renderHome(overrides: { appTopBarText?: string; background?: string } = {}) {
   const { appTopBarText = 'Player', background } = overrides;
@@ -92,19 +103,57 @@ describe('HomeAppComponent', () => {
     expect(topbar.topbarView()).toBe(TopbarView.PLAYER_HOME);
   });
 
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    FakeImage.last = undefined;
+  });
+
   /**
-   * Verifies: the page shows the background image named in settings, and none without the setting.
-   * Interacts with: ComnSettingsService.settings (stub), HomeAppComponent template.
-   * Data: AppLandingBackgroundImage set to a relative asset URL, or unset.
+   * Verifies: the page shows the background image named in settings once it loads.
+   * Interacts with: ComnSettingsService.settings (stub), a stubbed Image, HomeAppComponent template.
+   * Data: AppLandingBackgroundImage set to a relative asset URL; the image load event fires.
    */
-  it.each([
-    { label: 'with', background: '/assets/local/landing-background.jpg', expected: 'url("/assets/local/landing-background.jpg")' },
-    { label: 'without', background: undefined, expected: '' },
-  ])('shows the landing background $label the setting', async ({ background, expected }) => {
-    const { container } = await renderHome({ background });
+  it('shows the landing background once the image loads', async () => {
+    vi.stubGlobal('Image', FakeImage);
+    const { fixture, container } = await renderHome({ background: '/assets/local/landing-background.jpg' });
+
+    expect(FakeImage.last?.src).toBe('/assets/local/landing-background.jpg');
+    FakeImage.last!.onload!();
+    fixture.detectChanges();
 
     const page = container.querySelector('.container') as HTMLElement;
-    expect(page.style.getPropertyValue('--landing-background')).toBe(expected);
-    expect(page.classList.contains('has-background')).toBe(!!background);
+    expect(page.style.getPropertyValue('--landing-background')).toBe('url("/assets/local/landing-background.jpg")');
+    expect(page.classList.contains('has-background')).toBe(true);
+  });
+
+  /**
+   * Verifies: an image that fails to load leaves the normal page background, as if unset.
+   * Interacts with: ComnSettingsService.settings (stub), a stubbed Image, HomeAppComponent template.
+   * Data: AppLandingBackgroundImage set to a missing image; the image error event fires.
+   */
+  it('keeps the normal background when the image fails to load', async () => {
+    vi.stubGlobal('Image', FakeImage);
+    const { fixture, container } = await renderHome({ background: '/assets/local/missing.jpg' });
+
+    FakeImage.last!.onerror?.();
+    fixture.detectChanges();
+
+    const page = container.querySelector('.container') as HTMLElement;
+    expect(page.style.getPropertyValue('--landing-background')).toBe('');
+    expect(page.classList.contains('has-background')).toBe(false);
+  });
+
+  /**
+   * Verifies: without the setting, no image is requested and the normal page background is kept.
+   * Interacts with: ComnSettingsService.settings (stub), a stubbed Image, HomeAppComponent template.
+   * Data: AppLandingBackgroundImage unset.
+   */
+  it('keeps the normal background without the setting', async () => {
+    vi.stubGlobal('Image', FakeImage);
+    const { container } = await renderHome();
+
+    expect(FakeImage.last).toBeUndefined();
+    const page = container.querySelector('.container') as HTMLElement;
+    expect(page.classList.contains('has-background')).toBe(false);
   });
 });
