@@ -7,7 +7,6 @@ import {
   ErrorHandler,
   importProvidersFrom,
 } from '@angular/core';
-import { environment } from '../environments/environment';
 import { FocusedAppService } from './services/focused-app/focused-app.service';
 import { NotificationService } from './services/notification/notification.service';
 import { TeamsService } from './services/teams/teams.service';
@@ -22,6 +21,7 @@ import {
   provideCrucibleTheme,
   ComnSettingsModule,
   ComnAuthModule,
+  provideComnAuthThemeStorage,
 } from '@cmusei/crucible-common';
 import { ErrorService } from './services/error/error.service';
 import {
@@ -35,8 +35,6 @@ import {
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideRouter } from '@angular/router';
 import { ROUTES } from './app.routes';
-import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
-import { AkitaNgRouterStoreModule } from '@datorama/akita-ng-router-store';
 import { A11yModule } from '@angular/cdk/a11y';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
@@ -55,12 +53,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection(),
     importProvidersFrom(
-      environment.production ? [] : AkitaNgDevtools.forRoot(),
-      AkitaNgRouterStoreModule,
       ComnSettingsModule.forRoot(),
       ComnAuthModule.forRoot(),
       A11yModule,
     ),
+    provideComnAuthThemeStorage('player-ui.theme'),
     FocusedAppService,
     NotificationService,
     TeamsService,

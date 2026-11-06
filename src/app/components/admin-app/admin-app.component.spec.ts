@@ -5,16 +5,15 @@ import { describe, it, expect, vi } from 'vitest';
 import { Component, input, Type } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { screen } from '@testing-library/angular';
-import { BehaviorSubject, of } from 'rxjs';
 import userEvent from '@testing-library/user-event';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { AdminAppComponent, Section } from './admin-app.component';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 import { renderComponent } from 'src/app/test-utils/render-component';
 import { permissionDataProviders } from 'src/app/test-utils/mock-permission-data.service';
+import { activatedRouteStub } from 'src/app/test-utils/activated-route';
 import { SystemPermission } from '../../generated/player-api';
-import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -52,7 +51,9 @@ async function renderAdmin(
   overrides: { permissions?: SystemPermission[]; section?: string | null } = {},
 ) {
   const { permissions = [], section = null } = overrides;
-  const section$ = new BehaviorSubject<string | null>(section);
+  const { route, setQueryParams } = activatedRouteStub(
+    section == null ? {} : { section },
+  );
 
   const rendered = await renderComponent(AdminAppComponent, {
     childStubs: [
@@ -78,13 +79,7 @@ async function renderAdmin(
     ],
     providers: [
       ...permissionDataProviders({ system: permissions }),
-      {
-        provide: RouterQuery,
-        useValue: {
-          selectQueryParams: () => section$,
-          select: () => of(null),
-        },
-      },
+      { provide: ActivatedRoute, useValue: route },
     ],
   });
 
@@ -93,7 +88,7 @@ async function renderAdmin(
   const router = rendered.fixture.debugElement.injector.get(Router);
   const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-  return { ...rendered, navigate, section$ };
+  return { ...rendered, navigate, setQueryParams };
 }
 
 function topbar(fixture: ComponentFixture<AdminAppComponent>) {
@@ -184,7 +179,7 @@ describe('AdminAppComponent', () => {
 
   /**
    * Verifies: opening the page with a section query param titles the page for that section.
-   * Interacts with: RouterQuery.selectQueryParams stub feeding ngOnInit; the topbar stub's title input.
+   * Interacts with: ActivatedRoute.queryParamMap stub feeding ngOnInit; the topbar stub's title input.
    * Data: section ADMIN_USERS with ViewUsers granted.
    */
   it('titles the page from the section query param', async () => {
@@ -198,7 +193,7 @@ describe('AdminAppComponent', () => {
 
   /**
    * Verifies: a valid section query param renders that section even when the user lacks its View permission (current behavior).
-   * Interacts with: RouterQuery.selectQueryParams stub; real UserPermissionsService over stubbed permission endpoints; the section child stubs.
+   * Interacts with: ActivatedRoute.queryParamMap stub; real UserPermissionsService over stubbed permission endpoints; the section child stubs.
    * Data: section = ADMIN_ROLE_PERM with ViewViews granted and ViewRoles not.
    */
   it('renders a section from the query param without checking its permission', async () => {
@@ -235,7 +230,7 @@ describe('AdminAppComponent', () => {
   /**
    * Verifies: with no section query param, the page opens the first section, in nav order, whose View permission the
    *   user holds.
-   * Interacts with: RouterQuery.selectQueryParams stub (no section); real UserPermissionsService over stubbed permission
+   * Interacts with: ActivatedRoute.queryParamMap stub (no section); real UserPermissionsService over stubbed permission
    *   endpoints; the section child stubs.
    * Data: one row per grant list; ViewRoles and ViewUsers together open Users, which comes first in the nav.
    */
@@ -258,7 +253,7 @@ describe('AdminAppComponent', () => {
   /**
    * Verifies: with no section query param, a user who holds every system permission except the View ones (near miss:
    *   the Manage permissions of every section) gets no section.
-   * Interacts with: RouterQuery.selectQueryParams stub (no section); real UserPermissionsService over stubbed permission
+   * Interacts with: ActivatedRoute.queryParamMap stub (no section); real UserPermissionsService over stubbed permission
    *   endpoints; the section child stubs.
    * Data: every SystemPermission whose name does not start with View.
    */
@@ -274,17 +269,17 @@ describe('AdminAppComponent', () => {
 
   /**
    * Verifies: once the page is destroyed, a later section query param no longer changes the title or navigates.
-   * Interacts with: RouterQuery.selectQueryParams (a live subject); fixture.destroy(); Router.navigate (spied).
+   * Interacts with: ActivatedRoute.queryParamMap (a live stub); fixture.destroy(); Router.navigate (spied).
    * Data: section param changes to ADMIN_SUBS after destroy.
    */
   it('stops following the section query param after destroy', async () => {
-    const { fixture, navigate, section$ } = await renderAdmin({
+    const { fixture, navigate, setQueryParams } = await renderAdmin({
       section: Section.ADMIN_USERS,
       permissions: [SystemPermission.ViewUsers],
     });
     const component = fixture.componentInstance;
     fixture.destroy();
-    section$.next(Section.ADMIN_SUBS);
+    setQueryParams({ section: Section.ADMIN_SUBS });
     expect(component.title).toBe('Users');
     expect(navigate).not.toHaveBeenCalled();
   });

@@ -16,15 +16,14 @@ import {
   MatSidenavContainer,
   MatSidenavContent,
 } from '@angular/material/sidenav';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ComnSettingsService,
   Theme,
   ComnAuthQuery,
 } from '@cmusei/crucible-common';
-import { RouterQuery } from '@datorama/akita-ng-router-store';
 import { combineLatest, Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
@@ -67,7 +66,7 @@ import { AsyncPipe } from '@angular/common';
 export class AdminAppComponent implements OnInit, OnDestroy {
   private settingsService = inject(ComnSettingsService);
   private router = inject(Router);
-  private routerQuery = inject(RouterQuery);
+  private route = inject(ActivatedRoute);
   private authQuery = inject(ComnAuthQuery);
   loggedInUserService = inject(LoggedInUserService);
   permissionsService = inject(UserPermissionsService);
@@ -120,8 +119,13 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     },
   ];
 
+  private readonly sectionParam$ = this.route.queryParamMap.pipe(
+    map((params) => params.get('section')),
+    distinctUntilChanged(),
+  );
+
   public section$: Observable<Section> = combineLatest([
-    this.routerQuery.selectQueryParams('section'),
+    this.sectionParam$,
     this.permissions$,
   ]).pipe(
     map(([queryParam, permissions]) => {
@@ -147,8 +151,7 @@ export class AdminAppComponent implements OnInit, OnDestroy {
    * Initialization
    */
   ngOnInit() {
-    this.routerQuery
-      .selectQueryParams<string>('section')
+    this.sectionParam$
       .pipe(takeUntil(this.unsubscribe$))
       .subscribe((section) => {
         const sectionEnum: Section = section as Section;

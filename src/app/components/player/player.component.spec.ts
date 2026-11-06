@@ -7,18 +7,9 @@ import { ComponentFixture } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import {
-  BehaviorSubject,
-  firstValueFrom,
-  NEVER,
-  Observable,
-  of,
-  Subject,
-  throwError,
-} from 'rxjs';
+import { BehaviorSubject, NEVER, Observable, of, Subject, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
-import { RouterQuery } from '@datorama/akita-ng-router-store';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ComnAuthQuery, ComnSettingsService } from '@cmusei/crucible-common';
 import { ViewService } from '../../generated/player-api/api/view.service';
 import {
@@ -54,11 +45,11 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 import { ApiStub } from '../../test-utils/api-stub';
 import type { User as AuthUser } from 'oidc-client-ts';
 import { dialogRefStub } from '../../test-utils/dialog-refs';
-import { recordEmissions } from '../../test-utils/record-emissions';
 import { ApplicationListComponent } from './application-list/application-list.component';
 import { TopbarComponent } from '../shared/top-bar/topbar.component';
 import { FocusedAppComponent } from './focused-app/focused-app.component';
 import { NotificationsComponent } from './notifications/notifications.component';
+import { activatedRouteStub } from '../../test-utils/activated-route';
 
 @Component({ selector: 'app-application-list', template: '' })
 class ApplicationListStubComponent {
@@ -106,6 +97,14 @@ const teamB: TeamMembership = {
   isPrimary: false,
 };
 const demoView: View = { id: 'view-1', name: 'Demo' };
+// A second view, with a membership of its own, for the route-change test.
+const otherView: View = { id: 'view-2', name: 'Other' };
+const teamC: TeamMembership = {
+  id: 'tm-c',
+  teamId: 'team-c',
+  teamName: 'Team C',
+  isPrimary: true,
+};
 const alice = {
   profile: { sub: 'u1', name: 'Alice' },
   access_token: 'tok',
@@ -116,7 +115,6 @@ async function renderPlayer(
     memberships?: TeamMembership[];
     view?: Observable<View>;
     savedState?: unknown;
-    queryParams?: unknown[];
   } = {},
 ) {
   const { memberships = [teamA, teamB], view = of(demoView) } = overrides;
@@ -129,23 +127,17 @@ async function renderPlayer(
   const setUserPrimaryTeam = vi.fn((_userId: string, teamId: string) =>
     of<Team>({ id: teamId }),
   );
-  const getView = vi.fn(() => view);
-  const getTeamMemberships = vi.fn(() => of(structuredClone(memberships)));
+  const getView = vi.fn((id: string) =>
+    id === otherView.id ? of(otherView) : view,
+  );
+  const getTeamMemberships = vi.fn((_userId: string, viewId: string) =>
+    of(structuredClone(viewId === otherView.id ? [teamC] : memberships)),
+  );
   // The real UserPermissionsService loads team claims over this stub.
   const permissionStubs = permissionApiStubs();
   // Live subjects, so a test can emit after the page is destroyed.
-  const queryParams$ = new BehaviorSubject<unknown[]>(
-    overrides.queryParams ?? [null],
-  );
-  const routerState$ = new BehaviorSubject({
-    state: { params: { id: 'view-1' } },
-  });
+  const { route, setParams } = activatedRouteStub({}, { id: 'view-1' });
   const loggedInUser$ = new BehaviorSubject(alice);
-  const routerQuery = {
-    getParams: (key: string) => (key === 'id' ? 'view-1' : null),
-    selectQueryParams: () => queryParams$,
-    select: () => routerState$,
-  };
   const dialog = { open: vi.fn() } satisfies Pick<MatDialog, 'open'>;
   // The real Router (routerLink needs it); navigation is spied on before the
   // first render, which is when a refused view redirects.
@@ -173,7 +165,7 @@ async function renderPlayer(
       { replace: NotificationsComponent, with: NotificationsStubComponent },
     ],
     providers: [
-      { provide: RouterQuery, useValue: routerQuery },
+      { provide: ActivatedRoute, useValue: route },
       {
         provide: TeamService,
         useValue: { setUserPrimaryTeam } satisfies ApiStub<TeamService>,
@@ -225,8 +217,7 @@ async function renderPlayer(
     getView,
     getTeamMemberships,
     getMyTeamPermissions: permissionStubs.teamPermissions.getMyTeamPermissions,
-    queryParams$,
-    routerState$,
+    setParams,
     loggedInUser$,
   };
 }
@@ -303,6 +294,40 @@ describe('PlayerComponent', () => {
       getView.mock.calls.length,
       getTeamMemberships.mock.calls.length,
     ]).toEqual([2, 2]);
+  });
+
+  /**
+   * Verifies: a route change to another view, on the same page, loads that view and its memberships and hands them to
+   *   the topbar, the application list and the notifications.
+   * Interacts with: ActivatedRoute.paramMap (a live stub); ViewService.getView; TeamMembershipService.getTeamMemberships;
+   *   the child stubs.
+   * Data: the route moves from view-1 (Demo, Team A primary) to view-2 (Other, Team C primary).
+   */
+  it('loads the new view when the route changes to another view', async () => {
+    const { fixture, getView, getTeamMemberships, setParams } =
+      await renderPlayer();
+
+    setParams({ id: 'view-2' });
+    fixture.detectChanges();
+
+    expect(getView).toHaveBeenLastCalledWith('view-2');
+    expect(getTeamMemberships).toHaveBeenLastCalledWith('u1', 'view-2');
+    const teams = [
+      { id: 'team-c', name: 'Team C', isMember: true, isPrimary: true },
+    ];
+    const topbar = stub(fixture, TopbarStubComponent)!;
+    expect([topbar.title(), topbar.teams(), topbar.team()]).toEqual([
+      'Other',
+      teams,
+      teams[0],
+    ]);
+    const apps = stub(fixture, ApplicationListStubComponent)!;
+    expect([apps.viewId(), apps.teams()]).toEqual(['view-2', teams]);
+    const notifications = stub(fixture, NotificationsStubComponent)!;
+    expect([notifications.viewGuid(), notifications.teamGuid()]).toEqual([
+      'view-2',
+      'team-c',
+    ]);
   });
 
   /**
@@ -558,7 +583,7 @@ describe('PlayerComponent', () => {
   /**
    * Verifies: once the page is destroyed, a later logged-in user or route change no longer reloads the memberships,
    *   the view or the team permissions, and no longer shows a message or sends the user home.
-   * Interacts with: LoggedInUserService.loggedInUser$ and RouterQuery.select (live subjects); fixture.destroy();
+   * Interacts with: LoggedInUserService.loggedInUser$ and ActivatedRoute.paramMap (live stubs); fixture.destroy();
    *   ViewService.getView; TeamMembershipService.getTeamMemberships; TeamPermissionService.getMyTeamPermissions;
    *   SystemMessageService.displayMessage; Router.navigate (spied).
    * Data: Team A primary; after destroy the memberships answer [] (which would redirect "Not a Member"), a renewed
@@ -575,45 +600,9 @@ describe('PlayerComponent', () => {
     r.fixture.destroy();
     r.getTeamMemberships.mockReturnValue(of([]));
     r.loggedInUser$.next({ ...alice, access_token: 'renewed' } as AuthUser);
-    r.routerState$.next({ state: { params: { id: 'view-2' } } });
+    r.setParams({ id: 'view-2' });
     expect(calls()).toEqual(before);
     expect(r.displayMessage).not.toHaveBeenCalled();
     expect(r.navigate).not.toHaveBeenCalled();
-  });
-
-  describe('checkParam(), which no template calls', () => {
-    /**
-     * Verifies: checkParam emits whether every requested query parameter is present.
-     * Interacts with: RouterQuery.selectQueryParams; checkParam (called directly).
-     * Data: one row per parameter list.
-     */
-    it.each<[boolean, string, unknown[]]>([
-      [true, 'every parameter is present', ['a', 'b']],
-      [false, 'one parameter is missing', ['a', null]],
-    ])('emits %s when %s', async (expected, _case, queryParams) => {
-      const { fixture } = await renderPlayer({ queryParams });
-      expect(
-        await firstValueFrom(fixture.componentInstance.checkParam(['x', 'y'])),
-      ).toBe(expected);
-    });
-
-    /**
-     * Verifies: a checkParam stream completes when the page is destroyed and ignores later query parameters.
-     * Interacts with: RouterQuery.selectQueryParams (a live subject); checkParam (called directly); fixture.destroy().
-     * Data: parameters ['a', null], then ['a', 'b'] after destroy.
-     */
-    it('completes and stops emitting after destroy', async () => {
-      const { fixture, queryParams$ } = await renderPlayer({
-        queryParams: ['a', null],
-      });
-      const stream = fixture.componentInstance.checkParam(['x', 'y']);
-      const emitted = recordEmissions(stream);
-      let completed = false;
-      stream.subscribe({ complete: () => (completed = true) });
-      fixture.destroy();
-      queryParams$.next(['a', 'b']);
-      expect(emitted).toEqual([false]);
-      expect(completed).toBe(true);
-    });
   });
 });

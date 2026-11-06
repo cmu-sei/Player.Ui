@@ -14,8 +14,7 @@ import {
 import { AnyProvider, mergeProviders, unstubbed } from './unstubbed';
 
 // 1. App services that components inject. player.ui keeps its state in
-//    BehaviorSubject services rather than Akita stores, and those stay REAL,
-//    like Akita data services: PermissionsService, TeamPermissionsService,
+//    BehaviorSubject services, and those stay REAL: PermissionsService, TeamPermissionsService,
 //    RolesService, TeamRolesService and UserPermissionsService are
 //    `providedIn: 'root'` and are not listed, so specs get the real service
 //    over the generated API placeholders below (gate tests prime
@@ -53,9 +52,6 @@ import {
   WebhookService,
   XApiService,
 } from '../generated/player-api';
-
-// 3. RouterQuery: player.ui uses @datorama/akita-ng-router-store.
-import { RouterQuery } from '@datorama/akita-ng-router-store';
 
 export function getDefaultProviders(
   overrides?: readonly AnyProvider[],
@@ -100,15 +96,6 @@ export function getDefaultProviders(
     unstubbed(ViewService),
     unstubbed(WebhookService),
     unstubbed(XApiService, 'XApiService (generated)'),
-
-    // Akita router
-    {
-      provide: RouterQuery,
-      useValue: {
-        selectQueryParams: () => of(null),
-        select: () => of(null),
-      },
-    },
 
     // Common library. CrucibleDialogService is root-provided: without this
     // placeholder the real confirm dialog would open in every spec.

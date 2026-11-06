@@ -20,13 +20,12 @@ import {
   MatSidenavContainer,
   MatSidenavContent,
 } from '@angular/material/sidenav';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ComnAuthQuery,
   ComnSettingsService,
   Theme,
 } from '@cmusei/crucible-common';
-import { RouterQuery } from '@datorama/akita-ng-router-store';
 import {
   BehaviorSubject,
   combineLatest,
@@ -95,7 +94,7 @@ import { NotificationsComponent } from './notifications/notifications.component'
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   private router = inject(Router);
-  private routerQuery = inject(RouterQuery);
+  private route = inject(ActivatedRoute);
   private viewsService = inject(ViewsService);
   private viewService = inject(ViewService);
   private loggedInUserService = inject(LoggedInUserService);
@@ -152,37 +151,27 @@ export class PlayerComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    this.viewId = this.routerQuery.getParams('id');
-  }
-
-  checkParam(params: string[]): Observable<boolean> {
-    return this.routerQuery.selectQueryParams([...params]).pipe(
-      takeUntil(this.unsubscribe$),
-      switchMap((p) => {
-        return p.every((x) => x != null) ? of(true) : of(false);
-      }),
-    );
+    this.viewId = this.route.snapshot.paramMap.get('id');
   }
 
   loadData() {
-    return this.routerQuery.select().pipe(
-      // translate the state
-      map((state) => state.state),
+    return this.route.paramMap.pipe(
+      map((params) => params.get('id')),
 
-      // switchMap in case router state changes.
-      switchMap((state) =>
+      // switchMap in case the view id changes.
+      switchMap((viewId) =>
         combineLatest([
-          state.params['id']
-            ? this.viewService.getView(state.params['id'])
+          viewId
+            ? this.viewService.getView(viewId)
             : new Observable<View>(),
-          state.params['id']
+          viewId
             ? this.user$.pipe(
                 switchMap((user) =>
                   user
                     ? this.teamMembershipService
                         .getTeamMemberships(
                           user.profile.sub,
-                          state.params['id'],
+                          viewId,
                         )
                         .pipe(
                           map((memberships) =>
@@ -225,7 +214,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
             }
 
             return of({
-              state,
               view,
               teams: memberTeams,
               team: primaryTeam,
@@ -282,7 +270,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.router.createUrlTree(['/admin'], {
           queryParams: {
             section: 'views',
-            view: this.routerQuery.getParams('id'),
+            view: this.route.snapshot.paramMap.get('id'),
           },
         }),
       );
