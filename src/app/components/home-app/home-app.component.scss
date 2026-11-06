@@ -7,6 +7,12 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+
+  // The view list sits on the page background, so give it its own to stay
+  // readable over the landing background image.
+  &.crucible-landing-background .content-container {
+    background-color: var(--mat-sys-background);
+  }
 }
 
 .content-container {
