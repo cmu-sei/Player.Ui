@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { Component, OnInit, inject } from '@angular/core';
-import { ComnSettingsService } from '@cmusei/crucible-common';
+import { ComnSettingsService, CrucibleLandingBackgroundDirective } from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 import { TopbarComponent } from '../shared/top-bar/topbar.component';
 import { ViewListComponent } from './view-list/view-list.component';
@@ -11,7 +11,7 @@ import { ViewListComponent } from './view-list/view-list.component';
   selector: 'app-home-app',
   templateUrl: './home-app.component.html',
   styleUrls: ['./home-app.component.scss'],
-  imports: [TopbarComponent, ViewListComponent],
+  imports: [CrucibleLandingBackgroundDirective, TopbarComponent, ViewListComponent],
 })
 export class HomeAppComponent implements OnInit {
   private settingsService = inject(ComnSettingsService);
