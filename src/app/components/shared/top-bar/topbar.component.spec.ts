@@ -32,7 +32,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
+import { By } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { ClipboardModule } from 'ngx-clipboard';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
@@ -183,7 +184,7 @@ async function renderTopbar(
 
 async function openUserMenu() {
   const user = userEvent.setup();
-  await user.click(screen.getByText('Test User'));
+  await user.click(screen.getByText('Test User', { selector: '.user-name' }));
   return user;
 }
 
@@ -195,7 +196,7 @@ describe('TopbarComponent', () => {
    */
   it('should display title from input', async () => {
     await renderTopbar({ title: 'My Custom Title' });
-    expect(screen.getByText('My Custom Title')).toBeInTheDocument();
+    expect(screen.getByText('My Custom Title', { selector: '.view-text' })).toBeInTheDocument();
   });
 
   /**
@@ -205,7 +206,37 @@ describe('TopbarComponent', () => {
    */
   it('should show user menu button', async () => {
     await renderTopbar();
-    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('Test User', { selector: '.user-name' })).toBeInTheDocument();
+  });
+
+  /**
+   * Verifies: the user's name stays reachable when it is cut short: the menu button's tooltip
+   *   is the name, and the visible name sits in the element narrow viewports hide.
+   * Interacts with: MatTooltip on the Menu button; rendered template.
+   * Data: stub user profile name 'Test User'.
+   */
+  it('shows the user name as the menu button tooltip', async () => {
+    const { fixture } = await renderTopbar();
+    const button = fixture.debugElement.query(
+      By.css('button[aria-label="Menu"]'),
+    );
+    expect(button.injector.get(MatTooltip).message).toBe('Test User');
+    expect(
+      button.query(By.css('.user-name')).nativeElement.textContent.trim(),
+    ).toBe('Test User');
+  });
+
+  /**
+   * Verifies: a title clipped with an ellipsis can still be read in full from its tooltip.
+   * Interacts with: MatTooltip on the toolbar title.
+   * Data: a long view title.
+   */
+  it('shows the full title as its tooltip', async () => {
+    const title =
+      'A very long exercise view name that will not fit in the toolbar';
+    const { fixture } = await renderTopbar({ title });
+    const titleEl = fixture.debugElement.query(By.css('.view-text'));
+    expect(titleEl.injector.get(MatTooltip).message).toBe(title);
   });
 
   /**
@@ -261,7 +292,7 @@ describe('TopbarComponent', () => {
     await flush();
     fixture.detectChanges();
 
-    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('Test User', { selector: '.user-name' })).toBeInTheDocument();
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     expect(errors).toEqual([failure]);
   });
@@ -274,12 +305,12 @@ describe('TopbarComponent', () => {
    */
   it('stops following the logged-in user after destroy', async () => {
     const { fixture, loggedInUser$ } = await renderTopbar();
-    expect(screen.getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText('Test User', { selector: '.user-name' })).toBeInTheDocument();
     expect(loggedInUser$.observed).toBe(true);
     fixture.destroy();
     expect(loggedInUser$.observed).toBe(false);
     loggedInUser$.next({ profile: { name: 'Renamed User' } } as AuthUser);
-    expect(screen.queryByText('Renamed User')).not.toBeInTheDocument();
+    expect(screen.queryByText('Renamed User', { selector: '.user-name' })).not.toBeInTheDocument();
   });
 
   /**
@@ -289,7 +320,7 @@ describe('TopbarComponent', () => {
    */
   it('should display player title in toolbar', async () => {
     await renderTopbar({ title: 'Player' });
-    expect(screen.getByText('Player')).toBeInTheDocument();
+    expect(screen.getByText('Player', { selector: '.view-text' })).toBeInTheDocument();
   });
 
   describe('Administration entry', () => {
