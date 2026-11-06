@@ -26,6 +26,40 @@
   font-size: 110%;
   margin-left: 50px;
   margin-right: 40px;
+  // mat-toolbar-row is `white-space: nowrap`, so without these the title's full
+  // width is its minimum width and it pushes everything after it, including the
+  // account menu, off the right edge. `body` is `overflow: hidden`, so the menu
+  // would then be unreachable rather than merely clipped.
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// A long team name gives up room the same way; its tooltip carries it in full.
+.team-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Keep the account menu whole; the title and team name give up room first.
+.user-menu {
+  flex-shrink: 0;
+}
+
+// Narrow viewports: shrink the title gutters and drop the user's name, leaving
+// the chevron. The button keeps the name as its tooltip.
+@media (max-width: 599px) {
+  .view-text {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .user-name {
+    display: none;
+  }
 }
 
 .big-button {
