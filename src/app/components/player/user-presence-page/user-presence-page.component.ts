@@ -4,7 +4,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, OnInit, inject } from '@angular/core';
-import { RouterQuery } from '@datorama/akita-ng-router-store';
+import { ActivatedRoute } from '@angular/router';
 import { UserPresenceComponent } from './user-presence/user-presence.component';
 
 @Component({
@@ -13,11 +13,11 @@ import { UserPresenceComponent } from './user-presence/user-presence.component';
   imports: [UserPresenceComponent],
 })
 export class UserPresencePageComponent implements OnInit {
-  private routerQuery = inject(RouterQuery);
+  private route = inject(ActivatedRoute);
 
   viewId: string;
 
   ngOnInit(): void {
-    this.viewId = this.routerQuery.getParams('id');
+    this.viewId = this.route.snapshot.paramMap.get('id');
   }
 }
