@@ -41,22 +41,24 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-form-field>
     </div>
     <div class="ms-auto">
-      <button
-        mat-icon-button
-        aria-label="Add a new Application Template"
-        matTooltip="Add a new Application Template"
-        (click)="addAppTemplate()"
-      >
-        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
-      </button>
-      <button
-        mat-icon-button
-        aria-label="Import Application Templates"
-        matTooltip="Import Application Templates"
-        (click)="openDialog(importDialog)"
-      >
-        <mat-icon fontIcon="mdi-file-import" class="mdi-24px" />
-      </button>
+      @if (canManage$ | async) {
+        <button
+          mat-icon-button
+          aria-label="Add a new Application Template"
+          matTooltip="Add a new Application Template"
+          (click)="addAppTemplate()"
+        >
+          <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
+        </button>
+        <button
+          mat-icon-button
+          aria-label="Import Application Templates"
+          matTooltip="Import Application Templates"
+          (click)="openDialog(importDialog)"
+        >
+          <mat-icon fontIcon="mdi-file-import" class="mdi-24px" />
+        </button>
+      }
       <button
         mat-icon-button
         aria-label="Export Application Templates"
@@ -122,6 +124,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <app-admin-template-details
               (refresh)="refresh($event)"
               [appTemplate]="element"
+              [templates]="appTemplateDataSource.data"
             />
           </mat-expansion-panel>
         </div>

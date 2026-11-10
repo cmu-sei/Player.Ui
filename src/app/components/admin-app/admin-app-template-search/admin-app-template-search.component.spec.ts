@@ -54,6 +54,7 @@ const beta: ApplicationTemplate = {
 @Component({ selector: 'app-admin-template-details', template: '' })
 class AdminTemplateDetailsStubComponent {
   readonly appTemplate = input.required<ApplicationTemplate>();
+  readonly templates = input<ApplicationTemplate[]>([]);
   readonly refresh = output<boolean>();
 }
 
@@ -332,20 +333,60 @@ describe('AdminAppTemplateSearchComponent', () => {
   });
 
   /**
-   * Verifies: a user who holds only ViewApplications (the section's gate) is offered Add and Import (current behavior).
+   * Verifies: a user who holds only ViewApplications (the section's gate) can browse and export but is not offered
+   *   Add or Import, which the API refuses without ManageApplications.
    * Interacts with: the rendered header buttons; the real UserPermissionsService over stubbed permission endpoints.
    * Data: system permissions [ViewApplications].
    */
-  it('offers Add and Import to a user with only ViewApplications', async () => {
+  it('hides Add and Import from a user with only ViewApplications', async () => {
     const { fixture } = await renderSearch({
       permissions: [SystemPermission.ViewApplications],
     });
-    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
+    expect(tooltipButton(fixture, 'Add a new Application Template')).toBeNull();
+    expect(tooltipButton(fixture, 'Import Application Templates')).toBeNull();
     expect(
-      tooltipButton(fixture, 'Add a new Application Template'),
+      tooltipButton(fixture, 'Export Application Templates'),
     ).toBeInTheDocument();
-    expect(
-      tooltipButton(fixture, 'Import Application Templates'),
-    ).toBeInTheDocument();
+  });
+
+  /**
+   * Verifies: Add picks the next free "New Template" name, since template names are unique and the API refuses a
+   *   second "New Template".
+   * Interacts with: the Add button; ApplicationService.createApplicationTemplate.
+   * Data: existing templates "New Template" and "new template 2".
+   */
+  it('names a new template after the ones already added', async () => {
+    const user = userEvent.setup();
+    const { fixture, createApplicationTemplate } = await renderSearch({
+      templates: [
+        { ...alpha, id: 'n1', name: 'New Template' },
+        { ...beta, id: 'n2', name: 'new template 2' },
+      ],
+    });
+    await user.click(tooltipButton(fixture, 'Add a new Application Template')!);
+    expect(createApplicationTemplate).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ name: 'New Template 3' }),
+    );
+  });
+
+  /**
+   * Verifies: each details panel gets the whole template list, which it offers as replacements on delete.
+   * Interacts with: the details stubs' templates input.
+   * Data: Beta and Alpha.
+   */
+  it('gives each details panel every template', async () => {
+    const { fixture } = await renderSearch();
+    const details = fixture.debugElement
+      .queryAll(By.directive(AdminTemplateDetailsStubComponent))
+      .map((de) => de.componentInstance as AdminTemplateDetailsStubComponent);
+    expect(details).toHaveLength(2);
+    for (const d of details) {
+      expect(
+        d
+          .templates()
+          .map((t) => t.id)
+          .sort(),
+      ).toEqual(['t1', 't2']);
+    }
   });
 });
