@@ -279,6 +279,35 @@ describe('ViewApplicationsSelectComponent', () => {
   });
 
   /**
+   * Verifies: templates that share a name show their URL in the Application Template choices so they can be told
+   *   apart; a template with a unique name shows its name alone.
+   * Interacts with: the opened panel's Application Template select (MatSelectHarness).
+   * Data: two "Virtual Machines" templates (vm.test, old.test) and Chat.
+   */
+  it('shows the URL of templates that share a name', async () => {
+    const r = await renderSelect({
+      templates: [
+        { id: 'tm1', name: 'Virtual Machines', url: 'https://vm.test' },
+        { id: 'tm2', name: 'virtual machines ', url: 'https://old.test' },
+        { id: 'tm3', name: 'Chat', url: 'https://chat.test' },
+      ],
+    });
+    await openPanel(r);
+    const select = await selectOf(r.fixture, 'Application Template');
+    await select.open();
+    const options = await Promise.all(
+      (await select.getOptions()).map((o) => o.getText()),
+    );
+    // Whitespace from the template markup collapses on screen.
+    expect(options.map((o) => o.replace(/\s+/g, ' ').trim())).toEqual([
+      'None',
+      'Virtual Machines — https://vm.test',
+      'virtual machines — https://old.test',
+      'Chat',
+    ]);
+  });
+
+  /**
    * Verifies: an application made from a template shows the template's fields read-only below its own.
    * Interacts with: the opened panel's template section.
    * Data: an application from template Chat (chat.test, chat.png).

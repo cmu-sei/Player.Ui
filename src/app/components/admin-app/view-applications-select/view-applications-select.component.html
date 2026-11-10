@@ -82,6 +82,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 @for (template of applicationTemplates; track template.id) {
                   <mat-option [value]="template.id">
                     {{ template.name }}
+                    @if (sharesName(template)) {
+                      &mdash; {{ template.url }}
+                    }
                   </mat-option>
                 }
               </mat-select>
