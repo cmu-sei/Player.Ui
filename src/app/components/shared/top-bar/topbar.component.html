@@ -19,7 +19,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-icon svgIcon="ic_crucible_player" />
       </a>
     </span>
-    <span class="view-text">{{ title() }}</span>
+    <span class="view-text" [matTooltip]="title()">{{ title() }}</span>
     @if (teams && team && teams.length > 0) {
       <div
         class="team-text copy-text"
@@ -30,7 +30,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       >
         Team:
       </div>
-      <span class="team-text">{{ team.name }}</span>
+      <span class="team-text team-name" [matTooltip]="team.name">{{
+        team.name
+      }}</span>
       @if (teams.length > 1) {
         <div>
           <button
@@ -63,15 +65,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     }
     <span class="spacer"></span>
     @if (currentUser$ | async; as currentUser) {
-      <div class="team-text">
+      <div class="team-text user-menu">
+        <!--
+          The name is hidden on narrow viewports (see the scss), leaving only the
+          chevron, so the tooltip carries it instead.
+        -->
         <button
           mat-button
           [matMenuTriggerFor]="menu"
-          matTooltip="Menu"
+          [matTooltip]="currentUser.profile.name"
           aria-label="Menu"
         >
-          <strong>{{ currentUser.profile.name }}</strong>
-          <mat-icon fontIcon="mdi-chevron-down" />
+          <strong class="user-name">{{ currentUser.profile.name }}</strong>
+          <mat-icon aria-hidden="true" fontIcon="mdi-chevron-down" />
         </button>
         <mat-menu
           #menu="matMenu"
