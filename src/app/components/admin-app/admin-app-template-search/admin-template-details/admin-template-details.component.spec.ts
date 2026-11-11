@@ -1,10 +1,12 @@
 // Copyright 2026 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, onTestFinished } from 'vitest';
 import { screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { of } from 'rxjs';
+import { config, of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import {
@@ -29,15 +31,25 @@ const template: ApplicationTemplate = {
   embeddable: true,
   loadInBackground: false,
 };
+const other: ApplicationTemplate = {
+  id: 't2',
+  name: 'Alpha Kept',
+  url: 'https://kept.test',
+  icon: 'assets/img/player.png',
+  embeddable: true,
+  loadInBackground: false,
+};
 
 async function renderDetails(
   overrides: {
     confirm?: boolean;
     permissions?: SystemPermission[];
+    templates?: ApplicationTemplate[];
   } = {},
 ) {
   const {
     confirm = true,
+    templates = [template, other],
     permissions = [
       SystemPermission.ViewApplications,
       SystemPermission.ManageApplications,
@@ -48,7 +60,12 @@ async function renderDetails(
   const updateApplicationTemplate = vi.fn(
     (_id: string, t: ApplicationTemplate) => of(structuredClone(t)),
   );
-  const deleteApplicationTemplate = vi.fn(() => of(undefined));
+  const deleteApplicationTemplate = vi.fn(
+    (_id: string, _replacementTemplateId?: string) => of(undefined),
+  );
+  const getApplicationTemplate = vi.fn((_id: string) =>
+    of(structuredClone(template)),
+  );
   const confirmDialog = vi.fn(
     () => dialogRefStub<unknown, boolean>(confirm).dialogRef,
   );
@@ -61,8 +78,12 @@ async function renderDetails(
       MatInputModule,
       MatButtonModule,
       MatCheckboxModule,
+      MatSelectModule,
     ],
-    componentProperties: { appTemplate: structuredClone(template) },
+    componentProperties: {
+      appTemplate: structuredClone(template),
+      templates: structuredClone(templates),
+    },
     on: { refresh },
     providers: [
       ...permissionDataProviders({ system: permissions }),
@@ -71,6 +92,7 @@ async function renderDetails(
         useValue: {
           updateApplicationTemplate,
           deleteApplicationTemplate,
+          getApplicationTemplate,
         } satisfies ApiStub<ApplicationService>,
       },
       {
@@ -87,6 +109,7 @@ async function renderDetails(
     ...rendered,
     updateApplicationTemplate,
     deleteApplicationTemplate,
+    getApplicationTemplate,
     confirmDialog,
     refresh,
   };
@@ -173,7 +196,10 @@ describe('AdminTemplateDetailsComponent', () => {
         message: expect.stringContaining('Alpha'),
       }),
     );
-    expect(deleteApplicationTemplate).toHaveBeenCalledExactlyOnceWith('t1');
+    expect(deleteApplicationTemplate).toHaveBeenCalledExactlyOnceWith(
+      't1',
+      undefined,
+    );
     expect(refresh).toHaveBeenCalledExactlyOnceWith(true);
   });
 
@@ -194,16 +220,95 @@ describe('AdminTemplateDetailsComponent', () => {
   });
 
   /**
-   * Verifies: a user who holds only ViewApplications gets an editable form and the Delete button (current behavior).
-   * Interacts with: the rendered inputs and Delete button; the real UserPermissionsService over stubbed permission endpoints.
+   * Verifies: a user who holds only ViewApplications sees the template read-only, with no Delete — the API refuses
+   *   both without ManageApplications.
+   * Interacts with: the rendered inputs, checkboxes and Delete button; the real UserPermissionsService over stubbed
+   *   permission endpoints.
    * Data: system permissions [ViewApplications].
    */
-  it('offers editing and Delete to a user with only ViewApplications', async () => {
-    await renderDetails({ permissions: [SystemPermission.ViewApplications] });
-    // Current behavior; see agent-docs/ui-test-bugs/player.ui.md.
-    expect((screen.getByLabelText('Name') as HTMLInputElement).disabled).toBe(
-      false,
+  it('shows the template read-only to a user with only ViewApplications', async () => {
+    const { fixture } = await renderDetails({
+      permissions: [SystemPermission.ViewApplications],
+    });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    for (const label of ['Name', 'URL', 'Icon Path']) {
+      expect(screen.getByLabelText(label)).toBeDisabled();
+    }
+    expect(screen.getByLabelText('Embeddable')).toBeDisabled();
+    expect(screen.getByLabelText('Load in background')).toBeDisabled();
+    expect(screen.queryByText('Delete Application Template')).toBeNull();
+    expect(screen.queryByText('Move its applications to')).toBeNull();
+  });
+
+  /**
+   * Verifies: choosing a replacement sends it with the delete, the prompt says where the applications go, and the
+   *   template itself is not offered as its own replacement.
+   * Interacts with: the Move its applications to select; CrucibleDialogService.confirm;
+   *   ApplicationService.deleteApplicationTemplate.
+   * Data: templates Alpha (t1, the one deleted) and Alpha Kept (t2).
+   */
+  it('moves the applications to the chosen template when deleting', async () => {
+    const user = userEvent.setup();
+    const { confirmDialog, deleteApplicationTemplate, refresh } =
+      await renderDetails();
+    await user.click(screen.getByRole('combobox'));
+    const options = screen
+      .getAllByRole('option')
+      .map((o) => o.textContent?.trim());
+    expect(options).toEqual(['None', 'Alpha Kept — https://kept.test']);
+    await user.click(screen.getByRole('option', { name: /Alpha Kept/ }));
+    await user.click(screen.getByText('Delete Application Template'));
+    expect(confirmDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining(
+          'Applications that use it will move to Alpha Kept (https://kept.test).',
+        ),
+      }),
     );
-    expect(screen.getByText('Delete Application Template')).toBeInTheDocument();
+    expect(deleteApplicationTemplate).toHaveBeenCalledExactlyOnceWith(
+      't1',
+      't2',
+    );
+    expect(refresh).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  /**
+   * Verifies: when the API refuses an edit (a name another template uses), the form and the template object it
+   *   shares with the list show the saved values again rather than the refused one, and the error still propagates
+   *   to the app's error handler.
+   * Interacts with: the rendered Name input; ApplicationService.updateApplicationTemplate (fails) and
+   *   getApplicationTemplate.
+   * Data: Name changed to 'Taken'; the API answers 409.
+   */
+  it('restores the saved template when an edit is refused', async () => {
+    const user = userEvent.setup();
+    const { fixture, updateApplicationTemplate, getApplicationTemplate } =
+      await renderDetails();
+    const row = fixture.componentInstance.appTemplate;
+    const refused = new HttpErrorResponse({ status: 409 });
+    updateApplicationTemplate.mockImplementationOnce(() =>
+      throwError(() => refused),
+    );
+    // Unsubscribed errors go to rxjs's unhandled-error hook, which the app routes to its error handler.
+    const errors: unknown[] = [];
+    const previous = config.onUnhandledError;
+    config.onUnhandledError = (e) => errors.push(e);
+    onTestFinished(() => {
+      config.onUnhandledError = previous;
+    });
+    const name = screen.getByLabelText('Name');
+    name.focus();
+    await user.clear(name);
+    await user.type(name, 'Taken', { skipClick: true });
+    await user.tab();
+    expect(getApplicationTemplate).toHaveBeenCalledExactlyOnceWith('t1');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(name).toHaveValue('Alpha');
+    // The row object the list shares with the panel is restored, not just the panel's copy.
+    expect(row.name).toBe('Alpha');
+    await vi.waitFor(() => expect(errors).toEqual([refused]));
   });
 });

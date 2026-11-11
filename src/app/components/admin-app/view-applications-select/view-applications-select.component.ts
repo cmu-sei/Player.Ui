@@ -259,6 +259,17 @@ export class ViewApplicationsSelectComponent implements OnInit {
     }
   }
 
+  /**
+   * True when another template has the same name, so the option also shows the url to tell them apart.
+   */
+  sharesName(template: ApplicationTemplate): boolean {
+    const name = (template.name ?? '').trim().toLowerCase();
+    return this.applicationTemplates.some(
+      (x) =>
+        x.id !== template.id && (x.name ?? '').trim().toLowerCase() === name,
+    );
+  }
+
   getTemplate(applicationTemplateId: string) {
     const template = this.applicationTemplates.find(
       (x) => x.id === applicationTemplateId,

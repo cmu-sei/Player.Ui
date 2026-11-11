@@ -3,6 +3,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
+@let canEdit = canEdit$ | async;
 <div class="d-flex flex-column">
   <mat-form-field>
     <mat-label>Name</mat-label>
@@ -10,6 +11,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       matInput
       tabIndex="1"
       name="name"
+      [disabled]="!canEdit"
       [(ngModel)]="appTemplate.name"
       (change)="editAppTemplate()"
     />
@@ -20,6 +22,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       matInput
       tabIndex="2"
       name="url"
+      [disabled]="!canEdit"
       [(ngModel)]="appTemplate.url"
       (change)="editAppTemplate()"
     />
@@ -30,6 +33,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       matInput
       tabIndex="3"
       name="icon"
+      [disabled]="!canEdit"
       [(ngModel)]="appTemplate.icon"
       (change)="editAppTemplate()"
     />
@@ -39,6 +43,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-checkbox
       tabIndex="4"
       name="embeddable"
+      [disabled]="!canEdit"
       [(ngModel)]="appTemplate.embeddable"
       (change)="editAppTemplate()"
       >Embeddable</mat-checkbox
@@ -49,14 +54,32 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-checkbox
       tabIndex="5"
       name="loadInBackground"
+      [disabled]="!canEdit"
       [(ngModel)]="appTemplate.loadInBackground"
       (change)="editAppTemplate()"
       >Load in background</mat-checkbox
     >
   </mat-form-field>
-  <div class="bottom-button">
-    <button mat-stroked-button (click)="deleteApplicationTemplate()">
-      Delete Application Template
-    </button>
-  </div>
+  @if (canEdit) {
+    <mat-form-field>
+      <mat-label>Move its applications to</mat-label>
+      <mat-select
+        name="replacementTemplateId"
+        [(ngModel)]="replacementTemplateId"
+      >
+        <mat-option [value]="null">None</mat-option>
+        @for (other of otherTemplates; track other.id) {
+          <mat-option [value]="other.id">
+            {{ other.name }} &mdash; {{ other.url }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-hint>Needed only when views still use this template</mat-hint>
+    </mat-form-field>
+    <div class="bottom-button">
+      <button mat-stroked-button (click)="deleteApplicationTemplate()">
+        Delete Application Template
+      </button>
+    </div>
+  }
 </div>

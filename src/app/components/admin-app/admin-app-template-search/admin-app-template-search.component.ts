@@ -24,7 +24,12 @@ import {
   MatRowDef,
   MatRow,
 } from '@angular/material/table';
-import { ApplicationTemplate } from '../../../generated/player-api';
+import {
+  ApplicationTemplate,
+  SystemPermission,
+} from '../../../generated/player-api';
+import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
+import { AsyncPipe } from '@angular/common';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -54,6 +59,7 @@ export interface Action {
   templateUrl: './admin-app-template-search.component.html',
   styleUrls: ['./admin-app-template-search.component.scss'],
   imports: [
+    AsyncPipe,
     MatFormField,
     MatInput,
     FormsModule,
@@ -87,6 +93,11 @@ export interface Action {
 export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
   private applicationService = inject(ApplicationService);
   private dialog = inject(MatDialog);
+  private userPermissionsService = inject(UserPermissionsService);
+
+  public canManage$ = this.userPermissionsService.hasPermission(
+    SystemPermission.ManageApplications,
+  );
 
   public appTemplateDataSource: MatTableDataSource<ApplicationTemplate>;
   public appTemplateColumns: string[] = ['select', 'name', 'url'];
@@ -150,7 +161,7 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
    */
   addAppTemplate() {
     const newAppTemplate: ApplicationTemplate = {
-      name: 'New Template',
+      name: this.nextNewTemplateName(),
       url: 'http://localhost',
       embeddable: true,
       icon: 'assets/img/player.png',
@@ -167,6 +178,22 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
             this.currentAppTemplate = newApp;
           });
       });
+  }
+
+  /**
+   * Template names are unique, so a second Add must not reuse "New Template".
+   */
+  private nextNewTemplateName(): string {
+    const taken = new Set(
+      this.appTemplateDataSource.data.map((x) =>
+        (x.name ?? '').trim().toLowerCase(),
+      ),
+    );
+    let name = 'New Template';
+    for (let n = 2; taken.has(name.toLowerCase()); n++) {
+      name = `New Template ${n}`;
+    }
+    return name;
   }
 
   /**
