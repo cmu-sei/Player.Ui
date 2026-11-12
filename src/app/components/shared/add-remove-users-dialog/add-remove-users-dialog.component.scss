@@ -75,7 +75,6 @@
 }
 
 .mat-table-team-users {
-
   // The Role column uses a mat-form-field which makes rows taller than the
   // default 52px. Force the row height to match the All Users table.
   .mat-mdc-row {
@@ -105,4 +104,10 @@
     flex: 0 0 56px;
     justify-content: center;
   }
+}
+
+// Keep the Copy ID button left of the user name at full size when a long
+// name fills the cell.
+.copy-id-button {
+  flex: 0 0 auto;
 }
