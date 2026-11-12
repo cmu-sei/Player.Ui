@@ -4,7 +4,7 @@
 import { Injectable, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { ComnAuthService, ComnSettingsService } from '@cmusei/crucible-common';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { NotificationData } from '../../models/notification-data';
 import { ViewPresence } from '../../models/view-presence';
 
@@ -26,6 +26,12 @@ export class NotificationService {
   public userPresence$ = this.userPresenceList$.asObservable();
 
   public canSendMessage = new BehaviorSubject<boolean>(false);
+  /**
+   * Emits a team id when that team's applications may have changed: on the
+   * team hub's ApplicationsChanged, and after the team connection reconnects,
+   * since changes made while it was down were not sent to it.
+   */
+  public applicationsChanged = new Subject<string>();
   public viewConnection: signalR.HubConnection;
   public teamConnection: signalR.HubConnection;
   public userConnection: signalR.HubConnection;
@@ -88,6 +94,10 @@ export class NotificationService {
       this.notificationHistory.next(data);
     });
 
+    this.teamConnection.on('ApplicationsChanged', (teamId: string) => {
+      this.applicationsChanged.next(teamId);
+    });
+
     this.userConnection.on('Reply', (data: NotificationData) => {
       const validatedData = this.validateNotificationData(data);
       if (validatedData != null) {
@@ -128,6 +138,7 @@ export class NotificationService {
 
     this.teamConnection.onreconnected(() => {
       this.teamConnection.invoke('Join', teamGuid);
+      this.applicationsChanged.next(teamGuid);
       console.log('Team reconnected');
     });
 
