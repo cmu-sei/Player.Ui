@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { Subject, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import userEvent from '@testing-library/user-event';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { ApplicationData } from '../../../models/application-data';
@@ -35,6 +35,8 @@ async function renderList(
     theme?: Theme;
     teams?: TeamData[];
     isAuthenticated?: boolean;
+    /** What the first fetch answers, instead of `apps`. */
+    appsResponse?: Observable<ApplicationData[]>;
   } = {},
 ) {
   const {
@@ -44,7 +46,10 @@ async function renderList(
     isAuthenticated = true,
   } = overrides;
 
-  const getApplicationsByTeam = vi.fn(() => of(structuredClone(apps)));
+  const getApplicationsByTeam = vi.fn(
+    (): Observable<ApplicationData[]> =>
+      overrides.appsResponse ?? of(structuredClone(apps)),
+  );
   const isAuth = vi.fn(() => Promise.resolve(isAuthenticated));
   const xapi = {
     applicationSwitched: vi.fn(() => of(null)),
@@ -501,12 +506,13 @@ describe('ApplicationListComponent', () => {
     });
 
     /**
-     * Verifies: a failed refetch keeps the list already shown, and a later message still refreshes it.
+     * Verifies: a failed refetch keeps the list already shown and is logged, and a later message still refreshes it.
      * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam; the
      *   rendered links.
      * Data: a1; a refetch that errors; then a refetch with a2.
      */
     it('keeps the list when a refetch fails', async () => {
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
       const rendered = await renderList();
       const { container, fixture, getApplicationsByTeam } = rendered;
       await fixture.whenStable();
@@ -516,12 +522,37 @@ describe('ApplicationListComponent', () => {
 
       await pushApplicationsChanged(rendered, 'team-a');
       expect(appLinks(container).map((a) => a.title)).toEqual(['app-a1']);
+      expect(logged).toHaveBeenCalledOnce();
 
       getApplicationsByTeam.mockImplementation(() =>
         of([makeApp('a2', 'https://b.test/app')]),
       );
       await pushApplicationsChanged(rendered, 'team-a');
       expect(appLinks(container).map((a) => a.title)).toEqual(['app-a2']);
+    });
+
+    /**
+     * Verifies: a failed first load leaves the list empty without ending the live updates, so the next message
+     *   loads it.
+     * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam; the
+     *   rendered links.
+     * Data: the first fetch errors; then a message with a1 available.
+     */
+    it('loads the list on the next change after a failed first load', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const rendered = await renderList({
+        appsResponse: throwError(() => new Error('Server error')),
+      });
+      const { container, fixture, getApplicationsByTeam } = rendered;
+      await fixture.whenStable();
+      expect(appLinks(container)).toEqual([]);
+
+      getApplicationsByTeam.mockImplementation(() =>
+        of([makeApp('a1', 'https://a.test/app')]),
+      );
+      await pushApplicationsChanged(rendered, 'team-a');
+
+      expect(appLinks(container).map((a) => a.title)).toEqual(['app-a1']);
     });
 
     /**

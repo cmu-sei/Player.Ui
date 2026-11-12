@@ -86,17 +86,21 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   refreshApps() {
     const teamId = this.teams().find((t) => t.isPrimary).id;
     // Fetch the list on load and again whenever the team hub says it changed.
-    // A burst of changes (a reorder renumbers every app) is fetched once, and
-    // a failed refetch keeps the list already shown.
+    // A burst of changes (a reorder renumbers every app) is fetched once. A
+    // failed fetch keeps the list already shown (none, on the first load) and
+    // is logged; it doesn't end the stream, so the next change fetches again.
     const apps$ = this.notificationService.applicationsChanged.pipe(
       filter((changedTeamId) => changedTeamId === teamId),
       debounceTime(ApplicationListComponent.refreshDebounceMs),
-      map(() => true),
-      startWith(false),
-      switchMap((isRefresh) => {
-        const request = this.applicationsService.getApplicationsByTeam(teamId);
-        return isRefresh ? request.pipe(catchError(() => EMPTY)) : request;
-      }),
+      startWith(null),
+      switchMap(() =>
+        this.applicationsService.getApplicationsByTeam(teamId).pipe(
+          catchError((error) => {
+            console.error('Could not load the team applications', error);
+            return EMPTY;
+          }),
+        ),
+      ),
     );
 
     this.applications$ = combineLatest([this.authQuery.userTheme$, apps$]).pipe(
