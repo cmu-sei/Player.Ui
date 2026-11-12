@@ -137,8 +137,12 @@ export class NotificationService {
       });
 
     this.teamConnection.onreconnected(() => {
-      this.teamConnection.invoke('Join', teamGuid);
-      this.applicationsChanged.next(teamGuid);
+      // changes made while the connection was down weren't sent to it; ask
+      // for the list again once the group is rejoined, so none are missed
+      this.teamConnection
+        .invoke('Join', teamGuid)
+        .then(() => this.applicationsChanged.next(teamGuid))
+        .catch(() => console.log('Error while rejoining the Team group'));
       console.log('Team reconnected');
     });
 

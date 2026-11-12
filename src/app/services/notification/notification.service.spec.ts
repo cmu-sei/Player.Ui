@@ -220,8 +220,8 @@ describe('NotificationService', () => {
     });
 
     /**
-     * Verifies: a team reconnect rejoins the team group and then emits the team id, since changes made while the
-     *   connection was down were not sent to it
+     * Verifies: a team reconnect rejoins the team group and emits the team id once the rejoin completes, since
+     *   changes made while the connection was down were not sent to it
      * Interacts with: the team FakeHubConnection's reconnect() and invoke spy; service.applicationsChanged
      * Data: team id 't1'; the emission records how many invokes had been made by then
      */
@@ -237,6 +237,8 @@ describe('NotificationService', () => {
       );
 
       team.reconnect();
+      expect(changed).toEqual([]);
+      await flush();
 
       expect(changed).toEqual([['t1', [['Join', 't1']]]]);
     });
@@ -346,6 +348,35 @@ describe('NotificationService', () => {
 
       expect(vi.mocked(console.log)).toHaveBeenCalledWith(
         'Error while sending Notification',
+      );
+    });
+  });
+
+  describe('team reconnect', () => {
+    /**
+     * Verifies: a rejected team rejoin on reconnect is caught and logged, and the application list is not asked
+     *   for again, since the group was not rejoined
+     * Interacts with: the team FakeHubConnection's reconnect() and invoke spy (made to reject); the console.log spy
+     *   from beforeEach; service.applicationsChanged; captureUnhandledRejections
+     * Data: team id 't1'; the rejoin rejects with 'Join failed'
+     */
+    it('catches a rejected rejoin and emits nothing', async () => {
+      const service = createService();
+      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      const [, team] = connections;
+      await flush();
+      const rejections = captureUnhandledRejections();
+      const changed: string[] = [];
+      service.applicationsChanged.subscribe((id) => changed.push(id));
+      team.invoke.mockRejectedValueOnce(new Error('Join failed'));
+
+      team.reconnect();
+      await flush();
+
+      expect(rejections).toEqual([]);
+      expect(changed).toEqual([]);
+      expect(vi.mocked(console.log)).toHaveBeenCalledWith(
+        'Error while rejoining the Team group',
       );
     });
   });
@@ -525,7 +556,6 @@ describe('NotificationService', () => {
         ],
       ],
       ['view rejoin on reconnect', connected, 0, reconnect, [['Join', 'v1']]],
-      ['team rejoin on reconnect', connected, 1, reconnect, [['Join', 't1']]],
       [
         'user rejoin on reconnect',
         connected,
