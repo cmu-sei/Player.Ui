@@ -537,6 +537,43 @@ describe('PlayerComponent', () => {
   );
 
   /**
+   * Verifies: after the Edit View dialog closes, a later data reload (a token renewal) no longer drives the editor
+   *   (the real MatDialog nulls componentInstance on close, so driving it threw); while open, a reload still re-seeds
+   *   it.
+   * Interacts with: the topbar stub's editView output; MatDialog.open; the dialog's afterClosed(); the
+   *   LoggedInUserService.loggedInUser$ subject.
+   * Data: one renewal while open, then the dialog closes, then another renewal. The stub keeps componentInstance set
+   *   so a leaked subscription shows up as a third call instead of an asynchronously reported TypeError.
+   */
+  it('stops seeding the view editor once its dialog closes', async () => {
+    const { fixture, dialog, loggedInUser$ } = await renderPlayer();
+    const editor = {
+      resetStepper: vi.fn(),
+      updateApplicationTemplates: vi.fn(),
+      updateView: vi.fn(),
+      setView: vi.fn(),
+      editComplete: new Subject<string | null>(),
+    };
+    const afterClosed = new Subject<void>();
+    const { dialogRef } = dialogRefStub<typeof editor>();
+    Object.assign(dialogRef, {
+      componentInstance: editor,
+      afterClosed: () => afterClosed,
+    });
+    dialog.open.mockReturnValue(dialogRef);
+    stub(fixture, TopbarStubComponent)!.editView.emit({});
+    expect(editor.resetStepper).toHaveBeenCalledTimes(1);
+
+    loggedInUser$.next({ ...alice, access_token: 'renewed' } as AuthUser);
+    expect(editor.resetStepper).toHaveBeenCalledTimes(2);
+
+    afterClosed.next();
+    loggedInUser$.next({ ...alice, access_token: 'renewed-again' } as AuthUser);
+    expect(editor.resetStepper).toHaveBeenCalledTimes(2);
+    expect(editor.updateView).toHaveBeenCalledTimes(2);
+  });
+
+  /**
    * Verifies: Edit View in a new tab opens the view's admin page in a new browser tab instead of the dialog.
    * Interacts with: the topbar stub's editView output; the real Router's URL serializer; window.open; MatDialog.open.
    * Data: editView emits { isNewBrowserTab: true }.

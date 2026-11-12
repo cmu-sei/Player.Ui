@@ -293,7 +293,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
         maxWidth: '100vw',
         width: 'auto',
       });
-      this.data$.subscribe((data) => {
+      // data$ re-emits on every token renewal and route change; once the dialog
+      // closes its componentInstance is null, so stop following it then.
+      this.data$.pipe(takeUntil(dialogRef.afterClosed())).subscribe((data) => {
         dialogRef.componentInstance.resetStepper();
         dialogRef.componentInstance.updateApplicationTemplates();
         dialogRef.componentInstance.updateView();
