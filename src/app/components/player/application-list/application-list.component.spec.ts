@@ -2,13 +2,14 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { of } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import userEvent from '@testing-library/user-event';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { ApplicationData } from '../../../models/application-data';
 import { TeamData } from '../../../models/team-data';
 import { ApplicationsService } from '../../../services/applications/applications.service';
 import { FocusedAppService } from '../../../services/focused-app/focused-app.service';
+import { NotificationService } from '../../../services/notification/notification.service';
 import { XApiService } from '../../../services/xapi/xapi.service';
 import { ApplicationListComponent } from './application-list.component';
 import { renderComponent } from '../../../test-utils/render-component';
@@ -34,6 +35,8 @@ async function renderList(
     theme?: Theme;
     teams?: TeamData[];
     isAuthenticated?: boolean;
+    /** What the first fetch answers, instead of `apps`. */
+    appsResponse?: Observable<ApplicationData[]>;
   } = {},
 ) {
   const {
@@ -43,11 +46,16 @@ async function renderList(
     isAuthenticated = true,
   } = overrides;
 
-  const getApplicationsByTeam = vi.fn(() => of(structuredClone(apps)));
+  const getApplicationsByTeam = vi.fn(
+    (): Observable<ApplicationData[]> =>
+      overrides.appsResponse ?? of(structuredClone(apps)),
+  );
   const isAuth = vi.fn(() => Promise.resolve(isAuthenticated));
   const xapi = {
     applicationSwitched: vi.fn(() => of(null)),
   } satisfies Pick<XApiService, 'applicationSwitched'>;
+  // The team hub's application list messages, pushed by the test.
+  const applicationsChanged = new Subject<string>();
 
   const rendered = await renderComponent(ApplicationListComponent, {
     imports: [MatListModule, MatButtonModule],
@@ -75,6 +83,13 @@ async function renderList(
         useValue: { userTheme$: of(theme) },
       },
       { provide: XApiService, useValue: xapi },
+      {
+        provide: NotificationService,
+        useValue: { applicationsChanged } satisfies Pick<
+          NotificationService,
+          'applicationsChanged'
+        >,
+      },
     ],
   });
 
@@ -87,7 +102,36 @@ async function renderList(
       rendered.fixture.debugElement.injector.get(FocusedAppService)
         .focusedAppUrl,
     applicationSwitched: xapi.applicationSwitched,
+    applicationsChanged,
   };
+}
+
+/**
+ * Pushes ApplicationsChanged for a team and lets the component's debounce run
+ * out, then waits for the refetched list to render.
+ */
+async function pushApplicationsChanged(
+  rendered: Awaited<ReturnType<typeof renderList>>,
+  ...teamIds: string[]
+) {
+  vi.useFakeTimers({
+    // debounceTime reads Date.now as well as scheduling an interval.
+    toFake: [
+      'setTimeout',
+      'clearTimeout',
+      'setInterval',
+      'clearInterval',
+      'Date',
+    ],
+  });
+  try {
+    teamIds.forEach((teamId) => rendered.applicationsChanged.next(teamId));
+    vi.advanceTimersByTime(ApplicationListComponent.refreshDebounceMs);
+  } finally {
+    vi.useRealTimers();
+  }
+  rendered.fixture.detectChanges();
+  await rendered.fixture.whenStable();
 }
 
 /** The rendered application links, in render order. */
@@ -322,5 +366,240 @@ describe('ApplicationListComponent', () => {
       partialUpdate: true,
     });
     expect(getApplicationsByTeam).toHaveBeenLastCalledWith('team-b');
+  });
+
+  describe('when the team hub says the applications changed', () => {
+    /**
+     * Verifies: the list is fetched again and shows an added, a renamed and a reordered application, while the
+     *   focused application stays open without another xAPI switch.
+     * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam; the
+     *   rendered links; the real FocusedAppService; XApiService.applicationSwitched.
+     * Data: a1 and a2, with a1 focused; then a2 renamed and moved first, a1, and a new a3.
+     */
+    it('shows added, renamed and reordered applications and keeps the focused one', async () => {
+      const rendered = await renderList({
+        apps: [
+          makeApp('a1', 'https://a.test/app'),
+          makeApp('a2', 'https://b.test/app'),
+        ],
+      });
+      const { container, fixture, getApplicationsByTeam, focusedAppUrl } =
+        rendered;
+      await fixture.whenStable();
+      rendered.applicationSwitched.mockClear();
+      getApplicationsByTeam.mockImplementation(() =>
+        of([
+          { ...makeApp('a2', 'https://b.test/app'), name: 'Renamed' },
+          makeApp('a1', 'https://a.test/app'),
+          makeApp('a3', 'https://c.test/app'),
+        ]),
+      );
+
+      await pushApplicationsChanged(rendered, 'team-a');
+
+      expect(getApplicationsByTeam).toHaveBeenCalledTimes(2);
+      expect(getApplicationsByTeam).toHaveBeenLastCalledWith('team-a');
+      expect(appLinks(container).map((a) => a.title)).toEqual([
+        'Renamed',
+        'app-a1',
+        'app-a3',
+      ]);
+      expect(focusedAppUrl.value).toBe('https://a.test/app');
+      expect(rendered.applicationSwitched).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: a message for a team other than the primary one is ignored.
+     * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam.
+     * Data: the primary team is team-a; the message names team-b.
+     */
+    it('ignores another team', async () => {
+      const rendered = await renderList();
+      await rendered.fixture.whenStable();
+
+      await pushApplicationsChanged(rendered, 'team-b');
+
+      expect(rendered.getApplicationsByTeam).toHaveBeenCalledTimes(1);
+    });
+
+    /**
+     * Verifies: a burst of messages, as a reorder sends one per renumbered application, is fetched once.
+     * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam.
+     * Data: three messages for team-a inside one debounce window.
+     */
+    it('fetches a burst of changes once', async () => {
+      const rendered = await renderList();
+      await rendered.fixture.whenStable();
+
+      await pushApplicationsChanged(rendered, 'team-a', 'team-a', 'team-a');
+
+      expect(rendered.getApplicationsByTeam).toHaveBeenCalledTimes(2);
+    });
+
+    /**
+     * Verifies: when the focused application is removed, the first remaining one is opened.
+     * Interacts with: NotificationService.applicationsChanged; the real FocusedAppService;
+     *   XApiService.applicationSwitched.
+     * Data: a1 and a2 with a2 focused by a click; then only a1.
+     */
+    it('opens the first application when the focused one is removed', async () => {
+      const rendered = await renderList({
+        apps: [
+          makeApp('a1', 'https://a.test/app'),
+          makeApp('a2', 'https://b.test/app'),
+        ],
+      });
+      const { container, fixture, focusedAppUrl } = rendered;
+      await fixture.whenStable();
+      await clickLink(container, appLinks(container)[1]);
+      await fixture.whenStable();
+      expect(focusedAppUrl.value).toBe('https://b.test/app');
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of([makeApp('a1', 'https://a.test/app')]),
+      );
+
+      await pushApplicationsChanged(rendered, 'team-a');
+      await fixture.whenStable();
+
+      expect(focusedAppUrl.value).toBe('https://a.test/app');
+      expect(rendered.applicationSwitched).toHaveBeenLastCalledWith(
+        'v1',
+        'app-a1',
+        'https://a.test/app',
+      );
+    });
+
+    /**
+     * Verifies: when the last application is removed, the focused app goes blank.
+     * Interacts with: NotificationService.applicationsChanged; the rendered links; the real FocusedAppService.
+     * Data: a1 focused; then an empty list.
+     */
+    it('blanks the focused app when no application is left', async () => {
+      const rendered = await renderList();
+      const { container, fixture, focusedAppUrl } = rendered;
+      await fixture.whenStable();
+      rendered.getApplicationsByTeam.mockImplementation(() => of([]));
+
+      await pushApplicationsChanged(rendered, 'team-a');
+
+      expect(appLinks(container)).toEqual([]);
+      expect(focusedAppUrl.value).toBe('about:blank');
+    });
+
+    /**
+     * Verifies: when the focused application's URL changes, it is reopened on the new URL.
+     * Interacts with: NotificationService.applicationsChanged; the real FocusedAppService.
+     * Data: a1 focused on https://a.test/app; then a1 on https://a.test/moved.
+     */
+    it('reopens the focused application when its URL changes', async () => {
+      const rendered = await renderList();
+      const { fixture, focusedAppUrl } = rendered;
+      await fixture.whenStable();
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of([makeApp('a1', 'https://a.test/moved')]),
+      );
+
+      await pushApplicationsChanged(rendered, 'team-a');
+      await fixture.whenStable();
+
+      expect(focusedAppUrl.value).toBe('https://a.test/moved');
+    });
+
+    /**
+     * Verifies: a failed refetch keeps the list already shown and is logged, and a later message still refreshes it.
+     * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam; the
+     *   rendered links.
+     * Data: a1; a refetch that errors; then a refetch with a2.
+     */
+    it('keeps the list when a refetch fails', async () => {
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const rendered = await renderList();
+      const { container, fixture, getApplicationsByTeam } = rendered;
+      await fixture.whenStable();
+      getApplicationsByTeam.mockImplementationOnce(() =>
+        throwError(() => new Error('Server error')),
+      );
+
+      await pushApplicationsChanged(rendered, 'team-a');
+      expect(appLinks(container).map((a) => a.title)).toEqual(['app-a1']);
+      expect(logged).toHaveBeenCalledOnce();
+
+      getApplicationsByTeam.mockImplementation(() =>
+        of([makeApp('a2', 'https://b.test/app')]),
+      );
+      await pushApplicationsChanged(rendered, 'team-a');
+      expect(appLinks(container).map((a) => a.title)).toEqual(['app-a2']);
+    });
+
+    /**
+     * Verifies: a failed first load leaves the list empty without ending the live updates, so the next message
+     *   loads it.
+     * Interacts with: NotificationService.applicationsChanged; ApplicationsService.getApplicationsByTeam; the
+     *   rendered links.
+     * Data: the first fetch errors; then a message with a1 available.
+     */
+    it('loads the list on the next change after a failed first load', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const rendered = await renderList({
+        appsResponse: throwError(() => new Error('Server error')),
+      });
+      const { container, fixture, getApplicationsByTeam } = rendered;
+      await fixture.whenStable();
+      expect(appLinks(container)).toEqual([]);
+
+      getApplicationsByTeam.mockImplementation(() =>
+        of([makeApp('a1', 'https://a.test/app')]),
+      );
+      await pushApplicationsChanged(rendered, 'team-a');
+
+      expect(appLinks(container).map((a) => a.title)).toEqual(['app-a1']);
+    });
+
+    /**
+     * Verifies: a background application's iframe is neither moved nor given a new source when the list is
+     *   refreshed and reordered, since either would reload it.
+     * Interacts with: NotificationService.applicationsChanged; the rendered background iframes.
+     * Data: background apps b1 and b2; then the same apps in the opposite order.
+     */
+    it('leaves background iframes in place when the list is reordered', async () => {
+      const first = {
+        ...makeApp('b1', 'https://a.test/app'),
+        loadInBackground: true,
+      };
+      const second = {
+        ...makeApp('b2', 'https://b.test/app'),
+        loadInBackground: true,
+      };
+      const rendered = await renderList({ apps: [first, second] });
+      const { container, fixture } = rendered;
+      await fixture.whenStable();
+      const before = Array.from(container.querySelectorAll('iframe'));
+      const reloads = before.map((iframe) => {
+        const watched = { srcSets: 0 };
+        const descriptor = Object.getOwnPropertyDescriptor(
+          HTMLIFrameElement.prototype,
+          'src',
+        );
+        Object.defineProperty(iframe, 'src', {
+          configurable: true,
+          get: () => descriptor.get.call(iframe),
+          set: (value) => {
+            watched.srcSets++;
+            descriptor.set.call(iframe, value);
+          },
+        });
+        return watched;
+      });
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of([structuredClone(second), structuredClone(first)]),
+      );
+
+      await pushApplicationsChanged(rendered, 'team-a');
+
+      const after = Array.from(container.querySelectorAll('iframe'));
+      expect(after).toHaveLength(2);
+      after.forEach((iframe, i) => expect(iframe).toBe(before[i]));
+      expect(reloads.map((r) => r.srcSets)).toEqual([0, 0]);
+    });
   });
 });
