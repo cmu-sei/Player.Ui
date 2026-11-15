@@ -24,7 +24,7 @@ import {
   MatExpansionPanelHeader,
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
-import { NgClass, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatBadge } from '@angular/material/badge';
 import { MatIcon } from '@angular/material/icon';
 import { MatList, MatListItem } from '@angular/material/list';
@@ -45,7 +45,6 @@ import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
   imports: [
     MatExpansionPanel,
     MatExpansionPanelHeader,
-    NgClass,
     MatExpansionPanelTitle,
     MatBadge,
     MatIcon,
@@ -79,11 +78,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public showSystemNotifications: boolean;
   // Signals, because the hub sets these outside any event in this component and
   // the OnPush player view above it would otherwise skip the re-render.
-  public hasViewAdmin = signal<boolean>(false);
+  public readonly hasViewAdmin = signal<boolean>(false);
   public sendMessagePlaceholder: string;
   public notificationsList: Array<NotificationDataStatus>;
-  public notificationsHistory = signal<Array<NotificationDataStatus>>([]);
-  public newNotificationCount = signal<number>(0);
+  public readonly notificationsHistory = signal<Array<NotificationDataStatus>>([]);
+  public readonly newNotificationCount = signal<number>(0);
   public useBadge = false;
   public useBlink = false;
   public useBeep = false;

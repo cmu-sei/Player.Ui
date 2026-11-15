@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   (opened)="notificationPanelToggle('open')"
   (closed)="notificationPanelToggle('close')"
 >
-  <mat-expansion-panel-header [ngClass]="notificationDisplayClass()">
+  <mat-expansion-panel-header [class]="notificationDisplayClass()">
     <mat-panel-title>
       @if (useBadge) {
         <span

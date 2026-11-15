@@ -20,7 +20,6 @@ import {
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
 import { MatDivider } from '@angular/material/list';
-import { NgClass } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
 
 export enum ObjectType {
@@ -44,7 +43,6 @@ export enum ObjectType {
     MatExpansionPanelTitle,
     MatDivider,
     MatIconButton,
-    NgClass,
     MatIcon,
   ],
 })
