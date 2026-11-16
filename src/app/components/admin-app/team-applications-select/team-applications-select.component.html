@@ -52,7 +52,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           @if ({ disabled: app.displayOrder === 0 }; as moveUp) {
             <button
               [disabled]="moveUp.disabled"
-              [ngClass]="moveUp.disabled ? 'disabled-button' : null"
+              [class]="moveUp.disabled ? 'disabled-button' : null"
               mat-icon-button
               aria-label="Move Up"
               title="Move Up"
@@ -72,7 +72,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           ) {
             <button
               [disabled]="moveDown.disabled"
-              [ngClass]="moveDown.disabled ? 'disabled-button' : null"
+              [class]="moveDown.disabled ? 'disabled-button' : null"
               title="Move Down"
               mat-icon-button
               aria-label="Move Down"

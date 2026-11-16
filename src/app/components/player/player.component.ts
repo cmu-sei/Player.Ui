@@ -56,7 +56,7 @@ import {
   ResizableDirective,
   ResizeHandleDirective,
 } from 'angular-resizable-element';
-import { NgClass, NgStyle, AsyncPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
 import { MatList, MatListItem, MatDivider } from '@angular/material/list';
@@ -75,8 +75,6 @@ import { NotificationsComponent } from './notifications/notifications.component'
     MatSidenavContainer,
     MatSidenav,
     ResizableDirective,
-    NgClass,
-    NgStyle,
     MatToolbar,
     RouterLink,
     MatIcon,
