@@ -422,7 +422,9 @@ describe('NotificationsComponent', () => {
     expect(sources).toEqual(['assets/sounds/beep.mp3']);
     expect(renderedMessages(container)).toEqual(['new alert']);
     expect(setTitle).toHaveBeenLastCalledWith('Player (1 Alert)');
-    expect(container.querySelector('.mat-badge-content')).toHaveTextContent('1');
+    expect(container.querySelector('.mat-badge-content')).toHaveTextContent(
+      '1',
+    );
     expect(errors).toEqual([failure]);
   });
 

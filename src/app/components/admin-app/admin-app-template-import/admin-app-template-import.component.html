@@ -4,7 +4,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 @if (finished$ | async) {
-  <crucible-dialog [dialogTitle]="'Import ' + (typeString | titlecase)" [hideDefaultActions]="true">
+  <crucible-dialog
+    [dialogTitle]="'Import ' + (typeString | titlecase)"
+    [hideDefaultActions]="true"
+  >
     <div crucibleDialogContent>
       @if (result$ | async; as result) {
         @if (result.failures.length > 0) {
@@ -39,11 +42,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   >
     <div crucibleDialogContent [formGroup]="form" class="dialog-fields">
       <div class="file-row">
-        <button
-          type="button"
-          matButton="outlined"
-          (click)="fileInput.click()"
-        >
+        <button type="button" matButton="outlined" (click)="fileInput.click()">
           Choose File
         </button>
         <input
@@ -59,7 +58,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-slide-toggle
           formControlName="overwriteExisting"
           matTooltip="If an Application Template with a matching Id already exists, overwrite it. Otherwise, report as a failure."
-        >Overwrite Existing</mat-slide-toggle>
+          >Overwrite Existing</mat-slide-toggle
+        >
       </div>
     </div>
   </crucible-dialog>

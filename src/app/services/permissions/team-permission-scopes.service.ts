@@ -18,7 +18,7 @@ export class TeamPermissionScopesService {
   addScope(teamId: string, targetTeamId: string) {
     return this.teamPermissionScopeApi.addTeamPermissionScope(
       teamId,
-      targetTeamId
+      targetTeamId,
     );
   }
 
@@ -28,7 +28,7 @@ export class TeamPermissionScopesService {
   removeScope(teamId: string, targetTeamId: string) {
     return this.teamPermissionScopeApi.removeTeamPermissionScope(
       teamId,
-      targetTeamId
+      targetTeamId,
     );
   }
 }

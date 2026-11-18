@@ -81,7 +81,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   public readonly hasViewAdmin = signal<boolean>(false);
   public sendMessagePlaceholder: string;
   public notificationsList: Array<NotificationDataStatus>;
-  public readonly notificationsHistory = signal<Array<NotificationDataStatus>>([]);
+  public readonly notificationsHistory = signal<Array<NotificationDataStatus>>(
+    [],
+  );
   public readonly newNotificationCount = signal<number>(0);
   public useBadge = false;
   public useBlink = false;

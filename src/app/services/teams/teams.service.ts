@@ -23,9 +23,9 @@ export class TeamsService {
     viewGuid: string,
   ): Observable<Array<TeamData>> {
     return this.http
-      .get<
-        Array<TeamData>
-      >(`${this.settings.settings.ApiUrl}/api/users/${userGuid}/views/${viewGuid}/teams`)
+      .get<Array<TeamData>>(
+        `${this.settings.settings.ApiUrl}/api/users/${userGuid}/views/${viewGuid}/teams`,
+      )
       .pipe(
         map((teams) => {
           return teams;

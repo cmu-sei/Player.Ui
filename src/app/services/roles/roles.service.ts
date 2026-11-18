@@ -42,7 +42,7 @@ export class RolesService {
     return this.rolesApi.updateRole(role.id, role).pipe(
       tap((x) => {
         this.upsert(role.id, x);
-      })
+      }),
     );
   }
 
@@ -50,7 +50,7 @@ export class RolesService {
     return this.rolesApi.createRole(role).pipe(
       tap((x) => {
         this.upsert(x.id, x);
-      })
+      }),
     );
   }
 
@@ -58,7 +58,7 @@ export class RolesService {
     return this.rolesApi.deleteRole(id).pipe(
       tap(() => {
         this.remove(id);
-      })
+      }),
     );
   }
 
@@ -71,7 +71,7 @@ export class RolesService {
           role.permissions.push(permission);
           this.upsert(role.id, role);
         }
-      })
+      }),
     );
   }
 
@@ -84,11 +84,11 @@ export class RolesService {
 
           if (role != null) {
             role.permissions = role.permissions.filter(
-              (x) => x.id != permissionId
+              (x) => x.id != permissionId,
             );
             this.upsert(role.id, role);
           }
-        })
+        }),
       );
   }
 

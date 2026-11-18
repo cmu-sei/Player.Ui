@@ -4,7 +4,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 @if (finished$ | async) {
-  <crucible-dialog [dialogTitle]="'Import ' + (typeString | titlecase)" [hideDefaultActions]="true">
+  <crucible-dialog
+    [dialogTitle]="'Import ' + (typeString | titlecase)"
+    [hideDefaultActions]="true"
+  >
     <div crucibleDialogContent>
       @if (result$ | async; as result) {
         @if (result.failures.length > 0) {
@@ -40,11 +43,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   >
     <div crucibleDialogContent [formGroup]="form" class="dialog-fields">
       <div class="file-row">
-        <button
-          type="button"
-          matButton="outlined"
-          (click)="fileInput.click()"
-        >
+        <button type="button" matButton="outlined" (click)="fileInput.click()">
           Choose File
         </button>
         <input
@@ -61,14 +60,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-slide-toggle
           formControlName="matchApplicationTemplatesByName"
           matTooltip="If an Application Template cannot be found by Id, try to find one with a matching Name"
-        >Match Templates By Name</mat-slide-toggle>
+          >Match Templates By Name</mat-slide-toggle
+        >
       </div>
       <strong>Roles</strong>
       <div class="toggle-row">
         <mat-slide-toggle
           formControlName="matchRolesByName"
           matTooltip="If a Role cannot be found by Id, try to find one with a matching Name"
-        >Match By Name</mat-slide-toggle>
+          >Match By Name</mat-slide-toggle
+        >
       </div>
     </div>
   </crucible-dialog>

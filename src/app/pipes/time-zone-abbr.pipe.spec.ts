@@ -69,11 +69,14 @@ describe('TimeZoneAbbrPipe', () => {
   it.each([
     { locale: 'en-US', expected: 'GMT+1' },
     { locale: 'de-DE', expected: 'MEZ' },
-  ])('uses the $locale locale it is given: $expected', ({ locale, expected }) => {
-    expect(
-      createPipe(locale).transform('2026-11-12T16:00:00Z', 'Europe/Berlin'),
-    ).toBe(expected);
-  });
+  ])(
+    'uses the $locale locale it is given: $expected',
+    ({ locale, expected }) => {
+      expect(
+        createPipe(locale).transform('2026-11-12T16:00:00Z', 'Europe/Berlin'),
+      ).toBe(expected);
+    },
+  );
 
   /**
    * Verifies: without a zone argument the label is the viewer's own zone, the one the runtime resolves.

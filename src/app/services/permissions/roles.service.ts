@@ -41,7 +41,7 @@ export class RolesService {
     return this.rolesApi.updateRole(id, command).pipe(
       tap((x) => {
         this.upsert(id, x);
-      })
+      }),
     );
   }
 
@@ -49,7 +49,7 @@ export class RolesService {
     return this.rolesApi.createRole(command).pipe(
       tap((x) => {
         this.upsert(x.id, x);
-      })
+      }),
     );
   }
 
@@ -57,7 +57,7 @@ export class RolesService {
     return this.rolesApi.deleteRole(id).pipe(
       tap(() => {
         this.remove(id);
-      })
+      }),
     );
   }
 

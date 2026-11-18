@@ -17,11 +17,7 @@ DM20-0181 -->
     <div class="d-flex justify-content-center">
       <mat-form-field class="team-select">
         <mat-label>Teams</mat-label>
-        <mat-select
-          multiple
-          formControlName="teams"
-          class="team-select"
-        >
+        <mat-select multiple formControlName="teams" class="team-select">
           @for (team of currentTeams; track team) {
             <mat-option [value]="team.team.id">{{ team.name }}</mat-option>
           }

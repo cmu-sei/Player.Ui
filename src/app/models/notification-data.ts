@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 export interface NotificationData {
-  key: number,
+  key: number;
   fromId: string;
   fromName: string;
   fromType: string;

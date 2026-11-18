@@ -47,7 +47,7 @@ export class TeamRolesService {
     return this.teamRolesApi.updateTeamRole(id, command).pipe(
       tap((x) => {
         this.upsert(id, x);
-      })
+      }),
     );
   }
 
@@ -55,7 +55,7 @@ export class TeamRolesService {
     return this.teamRolesApi.createTeamRole(command).pipe(
       tap((x) => {
         this.upsert(x.id, x);
-      })
+      }),
     );
   }
 
@@ -63,7 +63,7 @@ export class TeamRolesService {
     return this.teamRolesApi.deleteTeamRole(id).pipe(
       tap(() => {
         this.remove(id);
-      })
+      }),
     );
   }
 
@@ -78,7 +78,7 @@ export class TeamRolesService {
             role.permissions.push(permission);
             this.upsert(role.id, role);
           }
-        })
+        }),
       );
   }
 
@@ -91,11 +91,11 @@ export class TeamRolesService {
 
           if (role != null) {
             role.permissions = role.permissions.filter(
-              (x) => x.id != permissionId
+              (x) => x.id != permissionId,
             );
             this.upsert(role.id, role);
           }
-        })
+        }),
       );
   }
 

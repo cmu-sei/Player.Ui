@@ -236,8 +236,7 @@ function stub<T>(
   type: new () => T,
 ) {
   return fixture.debugElement.query(By.directive(type))?.componentInstance as
-    | T
-    | undefined;
+    T | undefined;
 }
 
 function sidenav(fixture: ComponentFixture<PlayerComponent>): MatSidenav {

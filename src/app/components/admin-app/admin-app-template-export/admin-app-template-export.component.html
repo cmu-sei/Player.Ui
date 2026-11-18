@@ -4,7 +4,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 @if (hasErrors$ | async) {
-  <crucible-dialog dialogTitle="Export Application Templates" [hideDefaultActions]="true">
+  <crucible-dialog
+    dialogTitle="Export Application Templates"
+    [hideDefaultActions]="true"
+  >
     <div crucibleDialogContent>
       <p class="text-danger">
         Some errors occurred during export. Check errors.txt in the archive for
@@ -43,13 +46,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-slide-toggle
           formControlName="includeIcons"
           matTooltip="Include icon files in the exported archive"
-        >Include Icons</mat-slide-toggle>
+          >Include Icons</mat-slide-toggle
+        >
       </div>
       <div class="toggle-row">
         <mat-slide-toggle
           formControlName="embedIcons"
           matTooltip="Embed included Icons into exported JSON as data URIs"
-        >Embed Icons</mat-slide-toggle>
+          >Embed Icons</mat-slide-toggle
+        >
       </div>
     </div>
   </crucible-dialog>
