@@ -89,7 +89,6 @@ class NotificationsStubComponent {
   readonly viewGuid = input.required<string>();
   readonly teamGuid = input.required<string>();
   readonly userGuid = input.required<string>();
-  readonly userToken = input.required<string>();
   readonly userName = input.required<string>();
 }
 
@@ -285,9 +284,8 @@ describe('PlayerComponent', () => {
       notifications.viewGuid(),
       notifications.teamGuid(),
       notifications.userGuid(),
-      notifications.userToken(),
       notifications.userName(),
-    ]).toEqual(['view-1', 'team-a', 'u1', 'tok', 'Alice']);
+    ]).toEqual(['view-1', 'team-a', 'u1', 'Alice']);
   });
 
   /**

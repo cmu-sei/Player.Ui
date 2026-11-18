@@ -170,7 +170,6 @@ async function renderNotifications(
       viewGuid: 'v1',
       teamGuid: 't1',
       userGuid: 'u1',
-      userToken: 'tok',
       userName: 'Alice',
     },
   });
@@ -192,7 +191,6 @@ async function renderAsOnPush(
       viewGuid: 'v1',
       teamGuid: 't1',
       userGuid: 'u1',
-      userToken: 'tok',
       userName: 'Alice',
     },
     configureTestBed: (testBed) =>
@@ -212,18 +210,13 @@ function renderedMessages(container: Element): string[] {
 
 describe('NotificationsComponent', () => {
   /**
-   * Verifies: init connects to the notification server using the view/team/user guids and token inputs.
+   * Verifies: init connects to the notification server using the view/team/user guid inputs.
    * Interacts with: NotificationService.connectToNotificationServer spy.
-   * Data: component inputs viewGuid 'v1', teamGuid 't1', userGuid 'u1', userToken 'tok'.
+   * Data: component inputs viewGuid 'v1', teamGuid 't1', userGuid 'u1'.
    */
   it('connects to the notification server on init with the input guids', async () => {
     const { connectToNotificationServer } = await renderNotifications();
-    expect(connectToNotificationServer).toHaveBeenCalledWith(
-      'v1',
-      't1',
-      'u1',
-      'tok',
-    );
+    expect(connectToNotificationServer).toHaveBeenCalledWith('v1', 't1', 'u1');
   });
 
   /**
