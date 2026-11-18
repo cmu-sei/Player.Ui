@@ -56,11 +56,14 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
   readonly teams = input<TeamData[]>(undefined);
   readonly mini = input<boolean>(undefined);
 
-  public applications$: Observable<ApplicationData[]>;
+  public applications$: Observable<ApplicationList>;
   public viewGUID: string;
   public titleText: string;
   private unsubscribe$: Subject<null> = new Subject<null>();
   private currentApp: ApplicationData;
+  // Whether a list has been shown yet: opening an app for the first one is the
+  // only automatic open recorded as a switch.
+  private listShown = false;
   // The sanitized URL handed to each background iframe, kept while its URL
   // is unchanged so that a refreshed list does not reload the iframe.
   private safeUrls = new Map<string, SafeUrl>();
@@ -117,49 +120,51 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
           return { ...app, themedUrl, safeUrl };
         });
         this.safeUrls = safeUrls;
-        return themed;
+        return { apps: themed, background: backgroundApps(themed) };
       }),
-      tap((apps) => this.keepFocusedApp(apps)),
+      tap(({ apps }) => this.keepFocusedApp(apps)),
       takeUntil(this.unsubscribe$),
     );
   }
 
   /**
-   * Opens the first application on the first load. On a later list, keeps the
-   * focused application open, reopening it only if its URL changed; if it was
-   * removed, opens the first application, or a blank page when none is left.
+   * Opens the first embeddable application on the first load. On a later
+   * list, keeps the focused application open, reopening it only if its URL
+   * changed; a theme change needs no reopen, as the focused app applies the
+   * theme itself. If it was removed or can no longer be embedded, opens the
+   * first embeddable application, or a blank page when there is none. Only the
+   * first load is recorded as a switch: the others aren't the user's doing.
    */
   private keepFocusedApp(apps: ApplicationData[]) {
-    const current =
-      this.currentApp === undefined
-        ? undefined
-        : apps.find((app) => app.id === this.currentApp.id);
+    const current = apps.find(
+      (app) => app.id === this.currentApp?.id && app.embeddable,
+    );
+    const first = apps.find((app) => app.embeddable);
 
-    if (current === undefined) {
-      if (apps.length > 0) {
-        this.openInFocusedApp(apps[0]);
-      } else if (this.currentApp !== undefined) {
+    if (this.currentApp === undefined) {
+      if (first !== undefined) {
+        this.openInFocusedApp(first, !this.listShown);
+      }
+    } else if (current === undefined) {
+      if (first !== undefined) {
+        this.openInFocusedApp(first, false);
+      } else {
         this.currentApp = undefined;
         this.focusedAppService.focusedAppUrl.next('about:blank');
       }
-    } else if (current.themedUrl !== this.currentApp.themedUrl) {
-      this.openInFocusedApp(current);
+    } else if (current.url !== this.currentApp.url) {
+      this.openInFocusedApp(current, false);
     } else {
       this.currentApp = current;
     }
+    this.listShown = true;
   }
 
   /**
-   * The applications that load in the background, in a fixed order: moving an
-   * iframe in the page reloads it, so a reorder must not move theirs.
+   * Shows `app` in the focused app. `recordSwitch` is false when the list
+   * changed under the user, so that xAPI records only the user's own switches.
    */
-  backgroundApps(apps: ApplicationData[] | null): ApplicationData[] {
-    return (apps ?? [])
-      .filter((app) => app.loadInBackground)
-      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  }
-
-  openInFocusedApp(app: ApplicationData) {
+  openInFocusedApp(app: ApplicationData, recordSwitch = true) {
     this.currentApp = app;
     this.authService.isAuthenticated().then((isAuthenticated) => {
       if (!isAuthenticated) {
@@ -169,9 +174,11 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
         window.location.reload();
       } else {
         this.focusedAppService.focusedAppUrl.next(app.themedUrl);
-        this.xapiService
-          .applicationSwitched(this.viewId(), app.name, app.url)
-          .subscribe();
+        if (recordSwitch) {
+          this.xapiService
+            .applicationSwitched(this.viewId(), app.name, app.url)
+            .subscribe();
+        }
       }
     });
   }
@@ -189,12 +196,24 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
     return url;
   }
 
-  trackByFn(index, item) {
-    return item.id;
-  }
-
   ngOnDestroy() {
     this.unsubscribe$.next(null);
     this.unsubscribe$.complete();
   }
+}
+
+/** The list as rendered: the applications, and those that load in the background. */
+export interface ApplicationList {
+  apps: ApplicationData[];
+  background: ApplicationData[];
+}
+
+/**
+ * The applications that load in the background, in a fixed order: moving an
+ * iframe in the page reloads it, so a reorder must not move theirs.
+ */
+function backgroundApps(apps: ApplicationData[]): ApplicationData[] {
+  return apps
+    .filter((app) => app.loadInBackground)
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }

@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect, vi } from 'vitest';
-import { Observable, Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import userEvent from '@testing-library/user-event';
 import { ComnAuthQuery, ComnAuthService, Theme } from '@cmusei/crucible-common';
 import { ApplicationData } from '../../../models/application-data';
@@ -33,6 +33,8 @@ async function renderList(
   overrides: {
     apps?: ApplicationData[];
     theme?: Theme;
+    /** The user's theme over time, instead of the fixed `theme`. */
+    theme$?: Observable<Theme>;
     teams?: TeamData[];
     isAuthenticated?: boolean;
     /** What the first fetch answers, instead of `apps`. */
@@ -80,7 +82,7 @@ async function renderList(
       },
       {
         provide: ComnAuthQuery,
-        useValue: { userTheme$: of(theme) },
+        useValue: { userTheme$: overrides.theme$ ?? of(theme) },
       },
       { provide: XApiService, useValue: xapi },
       {
@@ -201,6 +203,28 @@ describe('ApplicationListComponent', () => {
       'v1',
       'app-a1',
       'https://a.test/app',
+    );
+  });
+
+  /**
+   * Verifies: the first load opens the first application that can be embedded, passing over one that can't.
+   * Interacts with: the real FocusedAppService; XApiService.applicationSwitched.
+   * Data: a1 not embeddable, then a2.
+   */
+  it('opens the first embeddable application', async () => {
+    const { fixture, focusedAppUrl, applicationSwitched } = await renderList({
+      apps: [
+        { ...makeApp('a1', 'https://a.test/app'), embeddable: false },
+        makeApp('a2', 'https://b.test/app'),
+      ],
+    });
+    await fixture.whenStable();
+
+    expect(focusedAppUrl.value).toBe('https://b.test/app');
+    expect(applicationSwitched).toHaveBeenCalledExactlyOnceWith(
+      'v1',
+      'app-a2',
+      'https://b.test/app',
     );
   });
 
@@ -437,7 +461,8 @@ describe('ApplicationListComponent', () => {
     });
 
     /**
-     * Verifies: when the focused application is removed, the first remaining one is opened.
+     * Verifies: when the focused application is removed, the first remaining one is opened, without an xAPI
+     *   switch, as the user didn't make it.
      * Interacts with: NotificationService.applicationsChanged; the real FocusedAppService;
      *   XApiService.applicationSwitched.
      * Data: a1 and a2 with a2 focused by a click; then only a1.
@@ -454,6 +479,7 @@ describe('ApplicationListComponent', () => {
       await clickLink(container, appLinks(container)[1]);
       await fixture.whenStable();
       expect(focusedAppUrl.value).toBe('https://b.test/app');
+      rendered.applicationSwitched.mockClear();
       rendered.getApplicationsByTeam.mockImplementation(() =>
         of([makeApp('a1', 'https://a.test/app')]),
       );
@@ -462,11 +488,68 @@ describe('ApplicationListComponent', () => {
       await fixture.whenStable();
 
       expect(focusedAppUrl.value).toBe('https://a.test/app');
-      expect(rendered.applicationSwitched).toHaveBeenLastCalledWith(
-        'v1',
-        'app-a1',
-        'https://a.test/app',
+      expect(rendered.applicationSwitched).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: the replacement for a removed focused application is the first that can be embedded.
+     * Interacts with: NotificationService.applicationsChanged; the real FocusedAppService.
+     * Data: a2 focused by a click; then a1 not embeddable and a3.
+     */
+    it('passes over an application that cannot be embedded when replacing the focused one', async () => {
+      const rendered = await renderList({
+        apps: [
+          makeApp('a1', 'https://a.test/app'),
+          makeApp('a2', 'https://b.test/app'),
+        ],
+      });
+      const { container, fixture, focusedAppUrl } = rendered;
+      await fixture.whenStable();
+      await clickLink(container, appLinks(container)[1]);
+      await fixture.whenStable();
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of([
+          { ...makeApp('a1', 'https://a.test/app'), embeddable: false },
+          makeApp('a3', 'https://c.test/app'),
+        ]),
       );
+
+      await pushApplicationsChanged(rendered, 'team-a');
+      await fixture.whenStable();
+
+      expect(focusedAppUrl.value).toBe('https://c.test/app');
+    });
+
+    /**
+     * Verifies: a focused application that can no longer be embedded is replaced, or the focused app goes blank
+     *   when no other can be.
+     * Interacts with: NotificationService.applicationsChanged; the real FocusedAppService.
+     * Data: a1 focused; then a1 not embeddable, alone and then beside a2.
+     */
+    it('replaces the focused application once it cannot be embedded', async () => {
+      const rendered = await renderList({
+        apps: [makeApp('a1', 'https://a.test/app')],
+      });
+      const { fixture, focusedAppUrl } = rendered;
+      await fixture.whenStable();
+      const unembeddable = {
+        ...makeApp('a1', 'https://a.test/app'),
+        embeddable: false,
+      };
+
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of([unembeddable, makeApp('a2', 'https://b.test/app')]),
+      );
+      await pushApplicationsChanged(rendered, 'team-a');
+      await fixture.whenStable();
+      expect(focusedAppUrl.value).toBe('https://b.test/app');
+
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of([unembeddable]),
+      );
+      await pushApplicationsChanged(rendered, 'team-a');
+      await fixture.whenStable();
+      expect(focusedAppUrl.value).toBe('about:blank');
     });
 
     /**
@@ -495,6 +578,7 @@ describe('ApplicationListComponent', () => {
       const rendered = await renderList();
       const { fixture, focusedAppUrl } = rendered;
       await fixture.whenStable();
+      rendered.applicationSwitched.mockClear();
       rendered.getApplicationsByTeam.mockImplementation(() =>
         of([makeApp('a1', 'https://a.test/moved')]),
       );
@@ -503,6 +587,35 @@ describe('ApplicationListComponent', () => {
       await fixture.whenStable();
 
       expect(focusedAppUrl.value).toBe('https://a.test/moved');
+      expect(rendered.applicationSwitched).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies: a theme change re-themes the links but leaves the focused app as it is, without an xAPI switch:
+     *   the focused app applies the theme itself.
+     * Interacts with: ComnAuthQuery.userTheme$; the rendered links; the real FocusedAppService;
+     *   XApiService.applicationSwitched.
+     * Data: a1 on a {theme} URL; the theme goes from light to dark.
+     */
+    it('leaves the focused application to re-theme itself', async () => {
+      const theme$ = new BehaviorSubject<Theme>('light-theme' as Theme);
+      const rendered = await renderList({
+        apps: [makeApp('a1', 'https://a.test/app?{theme}')],
+        theme$,
+      });
+      const { container, fixture, focusedAppUrl } = rendered;
+      await fixture.whenStable();
+      rendered.applicationSwitched.mockClear();
+
+      theme$.next('dark-theme' as Theme);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(appLinks(container)[0].getAttribute('href')).toBe(
+        'https://a.test/app?theme=dark-theme',
+      );
+      expect(focusedAppUrl.value).toBe('https://a.test/app?theme=light-theme');
+      expect(rendered.applicationSwitched).not.toHaveBeenCalled();
     });
 
     /**
