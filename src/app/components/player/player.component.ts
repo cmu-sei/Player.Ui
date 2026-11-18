@@ -184,14 +184,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
                         )
                         .pipe(
                           map((memberships) =>
-                            memberships.map(
-                              (membership): Team => ({
-                                id: membership.teamId,
-                                name: membership.teamName,
-                                isMember: true,
-                                isPrimary: membership.isPrimary,
-                              }),
-                            ),
+                            memberships.map((membership): Team => ({
+                              id: membership.teamId,
+                              name: membership.teamName,
+                              isMember: true,
+                              isPrimary: membership.isPrimary,
+                            })),
                           ),
                         )
                     : EMPTY,

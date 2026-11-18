@@ -1,2 +1,8 @@
 tabWidth: 2
 singleQuote: true
+overrides:
+  # .editorconfig turns max_line_length off for Markdown, which Prettier takes as an
+  # unlimited width for the code examples in it.
+  - files: '*.md'
+    options:
+      printWidth: 80

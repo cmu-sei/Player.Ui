@@ -11,7 +11,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   <div crucibleDialogContent [formGroup]="form" class="d-flex flex-column">
     <mat-form-field class="full-width">
       <mat-label>Name</mat-label>
-      <input type="text" matNativeControl formControlName="name" cdkFocusInitial />
+      <input
+        type="text"
+        matNativeControl
+        formControlName="name"
+        cdkFocusInitial
+      />
     </mat-form-field>
     <mat-form-field class="full-width">
       <mat-label>Callback URL</mat-label>

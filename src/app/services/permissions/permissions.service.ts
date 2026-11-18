@@ -43,7 +43,7 @@ export class PermissionsService {
     return this.permissionsApi.updatePermission(id, command).pipe(
       tap((x) => {
         this.upsert(id, x);
-      })
+      }),
     );
   }
 
@@ -51,7 +51,7 @@ export class PermissionsService {
     return this.permissionsApi.createPermission(command).pipe(
       tap((x) => {
         this.upsert(x.id, x);
-      })
+      }),
     );
   }
 
@@ -59,7 +59,7 @@ export class PermissionsService {
     return this.permissionsApi.deletePermission(id).pipe(
       tap(() => {
         this.remove(id);
-      })
+      }),
     );
   }
 

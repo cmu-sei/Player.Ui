@@ -22,7 +22,7 @@ export class TeamPermissionsService {
   teamPermissionsSubject = new BehaviorSubject<TeamPermissionModel[]>([]);
   teamPermissions$ = this.teamPermissionsSubject.asObservable().pipe(
     map((x) => x.filter((y) => y.name)),
-    map((x) => x.sort(this.sortFn))
+    map((x) => x.sort(this.sortFn)),
   );
 
   private sortFn(a: TeamPermissionModel, b: TeamPermissionModel) {
@@ -44,7 +44,7 @@ export class TeamPermissionsService {
     return this.teamPermissionsApi.updateTeamPermission(id, command).pipe(
       tap((x) => {
         this.upsert(id, x);
-      })
+      }),
     );
   }
 
@@ -52,7 +52,7 @@ export class TeamPermissionsService {
     return this.teamPermissionsApi.createTeamPermission(command).pipe(
       tap((x) => {
         this.upsert(x.id, x);
-      })
+      }),
     );
   }
 
@@ -60,21 +60,21 @@ export class TeamPermissionsService {
     return this.teamPermissionsApi.deleteTeamPermission(id).pipe(
       tap(() => {
         this.remove(id);
-      })
+      }),
     );
   }
 
   addToTeam(teamId: string, permissionId: string) {
     return this.teamPermissionsApi.addTeamPermissionToTeam(
       teamId,
-      permissionId
+      permissionId,
     );
   }
 
   removeFromTeam(teamId: string, permissionId: string) {
     return this.teamPermissionsApi.removeTeamPermissionFromTeam(
       teamId,
-      permissionId
+      permissionId,
     );
   }
 
