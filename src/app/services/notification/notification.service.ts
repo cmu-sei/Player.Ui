@@ -142,7 +142,9 @@ export class NotificationService {
       this.teamConnection
         .invoke('Join', teamGuid)
         .then(() => this.applicationsChanged.next(teamGuid))
-        .catch(() => console.log('Error while rejoining the Team group'));
+        .catch((err) =>
+          console.error('Error while rejoining the Team group', err),
+        );
       console.log('Team reconnected');
     });
 

@@ -356,8 +356,7 @@ describe('NotificationService', () => {
     /**
      * Verifies: a rejected team rejoin on reconnect is caught and logged, and the application list is not asked
      *   for again, since the group was not rejoined
-     * Interacts with: the team FakeHubConnection's reconnect() and invoke spy (made to reject); the console.log spy
-     *   from beforeEach; service.applicationsChanged; captureUnhandledRejections
+     * Interacts with: the team FakeHubConnection's reconnect() and invoke spy (made to reject); a console.error spy; service.applicationsChanged; captureUnhandledRejections
      * Data: team id 't1'; the rejoin rejects with 'Join failed'
      */
     it('catches a rejected rejoin and emits nothing', async () => {
@@ -369,14 +368,18 @@ describe('NotificationService', () => {
       const changed: string[] = [];
       service.applicationsChanged.subscribe((id) => changed.push(id));
       team.invoke.mockRejectedValueOnce(new Error('Join failed'));
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
 
       team.reconnect();
       await flush();
 
       expect(rejections).toEqual([]);
       expect(changed).toEqual([]);
-      expect(vi.mocked(console.log)).toHaveBeenCalledWith(
+      expect(consoleError).toHaveBeenCalledWith(
         'Error while rejoining the Team group',
+        new Error('Join failed'),
       );
     });
   });
