@@ -439,6 +439,23 @@ describe('NotificationService', () => {
     });
 
     /**
+     * Verifies: the presence connection joinPresence builds is on the view hub URL with no token in it, and reads
+     *   the current token each time it connects
+     * Interacts with: withUrl spy (URL and the options' accessTokenFactory); ComnAuthService.getAuthorizationToken
+     * Data: a token that changes from 'token-1' to 'token-2' between calls
+     */
+    it('builds the presence connection with the current token', () => {
+      let token = 'token-1';
+      const service = createService({ token: () => token });
+      service.joinPresence('v1');
+      const [[url, options]] = withUrl.mock.calls;
+      expect(url).toBe('https://notify.test/view');
+      expect(options.accessTokenFactory()).toBe('token-1');
+      token = 'token-2';
+      expect(options.accessTokenFactory()).toBe('token-2');
+    });
+
+    /**
      * Verifies: when a view connection already exists, joinPresence reuses it (no new build) and invokes 'JoinPresence' on it
      * Interacts with: service.viewConnection (existing FakeHubConnection); its invoke spy; service.joinPresence
      * Data: an established connection from connectToNotificationServer; connection count snapshotted before joinPresence
