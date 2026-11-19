@@ -40,6 +40,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { ClipboardService } from 'ngx-clipboard';
 import { dialogRefStub } from '../../../test-utils/dialog-refs';
 import { ApiStub } from '../../../test-utils/api-stub';
 import {
@@ -200,11 +201,23 @@ function rowButton(
     (r) =>
       r.querySelector('.mat-column-name > div')?.textContent?.trim() === name,
   );
-  const button = row?.querySelector<HTMLButtonElement>('button');
+  const button = row?.querySelector<HTMLButtonElement>(
+    'button[aria-label^="Add "], button[aria-label^="Remove "]',
+  );
   if (!button) {
     throw new Error(`No ${name} row with a button in ${table}`);
   }
   return button;
+}
+
+/**
+ * Spies on ngx-clipboard's copy. jsdom has no execCommand('copy'), so the
+ * service reports itself unsupported unless that check is stubbed too.
+ */
+function spyOnCopy() {
+  const clipboard = TestBed.inject(ClipboardService);
+  vi.spyOn(clipboard, 'isSupported', 'get').mockReturnValue(true);
+  return vi.spyOn(clipboard, 'copyFromContent').mockReturnValue(true);
 }
 
 /** Header cells of the Team Users table. */
@@ -293,6 +306,49 @@ describe('AddRemoveUsersDialogComponent', () => {
     expect(rowNames(container, TEAM_USERS)).toEqual([]);
     expect(rowNames(container, ALL_USERS)).toEqual(['Alice', 'Bob', 'Carol']);
     expect(screen.getByText('No results found')).toBeInTheDocument();
+  });
+
+  /**
+   * Verifies: each row in both tables has a Copy ID button that copies that user's id, not their name.
+   * Interacts with: the rendered copy buttons; ngx-clipboard's ClipboardService.copyFromContent.
+   * Data: Alice on the team and Bob in All Users; canManageRoles true and false, since View Admins with only
+   *   ManageTeam open the dialog in the restricted mode.
+   */
+  it.each([true, false])(
+    'copies a user id from either table when canManageRoles is %s',
+    async (canManageRoles) => {
+      const user = userEvent.setup();
+      await renderDialog({ canManageRoles });
+      const copy = spyOnCopy();
+
+      await user.click(screen.getByRole('button', { name: 'Copy ID of Bob' }));
+      expect(copy.mock.lastCall?.[0]).toBe('u2');
+
+      await user.click(
+        screen.getByRole('button', { name: 'Copy ID of Alice' }),
+      );
+      expect(copy.mock.lastCall?.[0]).toBe('u1');
+      expect(copy).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  /**
+   * Verifies: the Copy ID button of a team member without a name is labelled and copies by id.
+   * Interacts with: the rendered copy button; ClipboardService.copyFromContent.
+   * Data: team member u4 with a null name.
+   */
+  it('copies the id of a team member without a name', async () => {
+    const user = userEvent.setup();
+    const nameless: User = { id: 'u4', name: null };
+    await renderDialog({
+      users: [alice, bob, carol, nameless],
+      teamUsers: [nameless],
+    });
+    const copy = spyOnCopy();
+
+    await user.click(screen.getByRole('button', { name: 'Copy ID of u4' }));
+    expect(copy).toHaveBeenCalledOnce();
+    expect(copy.mock.lastCall?.[0]).toBe('u4');
   });
 
   /**

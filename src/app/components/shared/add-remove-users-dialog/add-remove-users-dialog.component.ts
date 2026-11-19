@@ -62,6 +62,7 @@ import { MatCard } from '@angular/material/card';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSelect } from '@angular/material/select';
 import { MatOption } from '@angular/material/autocomplete';
+import { ClipboardModule } from 'ngx-clipboard';
 
 /** User node with related user and application information */
 export class TeamUser {
@@ -110,6 +111,7 @@ export class TeamUser {
     MatButton,
     MatSelect,
     MatOption,
+    ClipboardModule,
     CrucibleDialogActionsDirective,
   ],
 })

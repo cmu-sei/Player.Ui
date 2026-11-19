@@ -6,7 +6,10 @@ import { Component, input, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { HomeAppComponent } from './home-app.component';
 import { renderComponent } from 'src/app/test-utils/render-component';
-import { ComnSettingsService, CrucibleThemeService } from '@cmusei/crucible-common';
+import {
+  ComnSettingsService,
+  CrucibleThemeService,
+} from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 import { TopbarComponent } from '../shared/top-bar/topbar.component';
 import { ViewListComponent } from './view-list/view-list.component';
@@ -32,7 +35,11 @@ class FakeImage {
 }
 
 async function renderHome(
-  overrides: { appTopBarText?: string; background?: string; dark?: boolean } = {},
+  overrides: {
+    appTopBarText?: string;
+    background?: string;
+    dark?: boolean;
+  } = {},
 ) {
   const { appTopBarText = 'Player', background, dark = false } = overrides;
 
@@ -120,7 +127,9 @@ describe('HomeAppComponent', () => {
    */
   it('shows the landing background once the image loads', async () => {
     vi.stubGlobal('Image', FakeImage);
-    const { fixture, container } = await renderHome({ background: '/assets/local/home-loads.jpg' });
+    const { fixture, container } = await renderHome({
+      background: '/assets/local/home-loads.jpg',
+    });
 
     const page = container.querySelector('.container') as HTMLElement;
     expect(FakeImage.last?.src).toBe('/assets/local/home-loads.jpg');
@@ -129,7 +138,9 @@ describe('HomeAppComponent', () => {
     FakeImage.last!.onload!();
     fixture.detectChanges();
 
-    expect(page.style.getPropertyValue('--crucible-landing-background')).toBe('url("/assets/local/home-loads.jpg")');
+    expect(page.style.getPropertyValue('--crucible-landing-background')).toBe(
+      'url("/assets/local/home-loads.jpg")',
+    );
     expect(page.classList.contains('crucible-landing-background')).toBe(true);
   });
 
@@ -140,7 +151,10 @@ describe('HomeAppComponent', () => {
    */
   it('tints the landing background in dark mode', async () => {
     vi.stubGlobal('Image', FakeImage);
-    const { fixture, container } = await renderHome({ background: '/assets/local/home-dark.jpg', dark: true });
+    const { fixture, container } = await renderHome({
+      background: '/assets/local/home-dark.jpg',
+      dark: true,
+    });
 
     FakeImage.last!.onload!();
     fixture.detectChanges();
@@ -157,13 +171,17 @@ describe('HomeAppComponent', () => {
    */
   it('keeps the normal background when the image fails to load', async () => {
     vi.stubGlobal('Image', FakeImage);
-    const { fixture, container } = await renderHome({ background: '/assets/local/home-missing.jpg' });
+    const { fixture, container } = await renderHome({
+      background: '/assets/local/home-missing.jpg',
+    });
 
     FakeImage.last!.onerror?.();
     fixture.detectChanges();
 
     const page = container.querySelector('.container') as HTMLElement;
-    expect(page.style.getPropertyValue('--crucible-landing-background')).toBe('');
+    expect(page.style.getPropertyValue('--crucible-landing-background')).toBe(
+      '',
+    );
     expect(page.classList.contains('crucible-landing-background')).toBe(false);
   });
 

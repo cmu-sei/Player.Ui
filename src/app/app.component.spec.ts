@@ -212,7 +212,9 @@ describe('AppComponent', () => {
   it('falls back to the Player brand color when color settings are missing', async () => {
     const ctx = setup();
     await renderApp(ctx.providers);
-    expect(bodyStyle('--crucible-topbar-background').toUpperCase()).toBe('#3B62A5');
+    expect(bodyStyle('--crucible-topbar-background').toUpperCase()).toBe(
+      '#3B62A5',
+    );
     expect(bodyStyle('--crucible-topbar-text').toUpperCase()).toBe('#FFFFFF');
     expect(bodyStyle('--mat-sys-primary').toUpperCase()).toBe('#3B62A5');
     expect(bodyStyle('--mat-sys-on-primary').toUpperCase()).toBe('#FFFFFF');

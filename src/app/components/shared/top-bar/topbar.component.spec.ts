@@ -196,7 +196,9 @@ describe('TopbarComponent', () => {
    */
   it('should display title from input', async () => {
     await renderTopbar({ title: 'My Custom Title' });
-    expect(screen.getByText('My Custom Title', { selector: '.view-text' })).toBeInTheDocument();
+    expect(
+      screen.getByText('My Custom Title', { selector: '.view-text' }),
+    ).toBeInTheDocument();
   });
 
   /**
@@ -206,7 +208,9 @@ describe('TopbarComponent', () => {
    */
   it('should show user menu button', async () => {
     await renderTopbar();
-    expect(screen.getByText('Test User', { selector: '.user-name' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Test User', { selector: '.user-name' }),
+    ).toBeInTheDocument();
   });
 
   /**
@@ -287,12 +291,16 @@ describe('TopbarComponent', () => {
     const user = await openUserMenu();
 
     await user.click(
-      within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Logout' }),
+      within(screen.getByRole('menu')).getByRole('menuitem', {
+        name: 'Logout',
+      }),
     );
     await flush();
     fixture.detectChanges();
 
-    expect(screen.getByText('Test User', { selector: '.user-name' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Test User', { selector: '.user-name' }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     expect(errors).toEqual([failure]);
   });
@@ -305,12 +313,16 @@ describe('TopbarComponent', () => {
    */
   it('stops following the logged-in user after destroy', async () => {
     const { fixture, loggedInUser$ } = await renderTopbar();
-    expect(screen.getByText('Test User', { selector: '.user-name' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Test User', { selector: '.user-name' }),
+    ).toBeInTheDocument();
     expect(loggedInUser$.observed).toBe(true);
     fixture.destroy();
     expect(loggedInUser$.observed).toBe(false);
     loggedInUser$.next({ profile: { name: 'Renamed User' } } as AuthUser);
-    expect(screen.queryByText('Renamed User', { selector: '.user-name' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Renamed User', { selector: '.user-name' }),
+    ).not.toBeInTheDocument();
   });
 
   /**
@@ -320,7 +332,9 @@ describe('TopbarComponent', () => {
    */
   it('should display player title in toolbar', async () => {
     await renderTopbar({ title: 'Player' });
-    expect(screen.getByText('Player', { selector: '.view-text' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Player', { selector: '.view-text' }),
+    ).toBeInTheDocument();
   });
 
   describe('Administration entry', () => {

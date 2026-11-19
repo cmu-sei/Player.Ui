@@ -10,7 +10,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   >
     <mat-sidenav
       #sidenav
-      [ngClass]="
+      [class]="
         (mini$ | async) ? 'appbarmenu-container-mini' : 'appbarmenu-container'
       "
       mode="side"
@@ -18,7 +18,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       mwlResizable
       (resizing)="resizingFn($event)"
       (resizeEnd)="resizeEnd($event)"
-      [ngStyle]="resizeStyle"
+      [style]="resizeStyle"
     >
       <div class="grid">
         <div class="sidebar-content">

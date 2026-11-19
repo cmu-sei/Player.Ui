@@ -56,7 +56,7 @@ import {
   ResizableDirective,
   ResizeHandleDirective,
 } from 'angular-resizable-element';
-import { NgClass, NgStyle, AsyncPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
 import { MatList, MatListItem, MatDivider } from '@angular/material/list';
@@ -75,8 +75,6 @@ import { NotificationsComponent } from './notifications/notifications.component'
     MatSidenavContainer,
     MatSidenav,
     ResizableDirective,
-    NgClass,
-    NgStyle,
     MatToolbar,
     RouterLink,
     MatIcon,
@@ -186,14 +184,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
                         )
                         .pipe(
                           map((memberships) =>
-                            memberships.map(
-                              (membership): Team => ({
-                                id: membership.teamId,
-                                name: membership.teamName,
-                                isMember: true,
-                                isPrimary: membership.isPrimary,
-                              }),
-                            ),
+                            memberships.map((membership): Team => ({
+                              id: membership.teamId,
+                              name: membership.teamName,
+                              isMember: true,
+                              isPrimary: membership.isPrimary,
+                            })),
                           ),
                         )
                     : EMPTY,
@@ -293,7 +289,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
         maxWidth: '100vw',
         width: 'auto',
       });
-      this.data$.subscribe((data) => {
+      // data$ re-emits on every token renewal and route change; once the dialog
+      // closes its componentInstance is null, so stop following it then.
+      this.data$.pipe(takeUntil(dialogRef.afterClosed())).subscribe((data) => {
         dialogRef.componentInstance.resetStepper();
         dialogRef.componentInstance.updateApplicationTemplates();
         dialogRef.componentInstance.updateView();

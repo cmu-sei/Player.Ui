@@ -46,7 +46,7 @@ export class ViewsService {
     return this.viewsApi.createView(command).pipe(
       tap((x) => {
         this.upsert(x.id, x);
-      })
+      }),
     );
   }
 
@@ -81,19 +81,19 @@ export class ViewsService {
           filename: HttpHeaderUtils.getFilename(response.headers),
           hasErrors: HttpHeaderUtils.hasArchiveErrors(response.headers),
         };
-      })
+      }),
     );
   }
 
   import(
     matchApplicationTemplatesByName: boolean,
     matchRolesByName: boolean,
-    archive: Blob
+    archive: Blob,
   ) {
     return this.viewsApi.importViews(
       matchApplicationTemplatesByName,
       matchRolesByName,
-      archive
+      archive,
     );
   }
 }

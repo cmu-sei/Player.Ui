@@ -58,6 +58,16 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             >User Name</mat-header-cell
           >
           <mat-cell *matCellDef="let element">
+            <button
+              mat-icon-button
+              class="copy-id-button"
+              [attr.aria-label]="'Copy ID of ' + (element.name ?? element.id)"
+              [matTooltip]="'Copy: ' + element.id"
+              ngxClipboard
+              [cbContent]="element.id"
+            >
+              <mat-icon class="mdi-24px" fontIcon="mdi-content-copy" />
+            </button>
             @if (element.name !== null) {
               <div>{{ element.name }}</div>
             }
@@ -188,6 +198,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef>User Name</mat-header-cell>
             <mat-cell *matCellDef="let element">
+              <button
+                mat-icon-button
+                class="copy-id-button"
+                [attr.aria-label]="
+                  'Copy ID of ' + (element.user.name ?? element.user.id)
+                "
+                [matTooltip]="'Copy: ' + element.user.id"
+                ngxClipboard
+                [cbContent]="element.user.id"
+              >
+                <mat-icon class="mdi-24px" fontIcon="mdi-content-copy" />
+              </button>
               @if (element.user.name !== null) {
                 <div>
                   {{ element.user.name }}
