@@ -600,15 +600,6 @@
   "src/app/components/player/application-list/application-list.component.ts": {
     "@typescript-eslint/no-floating-promises": {
       "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-return": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-expressions": {
-      "count": 1
     }
   },
   "src/app/components/player/file-browse/file-browse.component.spec.ts": {
@@ -950,9 +941,6 @@
     }
   },
   "src/app/services/notification/notification.service.spec.ts": {
-    "@typescript-eslint/array-type": {
-      "count": 1
-    },
     "@typescript-eslint/no-floating-promises": {
       "count": 1
     },
@@ -968,7 +956,7 @@
       "count": 1
     },
     "@typescript-eslint/no-floating-promises": {
-      "count": 11
+      "count": 10
     },
     "@typescript-eslint/no-unsafe-assignment": {
       "count": 1
