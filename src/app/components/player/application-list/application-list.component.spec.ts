@@ -561,7 +561,9 @@ describe('ApplicationListComponent', () => {
       const rendered = await renderList();
       const { container, fixture, focusedAppUrl } = rendered;
       await fixture.whenStable();
-      rendered.getApplicationsByTeam.mockImplementation(() => of([]));
+      rendered.getApplicationsByTeam.mockImplementation(() =>
+        of<ApplicationData[]>([]),
+      );
 
       await pushApplicationsChanged(rendered, 'team-a');
 
@@ -695,7 +697,7 @@ describe('ApplicationListComponent', () => {
         );
         Object.defineProperty(iframe, 'src', {
           configurable: true,
-          get: () => descriptor.get.call(iframe),
+          get: () => descriptor.get.call(iframe) as string,
           set: (value) => {
             watched.srcSets++;
             descriptor.set.call(iframe, value);

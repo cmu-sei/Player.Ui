@@ -231,7 +231,7 @@ describe('NotificationService', () => {
       const [, team] = connections;
       await flush();
       team.invoke.mockClear();
-      const changed: Array<[string, unknown[][]]> = [];
+      const changed: [string, unknown[][]][] = [];
       service.applicationsChanged.subscribe((id) =>
         changed.push([id, [...team.invoke.mock.calls]]),
       );
@@ -527,7 +527,7 @@ describe('NotificationService', () => {
      * Data: view 'v1', team 't1', user 'u1'; `arrange` builds and (where needed) starts the connections,
      *   then every invoke on the chosen connection rejects with `<method> failed` before `act` runs.
      */
-    it.each<[string, Arrange, number, Act, Array<[string, ...unknown[]]>]>([
+    it.each<[string, Arrange, number, Act, [string, ...unknown[]][]]>([
       [
         'view Join and GetHistory after start',
         connect,
