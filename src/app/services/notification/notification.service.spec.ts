@@ -238,7 +238,7 @@ describe('NotificationService', () => {
       const service = createService();
       const changed: string[] = [];
       service.applicationsChanged.subscribe((id) => changed.push(id));
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
 
       team.trigger('ApplicationsChanged', 't1');
@@ -254,7 +254,7 @@ describe('NotificationService', () => {
      */
     it('emits the team id after the team connection rejoins', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
       await flush();
       team.invoke.mockClear();
@@ -279,7 +279,7 @@ describe('NotificationService', () => {
       const service = createService();
       const changed: string[] = [];
       service.applicationsChanged.subscribe((id) => changed.push(id));
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view, , user] = connections;
       await flush();
 
@@ -388,7 +388,7 @@ describe('NotificationService', () => {
      */
     it('catches a rejected rejoin and emits nothing', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
       await flush();
       const rejections = captureUnhandledRejections();
