@@ -276,6 +276,36 @@ describe('ApplicationListComponent', () => {
   });
 
   /**
+   * Verifies: a background application whose URL is not http, https or relative gets a blank iframe, so
+   *   a javascript: URL never runs in Player's origin; the others keep theirs.
+   * Interacts with: the rendered background iframes, the real DomSanitizer, console.warn.
+   * Data: background apps with a javascript: URL, a data: URL and a relative URL.
+   */
+  it('blanks a background iframe whose URL has another scheme', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const background = (id: string, url: string) => ({
+      ...makeApp(id, url),
+      loadInBackground: true,
+    });
+    const { container } = await renderList({
+      apps: [
+        background('b1', 'javascript:alert(document.domain)'),
+        background('b2', 'data:text/html,<script>alert(1)</script>'),
+        background('b3', '/vm/views/v1'),
+      ],
+    });
+    const sources = Array.from(
+      container.querySelectorAll('iframe.hidden-app-iframe'),
+    ).map((iframe) => iframe.getAttribute('src'));
+    expect(sources).toEqual(['about:blank', 'about:blank', '/vm/views/v1']);
+    expect(warn).toHaveBeenCalledWith(
+      expect.any(String),
+      'javascript:alert(document.domain)',
+    );
+    warn.mockRestore();
+  });
+
+  /**
    * Verifies: clicking an embeddable application opens it in the focused app instead of navigating, after checking
    *   the login.
    * Interacts with: the rendered link; ComnAuthService.isAuthenticated; the real FocusedAppService;
