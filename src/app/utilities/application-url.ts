@@ -17,7 +17,7 @@ export function allowedApplicationUrl(url: string): string {
     return url;
   }
 
-  let protocol: string;
+  let protocol: string | undefined;
   try {
     // Parsed the way the iframe will parse it, so the tabs, newlines and
     // leading spaces a browser ignores cannot hide a scheme.
