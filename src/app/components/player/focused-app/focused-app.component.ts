@@ -8,6 +8,7 @@ import { combineLatest, Observable, Subject } from 'rxjs';
 import { ComnAuthQuery, Theme } from '@cmusei/crucible-common';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 import { AsyncPipe } from '@angular/common';
+import { allowedApplicationUrl } from '../../../utilities/application-url';
 
 @Component({
   selector: 'app-focused-app',
@@ -51,7 +52,9 @@ export class FocusedAppComponent implements OnDestroy {
       shareReplay(1),
       distinctUntilChanged(),
       map((themedUrl) =>
-        this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl),
+        this.sanitizer.bypassSecurityTrustResourceUrl(
+          allowedApplicationUrl(themedUrl),
+        ),
       ),
     );
   }

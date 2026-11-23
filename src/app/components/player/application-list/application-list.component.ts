@@ -33,6 +33,7 @@ import { XApiService } from '../../../services/xapi/xapi.service';
 import { MatList, MatListItem } from '@angular/material/list';
 import { MatButton } from '@angular/material/button';
 import { AsyncPipe } from '@angular/common';
+import { allowedApplicationUrl } from '../../../utilities/application-url';
 
 @Component({
   selector: 'app-application-list',
@@ -115,7 +116,9 @@ export class ApplicationListComponent implements OnInit, OnChanges, OnDestroy {
           const themedUrl = this.insertThemeToUrl(app.url, theme);
           const safeUrl =
             this.safeUrls.get(themedUrl) ??
-            this.sanitizer.bypassSecurityTrustResourceUrl(themedUrl);
+            this.sanitizer.bypassSecurityTrustResourceUrl(
+              allowedApplicationUrl(themedUrl),
+            );
           safeUrls.set(themedUrl, safeUrl);
           return { ...app, themedUrl, safeUrl };
         });

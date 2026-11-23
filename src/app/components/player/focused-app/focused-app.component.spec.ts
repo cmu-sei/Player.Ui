@@ -89,6 +89,47 @@ describe('FocusedAppComponent', () => {
   });
 
   /**
+   * Verifies: a URL that is not http, https or relative is replaced with about:blank before it is trusted
+   *   past the sanitizer, so a javascript: URL never runs in Player's origin.
+   * Interacts with: focusedAppUrl$ stream, the rendered iframe, console.warn.
+   * Data: renderFocused override url 'javascript:alert(document.domain)'.
+   */
+  it('loads about:blank instead of a URL with another scheme', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { fixture } = await renderFocused({
+      url: 'javascript:alert(document.domain)',
+    });
+    const emitted = await firstValueFrom(
+      fixture.componentInstance.focusedAppUrl$,
+    );
+    expect(unwrap(emitted)).toBe('about:blank');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        'iframe.focused-app-iframe',
+      ),
+    ).toHaveAttribute('src', 'about:blank');
+    warn.mockRestore();
+  });
+
+  /**
+   * Verifies: a relative URL, which resolves against Player's own address, is loaded as-is.
+   * Interacts with: focusedAppUrl$ stream.
+   * Data: renderFocused override url '/vm/views/v1?theme=light-theme' and dark-theme.
+   */
+  it('loads a relative URL', async () => {
+    const { fixture } = await renderFocused({
+      url: '/vm/views/v1?theme=light-theme',
+      theme: 'dark-theme' as Theme,
+    });
+    const emitted = await firstValueFrom(
+      fixture.componentInstance.focusedAppUrl$,
+    );
+    expect(unwrap(emitted)).toBe('/vm/views/v1?theme=dark-theme');
+  });
+
+  /**
    * Verifies: ngOnDestroy completes the private unsubscribe$ subject.
    * Interacts with: fixture.destroy(), spy on the component's unsubscribe$ complete method.
    * Data: default renderFocused().
