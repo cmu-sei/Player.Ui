@@ -70,7 +70,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   readonly viewGuid = input<string>(undefined);
   readonly teamGuid = input<string>(undefined);
   readonly userGuid = input<string>(undefined);
-  readonly userToken = input<string>(undefined);
   readonly userName = input<string>(undefined);
   public notification: NotificationDataStatus;
   public messageToSend: string;
@@ -175,7 +174,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.viewGuid(),
       this.teamGuid(),
       this.userGuid(),
-      this.userToken(),
     );
   }
 

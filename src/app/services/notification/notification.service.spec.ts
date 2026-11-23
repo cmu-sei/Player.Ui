@@ -18,8 +18,8 @@ import {
   flush,
 } from '../../test-utils/unhandled-rx-errors';
 
-function createService(overrides: { token?: string } = {}) {
-  const { token = 'auth-token' } = overrides;
+function createService(overrides: { token?: () => string } = {}) {
+  const { token = () => 'auth-token' } = overrides;
 
   TestBed.configureTestingModule({
     providers: [
@@ -31,7 +31,7 @@ function createService(overrides: { token?: string } = {}) {
       },
       {
         provide: ComnAuthService,
-        useValue: { getAuthorizationToken: () => token } satisfies Pick<
+        useValue: { getAuthorizationToken: token } satisfies Pick<
           ComnAuthService,
           'getAuthorizationToken'
         >,
@@ -69,19 +69,19 @@ describe('NotificationService', () => {
 
   describe('connectToNotificationServer()', () => {
     /**
-     * Verifies: connecting builds exactly three hub connections (view/team/user) on the view, team and user hub URLs
-     *   with the bearer token, starts each, and stores them on the service
+     * Verifies: connecting builds exactly three hub connections (view/team/user) on the view, team and user hub URLs,
+     *   with no token in the URL, starts each, and stores them on the service
      * Interacts with: mockHubConnectionBuilder (FakeHubConnections, withUrl spy); service.connectToNotificationServer
-     * Data: view/team/user/token identifiers ('v1','t1','u1','tok'); NotificationsSettings.url 'https://notify.test'
+     * Data: view/team/user identifiers ('v1','t1','u1'); NotificationsSettings.url 'https://notify.test'
      */
     it('builds view, team, and user connections and starts each', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       expect(connections).toHaveLength(3);
       expect(withUrl.mock.calls.map(([url]) => url)).toEqual([
-        'https://notify.test/view?bearer=tok',
-        'https://notify.test/team?bearer=tok',
-        'https://notify.test/user?bearer=tok',
+        'https://notify.test/view',
+        'https://notify.test/team',
+        'https://notify.test/user',
       ]);
       const [view, team, user] = connections;
       expect(view.start).toHaveBeenCalled();
@@ -93,13 +93,40 @@ describe('NotificationService', () => {
     });
 
     /**
+     * Verifies: every hub connection reads the token from ComnAuthService each time it connects, so a reconnect
+     *   after the token is renewed sends the current one
+     * Interacts with: withUrl spy (the options' accessTokenFactory); ComnAuthService.getAuthorizationToken
+     * Data: a token that changes from 'token-1' to 'token-2' between calls
+     */
+    it('reads the current token on every connect', () => {
+      let token = 'token-1';
+      const service = createService({ token: () => token });
+      service.connectToNotificationServer('v1', 't1', 'u1');
+      const factories = withUrl.mock.calls.map(
+        ([, options]) => options.accessTokenFactory,
+      );
+      expect(factories).toHaveLength(3);
+      expect(factories.map((factory) => factory())).toEqual([
+        'token-1',
+        'token-1',
+        'token-1',
+      ]);
+      token = 'token-2';
+      expect(factories.map((factory) => factory())).toEqual([
+        'token-2',
+        'token-2',
+        'token-2',
+      ]);
+    });
+
+    /**
      * Verifies: after the view connection's start() resolves, the service invokes 'Join' and 'GetHistory' with the view id
      * Interacts with: FakeHubConnection.invoke spy; service.connectToNotificationServer
      * Data: view id 'v1'; flush() drains microtasks so the start().then chain runs
      */
     it('joins and requests history once the view connection starts', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       await flush();
       const [view] = connections;
       expect(view.invoke).toHaveBeenCalledWith('Join', 'v1');
@@ -113,7 +140,7 @@ describe('NotificationService', () => {
      */
     it('routes a view "Reply" event through validation to viewNotification', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view] = connections;
       view.trigger('Reply', makeData({ key: 99, text: 'hi' }));
       const received = await firstValueFrom(service.viewNotification);
@@ -127,7 +154,7 @@ describe('NotificationService', () => {
      */
     it('routes a "History" event to notificationHistory', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view] = connections;
       const history = [makeData({ key: 1 }), makeData({ key: 2 })];
       view.trigger('History', history);
@@ -147,7 +174,7 @@ describe('NotificationService', () => {
       'routes a "Delete" event with %s to deleteNotification',
       async (_label, payload) => {
         const service = createService();
-        service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+        service.connectToNotificationServer('v1', 't1', 'u1');
         const [view] = connections;
         view.trigger('Delete', payload);
         expect(await firstValueFrom(service.deleteNotification)).toBe(payload);
@@ -161,7 +188,7 @@ describe('NotificationService', () => {
      */
     it('rejoins on reconnect', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view] = connections;
       view.invoke.mockClear();
       view.reconnect();
@@ -175,7 +202,7 @@ describe('NotificationService', () => {
      */
     it('rejoins the team group on team reconnect', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
       await flush();
       team.invoke.mockClear();
@@ -191,7 +218,7 @@ describe('NotificationService', () => {
      */
     it('rejoins the user group on user reconnect', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, , user] = connections;
       await flush();
       user.invoke.mockClear();
@@ -211,7 +238,7 @@ describe('NotificationService', () => {
       const service = createService();
       const changed: string[] = [];
       service.applicationsChanged.subscribe((id) => changed.push(id));
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
 
       team.trigger('ApplicationsChanged', 't1');
@@ -227,7 +254,7 @@ describe('NotificationService', () => {
      */
     it('emits the team id after the team connection rejoins', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
       await flush();
       team.invoke.mockClear();
@@ -252,7 +279,7 @@ describe('NotificationService', () => {
       const service = createService();
       const changed: string[] = [];
       service.applicationsChanged.subscribe((id) => changed.push(id));
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view, , user] = connections;
       await flush();
 
@@ -325,7 +352,7 @@ describe('NotificationService', () => {
      */
     it('invokes "Post" on the view connection', () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view] = connections;
       view.invoke.mockClear();
       service.sendNotification('v1', 'hello');
@@ -339,7 +366,7 @@ describe('NotificationService', () => {
      */
     it('catches a rejected "Post" instead of leaving it unhandled', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view] = connections;
       view.invoke.mockRejectedValueOnce(new Error('Forbidden'));
 
@@ -361,7 +388,7 @@ describe('NotificationService', () => {
      */
     it('catches a rejected rejoin and emits nothing', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [, team] = connections;
       await flush();
       const rejections = captureUnhandledRejections();
@@ -412,13 +439,30 @@ describe('NotificationService', () => {
     });
 
     /**
+     * Verifies: the presence connection joinPresence builds is on the view hub URL with no token in it, and reads
+     *   the current token each time it connects
+     * Interacts with: withUrl spy (URL and the options' accessTokenFactory); ComnAuthService.getAuthorizationToken
+     * Data: a token that changes from 'token-1' to 'token-2' between calls
+     */
+    it('builds the presence connection with the current token', () => {
+      let token = 'token-1';
+      const service = createService({ token: () => token });
+      service.joinPresence('v1');
+      const [[url, options]] = withUrl.mock.calls;
+      expect(url).toBe('https://notify.test/view');
+      expect(options.accessTokenFactory()).toBe('token-1');
+      token = 'token-2';
+      expect(options.accessTokenFactory()).toBe('token-2');
+    });
+
+    /**
      * Verifies: when a view connection already exists, joinPresence reuses it (no new build) and invokes 'JoinPresence' on it
      * Interacts with: service.viewConnection (existing FakeHubConnection); its invoke spy; service.joinPresence
      * Data: an established connection from connectToNotificationServer; connection count snapshotted before joinPresence
      */
     it('reuses an existing connection instead of building a new one', async () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const builtBefore = connections.length;
       const view = service.viewConnection as unknown as FakeHubConnection;
       view.invoke.mockClear();
@@ -487,7 +531,7 @@ describe('NotificationService', () => {
      */
     it('invokes "LeavePresence" when a connection exists', () => {
       const service = createService();
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
       const [view] = connections;
       view.invoke.mockClear();
       service.leavePresence('v1');
@@ -512,7 +556,7 @@ describe('NotificationService', () => {
       connection: FakeHubConnection,
     ) => void;
     const connect: Arrange = (service) =>
-      service.connectToNotificationServer('v1', 't1', 'u1', 'tok');
+      service.connectToNotificationServer('v1', 't1', 'u1');
     const connected: Arrange = async (service) => {
       connect(service);
       await flush();

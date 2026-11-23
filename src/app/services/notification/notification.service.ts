@@ -40,29 +40,10 @@ export class NotificationService {
     viewGuid: string,
     teamGuid: string,
     userGuid: string,
-    userToken: string,
   ) {
-    this.viewConnection = new signalR.HubConnectionBuilder()
-      .withUrl(
-        `${this.settingsSvc.settings.NotificationsSettings.url}/view?bearer=${userToken}`,
-      )
-      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
-      .withStatefulReconnect()
-      .build();
-    this.teamConnection = new signalR.HubConnectionBuilder()
-      .withUrl(
-        `${this.settingsSvc.settings.NotificationsSettings.url}/team?bearer=${userToken}`,
-      )
-      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
-      .withStatefulReconnect()
-      .build();
-    this.userConnection = new signalR.HubConnectionBuilder()
-      .withUrl(
-        `${this.settingsSvc.settings.NotificationsSettings.url}/user?bearer=${userToken}`,
-      )
-      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
-      .withStatefulReconnect()
-      .build();
+    this.viewConnection = this.buildConnection('view');
+    this.teamConnection = this.buildConnection('team');
+    this.userConnection = this.buildConnection('user');
 
     this.viewConnection.on('Reply', (data: NotificationData) => {
       const validatedData = this.validateNotificationData(data);
@@ -193,17 +174,27 @@ export class NotificationService {
     return data;
   }
 
+  /**
+   * A connection to one of the API's hubs. The token is read on every connect
+   * and reconnect, so a reconnect after the token was renewed authenticates
+   * with the current one rather than the one the page loaded with.
+   */
+  private buildConnection(hub: 'view' | 'team' | 'user') {
+    return new signalR.HubConnectionBuilder()
+      .withUrl(
+        `${this.settingsSvc.settings.NotificationsSettings.url}/${hub}`,
+        {
+          accessTokenFactory: () => this.authService.getAuthorizationToken(),
+        },
+      )
+      .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
+      .withStatefulReconnect()
+      .build();
+  }
+
   joinPresence(viewId: string, teamId?: string) {
     if (this.viewConnection == null) {
-      this.viewConnection = new signalR.HubConnectionBuilder()
-        .withUrl(
-          `${
-            this.settingsSvc.settings.NotificationsSettings.url
-          }/view?bearer=${this.authService.getAuthorizationToken()}`,
-        )
-        .withStatefulReconnect()
-        .withAutomaticReconnect(new RetryPolicy(120, 0, 5))
-        .build();
+      this.viewConnection = this.buildConnection('view');
 
       this.viewConnection
         .start()
