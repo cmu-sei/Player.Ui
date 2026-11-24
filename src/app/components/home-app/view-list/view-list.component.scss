@@ -29,12 +29,12 @@
   white-space: nowrap;
 }
 
-mat-table {
+.mat-mdc-table {
   width: 100%;
 }
 
-mat-cell,
-mat-header-cell {
+.mat-mdc-cell,
+.mat-mdc-header-cell {
   padding: 0 16px;
   vertical-align: middle;
   border-color: var(--pl-line);

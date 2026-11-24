@@ -185,6 +185,8 @@ a {
   margin-bottom: 8px;
 }
 .pl-tools .search-field {
+  @include dense-field;
+
   flex: 0 1 360px;
 }
 .pl-tools .end {

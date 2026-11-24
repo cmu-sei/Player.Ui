@@ -119,30 +119,47 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         >
           @if (team && showEditView$ | async) {
             <a mat-menu-item (click)="editFn($event)" [href]="getEditViewUrl()">
-              Edit View
+              <mat-icon aria-hidden="true" fontIcon="mdi-pencil-outline" />
+              <span>Edit View</span>
             </a>
           }
           @if (team && (showManageTeams$ | async)) {
             <button mat-menu-item (click)="openManageTeams()">
-              Manage Teams
+              <mat-icon
+                aria-hidden="true"
+                fontIcon="mdi-account-group-outline"
+              />
+              <span>Manage Teams</span>
             </button>
           }
           @if (
             (showAdministration$ | async) && topbarView() === 'player-admin'
           ) {
-            <a [routerLink]="['/']" mat-menu-item> Exit Administration </a>
+            <a [routerLink]="['/']" mat-menu-item>
+              <mat-icon aria-hidden="true" fontIcon="mdi-exit-to-app" />
+              <span>Exit Administration</span>
+            </a>
           }
           @if (
             (showAdministration$ | async) &&
             topbarView() !== TopbarView.PLAYER_ADMIN
           ) {
-            <a [routerLink]="['/admin']" mat-menu-item> Administration </a>
+            <a [routerLink]="['/admin']" mat-menu-item>
+              <mat-icon aria-hidden="true" fontIcon="mdi-cog-outline" />
+              <span>Administration</span>
+            </a>
           }
           @if (topbarView() === 'player-player') {
-            <button mat-menu-item (click)="resetUI()">Reset UI</button>
+            <button mat-menu-item (click)="resetUI()">
+              <mat-icon aria-hidden="true" fontIcon="mdi-restore" />
+              <span>Reset UI</span>
+            </button>
           }
           @if (topbarView() === 'player-player') {
-            <a [routerLink]="['/']" mat-menu-item> Exit View </a>
+            <a [routerLink]="['/']" mat-menu-item>
+              <mat-icon aria-hidden="true" fontIcon="mdi-exit-to-app" />
+              <span>Exit View</span>
+            </a>
           }
           <!--
             Light or dark, and Logout, as Scenario Builder's menu has them. The

@@ -27,6 +27,31 @@
     )
   );
 
+  // A toolbar draws its buttons in its own text colour; the bar's tools and the pill are muted.
+  button {
+    @include mat.toolbar-overrides(
+      (
+        container-text-color: var(--pl-muted),
+      )
+    );
+  }
+
+  // A tool whose menu is open stays lit: the accent on its soft fill.
+  button[aria-expanded='true'] {
+    @include mat.toolbar-overrides(
+      (
+        container-text-color: var(--pl-accent),
+      )
+    );
+    @include mat.icon-button-overrides(
+      (
+        icon-color: var(--pl-accent),
+      )
+    );
+
+    background-color: var(--pl-accent-soft);
+  }
+
   gap: 10px;
   border-bottom: 1px solid var(--pl-line);
 }
@@ -123,9 +148,18 @@
 }
 
 // The person's pill: an initial, their name and a chevron.
+.pill[aria-expanded='true'] {
+  @include mat.button-overrides(
+    (
+      outlined-outline-color: var(--pl-accent),
+    )
+  );
+}
+
 .pill {
   @include mat.button-overrides(
     (
+      outlined-label-text-tracking: normal,
       outlined-container-height: 28px,
       outlined-container-shape: 999px,
       outlined-horizontal-padding: 4px,
@@ -138,13 +172,23 @@
     )
   );
 
+  background-color: var(--pl-surface);
+
   .avatar {
     margin-right: 6px;
+  }
+
+  > .mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
   }
 }
 
 .avatar {
-  display: grid;
+  display: inline-grid;
+  vertical-align: middle;
   place-items: center;
   width: 20px;
   height: 20px;

@@ -98,6 +98,7 @@ html {
       item-label-text-weight: 500,
       item-icon-size: 16px,
       item-icon-color: var(--pl-muted),
+      item-spacing: 10px,
       item-hover-state-layer-color: var(--pl-accent),
       item-focus-state-layer-color: var(--pl-accent),
       container-color: var(--pl-surface),
@@ -161,7 +162,6 @@ html {
     (
       icon-color: var(--pl-muted),
       icon-size: 18px,
-      disabled-icon-color: var(--mat-sys-outline-variant),
     )
   );
   // A count on a badge: a small pill in the accent.
@@ -230,6 +230,37 @@ html {
   );
 }
 
+// Icons are 18px line drawings. Material has no size token for mat-icon, so its host is sized here, as
+// Material's icon docs do; the icon font's own size classes would overflow the box. Under html, so it outranks
+// Material's own 24px default but not the sizes it gives icons in a button, a list or a menu.
+html .mat-icon,
+html .mat-icon.mdi-24px {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+.mat-icon.mdi-24px::before,
+.mat-icon.mdi-18px::before,
+.mat-icon.mdi-36px::before {
+  font-size: 18px;
+}
+
+// Menu rows at the look's density. Material has no height token for a menu item, so the items Player
+// declares (the [mat-menu-item] hosts) are sized here.
+button[mat-menu-item],
+a[mat-menu-item] {
+  min-height: 32px;
+
+  .mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+  }
+}
+
 .header-text {
   font-weight: 600;
   color: var(--pl-ink);
@@ -242,6 +273,13 @@ html {
   top: 0;
   z-index: 9 !important;
   background: var(--pl-canvas);
+}
+
+// A row you can act on shows it under the pointer. Material's rows have no hover colour or token for one, so
+// Player's row hosts take it here.
+mat-row:hover,
+tr[mat-row]:hover {
+  background: var(--pl-accent-soft);
 }
 
 // remove the border around paginator items per page selection

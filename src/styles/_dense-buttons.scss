@@ -15,8 +15,38 @@
       filled-label-text-size: var(--pl-small),
       outlined-label-text-size: var(--pl-small),
       text-label-text-size: var(--pl-small),
+      filled-label-text-tracking: normal,
+      outlined-label-text-tracking: normal,
+      text-label-text-tracking: normal,
       outlined-outline-color: var(--pl-line-strong),
       outlined-label-text-color: var(--pl-ink),
     )
   );
+
+  // An outlined button stands on the surface, not the canvas.
+  [matButton='outlined'] {
+    background-color: var(--pl-surface);
+  }
+
+  // A dense button's icon is 16px.
+  [matButton] > .mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+  }
+}
+
+// A field in a dense row (a search over a list, a message box): 32px, on the surface.
+@mixin dense-field {
+  @include mat.form-field-overrides(
+    (
+      container-height: 33px,
+      container-vertical-padding: 6px,
+      container-text-line-height: 21px,
+    )
+  );
+
+  background-color: var(--pl-surface);
+  border-radius: var(--pl-radius);
 }

@@ -15,6 +15,8 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 }
 
 .search-field {
+  @include dense-field;
+
   flex: 0 1 260px;
 }
 
