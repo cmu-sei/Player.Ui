@@ -4,11 +4,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div class="view-list-container">
-  <div class="pl-head">
+  <div class="player-head">
     <h1 class="views-title">My Views</h1>
   </div>
-  <div class="pl-tools">
-    <mat-form-field class="search-field" subscriptSizing="dynamic">
+  <div class="player-tools player-dense-buttons">
+    <mat-form-field
+      class="search-field player-dense-field"
+      subscriptSizing="dynamic"
+    >
       <input
         matInput
         aria-label="Search"
@@ -44,7 +47,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     }
   </div>
 
-  <div class="pl-grid">
+  <div class="player-grid">
     <mat-table
       #table
       [dataSource]="dataSource"
@@ -64,7 +67,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             element.name
           }}</a>
           @if (element.isTemplate) {
-            <span class="template-badge">TEMPLATE</span>
+            <span class="player-template-badge">TEMPLATE</span>
           }
         </mat-cell>
       </ng-container>
@@ -93,7 +96,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-row *matRowDef="let row; columns: displayedColumns" />
     </mat-table>
     @if (dataSource.filteredData.length === 0) {
-      <div class="pl-empty no-results">No results found</div>
+      <div class="player-empty no-results">No results found</div>
     }
 
     @if (isLoading) {

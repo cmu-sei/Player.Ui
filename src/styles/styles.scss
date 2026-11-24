@@ -6,264 +6,19 @@
 @use '@mdi/font/scss/materialdesignicons';
 // Declares the Open Sans family the theme typography and the classification banner use.
 @use '@cmusei/crucible-common/fonts';
-// The colour tokens (light and dark), the base and the shared pl-* pieces.
-@use './glaze';
+// The Material theme, its variants and the few exceptions where Material has no token.
+@use './player-theme';
+// The base and the page layout classes.
+@use './layout';
 /* END IMPORTS */
 
 /* VENDER INCLUDES */
 @include mat.elevation-classes();
 /* END VENDER INCLUDES */
 
-// One Material theme for both modes. It follows color-scheme, which the tokens set (light on :root, dark when
-// <body> has darkMode), and its system colours are pinned to the tokens below, so Material's components take
-// the Glaze palette in either mode. Everything here goes through Material's theme and override mixins, which
-// fail the build on a token name Material doesn't know.
-html {
-  @include mat.theme(
-    (
-      color: (
-        theme-type: color-scheme,
-        primary: mat.$blue-palette,
-      ),
-      typography: (
-        plain-family: var(--pl-font),
-        brand-family: var(--pl-font),
-      ),
-      // Compact, to sit with 13px text and 28px controls.
-      density: -2,
-    )
-  );
-
-  // primary and on-primary are left out: CrucibleThemeService sets them from the app's settings, and the
-  // tokens' accent reads them.
-  @include mat.theme-overrides(
-    (
-      primary-container: var(--pl-accent-soft),
-      on-primary-container: var(--pl-accent-ink),
-      secondary-container: var(--pl-accent-soft),
-      on-secondary-container: var(--pl-accent-ink),
-      background: var(--pl-canvas),
-      on-background: var(--pl-ink),
-      surface: var(--pl-surface),
-      on-surface: var(--pl-ink),
-      on-surface-variant: var(--pl-muted),
-      surface-container-lowest: var(--pl-surface),
-      surface-container-low: var(--pl-surface),
-      surface-container: var(--pl-surface),
-      surface-container-high: var(--pl-raised),
-      surface-container-highest: var(--pl-raised),
-      surface-variant: var(--pl-raised),
-      inverse-surface: var(--pl-invert),
-      inverse-on-surface: var(--pl-on-invert),
-      outline: var(--pl-line-strong),
-      outline-variant: var(--pl-line),
-      error: var(--pl-bad),
-      // Material's fully round corners (buttons, chips) become the look's 8px.
-      corner-full: 8px,
-      corner-extra-large: 10px,
-      corner-large: 8px,
-      corner-medium: 8px,
-      corner-small: 6px,
-      corner-extra-small: 4px,
-    )
-  );
-
-  // Material's components at the look's sizes: 13px text, 12px for headers and secondary text, 28px buttons.
-  @include mat.table-overrides(
-    (
-      row-item-label-text-size: var(--pl-text),
-      header-headline-size: var(--pl-small),
-      header-headline-weight: 500,
-      header-headline-color: var(--pl-muted),
-      header-container-height: 36px,
-      row-item-container-height: 40px,
-      row-item-outline-color: var(--pl-line),
-      background-color: var(--pl-surface),
-    )
-  );
-  @include mat.paginator-overrides(
-    (
-      container-text-size: var(--pl-small),
-      select-trigger-text-size: var(--pl-small),
-      container-background-color: var(--pl-surface),
-      form-field-container-height: 28px,
-      form-field-container-vertical-padding: 4px,
-    )
-  );
-  // A menu or a select's list: a surface with a hairline round it (drawn as a ring in the shadow) and a soft
-  // drop shadow; a hovered item takes the accent's tint.
-  @include mat.menu-overrides(
-    (
-      item-label-text-size: var(--pl-text),
-      item-label-text-weight: 500,
-      item-icon-size: 16px,
-      item-icon-color: var(--pl-muted),
-      item-spacing: 10px,
-      item-hover-state-layer-color: var(--pl-accent),
-      item-focus-state-layer-color: var(--pl-accent),
-      container-color: var(--pl-surface),
-      container-shape: var(--pl-radius),
-      container-elevation-shadow: (
-        0 0 0 1px var(--pl-line),
-        0 12px 32px -12px rgb(var(--pl-shadow) / 0.45),
-      ),
-    )
-  );
-  @include mat.select-overrides(
-    (
-      panel-background-color: var(--pl-surface),
-      trigger-text-size: var(--pl-text),
-      container-elevation-shadow: (
-        0 0 0 1px var(--pl-line),
-        0 12px 32px -12px rgb(var(--pl-shadow) / 0.45),
-      ),
-    )
-  );
-  @include mat.option-overrides(
-    (
-      label-text-size: var(--pl-text),
-      hover-state-layer-color: var(--pl-accent),
-      focus-state-layer-color: var(--pl-accent),
-    )
-  );
-  @include mat.form-field-overrides(
-    (
-      container-text-size: var(--pl-text),
-      container-height: 36px,
-      container-vertical-padding: 8px,
-      outlined-label-text-size: var(--pl-text),
-      outlined-outline-color: var(--pl-line-strong),
-      outlined-hover-outline-color: var(--pl-muted),
-      outlined-container-shape: var(--pl-radius),
-    )
-  );
-  @include mat.list-overrides(
-    (
-      list-item-label-text-size: var(--pl-text),
-      list-item-one-line-container-height: 36px,
-    )
-  );
-  @include mat.button-overrides(
-    (
-      text-label-text-size: var(--pl-text),
-      filled-label-text-size: var(--pl-text),
-      outlined-label-text-size: var(--pl-text),
-      text-label-text-weight: 500,
-      filled-label-text-weight: 500,
-      outlined-label-text-weight: 500,
-      text-container-height: 32px,
-      filled-container-height: 32px,
-      outlined-container-height: 32px,
-      protected-container-height: 32px,
-    )
-  );
-  // Icon buttons: a small muted line drawing.
-  @include mat.icon-button-overrides(
-    (
-      icon-color: var(--pl-muted),
-      icon-size: 18px,
-    )
-  );
-  // A count on a badge: a small pill in the accent.
-  @include mat.badge-overrides(
-    (
-      background-color: var(--pl-accent),
-      text-color: var(--pl-on-accent),
-      text-size: 10px,
-      text-weight: 600,
-      container-size: 16px,
-      container-shape: 999px,
-      container-padding: 0 5px,
-    )
-  );
-  @include mat.dialog-overrides(
-    (
-      container-shape: 10px,
-      subhead-size: 16px,
-      subhead-weight: 600,
-      subhead-line-height: 24px,
-      subhead-color: var(--pl-ink),
-      supporting-text-color: var(--pl-body),
-      supporting-text-size: var(--pl-text),
-    )
-  );
-  // Controls at the look's density: a 32px hit area round a checkbox or a radio.
-  @include mat.checkbox-overrides(
-    (
-      label-text-size: var(--pl-text),
-      state-layer-size: 32px,
-      touch-target-size: 32px,
-    )
-  );
-  @include mat.radio-overrides(
-    (
-      label-text-size: var(--pl-text),
-      state-layer-size: 32px,
-    )
-  );
-  // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
-  @include mat.expansion-overrides(
-    (
-      container-shape: var(--pl-radius),
-      container-elevation-shadow: 0 0 0 1px var(--pl-line),
-      container-background-color: var(--pl-surface),
-      header-collapsed-state-height: 40px,
-      header-expanded-state-height: 40px,
-      header-text-size: var(--pl-text),
-      header-text-weight: 500,
-      container-text-size: var(--pl-text),
-    )
-  );
-  @include mat.tabs-overrides(
-    (
-      label-text-size: var(--pl-text),
-      container-height: 40px,
-    )
-  );
-  @include mat.sidenav-overrides(
-    (
-      container-background-color: var(--pl-surface),
-      content-background-color: var(--pl-canvas),
-      container-divider-color: var(--pl-line),
-      container-shape: 0,
-    )
-  );
-}
-
-// Icons are 18px line drawings. Material has no size token for mat-icon, so its host is sized here, as
-// Material's icon docs do; the icon font's own size classes would overflow the box. Under html, so it outranks
-// Material's own 24px default but not the sizes it gives icons in a button, a list or a menu.
-html .mat-icon,
-html .mat-icon.mdi-24px {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-  line-height: 18px;
-}
-
-.mat-icon.mdi-24px::before,
-.mat-icon.mdi-18px::before,
-.mat-icon.mdi-36px::before {
-  font-size: 18px;
-}
-
-// Menu rows at the look's density. Material has no height token for a menu item, so the items Player
-// declares (the [mat-menu-item] hosts) are sized here.
-button[mat-menu-item],
-a[mat-menu-item] {
-  min-height: 32px;
-
-  .mat-icon {
-    width: 16px;
-    height: 16px;
-    font-size: 16px;
-    line-height: 16px;
-  }
-}
-
 .header-text {
   font-weight: 600;
-  color: var(--pl-ink);
+  color: var(--mat-sys-on-surface);
 }
 
 // prevent table header rows from scrolling
@@ -272,14 +27,7 @@ a[mat-menu-item] {
   position: -webkit-sticky;
   top: 0;
   z-index: 9 !important;
-  background: var(--pl-canvas);
-}
-
-// A row you can act on shows it under the pointer. Material's rows have no hover colour or token for one, so
-// Player's row hosts take it here.
-mat-row:hover,
-tr[mat-row]:hover {
-  background: var(--pl-accent-soft);
+  background: var(--mat-sys-background);
 }
 
 // remove the border around paginator items per page selection
@@ -294,48 +42,41 @@ mat-paginator {
   min-width: 200px !important;
 }
 
+// A field's projected content (prefixes, suffixes) in ink. Its label is set by the theme.
+mat-form-field {
+  color: var(--mat-sys-on-surface);
+}
+
 // Global utility classes (previously from theme.globals() mixin)
 .selected {
-  background: var(--pl-accent);
-  color: var(--pl-on-accent);
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
 
   &:hover,
   &:focus {
-    background: var(--pl-accent) !important;
+    background: var(--mat-sys-primary) !important;
   }
 }
 
 .disabled-text {
-  color: var(--pl-muted);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .background {
-  background-color: var(--pl-canvas);
+  background-color: var(--mat-sys-background);
 }
 
 .highlight {
   &:hover,
   &:focus {
-    background: var(--pl-accent-soft);
+    background: var(--mat-sys-primary-container);
   }
 }
 
 .text {
-  color: var(--pl-ink);
-}
-
-.mat-mdc-form-field,
-.mat-mdc-floating-label,
-.mat-mdc-paginator-page-size-label,
-.mat-mdc-paginator-range-label,
-.mat-expansion-panel-header-description {
-  color: var(--pl-ink) !important;
-}
-
-.mat-expansion-panel {
-  background-color: var(--pl-surface) !important;
+  color: var(--mat-sys-on-surface);
 }
 
 .normal-text {
-  color: var(--pl-ink) !important;
+  color: var(--mat-sys-on-surface) !important;
 }

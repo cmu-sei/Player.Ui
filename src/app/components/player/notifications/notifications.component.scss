@@ -2,25 +2,21 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 @use '@angular/material' as mat;
-@use 'dense-buttons' as *;
 
 // A strip along the bottom of the view: one quiet line that opens upward into
 // the history and, for those who can send, a message field.
 .notifications-container {
   @include mat.expansion-overrides(
     (
-      container-shape: 0,
-      container-elevation-shadow: none,
       header-collapsed-state-height: 36px,
       header-expanded-state-height: 36px,
-      header-text-size: var(--pl-text),
     )
   );
 
   position: absolute;
   bottom: 0;
   width: 100%;
-  border-top: 1px solid var(--pl-line);
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 mat-panel-title {
@@ -29,9 +25,9 @@ mat-panel-title {
 
 .notification-panel-title {
   margin-right: 12px;
-  font-size: var(--pl-text);
+  font-size: var(--mat-sys-body-medium-size);
   font-weight: 600;
-  color: var(--pl-ink);
+  color: var(--mat-sys-on-surface);
 }
 
 // A new notification: the header pulses the warning tint until it is opened.
@@ -41,16 +37,16 @@ mat-panel-title {
 
 @keyframes blinking {
   0% {
-    background-color: var(--pl-warn-soft);
+    background-color: var(--player-warn-soft);
   }
 }
 
 .delete {
-  color: var(--pl-faint);
+  color: var(--player-faint);
   cursor: pointer;
 
   &:hover {
-    color: var(--pl-bad);
+    color: var(--mat-sys-error);
   }
 }
 
@@ -59,38 +55,34 @@ mat-panel-title {
 }
 
 .send-form {
-  @include dense-buttons;
-
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .input-message {
-  @include dense-field;
-
   flex: 1 1 auto;
 }
 
 .count {
   flex: none;
-  font-size: var(--pl-tiny);
-  color: var(--pl-faint);
+  font-size: var(--mat-sys-label-small-size);
+  color: var(--player-faint);
 }
 
 // The history: a bordered box of rows.
 .mat-mdc-list {
   padding: 0;
-  border: 1px solid var(--pl-line);
-  border-radius: var(--pl-radius);
-  background: var(--pl-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface);
   overflow: auto;
   max-height: 250px;
 }
 
 .mat-mdc-list-item {
   height: 32px !important; /* default is 72px */
-  border-bottom: 1px solid var(--pl-line);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
 
   &:last-child {
     border-bottom: 0;
@@ -107,33 +99,33 @@ mat-panel-title {
 }
 #time {
   width: 75px;
-  font-size: var(--pl-small);
+  font-size: var(--mat-sys-body-small-size);
 }
 #time .time {
-  font-family: var(--pl-mono);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-weight: 500;
-  color: var(--pl-ink);
+  color: var(--mat-sys-on-surface);
 }
 #time .zone {
   margin-left: 4px;
-  font-size: var(--pl-tiny);
-  color: var(--pl-faint);
+  font-size: var(--mat-sys-label-small-size);
+  color: var(--player-faint);
 }
 #from {
   width: 120px;
-  font-size: var(--pl-small);
-  color: var(--pl-muted);
+  font-size: var(--mat-sys-body-small-size);
+  color: var(--mat-sys-on-surface-variant);
 }
 #link {
   width: 48px;
   text-align: center;
-  font-size: var(--pl-small);
+  font-size: var(--mat-sys-body-small-size);
 }
 #message {
   min-width: 300px;
   padding: 0 8px;
-  font-size: var(--pl-text);
-  color: var(--pl-ink);
+  font-size: var(--mat-sys-body-medium-size);
+  color: var(--mat-sys-on-surface);
 }
 #deleteButton {
   width: 28px;

@@ -8,12 +8,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   (editComplete)="onEditComplete($event)"
 />
 
-<div [class.hidden]="showEditScreen" class="view-list-container pl-list">
-  <div class="pl-head">
+<div [class.hidden]="showEditScreen" class="view-list-container player-list">
+  <div class="player-head">
     <h1 class="header-text">Views</h1>
   </div>
-  <div class="pl-tools">
-    <mat-form-field class="search-field" subscriptSizing="dynamic">
+  <div class="player-tools player-dense-buttons">
+    <mat-form-field
+      class="search-field player-dense-field"
+      subscriptSizing="dynamic"
+    >
       <input
         matInput
         aria-label="Search"
@@ -112,7 +115,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           {{ element.name }}
         </button>
         @if (element.isTemplate) {
-          <span class="template-badge">TEMPLATE</span>
+          <span class="player-template-badge">TEMPLATE</span>
         }
       </mat-cell>
     </ng-container>
@@ -143,7 +146,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-row *matRowDef="let row; columns: displayedColumns" />
   </mat-table>
   @if (viewDataSource.filteredData.length === 0) {
-    <div class="pl-empty">No results found</div>
+    <div class="player-empty">No results found</div>
   }
   <mat-paginator
     #paginator

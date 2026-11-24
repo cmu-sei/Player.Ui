@@ -23,11 +23,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-cell *matCellDef="let element">
         <mat-chip-set>
           @if (element.online) {
-            <mat-chip class="status online" disableRipple
+            <mat-chip
+              class="status online player-status-chip player-status-chip-online"
+              disableRipple
               ><span class="dot"></span>Online</mat-chip
             >
           } @else {
-            <mat-chip class="status" disableRipple
+            <mat-chip class="status player-status-chip" disableRipple
               ><span class="dot"></span>Offline</mat-chip
             >
           }

@@ -16,7 +16,7 @@
 // The sections, down the left: a quiet list on the surface, the open one in the accent.
 .appbarmenu-container {
   width: 220px;
-  border-right: 1px solid var(--pl-line);
+  border-right: 1px solid var(--mat-sys-outline-variant);
 }
 
 .appitems-container {
@@ -27,16 +27,16 @@
   @include mat.list-overrides(
     (
       list-item-one-line-container-height: 38px,
-      list-item-container-shape: var(--pl-radius-sm),
-      list-item-label-text-size: var(--pl-text),
+      list-item-container-shape: var(--mat-sys-corner-small),
+      list-item-label-text-size: var(--mat-sys-body-medium-size),
       list-item-label-text-weight: 500,
       list-item-label-text-tracking: normal,
-      list-item-label-text-color: var(--pl-body),
-      list-item-hover-label-text-color: var(--pl-ink),
-      list-item-focus-label-text-color: var(--pl-ink),
+      list-item-label-text-color: var(--player-body),
+      list-item-hover-label-text-color: var(--mat-sys-on-surface),
+      list-item-focus-label-text-color: var(--mat-sys-on-surface),
       list-item-leading-icon-size: 24px,
-      list-item-leading-icon-color: var(--pl-muted),
-      list-item-hover-leading-icon-color: var(--pl-muted),
+      list-item-leading-icon-color: var(--mat-sys-on-surface-variant),
+      list-item-hover-leading-icon-color: var(--mat-sys-on-surface-variant),
       list-item-leading-icon-start-space: 10px,
       list-item-leading-icon-end-space: 10px,
     )
@@ -47,12 +47,12 @@
 .nav-item.active {
   @include mat.list-overrides(
     (
-      list-item-container-color: var(--pl-accent-soft),
-      list-item-label-text-color: var(--pl-accent-ink),
-      list-item-hover-label-text-color: var(--pl-accent-ink),
-      list-item-focus-label-text-color: var(--pl-accent-ink),
-      list-item-leading-icon-color: var(--pl-accent),
-      list-item-hover-leading-icon-color: var(--pl-accent),
+      list-item-container-color: var(--mat-sys-primary-container),
+      list-item-label-text-color: var(--mat-sys-on-primary-container),
+      list-item-hover-label-text-color: var(--mat-sys-on-primary-container),
+      list-item-focus-label-text-color: var(--mat-sys-on-primary-container),
+      list-item-leading-icon-color: var(--mat-sys-primary),
+      list-item-hover-leading-icon-color: var(--mat-sys-primary),
     )
   );
 }

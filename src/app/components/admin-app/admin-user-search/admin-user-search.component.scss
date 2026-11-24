@@ -13,9 +13,9 @@
 .table-container {
   flex: 1;
   overflow: auto;
-  border: 1px solid var(--pl-line);
-  border-radius: var(--pl-radius);
-  background: var(--pl-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface);
 }
 
 table {

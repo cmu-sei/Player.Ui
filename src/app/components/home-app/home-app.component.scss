@@ -9,12 +9,12 @@
 
   // The view list's head sits on the page, so give the sheet its own ground to
   // stay readable over the landing background image.
-  &.crucible-landing-background .pl-sheet {
+  &.crucible-landing-background .player-sheet {
     padding-top: 20px;
     padding-bottom: 20px;
-    border: 1px solid var(--pl-line);
-    border-radius: var(--pl-radius);
-    background-color: var(--pl-canvas);
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-medium);
+    background-color: var(--mat-sys-background);
   }
 }
 

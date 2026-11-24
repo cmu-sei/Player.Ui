@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   tools and the person's menu.
 -->
 <header>
-  <mat-toolbar class="bar toolbar">
+  <mat-toolbar class="bar toolbar player-toolbar">
     <app-switcher self="player" label="Apps" [apps]="apps" />
     <a
       class="brand home-logo"
@@ -59,6 +59,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <button
             type="button"
             matIconButton
+            class="player-toolbar-tool"
             [matMenuTriggerFor]="teamMenu"
             matTooltip="Select a Team"
             aria-label="Select a Team"
@@ -80,6 +81,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <button
         type="button"
         matIconButton
+        class="player-toolbar-tool"
         aria-label="Users"
         matTooltip="Users"
         (click)="openUserPresence()"
@@ -96,7 +98,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <button
           type="button"
           matButton="outlined"
-          class="pill"
+          class="pill player-toolbar-tool"
           [matMenuTriggerFor]="menu"
           [matTooltip]="currentUser.profile.name"
           aria-label="Menu"

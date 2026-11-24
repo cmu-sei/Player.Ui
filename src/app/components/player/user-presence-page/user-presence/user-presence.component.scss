@@ -3,20 +3,13 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-@use '@angular/material' as mat;
-@use 'dense-buttons' as *;
-
 // Wide enough for the tools to stay on one line.
 :host {
-  @include dense-buttons;
-
   display: block;
   min-width: min(600px, 90vw);
 }
 
 .search-field {
-  @include dense-field;
-
   flex: 0 1 260px;
 }
 
@@ -30,19 +23,12 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 .presence-accordion {
   display: block;
   margin: 8px 0 16px;
-  border: 1px solid var(--pl-line);
-  border-radius: var(--pl-radius);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
   overflow: hidden;
 
-  @include mat.expansion-overrides(
-    (
-      container-shape: 0,
-      container-elevation-shadow: none,
-    )
-  );
-
   mat-expansion-panel {
-    border-bottom: 1px solid var(--pl-line);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
 
     &:last-child {
       border-bottom: 0;
@@ -56,13 +42,12 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 }
 
 mat-panel-title {
-  font-size: var(--pl-text);
+  font-size: var(--mat-sys-body-medium-size);
   font-weight: 600;
-  color: var(--pl-ink);
+  color: var(--mat-sys-on-surface);
 }
 
 mat-panel-description {
   justify-content: flex-end;
-  font-size: var(--pl-small);
-  color: var(--pl-muted);
+  font-size: var(--mat-sys-body-small-size);
 }

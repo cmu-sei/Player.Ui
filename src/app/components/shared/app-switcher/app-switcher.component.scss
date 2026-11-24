@@ -16,7 +16,7 @@
 .dots {
   @include mat.icon-button-overrides(
     (
-      icon-color: var(--pl-faint),
+      icon-color: var(--player-faint),
       state-layer-size: 22px,
     )
   );
@@ -32,8 +32,8 @@
 // The menu's own content: a small muted title over the apps, each with a lettered badge.
 .app-switcher-title {
   padding: 4px 8px 6px;
-  font-size: var(--pl-small);
-  color: var(--pl-muted);
+  font-size: var(--mat-sys-body-small-size);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .app-switcher-badge {
@@ -42,10 +42,10 @@
   width: 22px;
   height: 22px;
   margin-right: 10px;
-  border: 1px solid var(--pl-line);
-  border-radius: var(--pl-radius-sm);
-  background: var(--pl-canvas);
-  font-size: var(--pl-tiny);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-background);
+  font-size: var(--mat-sys-label-small-size);
   font-weight: 600;
   text-transform: uppercase;
 }

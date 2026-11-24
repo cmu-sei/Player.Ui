@@ -1,0 +1,145 @@
+// Copyright 2026 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+// The base and the page layout pages share (player-*). Colours, type sizes and corners come from the theme
+// (_player-theme.scss) as Material system variables.
+
+/* ---- Base ---- */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: 400 var(--mat-sys-body-medium-size) / 1.45
+    var(--mat-sys-body-medium-font);
+  font-variant-numeric: tabular-nums;
+  background: var(--mat-sys-background);
+  color: var(--mat-sys-on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--mat-sys-on-surface);
+}
+
+a {
+  color: var(--mat-sys-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- A page: one centred sheet on the canvas ---- */
+
+.player-page {
+  height: 100%;
+  overflow: auto;
+}
+
+.player-sheet {
+  max-width: 1000px;
+  margin: 32px auto;
+  padding: 0 24px;
+
+  &.wide {
+    max-width: 1400px;
+  }
+}
+
+.player-head {
+  margin-bottom: 16px;
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .sub {
+    margin: 4px 0 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// The row over a list: its search, then its actions at the end.
+.player-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  .search-field {
+    flex: 0 1 360px;
+  }
+
+  .end {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+}
+
+/* ---- Containers ---- */
+
+// A bordered box of rows: the list on a sheet.
+.player-grid {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface);
+  overflow: hidden;
+
+  .title {
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--mat-sys-primary);
+    }
+  }
+}
+
+.player-empty {
+  padding: 20px 16px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// A list page whose table and paginator sit directly in it: together they are the bordered box.
+.player-list {
+  > mat-table {
+    box-sizing: border-box;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-medium) var(--mat-sys-corner-medium) 0 0;
+    overflow: hidden;
+  }
+
+  > mat-paginator {
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-top: 0;
+    border-radius: 0 0 var(--mat-sys-corner-medium) var(--mat-sys-corner-medium);
+  }
+
+  > .player-empty {
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-top: 0;
+    background: var(--mat-sys-surface);
+  }
+}

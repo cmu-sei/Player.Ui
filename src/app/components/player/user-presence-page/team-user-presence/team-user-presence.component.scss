@@ -3,49 +3,24 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
-@use '@angular/material' as mat;
-
 mat-table {
-  border-top: 1px solid var(--pl-line);
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .mat-column-online {
   flex: 0 0 120px;
 }
 
-// Online or offline: a small chip, the colour as text on its soft fill, with a dot before the words.
-.status {
-  @include mat.chips-overrides(
-    (
-      container-height: 20px,
-      container-shape-radius: 999px,
-      label-text-size: var(--pl-tiny),
-      label-text-color: var(--pl-muted),
-      outline-color: var(--pl-line-strong),
-      elevated-container-color: transparent,
-    )
-  );
-
-  &.online {
-    @include mat.chips-overrides(
-      (
-        label-text-color: var(--pl-ok),
-        outline-color: var(--pl-ok-line),
-        elevated-container-color: var(--pl-ok-soft),
-      )
-    );
-  }
-}
-
+// The status chip's dot, before its words.
 .dot {
   display: inline-block;
   width: 8px;
   height: 8px;
   margin-right: 4px;
   border-radius: 50%;
-  background: var(--pl-faint);
+  background: var(--player-faint);
 
   .online & {
-    background: var(--pl-ok);
+    background: var(--player-ok);
   }
 }

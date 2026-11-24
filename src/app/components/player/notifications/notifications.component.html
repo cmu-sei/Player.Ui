@@ -4,7 +4,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <mat-expansion-panel
-  class="notifications-container"
+  class="notifications-container player-flat-panels"
   (opened)="notificationPanelToggle('open')"
   (closed)="notificationPanelToggle('close')"
 >
@@ -88,11 +88,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   @if (hasViewAdmin()) {
     <div class="send-message">
       <form
-        class="send-form"
+        class="send-form player-dense-buttons"
         #notificationForm="ngForm"
         (ngSubmit)="sendMessage()"
       >
-        <mat-form-field class="input-message" subscriptSizing="dynamic">
+        <mat-form-field
+          class="input-message player-dense-field"
+          subscriptSizing="dynamic"
+        >
           <input
             matInput
             #msgtext

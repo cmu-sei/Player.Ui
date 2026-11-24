@@ -3,12 +3,15 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div class="list-container pl-list">
-  <div class="pl-head">
+<div class="list-container player-list">
+  <div class="player-head">
     <h1 class="header-text">Application Templates</h1>
   </div>
-  <div class="pl-tools">
-    <mat-form-field class="search-field" subscriptSizing="dynamic">
+  <div class="player-tools player-dense-buttons">
+    <mat-form-field
+      class="search-field player-dense-field"
+      subscriptSizing="dynamic"
+    >
       <input
         matInput
         aria-label="Search"
@@ -129,7 +132,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-row *matRowDef="let row; columns: appTemplateColumns" />
   </mat-table>
   @if (appTemplateDataSource.filteredData.length === 0) {
-    <div class="pl-empty">No Application Templates found</div>
+    <div class="player-empty">No Application Templates found</div>
   }
   <mat-paginator
     #paginator

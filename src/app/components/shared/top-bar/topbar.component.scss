@@ -9,51 +9,8 @@
 }
 
 .bar {
-  @include mat.toolbar-overrides(
-    (
-      container-background-color: var(--pl-surface),
-      container-text-color: var(--pl-ink),
-      standard-height: 48px,
-      mobile-height: 48px,
-      title-text-size: var(--pl-text),
-      title-text-weight: 400,
-      title-text-line-height: normal,
-    )
-  );
-  // The bar's tools: 28px targets.
-  @include mat.icon-button-overrides(
-    (
-      state-layer-size: 28px,
-    )
-  );
-
-  // A toolbar draws its buttons in its own text colour; the bar's tools and the pill are muted.
-  button {
-    @include mat.toolbar-overrides(
-      (
-        container-text-color: var(--pl-muted),
-      )
-    );
-  }
-
-  // A tool whose menu is open stays lit: the accent on its soft fill.
-  button[aria-expanded='true'] {
-    @include mat.toolbar-overrides(
-      (
-        container-text-color: var(--pl-accent),
-      )
-    );
-    @include mat.icon-button-overrides(
-      (
-        icon-color: var(--pl-accent),
-      )
-    );
-
-    background-color: var(--pl-accent-soft);
-  }
-
   gap: 10px;
-  border-bottom: 1px solid var(--pl-line);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
 .brand {
@@ -62,7 +19,7 @@
   gap: 8px;
   flex: none;
   font-weight: 600;
-  color: var(--pl-ink);
+  color: var(--mat-sys-on-surface);
   text-decoration: none;
 }
 
@@ -76,7 +33,7 @@
   width: 26px;
   height: 26px;
   border-radius: 7px;
-  background: var(--pl-mark, var(--pl-accent));
+  background: var(--crucible-topbar-background, var(--mat-sys-primary));
 
   svg {
     width: 21px;
@@ -84,21 +41,21 @@
   }
 
   .drop {
-    fill: var(--crucible-topbar-text, var(--pl-on-accent));
+    fill: var(--crucible-topbar-text, var(--mat-sys-on-primary));
   }
 
   .play {
-    fill: var(--pl-mark, var(--pl-accent));
+    fill: var(--crucible-topbar-background, var(--mat-sys-primary));
   }
 }
 
 .sep {
   flex: none;
-  color: var(--pl-faint);
+  color: var(--player-faint);
 }
 
 .crumb {
-  color: var(--pl-muted);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .section {
@@ -122,7 +79,7 @@
 
 .team-label {
   flex: none;
-  color: var(--pl-muted);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .copy-text {
@@ -151,9 +108,11 @@
 .pill[aria-expanded='true'] {
   @include mat.button-overrides(
     (
-      outlined-outline-color: var(--pl-accent),
+      outlined-outline-color: var(--mat-sys-primary),
     )
   );
+
+  background-color: var(--mat-sys-primary-container);
 }
 
 .pill {
@@ -165,14 +124,14 @@
       outlined-horizontal-padding: 4px,
       outlined-icon-spacing: 4px,
       outlined-icon-offset: 0,
-      outlined-outline-color: var(--pl-line),
-      outlined-label-text-color: var(--pl-muted),
-      outlined-label-text-size: var(--pl-small),
+      outlined-outline-color: var(--mat-sys-outline-variant),
+      outlined-label-text-color: var(--mat-sys-on-surface-variant),
+      outlined-label-text-size: var(--mat-sys-body-small-size),
       outlined-label-text-weight: 500,
     )
   );
 
-  background-color: var(--pl-surface);
+  background-color: var(--mat-sys-surface);
 
   .avatar {
     margin-right: 6px;
@@ -193,9 +152,9 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: var(--pl-accent);
-  color: var(--pl-on-accent);
-  font: 600 11px / 1 var(--pl-font);
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  font: 600 11px / 1 var(--mat-sys-body-medium-font);
   text-transform: uppercase;
 }
 

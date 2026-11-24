@@ -46,10 +46,10 @@ import { ComnSettingsService } from '@cmusei/crucible-common';
         gap: 16px;
         height: 24px;
         padding: 0 16px;
-        border-top: 1px solid var(--pl-line);
-        background: var(--pl-surface);
+        border-top: 1px solid var(--mat-sys-outline-variant);
+        background: var(--mat-sys-surface);
         font-size: 11px;
-        color: var(--pl-faint);
+        color: var(--player-faint);
       }
 
       .repo {
@@ -60,7 +60,7 @@ import { ComnSettingsService } from '@cmusei/crucible-common';
       }
 
       .repo:hover {
-        color: var(--pl-ink);
+        color: var(--mat-sys-on-surface);
       }
 
       .repo svg {

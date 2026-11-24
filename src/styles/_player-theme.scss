@@ -1,0 +1,481 @@
+// Copyright 2026 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+// Player's theme: the Glaze look, expressed through Angular Material's theming APIs.
+//
+// - The palette, type sizes and corners are Material system variables (--mat-sys-*), set by mat.theme and
+//   mat.theme-overrides. Components read those variables; they don't define colours of their own.
+// - Colours are light-dark(light, dark) pairs. mat.theme follows color-scheme (theme-type: color-scheme), which
+//   is light on :root and dark while CrucibleThemeService puts the darkMode class on <body>.
+// - primary and on-primary are not set here: CrucibleThemeService writes them inline on <html> and <body> from
+//   the app's settings, so an operator's colours keep working. The accent's tints are mixed from them.
+// - A few colours Material has no role for are Player additions (--player-*).
+// - Variants (dense rows, the top bar, flat panels, status chips) are classes a template opts into.
+// - Where Material has no token at all, the rule is in "Exceptions" at the end, on the hosts Player declares,
+//   never on Material's internal classes.
+//
+// Note: mat.theme-overrides silently ignores a key it doesn't know, unlike the component *-overrides mixins,
+// which fail the build. Check new keys against @angular/material/core/tokens/_system.scss.
+
+@use 'sass:string';
+@use '@angular/material' as mat;
+
+$_font: ('Open Sans', sans-serif);
+
+// A floating surface (a menu, a select's list): a hairline drawn as a ring, and a soft drop shadow.
+$_popup-shadow: (
+  0 0 0 1px var(--mat-sys-outline-variant),
+  0 12px 32px -12px light-dark(rgb(18 22 34 / 0.45), rgb(0 0 0 / 0.45))
+);
+
+:root {
+  color-scheme: light;
+}
+
+:root:has(body.darkMode) {
+  color-scheme: dark;
+}
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: color-scheme,
+        primary: mat.$blue-palette,
+      ),
+      typography: (
+        plain-family: $_font,
+        brand-family: $_font,
+      ),
+      // Compact, to sit with 13px text and 28px controls.
+      density: -2,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      // The ground, surfaces, ink and lines. Light is Glaze's; dark is GraySpace's.
+      background: light-dark(#f6f7f9, #0f1318),
+      on-background: light-dark(#1c2230, #d8dee6),
+      surface: light-dark(#ffffff, #151b22),
+      surface-container-lowest: light-dark(#ffffff, #151b22),
+      surface-container-low: light-dark(#ffffff, #151b22),
+      surface-container: light-dark(#ffffff, #151b22),
+      surface-container-high: light-dark(#fafbfc, #1b222b),
+      surface-container-highest: light-dark(#fafbfc, #1b222b),
+      surface-variant: light-dark(#fafbfc, #1b222b),
+      on-surface: light-dark(#1c2230, #d8dee6),
+      on-surface-variant: light-dark(#6b7385, #8a96a6),
+      outline: light-dark(#cfd4dc, #36414f),
+      outline-variant: light-dark(#e3e6eb, #2a333f),
+      inverse-surface: light-dark(#1c2230, #22344a),
+      inverse-on-surface: #ffffff,
+      error: light-dark(#c22f3a, #f85149),
+      // The accent's soft fill and its ink, mixed from the runtime primary.
+      primary-container: color-mix(
+          in srgb,
+          var(--mat-sys-primary) 9%,
+          var(--mat-sys-surface)
+        ),
+      on-primary-container: color-mix(
+          in srgb,
+          var(--mat-sys-primary) 68%,
+          light-dark(#000000, #ffffff)
+        ),
+      secondary-container: color-mix(
+          in srgb,
+          var(--mat-sys-primary) 9%,
+          var(--mat-sys-surface)
+        ),
+      on-secondary-container: color-mix(
+          in srgb,
+          var(--mat-sys-primary) 68%,
+          light-dark(#000000, #ffffff)
+        ),
+      // Type: 13px body text, 12px secondary text, 11px labels.
+      body-medium: string.unquote('400 13px / 1.25rem "Open Sans", sans-serif'),
+      body-medium-size: 13px,
+      body-small-size: 12px,
+      label-small-size: 11px,
+      // Corners: Material's fully round corners (buttons, chips) become 8px.
+      corner-full: 8px,
+      corner-extra-large: 10px,
+      corner-large: 8px,
+      corner-medium: 8px,
+      corner-small: 6px,
+      corner-extra-small: 4px,
+    )
+  );
+
+  // Player additions: colours Material has no role for.
+  --player-body: light-dark(
+    #3b4356,
+    #b8c2cf
+  ); // running text, between on-surface and on-surface-variant
+  --player-faint: light-dark(
+    #9aa1b0,
+    #5f6b7a
+  ); // placeholders, separators, the footer
+  --player-ok: light-dark(#1f8a5b, #3fb950);
+  --player-ok-soft: light-dark(#e7f5ee, #10221a);
+  --player-ok-line: light-dark(#bfe2cf, #23462c);
+  --player-warn-soft: light-dark(#fff3df, #221b0c);
+
+  // Material's components at the look's sizes.
+  @include mat.table-overrides(
+    (
+      row-item-label-text-size: var(--mat-sys-body-medium-size),
+      header-headline-size: var(--mat-sys-body-small-size),
+      header-headline-weight: 500,
+      header-headline-color: var(--mat-sys-on-surface-variant),
+      header-container-height: 36px,
+      row-item-container-height: 40px,
+      row-item-outline-color: var(--mat-sys-outline-variant),
+      background-color: var(--mat-sys-surface),
+    )
+  );
+  @include mat.paginator-overrides(
+    (
+      container-text-size: var(--mat-sys-body-small-size),
+      select-trigger-text-size: var(--mat-sys-body-small-size),
+      container-background-color: var(--mat-sys-surface),
+      form-field-container-height: 28px,
+      form-field-container-vertical-padding: 4px,
+    )
+  );
+  @include mat.menu-overrides(
+    (
+      item-label-text-size: var(--mat-sys-body-medium-size),
+      item-label-text-weight: 500,
+      item-icon-size: 16px,
+      item-icon-color: var(--mat-sys-on-surface-variant),
+      item-spacing: 10px,
+      item-hover-state-layer-color: var(--mat-sys-primary),
+      item-focus-state-layer-color: var(--mat-sys-primary),
+      container-color: var(--mat-sys-surface),
+      container-shape: var(--mat-sys-corner-medium),
+      container-elevation-shadow: $_popup-shadow,
+    )
+  );
+  @include mat.select-overrides(
+    (
+      panel-background-color: var(--mat-sys-surface),
+      trigger-text-size: var(--mat-sys-body-medium-size),
+      container-elevation-shadow: $_popup-shadow,
+    )
+  );
+  @include mat.option-overrides(
+    (
+      label-text-size: var(--mat-sys-body-medium-size),
+      hover-state-layer-color: var(--mat-sys-primary),
+      focus-state-layer-color: var(--mat-sys-primary),
+    )
+  );
+  // A field's label stays in ink in every state.
+  @include mat.form-field-overrides(
+    (
+      container-text-size: var(--mat-sys-body-medium-size),
+      container-height: 36px,
+      container-vertical-padding: 8px,
+      outlined-label-text-size: var(--mat-sys-body-medium-size),
+      outlined-outline-color: var(--mat-sys-outline),
+      outlined-hover-outline-color: var(--mat-sys-on-surface-variant),
+      outlined-container-shape: var(--mat-sys-corner-medium),
+      outlined-label-text-color: var(--mat-sys-on-surface),
+      outlined-hover-label-text-color: var(--mat-sys-on-surface),
+      outlined-focus-label-text-color: var(--mat-sys-on-surface),
+      outlined-disabled-label-text-color: var(--mat-sys-on-surface),
+      outlined-error-label-text-color: var(--mat-sys-on-surface),
+      outlined-error-hover-label-text-color: var(--mat-sys-on-surface),
+      outlined-error-focus-label-text-color: var(--mat-sys-on-surface),
+    )
+  );
+  @include mat.list-overrides(
+    (
+      list-item-label-text-size: var(--mat-sys-body-medium-size),
+      list-item-one-line-container-height: 36px,
+    )
+  );
+  @include mat.button-overrides(
+    (
+      text-label-text-size: var(--mat-sys-body-medium-size),
+      filled-label-text-size: var(--mat-sys-body-medium-size),
+      outlined-label-text-size: var(--mat-sys-body-medium-size),
+      text-label-text-weight: 500,
+      filled-label-text-weight: 500,
+      outlined-label-text-weight: 500,
+      text-container-height: 32px,
+      filled-container-height: 32px,
+      outlined-container-height: 32px,
+      protected-container-height: 32px,
+    )
+  );
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-on-surface-variant),
+      icon-size: 18px,
+    )
+  );
+  // A count on a badge: a small pill in the accent.
+  @include mat.badge-overrides(
+    (
+      background-color: var(--mat-sys-primary),
+      text-color: var(--mat-sys-on-primary),
+      text-size: 10px,
+      text-weight: 600,
+      container-size: 16px,
+      container-shape: 999px,
+      container-padding: 0 5px,
+    )
+  );
+  @include mat.dialog-overrides(
+    (
+      container-shape: 10px,
+      subhead-size: 16px,
+      subhead-weight: 600,
+      subhead-line-height: 24px,
+      subhead-color: var(--mat-sys-on-surface),
+      supporting-text-color: var(--player-body),
+      supporting-text-size: var(--mat-sys-body-medium-size),
+    )
+  );
+  // A 32px hit area round a checkbox or a radio.
+  @include mat.checkbox-overrides(
+    (
+      label-text-size: var(--mat-sys-body-medium-size),
+      state-layer-size: 32px,
+      touch-target-size: 32px,
+    )
+  );
+  @include mat.radio-overrides(
+    (
+      label-text-size: var(--mat-sys-body-medium-size),
+      state-layer-size: 32px,
+    )
+  );
+  // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
+  @include mat.expansion-overrides(
+    (
+      container-shape: var(--mat-sys-corner-medium),
+      container-elevation-shadow: 0 0 0 1px var(--mat-sys-outline-variant),
+      container-background-color: var(--mat-sys-surface),
+      header-collapsed-state-height: 40px,
+      header-expanded-state-height: 40px,
+      header-text-size: var(--mat-sys-body-medium-size),
+      header-text-weight: 500,
+      header-description-color: var(--mat-sys-on-surface),
+      container-text-size: var(--mat-sys-body-medium-size),
+    )
+  );
+  @include mat.tabs-overrides(
+    (
+      label-text-size: var(--mat-sys-body-medium-size),
+      container-height: 40px,
+    )
+  );
+  @include mat.sidenav-overrides(
+    (
+      container-background-color: var(--mat-sys-surface),
+      content-background-color: var(--mat-sys-background),
+      container-divider-color: var(--mat-sys-outline-variant),
+      container-shape: 0,
+    )
+  );
+  // The 13px body size reaches these too; they keep Material's 14px.
+  @include mat.slide-toggle-overrides(
+    (
+      label-text-size: 0.875rem,
+    )
+  );
+  @include mat.snack-bar-overrides(
+    (
+      supporting-text-size: 0.875rem,
+    )
+  );
+}
+
+// ---- Variants: classes a template opts into ----
+
+// The quiet buttons of a dense row (a list's tools, a form's single action): 28px, 12px text, 16px icons, and
+// an outlined button stands on the surface rather than the canvas.
+.player-dense-buttons {
+  @include mat.button-overrides(
+    (
+      filled-container-height: 28px,
+      outlined-container-height: 28px,
+      text-container-height: 28px,
+      filled-horizontal-padding: 10px,
+      outlined-horizontal-padding: 10px,
+      filled-label-text-size: var(--mat-sys-body-small-size),
+      outlined-label-text-size: var(--mat-sys-body-small-size),
+      text-label-text-size: var(--mat-sys-body-small-size),
+      filled-label-text-tracking: normal,
+      outlined-label-text-tracking: normal,
+      text-label-text-tracking: normal,
+      outlined-outline-color: var(--mat-sys-outline),
+      outlined-label-text-color: var(--mat-sys-on-surface),
+    )
+  );
+
+  // Exception: an outlined button has no fill token.
+  [matButton='outlined'] {
+    background-color: var(--mat-sys-surface);
+  }
+
+  // Exception: a button's icon has no size token.
+  [matButton] > .mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+  }
+}
+
+// A field in a dense row (a search over a list, a message box): 33px, on the surface. Put it on the
+// mat-form-field.
+.player-dense-field {
+  @include mat.form-field-overrides(
+    (
+      container-height: 33px,
+      container-vertical-padding: 6px,
+      container-text-line-height: 21px,
+    )
+  );
+
+  // Exception: an outlined field has no fill token.
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+// The app bar: a 48px surface with 13px text and 28px tools. Put it on the mat-toolbar.
+.player-toolbar {
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: var(--mat-sys-surface),
+      container-text-color: var(--mat-sys-on-surface),
+      standard-height: 48px,
+      mobile-height: 48px,
+      title-text-size: var(--mat-sys-body-medium-size),
+      title-text-weight: 400,
+      title-text-line-height: normal,
+    )
+  );
+  @include mat.icon-button-overrides(
+    (
+      state-layer-size: 28px,
+    )
+  );
+}
+
+// A tool in the app bar. A toolbar draws its buttons in its own text colour, so this sets that colour for the
+// button: muted, and the accent on its soft fill while the tool's menu is open.
+.player-toolbar-tool {
+  @include mat.toolbar-overrides(
+    (
+      container-text-color: var(--mat-sys-on-surface-variant),
+    )
+  );
+
+  &[aria-expanded='true'] {
+    @include mat.toolbar-overrides(
+      (
+        container-text-color: var(--mat-sys-primary),
+      )
+    );
+    @include mat.icon-button-overrides(
+      (
+        icon-color: var(--mat-sys-primary),
+      )
+    );
+
+    background-color: var(--mat-sys-primary-container);
+  }
+}
+
+// Expansion panels with no corners or shadow, for panels that sit edge to edge. Put it on the panel or on the
+// accordion that holds them.
+.player-flat-panels {
+  @include mat.expansion-overrides(
+    (
+      container-shape: 0,
+      container-elevation-shadow: none,
+    )
+  );
+}
+
+// A small status chip: the colour as text on its soft fill. Offline is muted; add -online for online.
+.player-status-chip {
+  @include mat.chips-overrides(
+    (
+      container-height: 20px,
+      container-shape-radius: 999px,
+      label-text-size: var(--mat-sys-label-small-size),
+      label-text-color: var(--mat-sys-on-surface-variant),
+      outline-color: var(--mat-sys-outline),
+      elevated-container-color: transparent,
+    )
+  );
+}
+
+.player-status-chip-online {
+  @include mat.chips-overrides(
+    (
+      label-text-color: var(--player-ok),
+      outline-color: var(--player-ok-line),
+      elevated-container-color: var(--player-ok-soft),
+    )
+  );
+}
+
+// A view that's a template, marked beside its name.
+.player-template-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  margin-left: 8px;
+  border: 1px solid
+    color-mix(in srgb, var(--mat-sys-primary) 28%, var(--mat-sys-surface));
+  border-radius: 999px;
+  background-color: var(--mat-sys-primary-container);
+  font-size: var(--mat-sys-label-small-size);
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-primary-container);
+}
+
+// ---- Exceptions: no Material token exists, so the hosts Player declares are styled directly ----
+
+// Icons are 18px. mat-icon has no size token, so its host is sized, as Material's icon guide does. Under html, so
+// it outranks Material's own 24px default but not the sizes it gives icons in a button, a list or a menu.
+html .mat-icon,
+html .mat-icon.mdi-24px {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+// The icon font's own size classes would overflow the box.
+.mat-icon.mdi-24px::before,
+.mat-icon.mdi-18px::before,
+.mat-icon.mdi-36px::before {
+  font-size: 18px;
+}
+
+// Menu rows are 32px. A menu item has no height token.
+button[mat-menu-item],
+a[mat-menu-item] {
+  min-height: 32px;
+
+  .mat-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+  }
+}
+
+// A row you can act on shows it under the pointer. A table has no hover token.
+mat-row:hover,
+tr[mat-row]:hover {
+  background: var(--mat-sys-primary-container);
+}

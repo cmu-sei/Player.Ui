@@ -4,9 +4,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 <div>
-  <div class="d-flex align-items-center w-100 my-1">
+  <div class="d-flex align-items-center w-100 my-1 player-dense-buttons">
     <span class="d-flex align-items-center flex-grow-1 gap-2">
-      <mat-form-field class="search-field" subscriptSizing="dynamic">
+      <mat-form-field
+        class="search-field player-dense-field"
+        subscriptSizing="dynamic"
+      >
         <input
           matInput
           aria-label="Search"
@@ -64,7 +67,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     }
   </div>
 
-  <mat-accordion class="presence-accordion" multi>
+  <mat-accordion class="presence-accordion player-flat-panels" multi>
     @for (team of _teams | async; track trackByTeamId(team)) {
       @let users = getPresenceByTeamId(team.id) | async;
       @let currentSearchTerm = searchTerm$ | async;

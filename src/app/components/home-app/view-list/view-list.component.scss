@@ -19,13 +19,13 @@
 
 .mat-column-description {
   flex: 1 1 auto;
-  color: var(--pl-muted);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .mat-column-dateCreated {
   flex: 0 0 150px;
-  font-size: var(--pl-small);
-  color: var(--pl-muted);
+  font-size: var(--mat-sys-body-small-size);
+  color: var(--mat-sys-on-surface-variant);
   white-space: nowrap;
 }
 
@@ -37,34 +37,21 @@
 .mat-mdc-header-cell {
   padding: 0 16px;
   vertical-align: middle;
-  border-color: var(--pl-line);
+  border-color: var(--mat-sys-outline-variant);
 }
 
 // A view's name is what you open: ink, turning the accent with its row.
 .title {
   font-weight: 500;
-  color: var(--pl-ink);
+  color: var(--mat-sys-on-surface);
   text-decoration: none;
 }
 
 mat-row:hover .title,
 .title:hover {
-  color: var(--pl-accent);
-}
-
-.template-badge {
-  display: inline-block;
-  padding: 1px 7px;
-  margin-left: 8px;
-  border: 1px solid var(--pl-accent-line);
-  border-radius: 999px;
-  background-color: var(--pl-accent-soft);
-  font-size: var(--pl-tiny);
-  font-weight: 500;
-  text-transform: uppercase;
-  color: var(--pl-accent-ink);
+  color: var(--mat-sys-primary);
 }
 
 mat-paginator {
-  border-top: 1px solid var(--pl-line);
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
