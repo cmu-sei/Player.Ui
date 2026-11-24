@@ -31,15 +31,9 @@ import {
 } from '../../../../generated/player-api';
 import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
-import {
-  MatFormField,
-  MatPrefix,
-  MatInput,
-  MatSuffix,
-} from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialogClose } from '@angular/material/dialog';
@@ -51,15 +45,10 @@ import { AsyncPipe } from '@angular/common';
   templateUrl: './user-presence.component.html',
   styleUrls: ['./user-presence.component.scss'],
   imports: [
-    MatFormField,
     MatIcon,
-    MatPrefix,
-    MatInput,
     FormsModule,
     MatIconButton,
-    MatSuffix,
     MatTooltip,
-    MatButton,
     MatCheckbox,
     MatDialogClose,
     MatAccordion,

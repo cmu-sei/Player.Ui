@@ -2,49 +2,11 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 :host {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  display: block;
 }
 
 .view-list-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
   min-width: 300px;
-}
-
-.views-title {
-  font-size: x-large;
-  text-align: left;
-  padding-left: 20px;
-}
-
-.no-results {
-  font-size: x-large;
-}
-
-.app-list-item {
-  padding: 0;
-  text-align: left;
-  font-size: x-small;
-}
-
-.player-icon {
-  transform: scale(2);
-  height: auto;
-  margin-right: 10px;
-  color: var(--mat-sys-primary);
-}
-
-.icon-text-container {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-left: 20px;
-  height: 90px;
 }
 
 .mat-column-name {
@@ -57,66 +19,52 @@
 
 .mat-column-description {
   flex: 1 1 auto;
+  color: var(--pl-muted);
 }
 
 .mat-column-dateCreated {
   flex: 0 0 150px;
+  font-size: var(--pl-small);
+  color: var(--pl-muted);
   white-space: nowrap;
-}
-
-.searchBox {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
-  margin-left: auto !important;
-  height: 60px !important;
-}
-
-.mat-mdc-text-field-wrapper {
-  height: 38px !important;
 }
 
 .mat-mdc-table {
   width: 100%;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .mat-mdc-cell,
 .mat-mdc-header-cell {
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding: 0 16px;
   vertical-align: middle;
-  border-color: var(--mat-sys-outline-variant);
+  border-color: var(--pl-line);
 }
 
-a:link {
-  color: var(--mat-sys-on-background);
+// A view's name is what you open: ink, turning the accent with its row.
+.title {
+  font-weight: 500;
+  color: var(--pl-ink);
+  text-decoration: none;
 }
 
-a:visited {
-  color: var(--mat-sys-on-background);
-}
-
-a:hover {
-  color: var(--mat-sys-outline);
-}
-
-a:active {
-  color: var(--mat-sys-on-background);
+.mat-mdc-row:hover .title,
+.title:hover {
+  color: var(--pl-accent);
 }
 
 .template-badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 1px 7px;
   margin-left: 8px;
-  font-size: 11px;
-  font-weight: 600;
+  border: 1px solid var(--pl-accent-line);
+  border-radius: 999px;
+  background-color: var(--pl-accent-soft);
+  font-size: var(--pl-tiny);
+  font-weight: 500;
   text-transform: uppercase;
-  border-radius: 4px;
-  background-color: var(--mat-sys-primary-container);
-  color: var(--mat-sys-on-primary-container);
+  color: var(--pl-accent-ink);
+}
+
+mat-paginator {
+  border-top: 1px solid var(--pl-line);
 }

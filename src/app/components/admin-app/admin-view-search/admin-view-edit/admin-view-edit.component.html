@@ -62,7 +62,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       aria-label="Return"
       (click)="returnToViewSearch()"
     >
-      <mat-icon svgIcon="ic_back_arrow" />
+      <mat-icon fontIcon="mdi-arrow-left" />
     </button>
   </div>
 </ng-template>
@@ -217,7 +217,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                       >
                         <mat-icon
                           style="transform: scale(0.85)"
-                          svgIcon="ic_clipboard_copy"
+                          fontIcon="mdi-content-copy"
                         />
                       </button>
                       <span style="font-size: xx-small">
@@ -463,7 +463,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   Download
                   <mat-icon
                     style="transform: scale(0.85)"
-                    svgIcon="ic_get_app"
+                    fontIcon="mdi-download"
                   />
                 </button>
                 <button
@@ -474,7 +474,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   Delete
                   <mat-icon
                     style="transform: scale(0.85)"
-                    svgIcon="ic_delete"
+                    fontIcon="mdi-trash-can-outline"
                   />
                 </button>
                 <button
@@ -485,7 +485,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   Copy Link
                   <mat-icon
                     style="transform: scale(0.85)"
-                    svgIcon="ic_clipboard_copy"
+                    fontIcon="mdi-content-copy"
                   />
                 </button>
                 <button
@@ -496,7 +496,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   title="Edit"
                 >
                   Edit Name
-                  <mat-icon style="transform: scale(0.85)" svgIcon="ic_edit" />
+                  <mat-icon
+                    style="transform: scale(0.85)"
+                    fontIcon="mdi-pencil-outline"
+                  />
                 </button>
                 @if (!appNames.includes(viewFile.name)) {
                   <button
@@ -505,7 +508,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                     title="Add as Application"
                   >
                     Add as App
-                    <mat-icon style="transform: scale(0.85)" svgIcon="ic_add" />
+                    <mat-icon
+                      style="transform: scale(0.85)"
+                      fontIcon="mdi-plus"
+                    />
                   </button>
                 }
               </div>

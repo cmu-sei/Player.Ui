@@ -9,6 +9,12 @@
   align-items: stretch;
 }
 
-.hide {
-  display: none;
+// The fields, one under the other, with the two options between them and the select.
+.details {
+  gap: 10px;
+  padding-top: 6px;
+}
+
+mat-checkbox {
+  margin: -4px 0 -4px -6px;
 }

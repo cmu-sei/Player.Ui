@@ -3,15 +3,55 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
+// Wide enough for the tools to stay on one line.
+:host {
+  display: block;
+  min-width: min(600px, 90vw);
+}
+
+.pl-search {
+  flex-basis: 260px;
+}
+
+.search-checkbox {
+  flex: none;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+// One team per panel: flat, with a hairline, the team's name and its count.
+.presence-accordion {
+  display: block;
+  margin: 8px 0 16px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  overflow: hidden;
+
+  mat-expansion-panel {
+    border: 0;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-bottom: 1px solid var(--pl-line);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  mat-expansion-panel-header {
+    height: 40px;
+    padding: 0 16px;
+  }
+}
+
 mat-panel-title {
-  font-size: large;
+  font-size: var(--pl-text);
+  font-weight: 600;
+  color: var(--pl-ink);
 }
 
 mat-panel-description {
-  font-size: large;
-}
-
-.presence-accordion {
-  display: block;
-  margin-bottom: 16px;
+  justify-content: flex-end;
+  font-size: var(--pl-small);
+  color: var(--pl-muted);
 }

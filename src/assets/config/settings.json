@@ -19,6 +19,16 @@
   },
   "AppTitle": "Player",
   "AppTopBarText": "Player",
+  "Apps": [
+    {
+      "id": "scenario-builder",
+      "name": "Scenario Builder",
+      "url": "http://localhost:4310"
+    },
+    { "id": "grayspace", "name": "GraySpace", "url": "http://localhost:8080/" },
+    { "id": "chronicle", "name": "Chronicle", "url": "http://localhost:4320" },
+    { "id": "player", "name": "Player", "url": "http://localhost:4301" }
+  ],
   "AppTopBarHexColor": "#3B62A5",
   "AppTopBarHexTextColor": "#FFFFFF",
   "AppLightModePrimaryHexColor": "#3B62A5",

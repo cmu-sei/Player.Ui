@@ -4,11 +4,17 @@
 .focused-app-iframe {
   height: 100%;
   width: 100%;
+  border: 0;
+  // The page sets color-scheme for its theme. An embedded application that
+  // doesn't declare one would get an opaque white backdrop in dark mode;
+  // matching its default keeps the frame transparent until it paints.
+  color-scheme: light;
 }
 
 .focused-app-container {
   position: absolute;
-  top: 46px;
+  // The top bar is above the sidebar and this area now, not inside it.
+  top: 0;
   bottom: 50px;
   left: 0;
   right: 0;

@@ -10,28 +10,27 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 >
   <mat-expansion-panel-header [class]="notificationDisplayClass()">
     <mat-panel-title>
-      @if (useBadge) {
-        <span
-          class="notification-badge"
-          matBadge="{{ newNotificationCount() }}"
-          matBadgeOverlap="false"
-          matBadgeColor="warn"
-          matBadgePosition="before"
-          matBadgeHidden="{{ newNotificationCount() < 1 }}"
-          matBadgeSize="small"
-        >
-        </span>
-      }
-      <span class="notification-panel-title">
-        <b> Notifications </b>
-      </span>
+      <!--
+        How many have arrived since the person last moved the pointer over
+        the page, as a small count after the title.
+      -->
+      <span
+        class="notification-panel-title"
+        matBadge="{{ newNotificationCount() }}"
+        matBadgeOverlap="false"
+        matBadgePosition="after"
+        matBadgeSize="medium"
+        [matBadgeHidden]="!useBadge || newNotificationCount() < 1"
+        >Notifications</span
+      >
       @if (
         hasViewAdmin() &&
         showSystemNotifications &&
         notificationsHistory().length > 0
       ) {
         <mat-icon
-          fontIcon="mdi-trash-can"
+          class="delete"
+          fontIcon="mdi-trash-can-outline"
           title="Delete ALL notifications"
           (click)="deleteViewNotifications()"
         />
@@ -49,7 +48,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 notif.broadcastTime | timeZoneAbbr
               }}"
             >
-              <b>{{ notif.broadcastTime | date: 'HH:mm' }}</b>
+              <span class="time">{{
+                notif.broadcastTime | date: 'HH:mm'
+              }}</span>
               <span class="zone">{{ notif.broadcastTime | timeZoneAbbr }}</span>
             </div>
             <div id="from">
@@ -71,7 +72,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             @if (hasViewAdmin()) {
               <div id="deleteButton">
                 <mat-icon
-                  fontIcon="mdi-trash-can"
+                  class="delete"
+                  fontIcon="mdi-trash-can-outline"
                   title="Delete notification"
                   (click)="deleteNotification(notif)"
                 />
@@ -85,27 +87,29 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
   @if (hasViewAdmin()) {
     <div class="send-message">
-      <form #notificationForm="ngForm" (ngSubmit)="sendMessage()">
-        <mat-form-field class="input-message">
-          <input
-            matInput
-            #msgtext
-            type="text"
-            placeholder="{{ sendMessagePlaceholder }}"
-            name="messageToSend"
-            [(ngModel)]="messageToSend"
-          />
-          <mat-hint align="end">{{ msgtext.value.length }} / 225</mat-hint>
-          <button
-            mat-button
-            type="submit"
-            matSuffix
-            aria-label="Send"
-            [disabled]="!notificationForm.form.valid"
-          >
-            Send
-          </button>
-        </mat-form-field>
+      <form
+        class="send-form"
+        #notificationForm="ngForm"
+        (ngSubmit)="sendMessage()"
+      >
+        <input
+          class="pl-field input-message"
+          #msgtext
+          type="text"
+          aria-label="Message"
+          placeholder="{{ sendMessagePlaceholder }}"
+          name="messageToSend"
+          [(ngModel)]="messageToSend"
+        />
+        <span class="count">{{ msgtext.value.length }} / 225</span>
+        <button
+          class="pl-button primary"
+          type="submit"
+          aria-label="Send"
+          [disabled]="!notificationForm.form.valid"
+        >
+          Send
+        </button>
       </form>
     </div>
   }

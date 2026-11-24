@@ -1,39 +1,99 @@
 // Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
-.margin-auto {
-  margin: auto;
+
+:host {
+  display: block;
+  flex: none;
 }
 
-.spacer {
-  flex: 1 1 auto;
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 16px;
+  // One line height for everything in the bar, so the product, the name, the
+  // team and the pills share a centre.
+  line-height: normal;
+  background: var(--pl-surface);
+  border-bottom: 1px solid var(--pl-line);
+  color: var(--pl-ink);
+  // The bar is one line: a long title or team name truncates instead of
+  // wrapping or pushing the account menu off the right edge.
+  white-space: nowrap;
 }
 
-.toolbar {
-  max-height: 46px;
-  min-height: 46px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-weight: 600;
+  color: var(--pl-ink);
+  text-decoration: none;
 }
 
-.team-text {
-  text-align: right;
-  margin-right: 10px;
+// The app's mark: a rounded square in the top-bar colour (AppTopBarHexColor)
+// holding Player's icon. Larger than a plain mark, to give the icon room; the
+// bar keeps its height.
+.mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--pl-mark, var(--pl-accent));
+
+  svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .drop {
+    fill: var(--crucible-topbar-text, var(--pl-on-accent));
+  }
+
+  .play {
+    fill: var(--pl-mark, var(--pl-accent));
+  }
 }
 
-.copy-text {
-  cursor: pointer;
+.sep {
+  flex: none;
+  color: var(--pl-faint);
 }
 
+.crumb {
+  color: var(--pl-muted);
+}
+
+.section {
+  flex: none;
+}
+
+// A long title gives up room first; its tooltip carries it in full.
 .view-text {
-  font-size: 110%;
-  margin-left: 50px;
-  margin-right: 40px;
-  // mat-toolbar-row is `white-space: nowrap`, so without these the title's full
-  // width is its minimum width and it pushes everything after it, including the
-  // account menu, off the right edge. `body` is `overflow: hidden`, so the menu
-  // would then be unreachable rather than merely clipped.
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.page {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.team-label {
+  flex: none;
+  color: var(--pl-muted);
+}
+
+.copy-text {
+  cursor: pointer;
 }
 
 // A long team name gives up room the same way; its tooltip carries it in full.
@@ -42,60 +102,80 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1 1 auto;
 }
 
 // Keep the account menu whole; the title and team name give up room first.
 .user-menu {
-  flex-shrink: 0;
+  flex: none;
 }
 
-// Narrow viewports: shrink the title gutters and drop the user's name, leaving
-// the chevron. The button keeps the name as its tooltip.
-@media (max-width: 599px) {
-  .view-text {
-    margin-left: 12px;
-    margin-right: 12px;
+// The person's pill: an initial, their name and a chevron.
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 4px 0 3px;
+  border: 1px solid var(--pl-line);
+  border-radius: 999px;
+  background: var(--pl-surface);
+  font: 500 var(--pl-small) var(--pl-font);
+  color: var(--pl-muted);
+  cursor: pointer;
+  transition:
+    border-color 120ms,
+    color 120ms,
+    background 120ms;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: var(--pl-accent);
+    color: var(--pl-accent);
+    background: var(--pl-accent-soft);
   }
 
-  .user-name {
-    display: none;
+  &:focus-visible {
+    outline: 2px solid var(--pl-accent);
+    outline-offset: 1px;
   }
-}
-
-.big-button {
-  width: 75%;
-}
-
-.small-button {
-  width: 25%;
-  padding-right: 40px;
-}
-
-.username-text {
-  font-weight: normal;
-}
-
-// Everything on the top bar draws in the top-bar text color, which stays the
-// brand pair in both themes. `primary` is for controls on the page surface.
-.toolbar {
-  .mat-mdc-button:not(:disabled),
-  .mat-mdc-icon-button:not(:disabled) {
-    color: var(--crucible-topbar-text);
-  }
-
-  mat-icon,
-  .mat-icon {
-    --mat-icon-color: var(--crucible-topbar-text);
-  }
-}
-
-// The logo is drawn in currentColor on a disc of the top-bar text color, so it
-// reads as a cut-out of the top bar in both themes.
-.toolbar .home-logo {
-  outline: none;
-  background-color: var(--crucible-topbar-text);
 
   mat-icon {
-    color: var(--crucible-topbar-background);
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+  }
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--pl-accent);
+  color: var(--pl-on-accent);
+  font: 600 11px / 1 var(--pl-font);
+  text-transform: uppercase;
+}
+
+.user-name {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+// Narrow viewports: drop the user's name, leaving the avatar and the chevron.
+// The button keeps the name as its tooltip.
+@media (max-width: 599px) {
+  .user-name {
+    display: none;
   }
 }

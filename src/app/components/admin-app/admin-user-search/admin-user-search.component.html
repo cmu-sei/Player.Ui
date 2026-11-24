@@ -3,34 +3,31 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div class="cssLayoutRowStartCenter">
-  <div class="sp-icon">
-    <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple" />
-  </div>
-  <mat-form-field style="width: 300px">
+<div class="pl-head">
+  <h1 class="header-text">Users</h1>
+</div>
+<div class="pl-tools">
+  <div class="pl-search">
     <input
-      matInput
+      class="pl-field"
+      aria-label="Search"
+      placeholder="Search"
       [(ngModel)]="filterString"
       (keyup)="applyFilter($event.target.value)"
-      placeholder="Search"
     />
     @if (filterString) {
       <button
-        mat-icon-button
+        type="button"
+        class="clear"
         aria-label="Clear Search"
-        matSuffix
-        color="primary"
-        (click)="applyFilter('')"
         title="Clear Search"
+        (click)="applyFilter('')"
       >
-        <mat-icon
-          style="transform: scale(0.85)"
-          fontIcon="mdi-close-circle-outline"
-        />
+        <mat-icon aria-hidden="true" fontIcon="mdi-close" />
       </button>
     }
-  </mat-form-field>
-  <div class="button-end">
+  </div>
+  <div class="end">
     <mat-paginator
       #paginator
       [pageIndex]="0"

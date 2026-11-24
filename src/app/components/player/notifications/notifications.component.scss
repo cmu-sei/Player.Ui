@@ -1,108 +1,145 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+// A strip along the bottom of the view: one quiet line that opens upward into
+// the history and, for those who can send, a message field.
 .notifications-container {
   position: absolute;
   bottom: 0;
   width: 100%;
+  border-top: 1px solid var(--pl-line);
+  border-radius: 0 !important;
+  box-shadow: none !important;
 
   ::ng-deep .mat-expansion-panel-header {
-    height: 45px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: var(--pl-text);
+  }
+
+  ::ng-deep .mat-expansion-panel-body {
+    padding: 0 16px 12px;
   }
 }
 
-.notification-badge {
-  margin-left: 20px;
+mat-panel-title {
+  align-items: center;
 }
 
 .notification-panel-title {
-  margin-left: 10px;
-  margin-right: 30px;
+  margin-right: 12px;
+  font-size: var(--pl-text);
+  font-weight: 600;
+  color: var(--pl-ink);
+
+  // The count of unseen notifications sits in the line, after the title,
+  // instead of floating over its corner.
+  &:not(.mat-badge-hidden) ::ng-deep .mat-badge-content {
+    position: static;
+    display: inline-block;
+    margin: 0 0 0 6px;
+    vertical-align: middle;
+  }
 }
 
+// A new notification: the header pulses the warning tint until it is opened.
 .blink {
   animation: blinking 3s infinite;
 }
 
 @keyframes blinking {
   0% {
-    background-color: orangered;
+    background-color: var(--pl-warn-soft);
   }
 }
 
-.notificationslist-input {
-  width: 100%;
-}
+.delete {
+  color: var(--pl-faint);
+  cursor: pointer;
 
-.notifications-form {
-  min-width: 500px;
-  max-width: 500px;
-  width: 100%;
+  &:hover {
+    color: var(--pl-bad);
+  }
 }
 
 .send-message {
+  margin-top: 8px;
+}
+
+.send-form {
   display: flex;
-  flex-direction: column;
-  margin-left: 30px;
-  margin-right: 50px;
+  align-items: center;
+  gap: 8px;
 }
 
 .input-message {
-  width: 100%;
+  flex: 1 1 auto;
 }
 
+.count {
+  flex: none;
+  font-size: var(--pl-tiny);
+  color: var(--pl-faint);
+}
+
+// The history: a bordered box of rows.
 .mat-mdc-list {
-  margin-left: 30px;
-  margin-right: 30px;
-  border: 1px solid;
+  padding: 0;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
   overflow: auto;
   max-height: 250px;
 }
 
 .mat-mdc-list-item {
-  height: 30px !important; /* default is 72px */
+  height: 32px !important; /* default is 72px */
+  border-bottom: 1px solid var(--pl-line);
+
+  &:last-child {
+    border-bottom: 0;
+  }
 }
 
 #wrapper {
   display: table;
-  table-layout: relative;
   width: 100%;
 }
 #wrapper > div {
   display: table-cell;
+  vertical-align: middle;
 }
 #time {
   width: 75px;
-  font-size: 90%;
-  padding: 0;
-  margin: 0;
-  text-align: left;
+  font-size: var(--pl-small);
+}
+#time .time {
+  font-family: var(--pl-mono);
+  font-weight: 500;
+  color: var(--pl-ink);
 }
 #time .zone {
-  font-size: 80%;
+  margin-left: 4px;
+  font-size: var(--pl-tiny);
+  color: var(--pl-faint);
 }
 #from {
-  width: 100px;
-  text-align: center;
-  font-size: 70%;
+  width: 120px;
+  font-size: var(--pl-small);
+  color: var(--pl-muted);
 }
 #link {
+  width: 48px;
   text-align: center;
-  width: 40px;
-  font-size: 60%;
+  font-size: var(--pl-small);
 }
 #message {
-  text-align: left;
-  font-size: 90%;
   min-width: 300px;
-  padding: 0.5em;
+  padding: 0 8px;
+  font-size: var(--pl-text);
+  color: var(--pl-ink);
 }
-#navigation {
-  width: 5px;
-  padding: 0;
-}
-#history {
-  width: 100%;
-  max-height: 200px;
-  text-align: left;
+#deleteButton {
+  width: 28px;
+  text-align: right;
 }

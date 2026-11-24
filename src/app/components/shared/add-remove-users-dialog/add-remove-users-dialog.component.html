@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="user-list-container mat-elevation-z8">
       <mat-toolbar class="background">
         <mat-toolbar-row>
-          <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple" />
+          <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple-outline" />
           <p>All Users</p>
         </mat-toolbar-row>
         <mat-toolbar-row>
@@ -21,7 +21,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 margin-right: 5px;
                 margin-left: 10px;
               "
-              svgIcon="ic_magnify_search"
+              fontIcon="mdi-magnify"
             />
             <input
               matInput
@@ -37,10 +37,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 (click)="clearFilter()"
                 title="Clear Search"
               >
-                <mat-icon
-                  style="transform: scale(0.85)"
-                  svgIcon="ic_cancel_circle"
-                />
+                <mat-icon style="transform: scale(0.85)" fontIcon="mdi-close" />
               </button>
             }
           </mat-form-field>
@@ -96,10 +93,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 "
                 (click)="addUserToTeam(element)"
               >
-                <mat-icon
-                  class="mdi-24px self-center"
-                  fontIcon="mdi-plus-circle-outline"
-                />
+                <mat-icon class="mdi-24px self-center" fontIcon="mdi-plus" />
               </button>
             </div>
           </mat-cell>
@@ -135,7 +129,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-toolbar class="background">
           <mat-toolbar-row id="userImport">
             <div class="d-flex align-items-center gap-2">
-              <mat-icon class="mdi-24px" fontIcon="mdi-account-group" />
+              <mat-icon class="mdi-24px" fontIcon="mdi-account-group-outline" />
               <p>Team Users</p>
             </div>
             @if (canManageRoles) {
@@ -165,7 +159,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   margin-right: 5px;
                   margin-left: 10px;
                 "
-                svgIcon="ic_magnify_search"
+                fontIcon="mdi-magnify"
               />
               <input
                 matInput
@@ -182,7 +176,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 >
                   <mat-icon
                     style="transform: scale(0.85)"
-                    svgIcon="ic_cancel_circle"
+                    fontIcon="mdi-close"
                   />
                 </button>
               }
@@ -265,10 +259,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   "
                   (click)="removeUserFromTeam(element)"
                 >
-                  <mat-icon
-                    class="mdi-24px self-center"
-                    fontIcon="mdi-minus-circle-outline"
-                  />
+                  <mat-icon class="mdi-24px self-center" fontIcon="mdi-minus" />
                 </button>
               </div>
             </mat-cell>

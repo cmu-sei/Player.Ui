@@ -102,16 +102,6 @@ function topbar(fixture: ComponentFixture<AdminAppComponent>) {
 }
 
 describe('AdminAppComponent', () => {
-  /**
-   * Verifies: the static "Administration" heading is rendered in the template.
-   * Interacts with: rendered DOM via Testing Library screen query.
-   * Data: default overrides (no permissions).
-   */
-  it('should display the Administration header', async () => {
-    await renderAdmin();
-    expect(screen.getByText('Administration')).toBeInTheDocument();
-  });
-
   const navItems: Array<[string, SystemPermission]> = [
     ['Views', SystemPermission.ViewViews],
     ['Application Templates', SystemPermission.ViewApplications],

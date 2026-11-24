@@ -8,6 +8,7 @@ import {
 } from '@cmusei/crucible-common';
 import { TopbarView } from '../shared/top-bar/topbar.models';
 import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FooterComponent } from '../shared/footer/footer.component';
 import { ViewListComponent } from './view-list/view-list.component';
 
 @Component({
@@ -17,6 +18,7 @@ import { ViewListComponent } from './view-list/view-list.component';
   imports: [
     CrucibleLandingBackgroundDirective,
     TopbarComponent,
+    FooterComponent,
     ViewListComponent,
   ],
 })

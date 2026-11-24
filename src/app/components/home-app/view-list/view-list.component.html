@@ -3,107 +3,111 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div class="view-list-container mat-elevation-z8">
-  <div class="icon-text-container">
-    <mat-icon class="player-icon" svgIcon="ic_crucible_player" />
-    <span class="views-title text">My Views</span>
-    @if (canCreate$ | async) {
-      <button
-        mat-icon-button
-        aria-label="Add New View"
-        matTooltip="Add New View"
-        (click)="create()"
-      >
-        <mat-icon class="mdi-24px" fontIcon="mdi-plus-circle" />
-      </button>
-    }
-    <div class="searchBox">
-      <mat-form-field style="width: 320px">
-        <input
-          matInput
-          [(ngModel)]="filterString"
-          (keyup)="applyFilter($event.target.value)"
-          placeholder="Search"
-        />
-        @if (filterString !== '') {
-          <button
-            mat-icon-button
-            aria-label="Clear Search"
-            matSuffix
-            (click)="clearFilter()"
-            title="Clear Search"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              fontIcon="mdi-close-circle-outline"
-            />
-          </button>
-        }
-      </mat-form-field>
+<div class="view-list-container">
+  <div class="pl-head">
+    <h1 class="views-title">My Views</h1>
+  </div>
+  <div class="pl-tools">
+    <div class="pl-search">
+      <input
+        class="pl-field"
+        aria-label="Search"
+        placeholder="Search"
+        [(ngModel)]="filterString"
+        (keyup)="applyFilter($event.target.value)"
+      />
+      @if (filterString !== '') {
+        <button
+          type="button"
+          class="clear"
+          aria-label="Clear Search"
+          title="Clear Search"
+          (click)="clearFilter()"
+        >
+          <mat-icon aria-hidden="true" fontIcon="mdi-close" />
+        </button>
+      }
     </div>
+    @if (canCreate$ | async) {
+      <span class="end">
+        <button
+          type="button"
+          class="pl-button primary"
+          aria-label="Add New View"
+          matTooltip="Add New View"
+          (click)="create()"
+        >
+          <mat-icon aria-hidden="true" fontIcon="mdi-plus" />Add New View
+        </button>
+      </span>
+    }
   </div>
 
-  <mat-table
-    #table
-    [dataSource]="dataSource"
-    matSort
-    matSortActive="name"
-    matSortDirection="asc"
-  >
-    <!--- Note that these columns can be defined in any order.
-    The actual rendered columns are set as a property on the row definition" -->
-    <!-- Name Column -->
-    <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>
-        Name
-      </mat-header-cell>
-      <mat-cell *matCellDef="let element">
-        <a [routerLink]="['/view', element.id]">{{ element.name }}</a>
-        @if (element.isTemplate) {
-          <span class="template-badge">TEMPLATE</span>
-        }
-      </mat-cell>
-    </ng-container>
-
-    <!-- Description Column -->
-    <ng-container matColumnDef="description">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>
-        Description
-      </mat-header-cell>
-      <mat-cell *matCellDef="let element">
-        {{ element.description }}
-      </mat-cell>
-    </ng-container>
-
-    <!-- Date Created Column -->
-    <ng-container matColumnDef="dateCreated">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>
-        Created
-      </mat-header-cell>
-      <mat-cell *matCellDef="let element">
-        {{ element.dateCreated | date: 'yyyy-MM-dd HH:mm' }}
-      </mat-cell>
-    </ng-container>
-
-    <mat-header-row *matHeaderRowDef="displayedColumns" />
-    <mat-row *matRowDef="let row; columns: displayedColumns" />
-  </mat-table>
-  @if (dataSource.filteredData.length === 0) {
-    <div class="text no-results">No results found</div>
-  }
-
-  @if (isLoading) {
-    <mat-card
-      appearance="outlined"
-      class="d-flex justify-content-center align-items-center"
+  <div class="pl-grid">
+    <mat-table
+      #table
+      [dataSource]="dataSource"
+      matSort
+      matSortActive="name"
+      matSortDirection="asc"
     >
-      <mat-progress-spinner color="primary" mode="indeterminate" />
-    </mat-card>
-  }
+      <!--- Note that these columns can be defined in any order.
+    The actual rendered columns are set as a property on the row definition" -->
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
+          Name
+        </mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <a class="title" [routerLink]="['/view', element.id]">{{
+            element.name
+          }}</a>
+          @if (element.isTemplate) {
+            <span class="template-badge">TEMPLATE</span>
+          }
+        </mat-cell>
+      </ng-container>
 
-  <mat-paginator
-    [pageSizeOptions]="[10, 25, 50, 100]"
-    showFirstLastButtons
-    aria-label="Select page of views"
-  />
+      <!-- Description Column -->
+      <ng-container matColumnDef="description">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
+          Description
+        </mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          {{ element.description }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- Date Created Column -->
+      <ng-container matColumnDef="dateCreated">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
+          Created
+        </mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          {{ element.dateCreated | date: 'yyyy-MM-dd HH:mm' }}
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns" />
+      <mat-row *matRowDef="let row; columns: displayedColumns" />
+    </mat-table>
+    @if (dataSource.filteredData.length === 0) {
+      <div class="pl-empty no-results">No results found</div>
+    }
+
+    @if (isLoading) {
+      <mat-card
+        appearance="outlined"
+        class="d-flex justify-content-center align-items-center"
+      >
+        <mat-progress-spinner color="primary" mode="indeterminate" />
+      </mat-card>
+    }
+
+    <mat-paginator
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      showFirstLastButtons
+      aria-label="Select page of views"
+    />
+  </div>
 </div>

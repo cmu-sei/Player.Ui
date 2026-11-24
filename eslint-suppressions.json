@@ -699,7 +699,7 @@
   },
   "src/app/components/player/player.component.html": {
     "@angular-eslint/template/no-negated-async": {
-      "count": 3
+      "count": 2
     }
   },
   "src/app/components/player/player.component.spec.ts": {
@@ -879,7 +879,7 @@
       "count": 1
     },
     "@typescript-eslint/no-unsafe-member-access": {
-      "count": 5
+      "count": 4
     }
   },
   "src/app/pipes/time-zone-abbr.pipe.spec.ts": {

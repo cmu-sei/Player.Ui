@@ -632,7 +632,7 @@ describe('NotificationsComponent', () => {
     const time = screen.getByTitle(
       `${formatDate(broadcastTime, 'MM/dd/yyyy HH:mm', 'en-US')} ${zone}`,
     );
-    expect(time.querySelector('b')).toHaveTextContent(
+    expect(time.querySelector('.time')).toHaveTextContent(
       formatDate(broadcastTime, 'HH:mm', 'en-US'),
     );
     expect(within(time).getByText(zone)).toHaveClass('zone');

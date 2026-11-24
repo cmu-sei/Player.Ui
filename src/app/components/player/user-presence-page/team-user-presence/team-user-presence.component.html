@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   headerHeight="headerSize"
   [style.height]="tableHeight"
 >
-  <mat-table [dataSource]="userDatasource" class="mat-elevation-z8">
+  <mat-table [dataSource]="userDatasource">
     <!-- Name Column -->
     <ng-container matColumnDef="user-name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
@@ -22,9 +22,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
       <mat-cell *matCellDef="let element">
         @if (element.online) {
-          <div class="online">Online</div>
+          <span class="pl-pill ok online"
+            ><span class="pl-dot ok"></span>Online</span
+          >
         } @else {
-          <div class="offline">Offline</div>
+          <span class="pl-pill offline"
+            ><span class="pl-dot"></span>Offline</span
+          >
         }
       </mat-cell>
     </ng-container>

@@ -8,18 +8,12 @@
   min-height: 0;
 }
 
-.cssLayoutRowStartCenter {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  flex-shrink: 0;
-}
-
 .table-container {
   flex: 1;
   overflow: auto;
-  padding-bottom: 20px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
 }
 
 table {
@@ -41,13 +35,7 @@ table {
   }
 }
 
-.button-end {
-  margin-left: 100px;
-}
-
-.sp-icon {
-  width: 5%;
-  color: var(--mat-sys-primary);
-  text-align: center;
-  min-width: 30px;
+// The paginator sits in the tools row, on the page, not in a box of its own.
+mat-paginator {
+  --mat-paginator-container-background-color: transparent;
 }

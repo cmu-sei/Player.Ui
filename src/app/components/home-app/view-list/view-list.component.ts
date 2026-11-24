@@ -33,9 +33,7 @@ import { SystemPermission, View } from '../../../generated/player-api';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { MatIcon } from '@angular/material/icon';
-import { MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
-import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatCard } from '@angular/material/card';
@@ -48,12 +46,8 @@ import { AsyncPipe, DatePipe } from '@angular/common';
   styleUrls: ['./view-list.component.scss'],
   imports: [
     MatIcon,
-    MatIconButton,
     MatTooltip,
-    MatFormField,
-    MatInput,
     FormsModule,
-    MatSuffix,
     MatTable,
     MatSort,
     MatColumnDef,

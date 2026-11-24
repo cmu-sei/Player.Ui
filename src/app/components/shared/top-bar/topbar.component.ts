@@ -8,6 +8,7 @@ import {
   OnDestroy,
   OnInit,
   TemplateRef,
+  computed,
   inject,
   input,
   output,
@@ -17,6 +18,7 @@ import { MatDialog, MatDialogClose } from '@angular/material/dialog';
 import {
   ComnAuthQuery,
   ComnAuthService,
+  ComnSettingsService,
   CrucibleDialogService,
   Theme,
   CrucibleDialogComponent,
@@ -36,16 +38,17 @@ import {
   SystemPermission,
   ViewPermission,
 } from '../../../generated/player-api';
-import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar';
-import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
 import { ClipboardModule } from 'ngx-clipboard';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
-import { MatSlideToggle } from '@angular/material/slide-toggle';
-import { MatLabel } from '@angular/material/input';
 import { AsyncPipe } from '@angular/common';
+import {
+  AppSwitcherComponent,
+  SwitcherApp,
+} from '../app-switcher/app-switcher.component';
 
 @Component({
   selector: 'app-topbar',
@@ -53,19 +56,16 @@ import { AsyncPipe } from '@angular/common';
   styleUrls: ['./topbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MatToolbar,
-    MatToolbarRow,
-    MatIconButton,
+    AppSwitcherComponent,
+    // The Users dialog's Close button, in this component's template.
+    MatButton,
     RouterLink,
     MatIcon,
     ClipboardModule,
     MatTooltip,
-    MatButton,
     MatMenuTrigger,
     MatMenu,
     MatMenuItem,
-    MatSlideToggle,
-    MatLabel,
     CrucibleDialogComponent,
     CrucibleDialogContentDirective,
     UserPresenceComponent,
@@ -82,6 +82,20 @@ export class TopbarComponent implements OnInit, OnDestroy {
   private confirmDialogService = inject(CrucibleDialogService);
   private snackbar = inject(MatSnackBar);
   private permissionsService = inject(UserPermissionsService);
+  private settingsService = inject(ComnSettingsService);
+
+  private readonly settings = this.settingsService.settings as {
+    AppTopBarText?: string;
+    Apps?: SwitcherApp[];
+  };
+
+  /** The product's name, beside the mark. */
+  readonly productName: string = this.settings.AppTopBarText || 'Player';
+  /**
+   * The other Crucible apps, for the app switcher: the optional `Apps` setting,
+   * a list of `{ id, name, url }`. Without it the switcher isn't shown.
+   */
+  readonly apps: SwitcherApp[] = this.settings.Apps ?? [];
 
   readonly title = input<string>(undefined);
   @Input() sidenav?;
@@ -95,8 +109,15 @@ export class TopbarComponent implements OnInit, OnDestroy {
   readonly editView = output<any>();
   currentUser$: Observable<AuthUser>;
   theme$: Observable<Theme>;
+  private currentTheme: Theme = Theme.LIGHT;
   unsubscribe$: Subject<null> = new Subject<null>();
   TopbarView = TopbarView;
+
+  /** Where you are: the page's title, unless it only repeats the product. */
+  readonly crumb = computed(() => {
+    const title = this.title();
+    return title && title !== this.productName ? title : null;
+  });
 
   showAdministration$ = this.permissionsService.canViewAdminstration();
   showEditView$ = this.permissionsService.can(
@@ -122,6 +143,14 @@ export class TopbarComponent implements OnInit, OnDestroy {
       takeUntil(this.unsubscribe$),
     );
     this.theme$ = this.authQuery.userTheme$;
+    this.theme$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((theme) => (this.currentTheme = theme));
+  }
+
+  /** The avatar's letter. */
+  initial(name: string | undefined): string {
+    return name?.trim()[0] ?? '';
   }
 
   setTeamFn(id: string) {
@@ -130,9 +159,11 @@ export class TopbarComponent implements OnInit, OnDestroy {
     }
   }
 
-  themeFn(event) {
-    const theme = event.checked ? Theme.DARK : Theme.LIGHT;
-    this.authService.setUserTheme(theme);
+  /** Light to dark, or back. The person's choice is kept with their sign-in. */
+  toggleTheme() {
+    this.authService.setUserTheme(
+      this.currentTheme === Theme.DARK ? Theme.LIGHT : Theme.DARK,
+    );
   }
 
   editFn(event) {

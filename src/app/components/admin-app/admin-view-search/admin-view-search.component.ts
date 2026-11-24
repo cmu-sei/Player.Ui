@@ -32,7 +32,6 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { MatIcon } from '@angular/material/icon';
-import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -56,11 +55,8 @@ export interface Action {
   imports: [
     AdminViewEditComponent,
     MatIcon,
-    MatFormField,
-    MatInput,
     FormsModule,
     MatIconButton,
-    MatSuffix,
     MatTooltip,
     MatBadge,
     MatTable,

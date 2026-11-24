@@ -23,6 +23,7 @@ import {
   ComnSettingsModule,
   ComnAuthModule,
 } from '@cmusei/crucible-common';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { ErrorService } from './services/error/error.service';
 import {
   MAT_TOOLTIP_DEFAULT_OPTIONS,
@@ -79,6 +80,12 @@ export const appConfig: ApplicationConfig = {
       useClass: ErrorService,
     },
     { provide: MAT_TOOLTIP_DEFAULT_OPTIONS, useValue: myCustomTooltipDefaults },
+    // Outlined fields: a bordered box with its label on the border, as the
+    // other inputs are drawn.
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: { appearance: 'outline' },
+    },
     provideRouter(ROUTES),
     provideNativeDateAdapter(),
     provideAnimationsAsync(),

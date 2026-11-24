@@ -1,0 +1,695 @@
+// Copyright 2026 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+// Glaze: the look Player shares with Scenario Builder, Chronicle and GraySpace. Colour tokens for light and
+// dark, the base, and the small pieces pages share (pl-*). Components use these tokens and never a colour,
+// shadow or radius of their own.
+//
+// The accent is not set here. CrucibleThemeService sets --mat-sys-primary and --mat-sys-on-primary for the
+// current theme from the app's settings (AppLightModePrimaryHexColor and the rest), and the accent reads them,
+// so an operator's colours keep working. AppTopBarHexColor colours the mark.
+
+:root {
+  color-scheme: light;
+
+  /* Ground and ink */
+  --pl-canvas: #f6f7f9; /* the page behind everything */
+  --pl-surface: #ffffff; /* bars, sheets, cards, menus, inputs */
+  --pl-raised: #fafbfc; /* a panel inside a surface */
+  --pl-ink: #1c2230; /* headings, names, values */
+  --pl-body: #3b4356; /* running text */
+  --pl-muted: #6b7385; /* labels, secondary text */
+  --pl-faint: #9aa1b0; /* placeholders, separators, the footer */
+  --pl-line: #e3e6eb; /* every hairline */
+  --pl-line-strong: #cfd4dc; /* borders of controls */
+
+  /* The one accent, from the theme service. Everything else about it is derived. */
+  --pl-accent: var(--mat-sys-primary);
+  --pl-on-accent: var(--mat-sys-on-primary);
+  /* The top bar's mark and the avatar */
+  --pl-mark: var(--crucible-topbar-background);
+  --pl-tint-base: #ffffff; /* what the accent is mixed toward for fills */
+  --pl-ink-base: #000000; /* what the accent is mixed toward for text */
+  --pl-accent-hover: color-mix(in srgb, var(--pl-accent) 86%, #000000);
+  --pl-accent-soft: color-mix(
+    in srgb,
+    var(--pl-accent) 9%,
+    var(--pl-tint-base)
+  );
+  --pl-accent-line: color-mix(
+    in srgb,
+    var(--pl-accent) 28%,
+    var(--pl-tint-base)
+  );
+  --pl-accent-ink: color-mix(in srgb, var(--pl-accent) 68%, var(--pl-ink-base));
+
+  /* A selected segment or a solid tag: ink on light, GraySpace's selected blue on dark */
+  --pl-invert: #1c2230;
+  --pl-on-invert: #ffffff;
+
+  /* Status: the colour as text, a soft fill, a line */
+  --pl-ok: #1f8a5b;
+  --pl-ok-soft: #e7f5ee;
+  --pl-ok-line: #bfe2cf;
+  --pl-warn: #a3600a;
+  --pl-warn-soft: #fff3df;
+  --pl-warn-line: #f3dfb8;
+  --pl-bad: #c22f3a;
+  --pl-bad-soft: #fdecee;
+  --pl-bad-line: #f3c4c8;
+
+  /* Shadows are drawn as rgb(var(--pl-shadow) / alpha) */
+  --pl-shadow: 18 22 34;
+
+  /* Type, size, shape: the same in both themes */
+  --pl-font: 'Open Sans', sans-serif;
+  --pl-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pl-text: 13px;
+  --pl-small: 12px;
+  --pl-tiny: 11px;
+  --pl-title: 17px;
+  --pl-radius: 8px;
+  --pl-radius-sm: 6px;
+}
+
+/* Dark is GraySpace's palette, shared by every app so they read as one product. Only colours change.
+   CrucibleThemeService marks dark with the darkMode class on <body>. The tokens stay on <html>, so the ones
+   derived from them (and Material's, in styles.scss) are computed where they are declared. */
+:root:has(body.darkMode) {
+  color-scheme: dark;
+
+  --pl-canvas: #0f1318;
+  --pl-surface: #151b22;
+  --pl-raised: #1b222b;
+  --pl-ink: #d8dee6;
+  --pl-body: #b8c2cf;
+  --pl-muted: #8a96a6;
+  --pl-faint: #5f6b7a;
+  --pl-line: #2a333f;
+  --pl-line-strong: #36414f;
+
+  --pl-tint-base: #151b22;
+  --pl-ink-base: #ffffff;
+
+  --pl-invert: #22344a;
+  --pl-on-invert: #ffffff;
+
+  --pl-ok: #3fb950;
+  --pl-ok-soft: #10221a;
+  --pl-ok-line: #23462c;
+  --pl-warn: #d29922;
+  --pl-warn-soft: #221b0c;
+  --pl-warn-line: #4a3b16;
+  --pl-bad: #f85149;
+  --pl-bad-soft: #2a1110;
+  --pl-bad-line: #5a2422;
+
+  --pl-shadow: 0 0 0;
+}
+
+/* ---- Base ---- */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: 400 var(--pl-text) / 1.45 var(--pl-font);
+  font-variant-numeric: tabular-nums;
+  background: var(--pl-canvas);
+  color: var(--pl-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--pl-ink);
+}
+
+a {
+  color: var(--pl-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--pl-accent);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---- A page: one centred sheet on the canvas ---- */
+
+.pl-page {
+  height: 100%;
+  overflow: auto;
+}
+.pl-sheet {
+  max-width: 1000px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+.pl-sheet.wide {
+  max-width: 1400px;
+}
+.pl-head {
+  margin-bottom: 16px;
+}
+.pl-head h1 {
+  font-size: 22px;
+}
+.pl-head .sub {
+  margin: 4px 0 0;
+  color: var(--pl-muted);
+}
+.pl-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.pl-tools .search {
+  max-width: 360px;
+}
+.pl-tools .end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ---- Small pieces ---- */
+
+/* Small mono caps, for a label over a group or a column */
+.pl-label {
+  font: 500 10px / 1 var(--pl-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pl-muted);
+}
+
+.pl-mono {
+  font-family: var(--pl-mono);
+}
+.pl-muted {
+  color: var(--pl-muted);
+}
+
+/* Quiet buttons for dense rows: 28px, text weight, no ripple */
+.pl-button {
+  flex: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--pl-line-strong);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
+  font: 500 var(--pl-small) / 1 var(--pl-font);
+  color: var(--pl-ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 120ms,
+    color 120ms,
+    background 120ms;
+}
+.pl-button:hover:not(:disabled) {
+  border-color: var(--pl-accent);
+  color: var(--pl-accent);
+}
+.pl-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pl-button.primary {
+  border-color: var(--pl-accent);
+  background: var(--pl-accent);
+  color: var(--pl-on-accent);
+}
+.pl-button.primary:hover:not(:disabled) {
+  border-color: var(--pl-accent-hover);
+  background: var(--pl-accent-hover);
+  color: var(--pl-on-accent);
+}
+.pl-button.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--pl-muted);
+}
+.pl-button.ghost:hover:not(:disabled) {
+  background: var(--pl-canvas);
+  color: var(--pl-ink);
+}
+.pl-button.danger:hover:not(:disabled) {
+  border-color: var(--pl-bad);
+  color: var(--pl-bad);
+}
+
+/* A quiet icon button: 28px, muted, turning the accent on its soft fill */
+.pl-tool {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--pl-radius-sm);
+  background: none;
+  color: var(--pl-muted);
+  cursor: pointer;
+  transition:
+    color 120ms,
+    background 120ms;
+}
+.pl-tool:hover,
+.pl-tool[aria-expanded='true'] {
+  color: var(--pl-accent);
+  background: var(--pl-accent-soft);
+}
+.pl-tool:focus-visible {
+  outline: 2px solid var(--pl-accent);
+  outline-offset: 1px;
+}
+.pl-tool mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+/* Text inputs and selects */
+.pl-field {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--pl-line-strong);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
+  font: 400 var(--pl-text) / 1.45 var(--pl-font);
+  color: var(--pl-ink);
+}
+.pl-field::placeholder {
+  color: var(--pl-faint);
+}
+.pl-field:focus {
+  outline: none;
+  border-color: var(--pl-accent);
+  box-shadow: 0 0 0 3px var(--pl-accent-soft);
+}
+textarea.pl-field {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* A search field with its clear button inside it, at the right */
+.pl-search {
+  position: relative;
+  flex: 0 1 360px;
+}
+.pl-search .pl-field {
+  padding-right: 30px;
+}
+.pl-search .clear {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--pl-radius-sm);
+  background: none;
+  color: var(--pl-faint);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.pl-search .clear:hover {
+  color: var(--pl-ink);
+}
+.pl-search .clear .mat-icon,
+.pl-button .mat-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  line-height: 16px;
+}
+
+/* Status: a dot, or a pill with the colour as text on its soft fill */
+.pl-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pl-faint);
+}
+.pl-dot.ok {
+  background: var(--pl-ok);
+}
+.pl-dot.warn {
+  background: var(--pl-warn);
+}
+.pl-dot.bad {
+  background: var(--pl-bad);
+}
+.pl-dot.info {
+  background: var(--pl-accent);
+}
+
+.pl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--pl-line-strong);
+  border-radius: 999px;
+  font-size: var(--pl-tiny);
+  color: var(--pl-muted);
+  white-space: nowrap;
+}
+.pl-pill.ok {
+  color: var(--pl-ok);
+  border-color: var(--pl-ok-line);
+  background: var(--pl-ok-soft);
+}
+.pl-pill.warn {
+  color: var(--pl-warn);
+  border-color: var(--pl-warn-line);
+  background: var(--pl-warn-soft);
+}
+.pl-pill.bad {
+  color: var(--pl-bad);
+  border-color: var(--pl-bad-line);
+  background: var(--pl-bad-soft);
+}
+.pl-pill.info {
+  color: var(--pl-accent-ink);
+  border-color: var(--pl-accent-line);
+  background: var(--pl-accent-soft);
+}
+
+/* An identifier or a code-like value */
+.pl-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--pl-canvas);
+  font: 500 var(--pl-tiny) var(--pl-mono);
+  color: var(--pl-muted);
+}
+
+/* A banner across the top of a sheet */
+.pl-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 7px 11px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius-sm);
+}
+.pl-banner.info {
+  color: var(--pl-accent-ink);
+  border-color: var(--pl-accent-line);
+  background: var(--pl-accent-soft);
+}
+.pl-banner.warn {
+  color: var(--pl-warn);
+  border-color: var(--pl-warn-line);
+  background: var(--pl-warn-soft);
+}
+.pl-banner.bad {
+  color: var(--pl-bad);
+  border-color: var(--pl-bad-line);
+  background: var(--pl-bad-soft);
+}
+
+/* ---- Containers ---- */
+
+/* A bordered box of rows: the list on a sheet. Wrap a plain <table> in it. */
+.pl-grid {
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
+  overflow: hidden;
+}
+.pl-grid table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pl-grid th {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--pl-line);
+  background: var(--pl-canvas);
+  font: 500 var(--pl-small) / 1.4 var(--pl-font);
+  color: var(--pl-muted);
+  text-align: left;
+}
+.pl-grid td {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--pl-line);
+  vertical-align: middle;
+}
+.pl-grid tbody tr:last-child td {
+  border-bottom: 0;
+}
+.pl-grid tbody tr:hover {
+  background: var(--pl-accent-soft);
+}
+.pl-grid tbody tr.selected {
+  background: var(--pl-accent-soft);
+  box-shadow: inset 3px 0 var(--pl-accent);
+}
+.pl-grid .title {
+  font-weight: 500;
+  color: var(--pl-ink);
+  text-decoration: none;
+}
+.pl-grid .title:hover {
+  color: var(--pl-accent);
+}
+.pl-grid .meta {
+  font-size: var(--pl-small);
+  color: var(--pl-muted);
+  white-space: nowrap;
+}
+.pl-grid td.actions {
+  padding: 4px 12px;
+  text-align: right;
+}
+.pl-empty {
+  padding: 20px 16px;
+  color: var(--pl-muted);
+}
+
+/* A list page whose Material table and paginator sit directly in it: together they are the bordered box */
+.pl-list > .mat-mdc-table {
+  box-sizing: border-box;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius) var(--pl-radius) 0 0;
+  overflow: hidden;
+}
+.pl-list > .mat-mdc-paginator {
+  border: 1px solid var(--pl-line);
+  border-top: 0;
+  border-radius: 0 0 var(--pl-radius) var(--pl-radius);
+}
+.pl-list > .pl-empty {
+  border: 1px solid var(--pl-line);
+  border-top: 0;
+  background: var(--pl-surface);
+}
+
+/* A card: something you open */
+.pl-card {
+  display: block;
+  padding: 12px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
+  color: var(--pl-ink);
+  text-decoration: none;
+}
+a.pl-card:hover,
+button.pl-card:hover {
+  border-color: var(--pl-accent);
+}
+.pl-card .name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* A box: a titled group of settings or facts on a sheet */
+.pl-box {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
+}
+.pl-box h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: var(--pl-text);
+}
+
+/* A segmented choice: the selected segment is solid */
+.pl-seg {
+  display: inline-flex;
+  border: 1px solid var(--pl-line-strong);
+  border-radius: var(--pl-radius-sm);
+  overflow: hidden;
+}
+.pl-seg button {
+  padding: 4px 12px;
+  border: 0;
+  border-right: 1px solid var(--pl-line-strong);
+  background: var(--pl-surface);
+  font: inherit;
+  color: var(--pl-muted);
+  cursor: pointer;
+}
+.pl-seg button:last-child {
+  border-right: 0;
+}
+.pl-seg button[aria-pressed='true'],
+.pl-seg button.on {
+  background: var(--pl-invert);
+  color: var(--pl-on-invert);
+}
+
+/* Tabs: the page's own navigation, in the top bar or under a head. A 2px accent underline marks where you are. */
+.pl-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 100%;
+}
+.pl-tabs a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  border-bottom: 2px solid transparent;
+  color: var(--pl-muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pl-tabs a:hover {
+  color: var(--pl-ink);
+}
+.pl-tabs a.active {
+  color: var(--pl-ink);
+  border-bottom-color: var(--pl-accent);
+}
+
+/* A popover menu: the app switcher's and the profile's are this */
+.pl-menu {
+  position: absolute;
+  z-index: 50;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius);
+  background: var(--pl-surface);
+  box-shadow: 0 12px 32px -12px rgb(var(--pl-shadow) / 0.45);
+}
+.pl-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--pl-radius-sm);
+  background: none;
+  font: 500 var(--pl-text) var(--pl-font);
+  color: var(--pl-ink);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pl-menu-item:hover,
+.pl-menu-item:focus-visible {
+  background: var(--pl-accent-soft);
+  outline: none;
+}
+.pl-menu-item svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--pl-muted);
+}
+.pl-menu-sep {
+  margin: 4px 0;
+  border-top: 1px solid var(--pl-line);
+}
+
+/* A dialog */
+.pl-modal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.55);
+}
+.pl-modal {
+  width: min(540px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--pl-line);
+  border-radius: 10px;
+  background: var(--pl-surface);
+  color: var(--pl-ink);
+}
+.pl-modal h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.pl-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}

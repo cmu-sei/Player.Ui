@@ -46,7 +46,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           matTooltip="Roles can be set on Users or, if enabled in your environment, can be matched to Role Names from the token of the Identity Provider in use."
           matTooltipShowDelay="0"
         >
-          <mat-icon class="mdi-24px" fontIcon="mdi-information" />
+          <mat-icon class="mdi-24px" fontIcon="mdi-information-outline" />
         </button>
       </th>
       <th mat-header-cell *matHeaderCellDef>All</th>
@@ -58,7 +58,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           [matTooltip]="permission.description"
           matTooltipShowDelay="0"
         >
-          <mat-icon class="mdi-24px" fontIcon="mdi-information" />
+          <mat-icon class="mdi-24px" fontIcon="mdi-information-outline" />
         </button>
         {{ permission?.name }}
       </td>
@@ -89,10 +89,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   (click)="deleteRole(role)"
                   title="Delete Role"
                 >
-                  <mat-icon
-                    class="mdi-24px"
-                    fontIcon="mdi-delete-forever-outline"
-                  />
+                  <mat-icon class="mdi-24px" fontIcon="mdi-trash-can-outline" />
                 </button>
               }
             }

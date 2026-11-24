@@ -3,64 +3,46 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
 
-<div class="list-container mat-elevation-z8">
-  <div class="d-flex align-items-center gap-3">
-    <div class="d-flex align-items-center gap-3">
-      <div class="sp-icon">
-        <img
-          height="35"
-          src="assets/img/SP_Icon_Intel.png"
-          alt="Application Templates"
-        />
-      </div>
-      <span class="header-text">Application Templates</span>
+<div class="list-container pl-list">
+  <div class="pl-head">
+    <h1 class="header-text">Application Templates</h1>
+  </div>
+  <div class="pl-tools">
+    <div class="pl-search">
+      <input
+        class="pl-field"
+        aria-label="Search"
+        placeholder="Search"
+        [(ngModel)]="filterString"
+        (keyup)="applyFilter($event.target.value)"
+      />
+      @if (filterString !== '') {
+        <button
+          type="button"
+          class="clear"
+          aria-label="Clear Search"
+          title="Clear Search"
+          (click)="clearFilter()"
+        >
+          <mat-icon aria-hidden="true" fontIcon="mdi-close" />
+        </button>
+      }
     </div>
-    <div class="my-1">
-      <mat-form-field style="width: 250px" subscriptSizing="dynamic">
-        <input
-          matInput
-          [(ngModel)]="filterString"
-          (keyup)="applyFilter($event.target.value)"
-          placeholder="Search"
-        />
-        @if (filterString !== '') {
-          <button
-            mat-icon-button
-            aria-label="Clear Search"
-            matSuffix
-            color="primary"
-            (click)="clearFilter()"
-            title="Clear Search"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_cancel_circle"
-            />
-          </button>
-        }
-      </mat-form-field>
-    </div>
-    <div class="ms-auto">
+    <span class="end">
       @if (canManage$ | async) {
         <button
-          mat-icon-button
-          aria-label="Add a new Application Template"
-          matTooltip="Add a new Application Template"
-          (click)="addAppTemplate()"
-        >
-          <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
-        </button>
-        <button
-          mat-icon-button
+          type="button"
+          class="pl-button"
           aria-label="Import Application Templates"
           matTooltip="Import Application Templates"
           (click)="openDialog(importDialog)"
         >
-          <mat-icon fontIcon="mdi-file-import" class="mdi-24px" />
+          <mat-icon aria-hidden="true" fontIcon="mdi-tray-arrow-down" />Import
         </button>
       }
       <button
-        mat-icon-button
+        type="button"
+        class="pl-button"
         aria-label="Export Application Templates"
         matTooltip="Export Application Templates"
         [matBadge]="
@@ -68,9 +50,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         "
         (click)="openDialog(exportDialog)"
       >
-        <mat-icon fontIcon="mdi-file-export" class="mdi-24px" />
+        <mat-icon aria-hidden="true" fontIcon="mdi-tray-arrow-up" />Export
       </button>
-    </div>
+      @if (canManage$ | async) {
+        <button
+          type="button"
+          class="pl-button primary"
+          aria-label="Add a new Application Template"
+          matTooltip="Add a new Application Template"
+          (click)="addAppTemplate()"
+        >
+          <mat-icon aria-hidden="true" fontIcon="mdi-plus" />New Template
+        </button>
+      }
+    </span>
   </div>
 
   <mat-table #table [dataSource]="appTemplateDataSource" matSort>
@@ -135,7 +128,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <mat-row *matRowDef="let row; columns: appTemplateColumns" />
   </mat-table>
   @if (appTemplateDataSource.filteredData.length === 0) {
-    <div>No Application Templates found</div>
+    <div class="pl-empty">No Application Templates found</div>
   }
   <mat-paginator
     #paginator

@@ -4,7 +4,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 @let canEdit = canEdit$ | async;
-<div class="d-flex flex-column">
+<div class="d-flex flex-column details">
   <mat-form-field>
     <mat-label>Name</mat-label>
     <input
@@ -38,28 +38,22 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       (change)="editAppTemplate()"
     />
   </mat-form-field>
-  <mat-form-field floatPlaceholder="always">
-    <input matInput class="hide" />
-    <mat-checkbox
-      tabIndex="4"
-      name="embeddable"
-      [disabled]="!canEdit"
-      [(ngModel)]="appTemplate.embeddable"
-      (change)="editAppTemplate()"
-      >Embeddable</mat-checkbox
-    >
-  </mat-form-field>
-  <mat-form-field floatPlaceholder="always">
-    <input matInput class="hide" />
-    <mat-checkbox
-      tabIndex="5"
-      name="loadInBackground"
-      [disabled]="!canEdit"
-      [(ngModel)]="appTemplate.loadInBackground"
-      (change)="editAppTemplate()"
-      >Load in background</mat-checkbox
-    >
-  </mat-form-field>
+  <mat-checkbox
+    tabIndex="4"
+    name="embeddable"
+    [disabled]="!canEdit"
+    [(ngModel)]="appTemplate.embeddable"
+    (change)="editAppTemplate()"
+    >Embeddable</mat-checkbox
+  >
+  <mat-checkbox
+    tabIndex="5"
+    name="loadInBackground"
+    [disabled]="!canEdit"
+    [(ngModel)]="appTemplate.loadInBackground"
+    (change)="editAppTemplate()"
+    >Load in background</mat-checkbox
+  >
   @if (canEdit) {
     <mat-form-field>
       <mat-label>Move its applications to</mat-label>

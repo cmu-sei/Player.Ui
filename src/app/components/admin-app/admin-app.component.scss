@@ -1,19 +1,5 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
-.appitems-container .mat-list-item {
-  height: auto;
-}
-
-.appslist {
-  margin-top: 10px;
-  margin-bottom: 20px;
-}
-
-.nolink {
-  text-decoration: none;
-  cursor: pointer;
-}
-
 :host {
   display: flex;
   flex-direction: column;
@@ -25,63 +11,62 @@
   overflow: hidden;
 }
 
+// The sections, down the left: a quiet list on the surface, the open one in the accent.
 .appbarmenu-container {
-  width: 250px;
-  border-right: solid var(--mat-sys-surface-container);
+  width: 220px;
+  border-right: 1px solid var(--pl-line);
 }
 
-.lefticon {
-  font-size: 75%;
-  padding: 0.5em;
-  padding-right: 1.5em;
-  height: 35px;
-  text-align: center;
+.appitems-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--pl-radius-sm);
+  background: none;
+  font: 500 var(--pl-text) var(--pl-font);
+  color: var(--pl-body);
+  text-align: left;
   cursor: pointer;
+  transition:
+    color 120ms,
+    background 120ms;
+
+  mat-icon {
+    flex: none;
+    color: var(--pl-muted);
+  }
+
+  &:hover {
+    background: var(--pl-canvas);
+    color: var(--pl-ink);
+  }
+
+  &.active {
+    background: var(--pl-accent-soft);
+    color: var(--pl-accent-ink);
+
+    mat-icon {
+      color: var(--pl-accent);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--pl-accent);
+    outline-offset: 1px;
+  }
 }
 
 .crucible-logo {
   position: absolute;
   bottom: 0;
-}
-
-.icon-text {
-  margin-left: 10px;
-  font-weight: bold;
-}
-
-.player-icon {
-  transform: scale(2);
-  width: 60px;
-  color: var(--mat-sys-primary);
-}
-
-.player-icon-small {
-  width: 35px;
-  height: 35px;
-  font-size: 35px;
-  padding: 5px 16px 5px 5px;
-  cursor: pointer;
-  color: var(--mat-sys-primary);
-}
-
-.sidenav-header {
-  height: 40px;
-  border-bottom: 2px solid var(--mat-sys-surface-container);
-}
-
-.player-icon-header {
-  color: var(--mat-sys-primary);
-}
-
-.icon-35px {
-  width: 35px;
-  height: 35px;
-  font-size: 35px;
-}
-
-.cssLayoutRowStartCenter {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
 }

@@ -2,51 +2,42 @@
 Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<div class="mat-elevation-z8 subscriptions-container">
-  <div class="d-flex align-items-center">
-    <img
-      src="assets/img/subscription.png"
-      alt="Subscriptions"
-      width="35"
-      class="ms-2"
-    />
-    <!-- <mat-icon class="player-icon-small" svgIcon="ic_crucible_player"></mat-icon> -->
-    <h3 class="header-text ms-2">Subscriptions</h3>
-    <div class="d-flex align-items-center ms-4">
-      <mat-form-field style="width: 320px" subscriptSizing="dynamic">
-        <input
-          matInput
-          [(ngModel)]="filterStr"
-          (keyup)="applyFilter($event.target.value)"
-          placeholder="Search"
-        />
-        @if (filterStr !== '') {
-          <button
-            mat-icon-button
-            aria-label="Clear Search"
-            matSuffix
-            color="primary"
-            (click)="clearFilter()"
-            title="Clear Search"
-          >
-            <mat-icon
-              style="transform: scale(0.85)"
-              svgIcon="ic_cancel_circle"
-            />
-          </button>
-        }
-      </mat-form-field>
+<div class="subscriptions-container pl-list">
+  <div class="pl-head">
+    <h1 class="header-text">Subscriptions</h1>
+  </div>
+  <div class="pl-tools">
+    <div class="pl-search">
+      <input
+        class="pl-field"
+        aria-label="Search"
+        placeholder="Search"
+        [(ngModel)]="filterStr"
+        (keyup)="applyFilter($event.target.value)"
+      />
+      @if (filterStr !== '') {
+        <button
+          type="button"
+          class="clear"
+          aria-label="Clear Search"
+          title="Clear Search"
+          (click)="clearFilter()"
+        >
+          <mat-icon aria-hidden="true" fontIcon="mdi-close" />
+        </button>
+      }
     </div>
-    <div class="ms-auto">
+    <span class="end">
       <button
-        mat-icon-button
+        type="button"
+        class="pl-button primary"
         aria-label="Add a new Subscription"
         matTooltip="Add a new Subscription"
         (click)="addNewSubscription()"
       >
-        <mat-icon fontIcon="mdi-plus-circle" class="mdi-24px" />
+        <mat-icon aria-hidden="true" fontIcon="mdi-plus" />New Subscription
       </button>
-    </div>
+    </span>
   </div>
 
   <mat-table #table [dataSource]="dataSource" matSort>
@@ -60,7 +51,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           title="Edit Subscription"
           (click)="editSubscription(element)"
         >
-          <mat-icon style="transform: scale(0.85)" svgIcon="ic_edit" />
+          <mat-icon
+            style="transform: scale(0.85)"
+            fontIcon="mdi-pencil-outline"
+          />
         </button>
         <button
           mat-icon-button
@@ -68,7 +62,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           title="Delete Subscription"
           (click)="deleteSubscription(element)"
         >
-          <mat-icon style="transform: scale(0.85)" svgIcon="ic_delete" />
+          <mat-icon
+            style="transform: scale(0.85)"
+            fontIcon="mdi-trash-can-outline"
+          />
         </button>
       </mat-cell>
     </ng-container>

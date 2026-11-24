@@ -2,27 +2,48 @@
 Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 -->
-<mat-toolbar
-  class="toolbar"
-  [style.backgroundColor]="'var(--crucible-topbar-background)'"
-  [style.color]="'var(--crucible-topbar-text)'"
->
-  <mat-toolbar-row>
-    <span class="margin-auto">
-      <a
-        mat-icon-button
-        class="home-logo"
-        aria-label="Player home"
-        title="Home"
-        [routerLink]="['/']"
-      >
-        <mat-icon svgIcon="ic_crucible_player" />
-      </a>
+<!--
+  The thin bar across the top of every page. Left to right: the other Crucible
+  apps, the product (one link home), where you are, the team; then the page's
+  tools and the person's menu.
+-->
+<header class="bar toolbar">
+  <app-switcher self="player" label="Apps" [apps]="apps" />
+  <a
+    class="brand home-logo"
+    aria-label="Player home"
+    title="Home"
+    [routerLink]="['/']"
+  >
+    <!-- Player's icon, in the mark: the drop in the top bar's text colour, the play arrow cut out of it. -->
+    <span class="mark" aria-hidden="true">
+      <svg viewBox="0 0 260 260">
+        <path
+          class="drop"
+          d="M44.67,46H185.93a10,10,0,0,1,10,10V162.48a80.63,80.63,0,0,1-80.63,80.63h0a80.63,80.63,0,0,1-80.63-80.63V56a10,10,0,0,1,10-10Z"
+          transform="translate(135.99 -39.19) rotate(45)"
+        />
+        <path
+          class="play"
+          d="M98.58,85v90.08a2.47,2.47,0,0,0,3.73,2.12l75.06-44.54a2.47,2.47,0,0,0,0-4.24L102.34,82.88A2.48,2.48,0,0,0,98.58,85Z"
+        />
+      </svg>
     </span>
-    <span class="view-text" [matTooltip]="title()">{{ title() }}</span>
-    @if (teams && team && teams.length > 0) {
+    {{ productName }}
+  </a>
+  @if (topbarView() === TopbarView.PLAYER_ADMIN) {
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="crumb section">Administration</span>
+  }
+  @if (crumb(); as crumb) {
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="crumb view-text" [matTooltip]="crumb">{{ crumb }}</span>
+  }
+  @if (teams && team && teams.length > 0) {
+    <div class="page">
+      <span class="sep" aria-hidden="true">/</span>
       <div
-        class="team-text copy-text"
+        class="team-label copy-text"
         ngxClipboard
         [cbContent]="team.id"
         (cbOnSuccess)="openSnackBar('Copied Team Id to clipboard')"
@@ -34,99 +55,123 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         team.name
       }}</span>
       @if (teams.length > 1) {
-        <div>
-          <button
-            mat-button
-            [matMenuTriggerFor]="teamMenu"
-            matTooltip="Select a Team"
-            aria-label="Select a Team"
-          >
-            <mat-icon svgIcon="ic_expand_more_white_24px" />
-          </button>
-          <mat-menu #teamMenu="matMenu" [overlapTrigger]="false">
-            @for (val of teams; track val) {
-              <button mat-menu-item (click)="setTeamFn(val.id)">
-                {{ val.name }}
-              </button>
-            }
-          </mat-menu>
-        </div>
-      }
-    }
-    @if (teams) {
-      <button
-        mat-icon-button
-        aria-label="Users"
-        matTooltip="Users"
-        (click)="openUserPresence()"
-      >
-        <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple-outline" />
-      </button>
-    }
-    <span class="spacer"></span>
-    @if (currentUser$ | async; as currentUser) {
-      <div class="team-text user-menu">
-        <!--
-          The name is hidden on narrow viewports (see the scss), leaving only the
-          chevron, so the tooltip carries it instead.
-        -->
         <button
-          mat-button
-          [matMenuTriggerFor]="menu"
-          [matTooltip]="currentUser.profile.name"
-          aria-label="Menu"
+          type="button"
+          class="pl-tool"
+          [matMenuTriggerFor]="teamMenu"
+          matTooltip="Select a Team"
+          aria-label="Select a Team"
         >
-          <strong class="user-name">{{ currentUser.profile.name }}</strong>
           <mat-icon aria-hidden="true" fontIcon="mdi-chevron-down" />
         </button>
-        <mat-menu
-          #menu="matMenu"
-          [overlapTrigger]="false"
-          class="user-dropdown-menu"
-        >
-          @if (team && showEditView$ | async) {
-            <a mat-menu-item (click)="editFn($event)" [href]="getEditViewUrl()">
-              Edit View
-            </a>
-          }
-          @if (team && (showManageTeams$ | async)) {
-            <button mat-menu-item (click)="openManageTeams()">
-              Manage Teams
+        <mat-menu #teamMenu="matMenu" [overlapTrigger]="false">
+          @for (val of teams; track val) {
+            <button mat-menu-item (click)="setTeamFn(val.id)">
+              {{ val.name }}
             </button>
           }
-          @if (
-            (showAdministration$ | async) && topbarView() === 'player-admin'
-          ) {
-            <a [routerLink]="['/']" mat-menu-item> Exit Administration </a>
-          }
-          @if (
-            (showAdministration$ | async) &&
-            topbarView() !== TopbarView.PLAYER_ADMIN
-          ) {
-            <a [routerLink]="['/admin']" mat-menu-item> Administration </a>
-          }
-          @if (topbarView() === 'player-player') {
-            <button mat-menu-item (click)="resetUI()">Reset UI</button>
-          }
-          @if (topbarView() === 'player-player') {
-            <a [routerLink]="['/']" mat-menu-item> Exit View </a>
-          }
-          <button mat-menu-item (click)="logout()">Logout</button>
-          <mat-slide-toggle
-            aria-labelledby="theme-toggle"
-            class="mat-menu-item toggle"
-            color="primary"
-            [checked]="(theme$ | async) === 'dark-theme' ? true : false"
-            (click)="$event.stopPropagation()"
-            (change)="themeFn($event)"
-          >
-            <mat-label id="theme-toggle">Dark Theme</mat-label>
-          </mat-slide-toggle>
         </mat-menu>
-      </div>
-    }
-  </mat-toolbar-row>
-</mat-toolbar>
+      }
+    </div>
+  }
+  <span class="spacer"></span>
+  @if (teams) {
+    <button
+      type="button"
+      class="pl-tool"
+      aria-label="Users"
+      matTooltip="Users"
+      (click)="openUserPresence()"
+    >
+      <mat-icon aria-hidden="true" fontIcon="mdi-account-multiple-outline" />
+    </button>
+  }
+  @if (currentUser$ | async; as currentUser) {
+    <div class="user-menu">
+      <!--
+        The name is hidden on narrow viewports (see the scss), leaving the
+        avatar and the chevron, so the tooltip carries it instead.
+      -->
+      <button
+        type="button"
+        class="pill"
+        [matMenuTriggerFor]="menu"
+        [matTooltip]="currentUser.profile.name"
+        aria-label="Menu"
+      >
+        <span class="avatar" aria-hidden="true">{{
+          initial(currentUser.profile.name)
+        }}</span>
+        <strong class="user-name">{{ currentUser.profile.name }}</strong>
+        <mat-icon aria-hidden="true" fontIcon="mdi-chevron-down" />
+      </button>
+      <mat-menu
+        #menu="matMenu"
+        [overlapTrigger]="false"
+        xPosition="before"
+        class="user-dropdown-menu"
+      >
+        @if (team && showEditView$ | async) {
+          <a mat-menu-item (click)="editFn($event)" [href]="getEditViewUrl()">
+            Edit View
+          </a>
+        }
+        @if (team && (showManageTeams$ | async)) {
+          <button mat-menu-item (click)="openManageTeams()">
+            Manage Teams
+          </button>
+        }
+        @if ((showAdministration$ | async) && topbarView() === 'player-admin') {
+          <a [routerLink]="['/']" mat-menu-item> Exit Administration </a>
+        }
+        @if (
+          (showAdministration$ | async) &&
+          topbarView() !== TopbarView.PLAYER_ADMIN
+        ) {
+          <a [routerLink]="['/admin']" mat-menu-item> Administration </a>
+        }
+        @if (topbarView() === 'player-player') {
+          <button mat-menu-item (click)="resetUI()">Reset UI</button>
+        }
+        @if (topbarView() === 'player-player') {
+          <a [routerLink]="['/']" mat-menu-item> Exit View </a>
+        }
+        <!--
+          Light or dark, and Logout, as Scenario Builder's menu has them. The
+          theme item stays open on a click, so the change is seen.
+        -->
+        <button
+          mat-menu-item
+          class="theme-item"
+          (click)="$event.stopPropagation(); toggleTheme()"
+        >
+          @if ((theme$ | async) === 'dark-theme') {
+            <svg class="item-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="8" cy="8" r="3" />
+              <path
+                d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"
+              />
+            </svg>
+            <span>Light mode</span>
+          } @else {
+            <svg class="item-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1Z"
+              />
+            </svg>
+            <span>Dark mode</span>
+          }
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <svg class="item-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M6 2.5H3.5v11H6M10.5 5l3 3-3 3M13.5 8H6.5" />
+          </svg>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    </div>
+  }
+</header>
 
 <ng-template #userPresenceDialog>
   <crucible-dialog dialogTitle="Users" [hideDefaultActions]="true">

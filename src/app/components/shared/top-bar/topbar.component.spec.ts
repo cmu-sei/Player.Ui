@@ -30,7 +30,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltip, MatTooltipModule } from '@angular/material/tooltip';
 import { By } from '@angular/platform-browser';
@@ -103,7 +102,6 @@ async function renderTopbar(
       MatFormFieldModule,
       MatIconModule,
       MatMenuModule,
-      MatSlideToggleModule,
       MatToolbarModule,
       MatTooltipModule,
       MatButtonModule,
@@ -255,14 +253,16 @@ describe('TopbarComponent', () => {
   });
 
   /**
-   * Verifies: the Dark Theme toggle is present in the opened user menu.
+   * Verifies: the opened user menu offers the other theme, by name.
    * Interacts with: rendered menu; opens it via a user click.
-   * Data: default render.
+   * Data: default render (light theme).
    */
-  it('should show dark theme toggle', async () => {
+  it('should offer dark mode in the user menu', async () => {
     await renderTopbar();
     await openUserMenu();
-    expect(screen.getByText('Dark Theme')).toBeInTheDocument();
+    expect(
+      screen.getByRole('menuitem', { name: 'Dark mode' }),
+    ).toBeInTheDocument();
   });
 
   /**
@@ -326,15 +326,39 @@ describe('TopbarComponent', () => {
   });
 
   /**
-   * Verifies: the default 'Player' title renders in the toolbar.
-   * Interacts with: rendered template; screen.getByText.
-   * Data: title 'Player'.
+   * Verifies: the product's name is the brand, linking home, and a title that only repeats it is not shown again as
+   *   where you are.
+   * Interacts with: rendered template; ComnSettingsService (default test settings).
+   * Data: AppTopBarText 'Player'; title 'Player'.
    */
-  it('should display player title in toolbar', async () => {
+  it('should display the product as the brand, once', async () => {
     await renderTopbar({ title: 'Player' });
+    const brand = screen.getByRole('link', { name: 'Player home' });
+    expect(brand).toHaveTextContent('Player');
+    expect(brand).toHaveAttribute('href', '/');
+    expect(document.querySelector('.view-text')).toBeNull();
+  });
+
+  /**
+   * Verifies: the avatar in the user menu button shows the first letter of the user's name.
+   * Interacts with: rendered template.
+   * Data: user 'Test User'.
+   */
+  it('shows the user initial in the avatar', async () => {
+    await renderTopbar();
+    expect(document.querySelector('.avatar')).toHaveTextContent('T');
+  });
+
+  /**
+   * Verifies: without the Apps setting there is no app switcher button.
+   * Interacts with: rendered template; ComnSettingsService (default test settings, no Apps).
+   * Data: default settings.
+   */
+  it('shows no app switcher without the Apps setting', async () => {
+    await renderTopbar();
     expect(
-      screen.getByText('Player', { selector: '.view-text' }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Apps' }),
+    ).not.toBeInTheDocument();
   });
 
   describe('Administration entry', () => {
@@ -391,7 +415,43 @@ describe('TopbarComponent', () => {
       });
       await openUserMenu();
       expect(screen.getByText('Exit Administration')).toBeInTheDocument();
-      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('menuitem', { name: 'Administration' }),
+      ).not.toBeInTheDocument();
+    });
+
+    /**
+     * Verifies: in the admin view the bar says where you are: Administration, then the section's title.
+     * Interacts with: topbarView and title inputs; rendered template.
+     * Data: PLAYER_ADMIN view with title 'Users'.
+     */
+    it('should name Administration and the section in the bar in admin view', async () => {
+      const crumbs = () =>
+        [...document.querySelectorAll('.crumb')].map((crumb) =>
+          crumb.textContent?.trim(),
+        );
+      await renderTopbar({
+        topbarView: TopbarView.PLAYER_ADMIN,
+        title: 'Users',
+      });
+      expect(crumbs()).toEqual(['Administration', 'Users']);
+    });
+
+    /**
+     * Verifies: outside the admin view the bar shows the title alone, without Administration before it.
+     * Interacts with: topbarView and title inputs; rendered template.
+     * Data: PLAYER_HOME view with title 'Users'.
+     */
+    it('should not name Administration in the bar outside the admin view', async () => {
+      await renderTopbar({
+        topbarView: TopbarView.PLAYER_HOME,
+        title: 'Users',
+      });
+      expect(
+        [...document.querySelectorAll('.crumb')].map((crumb) =>
+          crumb.textContent?.trim(),
+        ),
+      ).toEqual(['Users']);
     });
 
     /**
@@ -633,20 +693,21 @@ describe('TopbarComponent', () => {
     });
   });
 
-  describe('Dark Theme toggle', () => {
+  describe('theme item', () => {
     /**
-     * Verifies: switching the Dark Theme toggle sets the theme it switches to.
-     * Interacts with: the rendered slide toggle in the user menu; ComnAuthQuery.userTheme$; ComnAuthService.setUserTheme.
+     * Verifies: the theme item is named for the theme it switches to, sets that theme, and leaves the menu open.
+     * Interacts with: the rendered theme item in the user menu; ComnAuthQuery.userTheme$; ComnAuthService.setUserTheme.
      * Data: one row per starting theme.
      */
-    it.each<[string, string]>([
-      ['light-theme', 'dark-theme'],
-      ['dark-theme', 'light-theme'],
-    ])('switches from %s to %s', async (theme, expected) => {
+    it.each<[string, string, string]>([
+      ['light-theme', 'Dark mode', 'dark-theme'],
+      ['dark-theme', 'Light mode', 'light-theme'],
+    ])('from %s, %s switches to %s', async (theme, name, expected) => {
       const { setUserTheme } = await renderTopbar({ theme });
       const user = await openUserMenu();
-      await user.click(screen.getByRole('switch'));
+      await user.click(screen.getByRole('menuitem', { name }));
       expect(setUserTheme).toHaveBeenCalledExactlyOnceWith(expected);
+      expect(screen.getByRole('menuitem', { name })).toBeInTheDocument();
     });
   });
 

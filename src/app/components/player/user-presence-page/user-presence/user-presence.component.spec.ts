@@ -342,7 +342,9 @@ describe('UserPresenceComponent', () => {
       'Count: 0',
     ]);
 
-    await user.click(container.querySelector('button[matsuffix]')!);
+    await user.click(
+      container.querySelector('button[aria-label="Clear Search"]')!,
+    );
     await vi.waitFor(() => {
       fixture.detectChanges();
       expect(panelCounts(container)).toEqual([

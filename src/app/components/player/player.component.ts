@@ -20,7 +20,7 @@ import {
   MatSidenavContainer,
   MatSidenavContent,
 } from '@angular/material/sidenav';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import {
   ComnAuthQuery,
   ComnSettingsService,
@@ -57,12 +57,11 @@ import {
   ResizeHandleDirective,
 } from 'angular-resizable-element';
 import { AsyncPipe } from '@angular/common';
-import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
-import { MatList, MatListItem, MatDivider } from '@angular/material/list';
 import { ApplicationListComponent } from './application-list/application-list.component';
 import { MatIconButton } from '@angular/material/button';
 import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FooterComponent } from '../shared/footer/footer.component';
 import { FocusedAppComponent } from './focused-app/focused-app.component';
 import { NotificationsComponent } from './notifications/notifications.component';
 
@@ -75,17 +74,13 @@ import { NotificationsComponent } from './notifications/notifications.component'
     MatSidenavContainer,
     MatSidenav,
     ResizableDirective,
-    MatToolbar,
-    RouterLink,
     MatIcon,
-    MatList,
-    MatListItem,
-    MatDivider,
     ApplicationListComponent,
     MatIconButton,
     ResizeHandleDirective,
     MatSidenavContent,
     TopbarComponent,
+    FooterComponent,
     FocusedAppComponent,
     NotificationsComponent,
     AsyncPipe,

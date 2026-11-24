@@ -263,7 +263,6 @@ describe('PlayerComponent', () => {
     const { fixture, getView, getTeamMemberships } = await renderPlayer();
     expect(getView).toHaveBeenCalledWith('view-1');
     expect(getTeamMemberships).toHaveBeenCalledWith('u1', 'view-1');
-    expect(screen.getByText('Player')).toBeInTheDocument();
     const teams = [
       { id: 'team-a', name: 'Team A', isMember: true, isPrimary: true },
       { id: 'team-b', name: 'Team B', isMember: true, isPrimary: false },

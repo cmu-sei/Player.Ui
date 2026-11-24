@@ -33,7 +33,6 @@ import { RolesService } from '../../../services/roles/roles.service';
 import { UserPermissionsService } from '../../../services/permissions/user-permissions.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { MatIcon } from '@angular/material/icon';
-import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatIconButton } from '@angular/material/button';
 import { ClipboardModule } from 'ngx-clipboard';
@@ -59,11 +58,8 @@ interface UserAttributeColumn {
   styleUrls: ['./admin-user-search.component.scss'],
   imports: [
     MatIcon,
-    MatFormField,
-    MatInput,
     FormsModule,
     MatIconButton,
-    MatSuffix,
     MatPaginator,
     MatTable,
     MatSort,

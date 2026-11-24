@@ -4,6 +4,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 -->
 
 @if (data$ | async; as data) {
+  <app-topbar
+    [sidenav]="sidenav"
+    [title]="data.view.name"
+    topbarView="player-player"
+    [teams]="data.teams"
+    [team]="data.team"
+    [viewId]="viewId"
+    [mini]="mini$ | async"
+    (setTeam)="setPrimaryTeam($event)"
+    (sidenavToggle)="sidenavToggleFn($event)"
+    (editView)="editViewFn($event)"
+  />
   <mat-sidenav-container
     class="appcontent-container"
     [autosize]="autosizeSidenav"
@@ -22,40 +34,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     >
       <div class="grid">
         <div class="sidebar-content">
-          @if (!(mini$ | async)) {
-            <mat-toolbar
-              class="sidenav-header"
-              title="Return to Home"
-              [routerLink]="['/']"
-            >
-              <a class="nolink" [routerLink]="['/']">
-                <div class="d-flex align-items-center">
-                  <mat-icon
-                    class="icon-35px player-icon-header"
-                    svgIcon="ic_crucible_player"
-                  />
-                  <h2 class="icon-text">{{ data.title }}</h2>
-                </div>
-              </a>
-            </mat-toolbar>
-          } @else {
-            <mat-list>
-              <mat-list-item class="player-title-mini">
-                <a
-                  [routerLink]="['/']"
-                  title="Return to Home"
-                  aria-label="Return to Home"
-                  class="home-link-mini"
-                >
-                  <mat-icon
-                    class="mat-list-item-icon mdi-24px"
-                    svgIcon="ic_crucible_player"
-                  />
-                </a>
-              </mat-list-item>
-            </mat-list>
-          }
-          <mat-divider />
           <app-application-list
             [viewId]="data.view.id"
             [teams]="data.teams"
@@ -124,18 +102,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </div>
     </mat-sidenav>
     <mat-sidenav-content class="noscroll">
-      <app-topbar
-        [sidenav]="sidenav"
-        [title]="data.view.name"
-        topbarView="player-player"
-        [teams]="data.teams"
-        [team]="data.team"
-        [viewId]="viewId"
-        [mini]="mini$ | async"
-        (setTeam)="setPrimaryTeam($event)"
-        (sidenavToggle)="sidenavToggleFn($event)"
-        (editView)="editViewFn($event)"
-      />
       <app-focused-app />
       @if (user$ | async; as user) {
         <app-notifications
@@ -151,6 +117,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       }
     </mat-sidenav-content>
   </mat-sidenav-container>
+  <app-footer />
 } @else {
   LOADING
 }

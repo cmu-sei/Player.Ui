@@ -26,7 +26,6 @@ import {
 } from '../../../generated/player-api';
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
-import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
@@ -37,11 +36,8 @@ import { MatTooltip } from '@angular/material/tooltip';
   templateUrl: './app-admin-subscription-search.component.html',
   styleUrls: ['./app-admin-subscription-search.component.scss'],
   imports: [
-    MatFormField,
-    MatInput,
     FormsModule,
     MatIconButton,
-    MatSuffix,
     MatIcon,
     MatTooltip,
     MatTable,

@@ -29,13 +29,6 @@ import { MatBadge } from '@angular/material/badge';
 import { MatIcon } from '@angular/material/icon';
 import { MatList, MatListItem } from '@angular/material/list';
 import { FormsModule } from '@angular/forms';
-import {
-  MatFormField,
-  MatInput,
-  MatHint,
-  MatSuffix,
-} from '@angular/material/input';
-import { MatButton } from '@angular/material/button';
 import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
 
 @Component({
@@ -51,11 +44,6 @@ import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
     MatList,
     MatListItem,
     FormsModule,
-    MatFormField,
-    MatInput,
-    MatHint,
-    MatButton,
-    MatSuffix,
     DatePipe,
     TimeZoneAbbrPipe,
   ],

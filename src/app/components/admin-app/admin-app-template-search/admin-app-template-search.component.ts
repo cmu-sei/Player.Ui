@@ -33,9 +33,7 @@ import { AsyncPipe } from '@angular/common';
 import { ApplicationService } from '../../../generated/player-api/api/application.service';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
-import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatBadge } from '@angular/material/badge';
@@ -60,11 +58,7 @@ export interface Action {
   styleUrls: ['./admin-app-template-search.component.scss'],
   imports: [
     AsyncPipe,
-    MatFormField,
-    MatInput,
     FormsModule,
-    MatIconButton,
-    MatSuffix,
     MatIcon,
     MatTooltip,
     MatBadge,

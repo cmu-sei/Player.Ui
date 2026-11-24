@@ -16,7 +16,7 @@ import {
   MatSidenavContainer,
   MatSidenavContent,
 } from '@angular/material/sidenav';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import {
   ComnSettingsService,
   Theme,
@@ -29,11 +29,9 @@ import { TopbarView } from '../shared/top-bar/topbar.models';
 import { LoggedInUserService } from '../../services/logged-in-user/logged-in-user.service';
 import { UserPermissionsService } from '../../services/permissions/user-permissions.service';
 import { SystemPermission } from '../../generated/player-api';
-import { MatToolbar } from '@angular/material/toolbar';
 import { MatIcon } from '@angular/material/icon';
-import { MatList, MatListItem } from '@angular/material/list';
-import { MatButton } from '@angular/material/button';
 import { TopbarComponent } from '../shared/top-bar/topbar.component';
+import { FooterComponent } from '../shared/footer/footer.component';
 import { AdminViewSearchComponent } from './admin-view-search/admin-view-search.component';
 import { AdminUserSearchComponent } from './admin-user-search/admin-user-search.component';
 import { AdminAppTemplateSearchComponent } from './admin-app-template-search/admin-app-template-search.component';
@@ -48,14 +46,10 @@ import { AsyncPipe } from '@angular/common';
   imports: [
     MatSidenavContainer,
     MatSidenav,
-    MatToolbar,
-    RouterLink,
     MatIcon,
-    MatList,
-    MatListItem,
-    MatButton,
     MatSidenavContent,
     TopbarComponent,
+    FooterComponent,
     AdminViewSearchComponent,
     AdminUserSearchComponent,
     AdminAppTemplateSearchComponent,
@@ -86,36 +80,31 @@ export class AdminAppComponent implements OnInit, OnDestroy {
     {
       name: 'Views',
       section: Section.ADMIN_VIEWS,
-      icon: 'ic_crucible_player',
-      svgIcon: true,
+      icon: 'mdi-monitor-dashboard',
       permission: SystemPermission.ViewViews,
     },
     {
       name: 'Application Templates',
       section: Section.ADMIN_APP_TEMP,
-      icon: 'assets/img/SP_Icon_Intel.png',
-      svgIcon: false,
+      icon: 'mdi-file-document-outline',
       permission: SystemPermission.ViewApplications,
     },
     {
       name: 'Subscriptions',
       section: Section.ADMIN_SUBS,
-      icon: 'assets/img/subscription.png',
-      svgIcon: false,
+      icon: 'mdi-rss',
       permission: SystemPermission.ViewWebhookSubscriptions,
     },
     {
       name: 'Users',
       section: Section.ADMIN_USERS,
-      icon: 'assets/img/SP_Icon_User.png',
-      svgIcon: false,
+      icon: 'mdi-account-outline',
       permission: SystemPermission.ViewUsers,
     },
     {
       name: 'Roles',
       section: Section.ADMIN_ROLE_PERM,
-      icon: 'assets/img/SP_Icon_Alert.png',
-      svgIcon: false,
+      icon: 'mdi-shield-account-outline',
       permission: SystemPermission.ViewRoles,
     },
   ];
@@ -206,8 +195,8 @@ export enum Section {
 
 export interface SectionItem {
   name: string;
+  /** A Material Design Icons name, e.g. `mdi-rss`. */
   icon: string;
   section: Section;
-  svgIcon: boolean;
   permission: SystemPermission;
 }
