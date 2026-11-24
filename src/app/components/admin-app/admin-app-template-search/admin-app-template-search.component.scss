@@ -12,17 +12,17 @@
 
 // A row grows when its template is opened. Its checkbox, icon and name stay at
 // the top, level with the panel's header, instead of drifting to the middle.
-.mat-mdc-cell.mat-column-select,
-.mat-mdc-cell.mat-column-name {
+mat-cell.mat-column-select,
+mat-cell.mat-column-name {
   align-items: flex-start;
 }
 
 // The closed row is 48px: the panel's 40px header and the 4px above and below it.
-.mat-mdc-cell.mat-column-select {
+mat-cell.mat-column-select {
   padding-top: 8px;
 }
 
-.mat-mdc-cell.mat-column-name {
+mat-cell.mat-column-name {
   padding-top: 10px;
   // The name sits level with the middle of its 28px icon.
   line-height: 28px;
@@ -33,6 +33,6 @@
 }
 
 // A row holds a form when it is open, so it doesn't light up under the pointer.
-.mat-mdc-row:hover {
+mat-row:hover {
   background: none;
 }

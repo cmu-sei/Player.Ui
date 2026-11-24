@@ -1,0 +1,43 @@
+// Copyright 2026 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+@use '@angular/material' as mat;
+
+:host {
+  display: flex;
+  align-items: center;
+  margin-left: -8px;
+}
+
+:host(:empty) {
+  display: none;
+}
+
+.dots {
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--pl-faint),
+    )
+  );
+}
+
+// The menu's own content: a small muted title over the apps, each with a lettered badge.
+.app-switcher-title {
+  padding: 4px 8px 6px;
+  font-size: var(--pl-small);
+  color: var(--pl-muted);
+}
+
+.app-switcher-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  border: 1px solid var(--pl-line);
+  border-radius: var(--pl-radius-sm);
+  background: var(--pl-canvas);
+  font-size: var(--pl-tiny);
+  font-weight: 600;
+  text-transform: uppercase;
+}

@@ -92,18 +92,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         #notificationForm="ngForm"
         (ngSubmit)="sendMessage()"
       >
-        <input
-          class="pl-field input-message"
-          #msgtext
-          type="text"
-          aria-label="Message"
-          placeholder="{{ sendMessagePlaceholder }}"
-          name="messageToSend"
-          [(ngModel)]="messageToSend"
-        />
+        <mat-form-field class="input-message" subscriptSizing="dynamic">
+          <input
+            matInput
+            #msgtext
+            type="text"
+            aria-label="Message"
+            placeholder="{{ sendMessagePlaceholder }}"
+            name="messageToSend"
+            [(ngModel)]="messageToSend"
+          />
+        </mat-form-field>
         <span class="count">{{ msgtext.value.length }} / 225</span>
         <button
-          class="pl-button primary"
+          matButton="filled"
           type="submit"
           aria-label="Send"
           [disabled]="!notificationForm.form.valid"

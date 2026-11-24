@@ -29,12 +29,12 @@
   white-space: nowrap;
 }
 
-.mat-mdc-table {
+mat-table {
   width: 100%;
 }
 
-.mat-mdc-cell,
-.mat-mdc-header-cell {
+mat-cell,
+mat-header-cell {
   padding: 0 16px;
   vertical-align: middle;
   border-color: var(--pl-line);
@@ -47,7 +47,7 @@
   text-decoration: none;
 }
 
-.mat-mdc-row:hover .title,
+mat-row:hover .title,
 .title:hover {
   color: var(--pl-accent);
 }

@@ -3,14 +3,19 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
  Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 */
 
+@use '@angular/material' as mat;
+@use 'dense-buttons' as *;
+
 // Wide enough for the tools to stay on one line.
 :host {
+  @include dense-buttons;
+
   display: block;
   min-width: min(600px, 90vw);
 }
 
-.pl-search {
-  flex-basis: 260px;
+.search-field {
+  flex: 0 1 260px;
 }
 
 .search-checkbox {
@@ -27,10 +32,14 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
   border-radius: var(--pl-radius);
   overflow: hidden;
 
+  @include mat.expansion-overrides(
+    (
+      container-shape: 0,
+      container-elevation-shadow: none,
+    )
+  );
+
   mat-expansion-panel {
-    border: 0;
-    border-radius: 0 !important;
-    box-shadow: none !important;
     border-bottom: 1px solid var(--pl-line);
 
     &:last-child {

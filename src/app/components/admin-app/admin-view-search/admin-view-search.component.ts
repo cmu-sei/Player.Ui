@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -53,6 +54,9 @@ export interface Action {
   templateUrl: './admin-view-search.component.html',
   styleUrls: ['./admin-view-search.component.scss'],
   imports: [
+    MatFormField,
+    MatInput,
+    MatSuffix,
     AdminViewEditComponent,
     MatIcon,
     FormsModule,

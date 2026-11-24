@@ -10,6 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -45,6 +47,11 @@ import { AsyncPipe, DatePipe } from '@angular/common';
   templateUrl: './view-list.component.html',
   styleUrls: ['./view-list.component.scss'],
   imports: [
+    MatIconButton,
+    MatFormField,
+    MatInput,
+    MatSuffix,
+    MatButton,
     MatIcon,
     MatTooltip,
     FormsModule,

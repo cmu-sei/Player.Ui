@@ -1,6 +1,8 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+@use '@angular/material' as mat;
+
 :host {
   display: flex;
   flex-direction: column;
@@ -17,8 +19,13 @@
 }
 
 table {
+  @include mat.table-overrides(
+    (
+      row-item-container-height: auto,
+    )
+  );
+
   width: 100%;
-  --mat-table-row-item-container-height: auto;
 }
 
 .mat-mdc-cell,
@@ -37,5 +44,9 @@ table {
 
 // The paginator sits in the tools row, on the page, not in a box of its own.
 mat-paginator {
-  --mat-paginator-container-background-color: transparent;
+  @include mat.paginator-overrides(
+    (
+      container-background-color: transparent,
+    )
+  );
 }

@@ -10,6 +10,8 @@ import {
   input,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
+import { MatFormField, MatInput } from '@angular/material/input';
+import { MatButton } from '@angular/material/button';
 import {
   ComnSettingsService,
   CrucibleDialogService,
@@ -36,6 +38,9 @@ import { TimeZoneAbbrPipe } from '../../../pipes/time-zone-abbr.pipe';
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
   imports: [
+    MatFormField,
+    MatInput,
+    MatButton,
     MatExpansionPanel,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,

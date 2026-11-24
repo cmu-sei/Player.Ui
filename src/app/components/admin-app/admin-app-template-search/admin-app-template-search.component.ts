@@ -10,6 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -57,6 +59,11 @@ export interface Action {
   templateUrl: './admin-app-template-search.component.html',
   styleUrls: ['./admin-app-template-search.component.scss'],
   imports: [
+    MatIconButton,
+    MatFormField,
+    MatInput,
+    MatSuffix,
+    MatButton,
     AsyncPipe,
     FormsModule,
     MatIcon,

@@ -16,7 +16,8 @@
 
 // One Material theme for both modes. It follows color-scheme, which the tokens set (light on :root, dark when
 // <body> has darkMode), and its system colours are pinned to the tokens below, so Material's components take
-// the Glaze palette in either mode.
+// the Glaze palette in either mode. Everything here goes through Material's theme and override mixins, which
+// fail the build on a token name Material doesn't know.
 html {
   @include mat.theme(
     (
@@ -67,179 +68,171 @@ html {
     )
   );
 
-  // Material's components at the look's sizes: 13px text, 12px for headers and secondary text.
-  --mat-table-row-item-label-text-size: var(--pl-text);
-  --mat-table-header-headline-size: var(--pl-small);
-  --mat-table-header-headline-weight: 500;
-  --mat-table-header-headline-color: var(--pl-muted);
-  --mat-table-header-container-height: 36px;
-  --mat-table-row-item-container-height: 40px;
-  --mat-table-row-item-outline-color: var(--pl-line);
-  --mat-table-background-color: var(--pl-surface);
-  --mat-paginator-container-text-size: var(--pl-small);
-  --mat-paginator-select-trigger-text-size: var(--pl-small);
-  --mat-paginator-container-background-color: var(--pl-surface);
-  --mat-menu-item-label-text-size: var(--pl-text);
-  --mat-menu-item-label-text-weight: 500;
-  --mat-menu-container-color: var(--pl-surface);
-  --mat-menu-container-shape: var(--pl-radius);
-  --mat-menu-container-elevation-shadow: 0 12px 32px -12px
-    rgb(var(--pl-shadow) / 0.45);
-  --mat-select-panel-background-color: var(--pl-surface);
-  --mat-select-trigger-text-size: var(--pl-text);
-  --mat-form-field-container-text-size: var(--pl-text);
-  --mat-list-list-item-label-text-size: var(--pl-text);
-  --mat-button-text-label-text-size: var(--pl-text);
-  --mat-button-filled-label-text-size: var(--pl-text);
-  --mat-button-outlined-label-text-size: var(--pl-text);
+  // Material's components at the look's sizes: 13px text, 12px for headers and secondary text, 28px buttons.
+  @include mat.table-overrides(
+    (
+      row-item-label-text-size: var(--pl-text),
+      header-headline-size: var(--pl-small),
+      header-headline-weight: 500,
+      header-headline-color: var(--pl-muted),
+      header-container-height: 36px,
+      row-item-container-height: 40px,
+      row-item-outline-color: var(--pl-line),
+      background-color: var(--pl-surface),
+    )
+  );
+  @include mat.paginator-overrides(
+    (
+      container-text-size: var(--pl-small),
+      select-trigger-text-size: var(--pl-small),
+      container-background-color: var(--pl-surface),
+      form-field-container-height: 28px,
+      form-field-container-vertical-padding: 4px,
+    )
+  );
+  // A menu or a select's list: a surface with a hairline round it (drawn as a ring in the shadow) and a soft
+  // drop shadow; a hovered item takes the accent's tint.
+  @include mat.menu-overrides(
+    (
+      item-label-text-size: var(--pl-text),
+      item-label-text-weight: 500,
+      item-icon-size: 16px,
+      item-icon-color: var(--pl-muted),
+      item-hover-state-layer-color: var(--pl-accent),
+      item-focus-state-layer-color: var(--pl-accent),
+      container-color: var(--pl-surface),
+      container-shape: var(--pl-radius),
+      container-elevation-shadow: (
+        0 0 0 1px var(--pl-line),
+        0 12px 32px -12px rgb(var(--pl-shadow) / 0.45),
+      ),
+    )
+  );
+  @include mat.select-overrides(
+    (
+      panel-background-color: var(--pl-surface),
+      trigger-text-size: var(--pl-text),
+      container-elevation-shadow: (
+        0 0 0 1px var(--pl-line),
+        0 12px 32px -12px rgb(var(--pl-shadow) / 0.45),
+      ),
+    )
+  );
+  @include mat.option-overrides(
+    (
+      label-text-size: var(--pl-text),
+      hover-state-layer-color: var(--pl-accent),
+      focus-state-layer-color: var(--pl-accent),
+    )
+  );
+  @include mat.form-field-overrides(
+    (
+      container-text-size: var(--pl-text),
+      container-height: 36px,
+      container-vertical-padding: 8px,
+      outlined-label-text-size: var(--pl-text),
+      outlined-outline-color: var(--pl-line-strong),
+      outlined-hover-outline-color: var(--pl-muted),
+      outlined-container-shape: var(--pl-radius),
+    )
+  );
+  @include mat.list-overrides(
+    (
+      list-item-label-text-size: var(--pl-text),
+      list-item-one-line-container-height: 36px,
+    )
+  );
+  @include mat.button-overrides(
+    (
+      text-label-text-size: var(--pl-text),
+      filled-label-text-size: var(--pl-text),
+      outlined-label-text-size: var(--pl-text),
+      text-label-text-weight: 500,
+      filled-label-text-weight: 500,
+      outlined-label-text-weight: 500,
+      text-container-height: 32px,
+      filled-container-height: 32px,
+      outlined-container-height: 32px,
+      protected-container-height: 32px,
+    )
+  );
+  // Icon buttons: a small muted line drawing.
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--pl-muted),
+      icon-size: 18px,
+      disabled-icon-color: var(--mat-sys-outline-variant),
+    )
+  );
   // A count on a badge: a small pill in the accent.
-  --mat-badge-background-color: var(--pl-accent);
-  --mat-badge-text-color: var(--pl-on-accent);
-  --mat-badge-text-size: 10px;
-  --mat-badge-text-weight: 600;
-  --mat-badge-container-size: 16px;
-  --mat-badge-container-shape: 999px;
-  --mat-badge-container-padding: 0 5px;
-  --mat-dialog-container-shape: 10px;
-  --mat-dialog-subhead-size: 16px;
-  --mat-dialog-subhead-weight: 600;
-  --mat-dialog-subhead-line-height: 24px;
-  --mat-dialog-subhead-color: var(--pl-ink);
-  --mat-dialog-supporting-text-color: var(--pl-body);
-  --mat-checkbox-label-text-size: var(--pl-text);
-  // Controls at the look's density: a 32px hit area round a checkbox, 36px fields and selects, 32px options.
-  --mat-checkbox-state-layer-size: 32px;
-  --mat-radio-state-layer-size: 32px;
-  --mat-radio-label-text-size: var(--pl-text);
-  --mat-form-field-container-height: 36px;
-  --mat-form-field-container-vertical-padding: 8px;
-  --mat-option-label-text-size: var(--pl-text);
-  --mat-paginator-form-field-container-height: 28px;
-  --mat-paginator-form-field-container-vertical-padding: 4px;
-  --mat-expansion-container-shape: var(--pl-radius);
-  --mat-expansion-container-elevation-shadow: none;
-  --mat-expansion-header-collapsed-state-height: 40px;
-  --mat-expansion-header-expanded-state-height: 40px;
-  --mat-expansion-header-text-size: var(--pl-text);
-  --mat-expansion-header-text-weight: 500;
-  --mat-expansion-container-text-size: var(--pl-text);
-  --mat-list-list-item-one-line-container-height: 36px;
-  --mat-tab-label-text-size: var(--pl-text);
-  --mat-tab-container-height: 40px;
-  --mat-button-filled-container-height: 32px;
-  --mat-button-outlined-container-height: 32px;
-  --mat-button-text-container-height: 32px;
-  --mat-button-protected-container-height: 32px;
-  --mat-button-filled-label-text-weight: 500;
-  --mat-button-outlined-label-text-weight: 500;
-  --mat-button-text-label-text-weight: 500;
-  --mat-form-field-outlined-label-text-size: var(--pl-text);
-  --mat-form-field-outlined-outline-color: var(--pl-line-strong);
-  --mat-form-field-outlined-hover-outline-color: var(--pl-muted);
-  --mat-form-field-outlined-container-shape: var(--pl-radius);
-  --mat-dialog-supporting-text-size: var(--pl-text);
-  --mat-sidenav-container-background-color: var(--pl-surface);
-  --mat-sidenav-content-background-color: var(--pl-canvas);
-  --mat-sidenav-container-divider-color: var(--pl-line);
-  --mat-sidenav-container-shape: 0;
-}
-
-// A menu is a bordered surface with small rounded rows, as the app switcher's is. A select's list is the same.
-.mat-mdc-menu-panel,
-div.mat-mdc-select-panel {
-  border: 1px solid var(--pl-line);
-}
-
-div.mat-mdc-select-panel {
-  padding: 6px;
-  border-radius: var(--pl-radius);
-  box-shadow: 0 12px 32px -12px rgb(var(--pl-shadow) / 0.45);
-}
-
-.mat-mdc-option {
-  min-height: 32px !important;
-  border-radius: var(--pl-radius-sm);
-}
-
-// A checkbox's touch target is no larger than its hit area, so rows of them sit close.
-.mat-mdc-checkbox-touch-target {
-  width: 32px !important;
-  height: 32px !important;
-}
-
-// An expansion panel is a flat bordered box, not a raised card.
-.mat-expansion-panel:not(.notifications-container) {
-  border: 1px solid var(--pl-line);
-}
-
-.mat-mdc-menu-content {
-  padding: 6px !important;
-}
-
-.mat-mdc-menu-item {
-  min-height: 32px !important;
-  border-radius: var(--pl-radius-sm);
-}
-
-.mat-mdc-menu-item:hover:not([disabled]),
-.mat-mdc-menu-item.cdk-keyboard-focused:not([disabled]) {
-  background: var(--pl-accent-soft) !important;
-}
-
-// Icons are small line drawings in the colour of their text: 18px, muted in an icon button, the accent
-// when it is hovered.
-.mat-icon,
-.mat-icon.mdi-24px {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-  line-height: 18px;
-}
-
-// The icon font's own size classes would overflow the 18px box.
-.mat-icon.mdi-24px::before,
-.mat-icon.mdi-18px::before,
-.mat-icon.mdi-36px::before {
-  font-size: 18px;
-}
-
-.mat-mdc-icon-button {
-  --mat-icon-button-icon-color: var(--pl-muted);
-  --mat-icon-button-icon-size: 18px;
-
-  &:hover:not([disabled]) {
-    --mat-icon-button-icon-color: var(--pl-accent);
-  }
-}
-
-// Override the disabled icon color specifically for mat-icon-button
-.mat-mdc-icon-button[disabled] .mat-icon {
-  --mat-icon-color-disabled: var(--mat-sys-outline-variant);
+  @include mat.badge-overrides(
+    (
+      background-color: var(--pl-accent),
+      text-color: var(--pl-on-accent),
+      text-size: 10px,
+      text-weight: 600,
+      container-size: 16px,
+      container-shape: 999px,
+      container-padding: 0 5px,
+    )
+  );
+  @include mat.dialog-overrides(
+    (
+      container-shape: 10px,
+      subhead-size: 16px,
+      subhead-weight: 600,
+      subhead-line-height: 24px,
+      subhead-color: var(--pl-ink),
+      supporting-text-color: var(--pl-body),
+      supporting-text-size: var(--pl-text),
+    )
+  );
+  // Controls at the look's density: a 32px hit area round a checkbox or a radio.
+  @include mat.checkbox-overrides(
+    (
+      label-text-size: var(--pl-text),
+      state-layer-size: 32px,
+      touch-target-size: 32px,
+    )
+  );
+  @include mat.radio-overrides(
+    (
+      label-text-size: var(--pl-text),
+      state-layer-size: 32px,
+    )
+  );
+  // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
+  @include mat.expansion-overrides(
+    (
+      container-shape: var(--pl-radius),
+      container-elevation-shadow: 0 0 0 1px var(--pl-line),
+      container-background-color: var(--pl-surface),
+      header-collapsed-state-height: 40px,
+      header-expanded-state-height: 40px,
+      header-text-size: var(--pl-text),
+      header-text-weight: 500,
+      container-text-size: var(--pl-text),
+    )
+  );
+  @include mat.tabs-overrides(
+    (
+      label-text-size: var(--pl-text),
+      container-height: 40px,
+    )
+  );
+  @include mat.sidenav-overrides(
+    (
+      container-background-color: var(--pl-surface),
+      content-background-color: var(--pl-canvas),
+      container-divider-color: var(--pl-line),
+      container-shape: 0,
+    )
+  );
 }
 
 .header-text {
   font-weight: 600;
   color: var(--pl-ink);
-}
-
-// The user menu: items without an icon line their words up with those that have one.
-.user-dropdown-menu .mat-mdc-menu-item:not(:has(.item-icon)) {
-  padding-left: 36px;
-}
-
-// A menu item's icon: a small line drawing in the muted colour, before its words.
-.mat-mdc-menu-item .item-icon {
-  flex: none;
-  width: 14px;
-  height: 14px;
-  margin-right: 10px;
-  vertical-align: -2px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  color: var(--pl-muted);
 }
 
 // prevent table header rows from scrolling
@@ -251,16 +244,15 @@ div.mat-mdc-select-panel {
   background: var(--pl-canvas);
 }
 
-// A row you can act on shows it, as the grid's rows do.
-.mat-mdc-row:hover {
-  background: var(--pl-accent-soft);
-}
-
 // remove the border around paginator items per page selection
 mat-paginator {
-  --mat-form-field-outlined-outline-color: transparent;
-  --mat-form-field-outlined-hover-outline-color: transparent;
-  --mat-form-field-outlined-focus-outline-color: transparent;
+  @include mat.form-field-overrides(
+    (
+      outlined-outline-color: transparent,
+      outlined-hover-outline-color: transparent,
+      outlined-focus-outline-color: transparent,
+    )
+  );
   min-width: 200px !important;
 }
 

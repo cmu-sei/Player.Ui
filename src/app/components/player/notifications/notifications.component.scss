@@ -1,25 +1,26 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+@use '@angular/material' as mat;
+@use 'dense-buttons' as *;
+
 // A strip along the bottom of the view: one quiet line that opens upward into
 // the history and, for those who can send, a message field.
 .notifications-container {
+  @include mat.expansion-overrides(
+    (
+      container-shape: 0,
+      container-elevation-shadow: none,
+      header-collapsed-state-height: 36px,
+      header-expanded-state-height: 36px,
+      header-text-size: var(--pl-text),
+    )
+  );
+
   position: absolute;
   bottom: 0;
   width: 100%;
   border-top: 1px solid var(--pl-line);
-  border-radius: 0 !important;
-  box-shadow: none !important;
-
-  ::ng-deep .mat-expansion-panel-header {
-    height: 36px;
-    padding: 0 16px;
-    font-size: var(--pl-text);
-  }
-
-  ::ng-deep .mat-expansion-panel-body {
-    padding: 0 16px 12px;
-  }
 }
 
 mat-panel-title {
@@ -31,15 +32,6 @@ mat-panel-title {
   font-size: var(--pl-text);
   font-weight: 600;
   color: var(--pl-ink);
-
-  // The count of unseen notifications sits in the line, after the title,
-  // instead of floating over its corner.
-  &:not(.mat-badge-hidden) ::ng-deep .mat-badge-content {
-    position: static;
-    display: inline-block;
-    margin: 0 0 0 6px;
-    vertical-align: middle;
-  }
 }
 
 // A new notification: the header pulses the warning tint until it is opened.
@@ -67,6 +59,8 @@ mat-panel-title {
 }
 
 .send-form {
+  @include dense-buttons;
+
   display: flex;
   align-items: center;
   gap: 8px;

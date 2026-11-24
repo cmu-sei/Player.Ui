@@ -1,0 +1,22 @@
+// Copyright 2026 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+@use '@angular/material' as mat;
+
+// The quiet buttons of a dense row (a list's tools, a form's single action): 28px, with 12px text.
+@mixin dense-buttons {
+  @include mat.button-overrides(
+    (
+      filled-container-height: 28px,
+      outlined-container-height: 28px,
+      text-container-height: 28px,
+      filled-horizontal-padding: 10px,
+      outlined-horizontal-padding: 10px,
+      filled-label-text-size: var(--pl-small),
+      outlined-label-text-size: var(--pl-small),
+      text-label-text-size: var(--pl-small),
+      outlined-outline-color: var(--pl-line-strong),
+      outlined-label-text-color: var(--pl-ink),
+    )
+  );
+}

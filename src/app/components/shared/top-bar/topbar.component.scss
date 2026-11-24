@@ -1,26 +1,34 @@
 // Copyright 2022 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+@use '@angular/material' as mat;
+
 :host {
   display: block;
   flex: none;
 }
 
 .bar {
-  display: flex;
-  align-items: center;
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: var(--pl-surface),
+      container-text-color: var(--pl-ink),
+      standard-height: 48px,
+      mobile-height: 48px,
+      title-text-size: var(--pl-text),
+      title-text-weight: 400,
+      title-text-line-height: normal,
+    )
+  );
+  // The bar's tools: 28px targets.
+  @include mat.icon-button-overrides(
+    (
+      state-layer-size: 28px,
+    )
+  );
+
   gap: 10px;
-  height: 48px;
-  padding: 0 16px;
-  // One line height for everything in the bar, so the product, the name, the
-  // team and the pills share a centre.
-  line-height: normal;
-  background: var(--pl-surface);
   border-bottom: 1px solid var(--pl-line);
-  color: var(--pl-ink);
-  // The bar is one line: a long title or team name truncates instead of
-  // wrapping or pushing the account menu off the right edge.
-  white-space: nowrap;
 }
 
 .brand {
@@ -116,39 +124,22 @@
 
 // The person's pill: an initial, their name and a chevron.
 .pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 4px 0 3px;
-  border: 1px solid var(--pl-line);
-  border-radius: 999px;
-  background: var(--pl-surface);
-  font: 500 var(--pl-small) var(--pl-font);
-  color: var(--pl-muted);
-  cursor: pointer;
-  transition:
-    border-color 120ms,
-    color 120ms,
-    background 120ms;
+  @include mat.button-overrides(
+    (
+      outlined-container-height: 28px,
+      outlined-container-shape: 999px,
+      outlined-horizontal-padding: 4px,
+      outlined-icon-spacing: 4px,
+      outlined-icon-offset: 0,
+      outlined-outline-color: var(--pl-line),
+      outlined-label-text-color: var(--pl-muted),
+      outlined-label-text-size: var(--pl-small),
+      outlined-label-text-weight: 500,
+    )
+  );
 
-  &:hover,
-  &[aria-expanded='true'] {
-    border-color: var(--pl-accent);
-    color: var(--pl-accent);
-    background: var(--pl-accent-soft);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--pl-accent);
-    outline-offset: 1px;
-  }
-
-  mat-icon {
-    width: 16px;
-    height: 16px;
-    font-size: 16px;
-    line-height: 16px;
+  .avatar {
+    margin-right: 6px;
   }
 }
 

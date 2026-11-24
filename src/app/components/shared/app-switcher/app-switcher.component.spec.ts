@@ -2,7 +2,7 @@
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
 import { describe, it, expect } from 'vitest';
-import { screen } from '@testing-library/angular';
+import { fireEvent, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { renderComponent } from '../../../test-utils/render-component';
 import { AppSwitcherComponent, SwitcherApp } from './app-switcher.component';
@@ -29,13 +29,13 @@ describe('AppSwitcherComponent', () => {
   /**
    * Verifies: the menu lists the other apps that have a URL, each opening in a new window; this app and an app without
    *   a URL are left out.
-   * Interacts with: the dots button and the menu's links.
+   * Interacts with: the dots button and the menu's items.
    * Data: Player (self), Caster, Alloy without a URL.
    */
   it('lists the other apps that have a URL', async () => {
     await renderSwitcher([player, caster, unlinked]);
     await userEvent.click(screen.getByRole('button', { name: 'Apps' }));
-    const links = screen.getAllByRole('link');
+    const links = await screen.findAllByRole('menuitem');
     expect(links.map((link) => link.textContent?.trim())).toEqual(['CCaster']);
     expect(links[0]).toHaveAttribute('href', 'http://localhost:4310');
     expect(links[0]).toHaveAttribute('target', '_blank');
@@ -55,26 +55,22 @@ describe('AppSwitcherComponent', () => {
   });
 
   /**
-   * Verifies: a click pins the menu open past the pointer leaving, and Escape closes it and returns focus to the button.
-   * Interacts with: the dots button; mouseleave on the host; the Escape key.
+   * Verifies: Escape closes the menu and returns focus to the button.
+   * Interacts with: the dots button; the Escape key.
    * Data: Player (self), Caster.
    */
-  it('stays open after a click until Escape, which returns focus to the button', async () => {
-    const { fixture } = await renderSwitcher([player, caster]);
+  it('closes on Escape and returns focus to the button', async () => {
+    await renderSwitcher([player, caster]);
     const user = userEvent.setup();
     const button = screen.getByRole('button', { name: 'Apps' });
     await user.click(button);
+    const menu = await screen.findByRole('menu');
     expect(button).toHaveAttribute('aria-expanded', 'true');
 
-    (fixture.nativeElement as HTMLElement).dispatchEvent(
-      new MouseEvent('mouseleave'),
+    fireEvent.keyDown(menu, { key: 'Escape', keyCode: 27 });
+    await waitFor(() =>
+      expect(button).toHaveAttribute('aria-expanded', 'false'),
     );
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    fixture.detectChanges();
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
-
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     expect(button).toHaveFocus();
   });
 });

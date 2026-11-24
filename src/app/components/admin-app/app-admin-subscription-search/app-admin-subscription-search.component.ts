@@ -4,6 +4,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, OnDestroy, OnInit, inject, viewChild } from '@angular/core';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { MatSort, MatSortable, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -27,7 +28,7 @@ import {
 import { DialogService } from '../../../services/dialog/dialog.service';
 import { CrucibleDialogService } from '@cmusei/crucible-common';
 import { FormsModule } from '@angular/forms';
-import { MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
@@ -36,6 +37,10 @@ import { MatTooltip } from '@angular/material/tooltip';
   templateUrl: './app-admin-subscription-search.component.html',
   styleUrls: ['./app-admin-subscription-search.component.scss'],
   imports: [
+    MatFormField,
+    MatInput,
+    MatSuffix,
+    MatButton,
     FormsModule,
     MatIconButton,
     MatIcon,

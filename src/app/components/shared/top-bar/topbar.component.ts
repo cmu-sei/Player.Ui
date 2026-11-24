@@ -38,7 +38,8 @@ import {
   SystemPermission,
   ViewPermission,
 } from '../../../generated/player-api';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatToolbar } from '@angular/material/toolbar';
 import { RouterLink } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
 import { ClipboardModule } from 'ngx-clipboard';
@@ -57,8 +58,10 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     AppSwitcherComponent,
+    MatToolbar,
     // The Users dialog's Close button, in this component's template.
     MatButton,
+    MatIconButton,
     RouterLink,
     MatIcon,
     ClipboardModule,

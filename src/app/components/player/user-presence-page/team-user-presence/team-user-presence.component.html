@@ -21,15 +21,17 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <ng-container matColumnDef="online">
       <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
       <mat-cell *matCellDef="let element">
-        @if (element.online) {
-          <span class="pl-pill ok online"
-            ><span class="pl-dot ok"></span>Online</span
-          >
-        } @else {
-          <span class="pl-pill offline"
-            ><span class="pl-dot"></span>Offline</span
-          >
-        }
+        <mat-chip-set>
+          @if (element.online) {
+            <mat-chip class="status online" disableRipple
+              ><span class="dot"></span>Online</mat-chip
+            >
+          } @else {
+            <mat-chip class="status" disableRipple
+              ><span class="dot"></span>Offline</mat-chip
+            >
+          }
+        </mat-chip-set>
       </mat-cell>
     </ng-container>
 

@@ -4,6 +4,7 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 */
 
 import { Component, Input, input } from '@angular/core';
+import { MatChip, MatChipSet } from '@angular/material/chips';
 import {
   TableVirtualScrollDataSource,
   TableVirtualScrollModule,
@@ -30,6 +31,8 @@ import {
   templateUrl: './team-user-presence.component.html',
   styleUrls: ['./team-user-presence.component.scss'],
   imports: [
+    MatChipSet,
+    MatChip,
     CdkVirtualScrollViewport,
     TableVirtualScrollModule,
     MatTable,

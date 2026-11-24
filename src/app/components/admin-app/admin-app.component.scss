@@ -1,5 +1,7 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+@use '@angular/material' as mat;
 :host {
   display: flex;
   flex-direction: column;
@@ -22,48 +24,36 @@
   flex-direction: column;
   gap: 2px;
   padding: 12px 8px;
+  @include mat.list-overrides(
+    (
+      list-item-one-line-container-height: 32px,
+      list-item-container-shape: var(--pl-radius-sm),
+      list-item-label-text-size: var(--pl-text),
+      list-item-label-text-weight: 500,
+      list-item-label-text-color: var(--pl-body),
+      list-item-hover-label-text-color: var(--pl-ink),
+      list-item-focus-label-text-color: var(--pl-ink),
+      list-item-leading-icon-size: 18px,
+      list-item-leading-icon-color: var(--pl-muted),
+      list-item-hover-leading-icon-color: var(--pl-muted),
+      list-item-leading-icon-start-space: 10px,
+      list-item-leading-icon-end-space: 10px,
+    )
+  );
 }
 
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 7px 10px;
-  border: 0;
-  border-radius: var(--pl-radius-sm);
-  background: none;
-  font: 500 var(--pl-text) var(--pl-font);
-  color: var(--pl-body);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    color 120ms,
-    background 120ms;
-
-  mat-icon {
-    flex: none;
-    color: var(--pl-muted);
-  }
-
-  &:hover {
-    background: var(--pl-canvas);
-    color: var(--pl-ink);
-  }
-
-  &.active {
-    background: var(--pl-accent-soft);
-    color: var(--pl-accent-ink);
-
-    mat-icon {
-      color: var(--pl-accent);
-    }
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--pl-accent);
-    outline-offset: 1px;
-  }
+// The open section: the accent on its soft fill.
+.nav-item.active {
+  @include mat.list-overrides(
+    (
+      list-item-container-color: var(--pl-accent-soft),
+      list-item-label-text-color: var(--pl-accent-ink),
+      list-item-hover-label-text-color: var(--pl-accent-ink),
+      list-item-focus-label-text-color: var(--pl-accent-ink),
+      list-item-leading-icon-color: var(--pl-accent),
+      list-item-hover-leading-icon-color: var(--pl-accent),
+    )
+  );
 }
 
 .crucible-logo {

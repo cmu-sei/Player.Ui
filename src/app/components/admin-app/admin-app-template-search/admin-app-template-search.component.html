@@ -8,9 +8,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <h1 class="header-text">Application Templates</h1>
   </div>
   <div class="pl-tools">
-    <div class="pl-search">
+    <mat-form-field class="search-field" subscriptSizing="dynamic">
       <input
-        class="pl-field"
+        matInput
         aria-label="Search"
         placeholder="Search"
         [(ngModel)]="filterString"
@@ -19,7 +19,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       @if (filterString !== '') {
         <button
           type="button"
-          class="clear"
+          matIconButton
+          matSuffix
           aria-label="Clear Search"
           title="Clear Search"
           (click)="clearFilter()"
@@ -27,12 +28,12 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-icon aria-hidden="true" fontIcon="mdi-close" />
         </button>
       }
-    </div>
+    </mat-form-field>
     <span class="end">
       @if (canManage$ | async) {
         <button
           type="button"
-          class="pl-button"
+          matButton="outlined"
           aria-label="Import Application Templates"
           matTooltip="Import Application Templates"
           (click)="openDialog(importDialog)"
@@ -42,7 +43,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       }
       <button
         type="button"
-        class="pl-button"
+        matButton="outlined"
         aria-label="Export Application Templates"
         matTooltip="Export Application Templates"
         [matBadge]="
@@ -55,7 +56,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       @if (canManage$ | async) {
         <button
           type="button"
-          class="pl-button primary"
+          matButton="filled"
           aria-label="Add a new Application Template"
           matTooltip="Add a new Application Template"
           (click)="addAppTemplate()"

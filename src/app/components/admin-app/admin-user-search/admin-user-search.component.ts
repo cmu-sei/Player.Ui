@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import {
   MatTableDataSource,
@@ -57,6 +58,9 @@ interface UserAttributeColumn {
   templateUrl: './admin-user-search.component.html',
   styleUrls: ['./admin-user-search.component.scss'],
   imports: [
+    MatFormField,
+    MatInput,
+    MatSuffix,
     MatIcon,
     FormsModule,
     MatIconButton,

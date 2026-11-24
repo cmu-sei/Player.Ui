@@ -18,6 +18,12 @@ import {
 } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import {
+  MatActionList,
+  MatListItem,
+  MatListItemIcon,
+  MatListItemTitle,
+} from '@angular/material/list';
+import {
   ComnSettingsService,
   Theme,
   ComnAuthQuery,
@@ -44,6 +50,10 @@ import { AsyncPipe } from '@angular/common';
   templateUrl: './admin-app.component.html',
   styleUrls: ['./admin-app.component.scss'],
   imports: [
+    MatActionList,
+    MatListItem,
+    MatListItemIcon,
+    MatListItemTitle,
     MatSidenavContainer,
     MatSidenav,
     MatIcon,

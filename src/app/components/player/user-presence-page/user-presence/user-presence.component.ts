@@ -20,6 +20,7 @@ import {
   MatExpansionPanelDescription,
 } from '@angular/material/expansion';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { MatFormField, MatInput, MatSuffix } from '@angular/material/input';
 import { debounceTime, map, shareReplay, switchMap } from 'rxjs/operators';
 import {
   Team,
@@ -33,7 +34,7 @@ import { ViewPresence } from '../../../../models/view-presence';
 import { NotificationService } from '../../../../services/notification/notification.service';
 import { MatIcon } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialogClose } from '@angular/material/dialog';
@@ -45,6 +46,10 @@ import { AsyncPipe } from '@angular/common';
   templateUrl: './user-presence.component.html',
   styleUrls: ['./user-presence.component.scss'],
   imports: [
+    MatFormField,
+    MatInput,
+    MatSuffix,
+    MatButton,
     MatIcon,
     FormsModule,
     MatIconButton,

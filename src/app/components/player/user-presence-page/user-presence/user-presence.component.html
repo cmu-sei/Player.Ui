@@ -6,9 +6,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 <div>
   <div class="d-flex align-items-center w-100 my-1">
     <span class="d-flex align-items-center flex-grow-1 gap-2">
-      <div class="pl-search">
+      <mat-form-field class="search-field" subscriptSizing="dynamic">
         <input
-          class="pl-field"
+          matInput
           aria-label="Search"
           placeholder="Search"
           [(ngModel)]="searchTerm"
@@ -17,7 +17,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         @if (searchTerm !== '') {
           <button
             type="button"
-            class="clear"
+            matIconButton
+            matSuffix
             aria-label="Clear Search"
             matTooltip="Clear Search"
             (click)="clearFilter()"
@@ -25,11 +26,19 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             <mat-icon aria-hidden="true" fontIcon="mdi-close" />
           </button>
         }
-      </div>
-      <button type="button" class="pl-button" (click)="accordion().openAll()">
+      </mat-form-field>
+      <button
+        type="button"
+        matButton="outlined"
+        (click)="accordion().openAll()"
+      >
         Expand All
       </button>
-      <button type="button" class="pl-button" (click)="accordion().closeAll()">
+      <button
+        type="button"
+        matButton="outlined"
+        (click)="accordion().closeAll()"
+      >
         Collapse All
       </button>
       <mat-checkbox

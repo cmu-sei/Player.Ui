@@ -7,9 +7,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <h1 class="header-text">Subscriptions</h1>
   </div>
   <div class="pl-tools">
-    <div class="pl-search">
+    <mat-form-field class="search-field" subscriptSizing="dynamic">
       <input
-        class="pl-field"
+        matInput
         aria-label="Search"
         placeholder="Search"
         [(ngModel)]="filterStr"
@@ -18,7 +18,8 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       @if (filterStr !== '') {
         <button
           type="button"
-          class="clear"
+          matIconButton
+          matSuffix
           aria-label="Clear Search"
           title="Clear Search"
           (click)="clearFilter()"
@@ -26,11 +27,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           <mat-icon aria-hidden="true" fontIcon="mdi-close" />
         </button>
       }
-    </div>
+    </mat-form-field>
     <span class="end">
       <button
         type="button"
-        class="pl-button primary"
+        matButton="filled"
         aria-label="Add a new Subscription"
         matTooltip="Add a new Subscription"
         (click)="addNewSubscription()"
