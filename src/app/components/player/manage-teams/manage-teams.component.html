@@ -9,18 +9,15 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 >
   <div crucibleDialogContent class="manage-teams-content">
     @if (teamsResource.isLoading() && !teamsResource.hasValue()) {
-      <mat-card
-        appearance="outlined"
-        class="d-flex justify-content-center align-items-center"
-      >
+      <mat-card class="d-flex justify-content-center align-items-center">
         <mat-progress-spinner mode="indeterminate" />
       </mat-card>
     } @else if (teamsResource.error()) {
-      <mat-card appearance="outlined" class="empty-state">
+      <mat-card class="empty-state">
         Unable to load teams. Please try again.
       </mat-card>
     } @else if (teams().length === 0) {
-      <mat-card appearance="outlined" class="empty-state">
+      <mat-card class="empty-state">
         You do not have permission to manage any Teams in this View.
       </mat-card>
     } @else {

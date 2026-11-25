@@ -24,7 +24,6 @@ export class DialogService {
     const dialogRef = this.dialog.open(NameDialogComponent, {
       data: data || {},
       minWidth: '400px',
-      maxWidth: '90vw',
     });
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.message = message;
@@ -70,7 +69,6 @@ export class DialogService {
   ): Observable<boolean> {
     const dialogRef = this.dialog.open(EditSubscriptionComponent, {
       width: '500px',
-      maxWidth: '90vw',
     });
     dialogRef.componentInstance.currentSub = subscription;
     return dialogRef.afterClosed();
@@ -83,7 +81,6 @@ export class DialogService {
   ): Observable<boolean> {
     const dialogRef = this.dialog.open(CreateApplicationDialogComponent, {
       width: '480px',
-      maxWidth: '90vw',
     });
     dialogRef.componentInstance.applicationId = applicationId;
     dialogRef.componentInstance.file = file;
@@ -94,7 +91,6 @@ export class DialogService {
   private withDialogDefaults(configData?: any): any {
     return {
       minWidth: '400px',
-      maxWidth: '90vw',
       ...(configData || {}),
     };
   }

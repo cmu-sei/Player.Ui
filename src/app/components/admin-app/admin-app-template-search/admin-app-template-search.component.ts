@@ -236,7 +236,6 @@ export class AdminAppTemplateSearchComponent implements OnInit, AfterViewInit {
     this.dialogRef = this.dialog.open(templateRef, {
       autoFocus: true,
       width: '480px',
-      maxWidth: '90vw',
     });
   }
 

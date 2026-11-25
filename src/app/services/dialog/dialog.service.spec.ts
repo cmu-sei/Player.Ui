@@ -67,7 +67,6 @@ describe('DialogService', () => {
     expect(open).toHaveBeenCalledWith(NameDialogComponent, {
       data: { nameValue: 'x' },
       minWidth: '400px',
-      maxWidth: '90vw',
     });
     expect(componentInstance.title).toBe('Rename');
     expect(componentInstance.message).toBe('Enter a name');
@@ -84,7 +83,6 @@ describe('DialogService', () => {
     service.addRemoveUsersToTeam('Members', team, { width: '600px' });
     expect(open).toHaveBeenCalledWith(AddRemoveUsersDialogComponent, {
       minWidth: '400px',
-      maxWidth: '90vw',
       width: '600px',
     });
     expect(componentInstance.title).toBe('Members');
@@ -128,7 +126,6 @@ describe('DialogService', () => {
     service.editFile('f1', 'v1', 'old.txt', ['t1', 't2']);
     expect(open).toHaveBeenCalledWith(EditFileDialogComponent, {
       minWidth: '400px',
-      maxWidth: '90vw',
     });
     expect(componentInstance.fileId).toBe('f1');
     expect(componentInstance.viewId).toBe('v1');
@@ -147,7 +144,6 @@ describe('DialogService', () => {
     service.editSubscription(subscription);
     expect(open).toHaveBeenCalledWith(EditSubscriptionComponent, {
       width: '500px',
-      maxWidth: '90vw',
     });
     expect(componentInstance.currentSub).toBe(subscription);
   });
@@ -175,7 +171,6 @@ describe('DialogService', () => {
     service.createApplication('app1', file, currentTeams);
     expect(open).toHaveBeenCalledWith(CreateApplicationDialogComponent, {
       width: '480px',
-      maxWidth: '90vw',
     });
     expect(componentInstance.applicationId).toBe('app1');
     expect(componentInstance.file).toBe(file);

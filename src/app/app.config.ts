@@ -24,6 +24,11 @@ import {
   ComnAuthModule,
 } from '@cmusei/crucible-common';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import {
+  MAT_DIALOG_DEFAULT_OPTIONS,
+  MatDialogConfig,
+} from '@angular/material/dialog';
+import { MAT_CARD_CONFIG } from '@angular/material/card';
 import { ErrorService } from './services/error/error.service';
 import {
   MAT_TOOLTIP_DEFAULT_OPTIONS,
@@ -86,6 +91,13 @@ export const appConfig: ApplicationConfig = {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: 'outline' },
     },
+    // A dialog keeps a margin on a narrow screen. A wide dialog passes its own maxWidth.
+    {
+      provide: MAT_DIALOG_DEFAULT_OPTIONS,
+      useValue: { ...new MatDialogConfig(), maxWidth: '90vw' },
+    },
+    // Cards are flat boxes with a hairline, as the panels are drawn.
+    { provide: MAT_CARD_CONFIG, useValue: { appearance: 'outlined' } },
     provideRouter(ROUTES),
     provideNativeDateAdapter(),
     provideAnimationsAsync(),
