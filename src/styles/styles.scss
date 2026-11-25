@@ -30,7 +30,7 @@ mat-paginator {
       outlined-focus-outline-color: transparent,
     )
   );
-  min-width: 200px !important;
+  min-width: 200px;
 }
 
 // A field's projected content (prefixes, suffixes) in ink. Its label is set by the theme.
@@ -47,6 +47,11 @@ mat-form-field {
   color: var(--mat-sys-on-surface);
 }
 
+// A text button drawn in ink rather than the accent.
 .normal-text {
-  color: var(--mat-sys-on-surface) !important;
+  @include mat.button-overrides(
+    (
+      text-label-text-color: var(--mat-sys-on-surface),
+    )
+  );
 }

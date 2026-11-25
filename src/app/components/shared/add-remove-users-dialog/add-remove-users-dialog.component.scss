@@ -73,7 +73,7 @@ mat-toolbar-row {
 
 // Narrow the icon-button action columns and let the User Name columns absorb
 // the freed width.
-.mat-table-all-users {
+.all-users-table {
   .mat-column-name {
     flex: 1 1 auto;
   }
@@ -84,7 +84,7 @@ mat-toolbar-row {
   }
 }
 
-.mat-table-team-users {
+.team-users-table {
   // The Role column holds a 40px field, so its rows are 52px.
   @include mat.table-overrides(
     (

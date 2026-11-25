@@ -60,8 +60,8 @@ function membership(userId: string, roleId: string | null = null) {
 // loadTeam reads team.id and team.viewId, as DialogService passes them.
 const team = { id: 't1', name: 'Red', viewId: 'v1' };
 
-const ALL_USERS = '.mat-table-all-users';
-const TEAM_USERS = '.mat-table-team-users';
+const ALL_USERS = '.all-users-table';
+const TEAM_USERS = '.team-users-table';
 
 async function renderDialog(
   overrides: {
