@@ -47,30 +47,9 @@ mat-form-field {
   color: var(--mat-sys-on-surface);
 }
 
-// Global utility classes (previously from theme.globals() mixin)
-.selected {
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
-
-  &:hover,
-  &:focus {
-    background: var(--mat-sys-primary) !important;
-  }
-}
-
-.disabled-text {
-  color: var(--mat-sys-on-surface-variant);
-}
-
+// Global utility classes
 .background {
   background-color: var(--mat-sys-background);
-}
-
-.highlight {
-  &:hover,
-  &:focus {
-    background: var(--mat-sys-primary-container);
-  }
 }
 
 .text {

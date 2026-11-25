@@ -4,7 +4,7 @@
 // Player's theme: the Glaze look, expressed through Angular Material's theming APIs.
 //
 // - The palette, type sizes and corners are Material system variables (--mat-sys-*), set by mat.theme and
-//   mat.theme-overrides. Components read those variables; they don't define colours of their own.
+//   its overrides. Components read those variables; they don't define colours of their own.
 // - Colours are light-dark(light, dark) pairs. mat.theme follows color-scheme (theme-type: color-scheme), which
 //   is light on :root and dark while CrucibleThemeService puts the darkMode class on <body>.
 // - primary and on-primary are not set here: CrucibleThemeService writes them inline on <html> and <body> from
@@ -14,7 +14,7 @@
 // - Where Material has no token at all, the rule is in "Exceptions" at the end, on the hosts Player declares,
 //   never on Material's internal classes.
 //
-// Note: mat.theme-overrides silently ignores a key it doesn't know, unlike the component *-overrides mixins,
+// Note: mat.theme's overrides silently ignore a key it doesn't know, unlike the component *-overrides mixins,
 // which fail the build. Check new keys against @angular/material/core/tokens/_system.scss.
 
 @use 'sass:string';
@@ -36,6 +36,60 @@ $_popup-shadow: (
   color-scheme: dark;
 }
 
+// System variables that differ from the generated theme. mat.theme emits each once.
+$_overrides: (
+  // The ground, surfaces, ink and lines. Light is Glaze's; dark is GraySpace's.
+  background: light-dark(#f6f7f9, #0f1318),
+  on-background: light-dark(#1c2230, #d8dee6),
+  surface: light-dark(#ffffff, #151b22),
+  surface-container-lowest: light-dark(#ffffff, #151b22),
+  surface-container-low: light-dark(#ffffff, #151b22),
+  surface-container: light-dark(#ffffff, #151b22),
+  surface-container-high: light-dark(#fafbfc, #1b222b),
+  surface-container-highest: light-dark(#fafbfc, #1b222b),
+  surface-variant: light-dark(#fafbfc, #1b222b),
+  on-surface: light-dark(#1c2230, #d8dee6),
+  on-surface-variant: light-dark(#6b7385, #8a96a6),
+  outline: light-dark(#cfd4dc, #36414f),
+  outline-variant: light-dark(#e3e6eb, #2a333f),
+  inverse-surface: light-dark(#1c2230, #22344a),
+  inverse-on-surface: #ffffff,
+  error: light-dark(#c22f3a, #f85149),
+  // The accent's soft fill and its ink, mixed from the runtime primary.
+  primary-container: color-mix(
+      in srgb,
+      var(--mat-sys-primary) 9%,
+      var(--mat-sys-surface)
+    ),
+  on-primary-container: color-mix(
+      in srgb,
+      var(--mat-sys-primary) 68%,
+      light-dark(#000000, #ffffff)
+    ),
+  secondary-container: color-mix(
+      in srgb,
+      var(--mat-sys-primary) 9%,
+      var(--mat-sys-surface)
+    ),
+  on-secondary-container: color-mix(
+      in srgb,
+      var(--mat-sys-primary) 68%,
+      light-dark(#000000, #ffffff)
+    ),
+  // Type: 13px body text, 12px secondary text, 11px labels.
+  body-medium: string.unquote('400 13px / 1.25rem "Open Sans", sans-serif'),
+  body-medium-size: 13px,
+  body-small-size: 12px,
+  label-small-size: 11px,
+  // Corners: Material's fully round corners (buttons, chips) become 8px.
+  corner-full: 8px,
+  corner-extra-large: 10px,
+  corner-large: 8px,
+  corner-medium: 8px,
+  corner-small: 6px,
+  corner-extra-small: 4px,
+);
+
 html {
   @include mat.theme(
     (
@@ -49,73 +103,15 @@ html {
       ),
       // Compact, to sit with 13px text and 28px controls.
       density: -2,
-    )
-  );
-
-  @include mat.theme-overrides(
-    (
-      // The ground, surfaces, ink and lines. Light is Glaze's; dark is GraySpace's.
-      background: light-dark(#f6f7f9, #0f1318),
-      on-background: light-dark(#1c2230, #d8dee6),
-      surface: light-dark(#ffffff, #151b22),
-      surface-container-lowest: light-dark(#ffffff, #151b22),
-      surface-container-low: light-dark(#ffffff, #151b22),
-      surface-container: light-dark(#ffffff, #151b22),
-      surface-container-high: light-dark(#fafbfc, #1b222b),
-      surface-container-highest: light-dark(#fafbfc, #1b222b),
-      surface-variant: light-dark(#fafbfc, #1b222b),
-      on-surface: light-dark(#1c2230, #d8dee6),
-      on-surface-variant: light-dark(#6b7385, #8a96a6),
-      outline: light-dark(#cfd4dc, #36414f),
-      outline-variant: light-dark(#e3e6eb, #2a333f),
-      inverse-surface: light-dark(#1c2230, #22344a),
-      inverse-on-surface: #ffffff,
-      error: light-dark(#c22f3a, #f85149),
-      // The accent's soft fill and its ink, mixed from the runtime primary.
-      primary-container: color-mix(
-          in srgb,
-          var(--mat-sys-primary) 9%,
-          var(--mat-sys-surface)
-        ),
-      on-primary-container: color-mix(
-          in srgb,
-          var(--mat-sys-primary) 68%,
-          light-dark(#000000, #ffffff)
-        ),
-      secondary-container: color-mix(
-          in srgb,
-          var(--mat-sys-primary) 9%,
-          var(--mat-sys-surface)
-        ),
-      on-secondary-container: color-mix(
-          in srgb,
-          var(--mat-sys-primary) 68%,
-          light-dark(#000000, #ffffff)
-        ),
-      // Type: 13px body text, 12px secondary text, 11px labels.
-      body-medium: string.unquote('400 13px / 1.25rem "Open Sans", sans-serif'),
-      body-medium-size: 13px,
-      body-small-size: 12px,
-      label-small-size: 11px,
-      // Corners: Material's fully round corners (buttons, chips) become 8px.
-      corner-full: 8px,
-      corner-extra-large: 10px,
-      corner-large: 8px,
-      corner-medium: 8px,
-      corner-small: 6px,
-      corner-extra-small: 4px,
-    )
+    ),
+    $_overrides
   );
 
   // Player additions: colours Material has no role for.
-  --player-body: light-dark(
-    #3b4356,
-    #b8c2cf
-  ); // running text, between on-surface and on-surface-variant
-  --player-faint: light-dark(
-    #9aa1b0,
-    #5f6b7a
-  ); // placeholders, separators, the footer
+  // Running text, between on-surface and on-surface-variant.
+  --player-body: light-dark(#3b4356, #b8c2cf);
+  // Placeholders, separators, the footer.
+  --player-faint: light-dark(#9aa1b0, #5f6b7a);
   --player-ok: light-dark(#1f8a5b, #3fb950);
   --player-ok-soft: light-dark(#e7f5ee, #10221a);
   --player-ok-line: light-dark(#bfe2cf, #23462c);
@@ -204,10 +200,6 @@ html {
       text-label-text-weight: 500,
       filled-label-text-weight: 500,
       outlined-label-text-weight: 500,
-      text-container-height: 32px,
-      filled-container-height: 32px,
-      outlined-container-height: 32px,
-      protected-container-height: 32px,
     )
   );
   @include mat.icon-button-overrides(
@@ -239,18 +231,14 @@ html {
       supporting-text-size: var(--mat-sys-body-medium-size),
     )
   );
-  // A 32px hit area round a checkbox or a radio.
   @include mat.checkbox-overrides(
     (
       label-text-size: var(--mat-sys-body-medium-size),
-      state-layer-size: 32px,
-      touch-target-size: 32px,
     )
   );
   @include mat.radio-overrides(
     (
       label-text-size: var(--mat-sys-body-medium-size),
-      state-layer-size: 32px,
     )
   );
   // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
@@ -259,7 +247,6 @@ html {
       container-shape: var(--mat-sys-corner-medium),
       container-elevation-shadow: 0 0 0 1px var(--mat-sys-outline-variant),
       container-background-color: var(--mat-sys-surface),
-      header-collapsed-state-height: 40px,
       header-expanded-state-height: 40px,
       header-text-size: var(--mat-sys-body-medium-size),
       header-text-weight: 500,
@@ -270,7 +257,6 @@ html {
   @include mat.tabs-overrides(
     (
       label-text-size: var(--mat-sys-body-medium-size),
-      container-height: 40px,
     )
   );
   @include mat.sidenav-overrides(
@@ -446,19 +432,11 @@ html {
 
 // Icons are 18px. mat-icon has no size token, so its host is sized, as Material's icon guide does. Under html, so
 // it outranks Material's own 24px default but not the sizes it gives icons in a button, a list or a menu.
-html .mat-icon,
-html .mat-icon.mdi-24px {
+html .mat-icon {
   width: 18px;
   height: 18px;
   font-size: 18px;
   line-height: 18px;
-}
-
-// The icon font's own size classes would overflow the box.
-.mat-icon.mdi-24px::before,
-.mat-icon.mdi-18px::before,
-.mat-icon.mdi-36px::before {
-  font-size: 18px;
 }
 
 // Menu rows are 32px. A menu item has no height token.
@@ -466,9 +444,8 @@ button[mat-menu-item],
 a[mat-menu-item] {
   min-height: 32px;
 
+  // item-icon-size sets the icon's box; the icon font needs its size too.
   .mat-icon {
-    width: 16px;
-    height: 16px;
     font-size: 16px;
     line-height: 16px;
   }

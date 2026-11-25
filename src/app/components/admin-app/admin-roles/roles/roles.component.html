@@ -11,30 +11,18 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <button
           mat-icon-button
           [attr.aria-label]="adding ? 'Cancel' : 'Add'"
-          color="primary"
           (click)="addRole()"
           [disabled]="!(canEdit$ | async)"
           [matTooltip]="adding ? 'Cancel' : 'Add'"
         >
-          <mat-icon
-            class="mdi-24px"
-            [fontIcon]="adding ? 'mdi-cancel' : 'mdi-plus-circle'"
-          />
+          <mat-icon [fontIcon]="adding ? 'mdi-cancel' : 'mdi-plus-circle'" />
         </button>
         @if (adding) {
           <span class="d-inline-flex gap-2">
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="addRole(); adding = false"
-            >
+            <button mat-raised-button (click)="addRole(); adding = false">
               Add Role
             </button>
-            <button
-              mat-raised-button
-              color="primary"
-              (click)="addPermission(); adding = false"
-            >
+            <button mat-raised-button (click)="addPermission(); adding = false">
               Add Permission
             </button>
           </span>
@@ -42,11 +30,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <button
           mat-icon-button
           aria-label="About roles"
-          color="primary"
           matTooltip="Roles can be set on Users or, if enabled in your environment, can be matched to Role Names from the token of the Identity Provider in use."
           matTooltipShowDelay="0"
         >
-          <mat-icon class="mdi-24px" fontIcon="mdi-information-outline" />
+          <mat-icon fontIcon="mdi-information-outline" />
         </button>
       </th>
       <th mat-header-cell *matHeaderCellDef>All</th>
@@ -54,11 +41,10 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <button
           mat-icon-button
           [attr.aria-label]="'About ' + permission?.name"
-          color="primary"
           [matTooltip]="permission.description"
           matTooltipShowDelay="0"
         >
-          <mat-icon class="mdi-24px" fontIcon="mdi-information-outline" />
+          <mat-icon fontIcon="mdi-information-outline" />
         </button>
         {{ permission?.name }}
       </td>
@@ -74,22 +60,20 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 <button
                   mat-icon-button
                   [attr.aria-label]="'Rename role ' + role.name"
-                  color="primary"
                   (click)="renameRole(role)"
                   title="Rename Role"
                 >
-                  <mat-icon class="mdi-24px" fontIcon="mdi-pencil-outline" />
+                  <mat-icon fontIcon="mdi-pencil-outline" />
                 </button>
               }
               @if (!role.immutable) {
                 <button
                   mat-icon-button
                   [attr.aria-label]="'Delete role ' + role.name"
-                  color="primary"
                   (click)="deleteRole(role)"
                   title="Delete Role"
                 >
-                  <mat-icon class="mdi-24px" fontIcon="mdi-trash-can-outline" />
+                  <mat-icon fontIcon="mdi-trash-can-outline" />
                 </button>
               }
             }
@@ -98,7 +82,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <td mat-cell *matCellDef="let permission">
           @if (permission.name == allPermission || !role.allPermissions) {
             <mat-checkbox
-              color="primary"
               [checked]="hasPermission(permission, role)"
               (change)="setPermission(permission, role, $event)"
               [disabled]="role.immutable || !(canEdit$ | async)"

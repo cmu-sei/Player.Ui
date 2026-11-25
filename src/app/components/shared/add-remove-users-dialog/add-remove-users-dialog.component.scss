@@ -6,10 +6,6 @@
 :host {
   // Compact the two Search fields and the Role dropdown to a 40px height.
   @include mat.form-field-density(-4);
-
-  // Density -4 also sets `filled-label-display: none`, which drops the
-  // "Search" label from the empty inputs. Restore it.
-  --mat-form-field-filled-label-display: block;
 }
 
 .add-remove-users-content {

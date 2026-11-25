@@ -54,7 +54,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (click)="$event.stopPropagation()"
           title="Copy:  {{ element.id }}"
         >
-          <mat-icon class="mdi-24px" fontIcon="mdi-content-copy" />
+          <mat-icon fontIcon="mdi-content-copy" />
         </button>
         {{ element.id }}
       </td>
@@ -90,7 +90,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             (click)="deleteUser(element); $event.stopPropagation()"
             title="Delete User"
           >
-            <mat-icon class="mdi-24px" fontIcon="mdi-trash-can-outline" />
+            <mat-icon fontIcon="mdi-trash-can-outline" />
           </button>
         }
       </td>
@@ -105,7 +105,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       appearance="outlined"
       style="display: flex; justify-content: center; align-items: center"
     >
-      <mat-progress-spinner color="primary" mode="indeterminate" />
+      <mat-progress-spinner mode="indeterminate" />
     </mat-card>
   }
 </div>

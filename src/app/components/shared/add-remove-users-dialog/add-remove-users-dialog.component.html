@@ -8,7 +8,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     <div class="user-list-container mat-elevation-z8">
       <mat-toolbar class="background">
         <mat-toolbar-row>
-          <mat-icon class="mdi-24px" fontIcon="mdi-account-multiple-outline" />
+          <mat-icon fontIcon="mdi-account-multiple-outline" />
           <p>All Users</p>
         </mat-toolbar-row>
         <mat-toolbar-row>
@@ -63,7 +63,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               ngxClipboard
               [cbContent]="element.id"
             >
-              <mat-icon class="mdi-24px" fontIcon="mdi-content-copy" />
+              <mat-icon fontIcon="mdi-content-copy" />
             </button>
             @if (element.name !== null) {
               <div>{{ element.name }}</div>
@@ -73,7 +73,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             }
             @if (element.id === currentUserId) {
               <mat-chip-set class="ms-2">
-                <mat-chip highlighted color="primary">You</mat-chip>
+                <mat-chip highlighted>You</mat-chip>
               </mat-chip-set>
             }
           </mat-cell>
@@ -93,7 +93,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 "
                 (click)="addUserToTeam(element)"
               >
-                <mat-icon class="mdi-24px self-center" fontIcon="mdi-plus" />
+                <mat-icon class="self-center" fontIcon="mdi-plus" />
               </button>
             </div>
           </mat-cell>
@@ -108,7 +108,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           appearance="outlined"
           class="d-flex justify-content-center align-items-center"
         >
-          <mat-progress-spinner color="primary" mode="indeterminate" />
+          <mat-progress-spinner mode="indeterminate" />
         </mat-card>
       }
 
@@ -129,7 +129,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <mat-toolbar class="background">
           <mat-toolbar-row id="userImport">
             <div class="d-flex align-items-center gap-2">
-              <mat-icon class="mdi-24px" fontIcon="mdi-account-group-outline" />
+              <mat-icon fontIcon="mdi-account-group-outline" />
               <p>Team Users</p>
             </div>
             @if (canManageRoles) {
@@ -202,7 +202,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                 ngxClipboard
                 [cbContent]="element.user.id"
               >
-                <mat-icon class="mdi-24px" fontIcon="mdi-content-copy" />
+                <mat-icon fontIcon="mdi-content-copy" />
               </button>
               @if (element.user.name !== null) {
                 <div>
@@ -214,7 +214,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               }
               @if (element.user.id === currentUserId) {
                 <mat-chip-set class="ms-2">
-                  <mat-chip highlighted color="primary">You</mat-chip>
+                  <mat-chip highlighted>You</mat-chip>
                 </mat-chip-set>
               }
             </mat-cell>
@@ -259,7 +259,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                   "
                   (click)="removeUserFromTeam(element)"
                 >
-                  <mat-icon class="mdi-24px self-center" fontIcon="mdi-minus" />
+                  <mat-icon class="self-center" fontIcon="mdi-minus" />
                 </button>
               </div>
             </mat-cell>
@@ -274,7 +274,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             appearance="outlined"
             class="d-flex justify-content-center align-items-center"
           >
-            <mat-progress-spinner color="primary" mode="indeterminate" />
+            <mat-progress-spinner mode="indeterminate" />
           </mat-card>
         }
 

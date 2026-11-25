@@ -139,7 +139,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         <div class="add-margin">
           <div>
             <mat-checkbox
-              color="primary"
               [(ngModel)]="view.isTemplate"
               (change)="saveViewStatus()"
               matTooltip="If this View should be considered a template to be used for creating other Views"
@@ -253,7 +252,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
                     />
                     <div>
                       <mat-checkbox
-                        color="primary"
                         [checked]="view.defaultTeamId === teamContainer.team.id"
                         (change)="
                           setDefaultTeam(
@@ -317,7 +315,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           appearance="outlined"
           class="d-flex justify-content-center align-items-center"
         >
-          <mat-progress-spinner color="primary" mode="indeterminate" />
+          <mat-progress-spinner mode="indeterminate" />
         </mat-card>
       }
     </mat-step>
@@ -351,7 +349,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               <div class="d-flex flex-column align-items-center">
                 <div class="d-flex align-items-center">
                   <mat-checkbox
-                    color="primary"
                     [(ngModel)]="selectAllTeamsForFile"
                     (change)="toggleAllTeamsForFile($event.checked)"
                     class="me-3"
@@ -424,7 +421,6 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
               <div class="d-flex flex-column align-items-center">
                 <div class="d-flex align-items-center">
                   <mat-checkbox
-                    color="primary"
                     [checked]="isAllTeamsSelected(viewFile)"
                     (change)="
                       toggleAllTeamsForViewFile($event.checked, viewFile)
