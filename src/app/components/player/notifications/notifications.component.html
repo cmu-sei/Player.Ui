@@ -38,9 +38,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     </mat-panel-title>
   </mat-expansion-panel-header>
   @if (notificationsHistory() != undefined) {
-    <mat-list>
+    <mat-list class="history">
       @for (notif of notificationsHistory(); track notif) {
-        <mat-list-item>
+        <mat-list-item class="history-item">
           <div id="wrapper">
             <div
               id="time"

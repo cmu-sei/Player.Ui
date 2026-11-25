@@ -14,7 +14,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   }
   @for (app of list?.apps; track app.id) {
     @if (mini()) {
-      <mat-list-item class="non-selected-item">
+      <mat-list-item class="app-item app-item-mini">
         <a
           [title]="app.name"
           [href]="app.themedUrl"
@@ -22,14 +22,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           class="app-link-mini"
         >
           <img
-            class="mat-list-item-icon"
+            class="app-icon"
             src="{{ app.icon }}"
             alt="{{ app.name }}"
           />
         </a>
       </mat-list-item>
     } @else {
-      <mat-list-item class="list-item">
+      <mat-list-item class="app-item">
         <div class="app-button-container">
           <a
             mat-button

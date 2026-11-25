@@ -1,6 +1,8 @@
 // Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 // Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
 
+@use '@angular/material' as mat;
+
 :host {
   flex: 1;
   min-height: 0;
@@ -41,26 +43,20 @@
   text-align: center;
 }
 
-.non-selected-item {
-  display: flex;
-  flex-direction: row;
+// An application's row runs to the sidebar's edges. A list item has no padding token, so its host is styled.
+.app-item {
+  padding: 0;
+}
+
+// Collapsed to icons: a 44px row with the icon centred.
+.app-item-mini {
+  @include mat.list-overrides(
+    (
+      list-item-one-line-container-height: 44px,
+    )
+  );
+
   cursor: pointer;
-  height: 44px !important;
-  width: 100%;
-
-  .mdc-list-item__content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
-
-  .mat-mdc-list-item-unscoped-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
 
   .app-link-mini {
     display: flex;
@@ -71,14 +67,9 @@
     text-decoration: none;
   }
 
-  .mat-list-item-icon {
+  .app-icon {
     width: 24px;
     height: 24px;
-  }
-
-  .mat-mdc-list-item {
-    padding: 0px !important;
-    width: 48px;
   }
 }
 
@@ -91,9 +82,4 @@
 .app-name {
   text-wrap: pretty;
   text-align: left;
-}
-
-.mat-mdc-list-item,
-.mat-list-item-content {
-  padding: 0px !important;
 }

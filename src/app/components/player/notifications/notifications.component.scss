@@ -70,8 +70,14 @@ mat-panel-title {
   color: var(--player-faint);
 }
 
-// The history: a bordered box of rows.
-.mat-mdc-list {
+// The history: a bordered box of 32px rows.
+.history {
+  @include mat.list-overrides(
+    (
+      list-item-one-line-container-height: 32px,
+    )
+  );
+
   padding: 0;
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--mat-sys-corner-medium);
@@ -80,8 +86,7 @@ mat-panel-title {
   max-height: 250px;
 }
 
-.mat-mdc-list-item {
-  height: 32px !important; /* default is 72px */
+.history-item {
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 
   &:last-child {

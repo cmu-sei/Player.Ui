@@ -37,13 +37,6 @@
   color: var(--mat-sys-primary);
 }
 
-.mat-list-item-icon {
-  color: var(--mat-sys-primary) !important;
-  width: 24px;
-  height: 24px;
-  font-size: 24px;
-}
-
 .sidenav-header {
   height: 40px;
   border-bottom: 2px solid var(--mat-sys-surface-container);
@@ -136,10 +129,6 @@
 .team-text {
   text-align: right;
   margin-right: 10px;
-}
-
-.mdc-list {
-  padding: 0 !important;
 }
 
 .player-title-mini {
