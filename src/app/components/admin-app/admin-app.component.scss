@@ -33,11 +33,8 @@
       list-item-label-text-tracking: var(--mat-sys-label-large-tracking),
       active-indicator-color: var(--mat-sys-primary-container),
       list-item-label-text-color: var(--player-body),
-      list-item-hover-label-text-color: var(--mat-sys-on-surface),
-      list-item-focus-label-text-color: var(--mat-sys-on-surface),
       list-item-leading-icon-size: 24px,
       list-item-leading-icon-color: var(--mat-sys-on-surface-variant),
-      list-item-hover-leading-icon-color: var(--mat-sys-on-surface-variant),
       list-item-leading-icon-start-space: 10px,
       list-item-leading-icon-end-space: 10px,
     )
@@ -49,10 +46,7 @@
   @include mat.list-overrides(
     (
       list-item-label-text-color: var(--mat-sys-on-primary-container),
-      list-item-hover-label-text-color: var(--mat-sys-on-primary-container),
-      list-item-focus-label-text-color: var(--mat-sys-on-primary-container),
       list-item-leading-icon-color: var(--mat-sys-primary),
-      list-item-hover-leading-icon-color: var(--mat-sys-primary),
     )
   );
 }

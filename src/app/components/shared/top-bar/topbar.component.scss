@@ -105,16 +105,6 @@
 }
 
 // The person's pill: an initial, their name and a chevron.
-.pill[aria-expanded='true'] {
-  @include mat.button-overrides(
-    (
-      outlined-outline-color: var(--mat-sys-primary),
-    )
-  );
-
-  background-color: var(--mat-sys-primary-container);
-}
-
 .pill {
   @include mat.button-overrides(
     (

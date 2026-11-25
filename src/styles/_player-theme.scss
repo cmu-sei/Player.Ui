@@ -21,12 +21,6 @@
 
 $_font: ('Open Sans', sans-serif);
 
-// A floating surface (a menu, a select's list): a hairline drawn as a ring, and a soft drop shadow.
-$_popup-shadow: (
-  0 0 0 1px var(--mat-sys-outline-variant),
-  0 12px 32px -12px light-dark(rgb(18 22 34 / 0.45), rgb(0 0 0 / 0.45))
-);
-
 :root {
   color-scheme: light;
 }
@@ -120,36 +114,12 @@ html {
   @include mat.menu-overrides(
     (
       item-icon-color: var(--mat-sys-on-surface-variant),
-      item-hover-state-layer-color: var(--mat-sys-primary),
-      item-focus-state-layer-color: var(--mat-sys-primary),
       container-color: var(--mat-sys-surface),
-      container-elevation-shadow: $_popup-shadow,
     )
   );
   @include mat.select-overrides(
     (
       panel-background-color: var(--mat-sys-surface),
-      container-elevation-shadow: $_popup-shadow,
-    )
-  );
-  @include mat.option-overrides(
-    (
-      hover-state-layer-color: var(--mat-sys-primary),
-      focus-state-layer-color: var(--mat-sys-primary),
-    )
-  );
-  // A field's label stays in ink in every state.
-  @include mat.form-field-overrides(
-    (
-      outlined-outline-color: var(--mat-sys-outline),
-      outlined-hover-outline-color: var(--mat-sys-on-surface-variant),
-      outlined-label-text-color: var(--mat-sys-on-surface),
-      outlined-hover-label-text-color: var(--mat-sys-on-surface),
-      outlined-focus-label-text-color: var(--mat-sys-on-surface),
-      outlined-disabled-label-text-color: var(--mat-sys-on-surface),
-      outlined-error-label-text-color: var(--mat-sys-on-surface),
-      outlined-error-hover-label-text-color: var(--mat-sys-on-surface),
-      outlined-error-focus-label-text-color: var(--mat-sys-on-surface),
     )
   );
   @include mat.icon-button-overrides(
@@ -170,12 +140,9 @@ html {
       supporting-text-color: var(--player-body),
     )
   );
-  // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
   @include mat.expansion-overrides(
     (
-      container-elevation-shadow: 0 0 0 1px var(--mat-sys-outline-variant),
       container-background-color: var(--mat-sys-surface),
-      header-description-color: var(--mat-sys-on-surface),
     )
   );
   @include mat.sidenav-overrides(
@@ -200,37 +167,11 @@ html {
 }
 
 // A tool in the app bar. A toolbar draws its buttons in its own text colour, so this sets that colour for the
-// button: muted, and the accent on its soft fill while the tool's menu is open.
+// button: muted, as a Material 3 app bar's trailing icons are.
 .player-toolbar-tool {
   @include mat.toolbar-overrides(
     (
       container-text-color: var(--mat-sys-on-surface-variant),
-    )
-  );
-
-  &[aria-expanded='true'] {
-    @include mat.toolbar-overrides(
-      (
-        container-text-color: var(--mat-sys-primary),
-      )
-    );
-    @include mat.icon-button-overrides(
-      (
-        icon-color: var(--mat-sys-primary),
-      )
-    );
-
-    background-color: var(--mat-sys-primary-container);
-  }
-}
-
-// Expansion panels with no corners or shadow, for panels that sit edge to edge. Put it on the panel or on the
-// accordion that holds them.
-.player-flat-panels {
-  @include mat.expansion-overrides(
-    (
-      container-shape: 0,
-      container-elevation-shadow: none,
     )
   );
 }
@@ -284,11 +225,4 @@ html {
 html .mat-icon {
   font-size: 24px;
   line-height: 1;
-}
-
-// FRAGILE: no Material token (angular/components#8204).
-// A row you can act on shows it under the pointer. A table has no hover token.
-mat-row:hover,
-tr[mat-row]:hover {
-  background: var(--mat-sys-primary-container);
 }

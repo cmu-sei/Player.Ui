@@ -21,15 +21,7 @@
   color: var(--mat-sys-on-surface);
 }
 
-// remove the border around paginator items per page selection
 mat-paginator {
-  @include mat.form-field-overrides(
-    (
-      outlined-outline-color: transparent,
-      outlined-hover-outline-color: transparent,
-      outlined-focus-outline-color: transparent,
-    )
-  );
   min-width: 200px;
 }
 
