@@ -17,7 +17,6 @@
 // Note: mat.theme's overrides silently ignore a key it doesn't know, unlike the component *-overrides mixins,
 // which fail the build. Check new keys against @angular/material/core/tokens/_system.scss.
 
-@use 'sass:string';
 @use '@angular/material' as mat;
 
 $_font: ('Open Sans', sans-serif);
@@ -76,11 +75,6 @@ $_overrides: (
       var(--mat-sys-primary) 68%,
       light-dark(#000000, #ffffff)
     ),
-  // Type: 13px body text, 12px secondary text, 11px labels.
-  body-medium: string.unquote('400 13px / 1.25rem "Open Sans", sans-serif'),
-  body-medium-size: 13px,
-  body-small-size: 12px,
-  label-small-size: 11px,
 );
 
 html {
@@ -110,12 +104,9 @@ html {
   --player-ok-line: light-dark(#bfe2cf, #23462c);
   --player-warn-soft: light-dark(#fff3df, #221b0c);
 
-  // Material's components at the look's sizes.
+  // Material's components in the look's colours and sizes.
   @include mat.table-overrides(
     (
-      row-item-label-text-size: var(--mat-sys-body-medium-size),
-      header-headline-size: var(--mat-sys-body-small-size),
-      header-headline-weight: 500,
       header-headline-color: var(--mat-sys-on-surface-variant),
       header-container-height: 36px,
       row-item-container-height: 40px,
@@ -125,8 +116,6 @@ html {
   );
   @include mat.paginator-overrides(
     (
-      container-text-size: var(--mat-sys-body-small-size),
-      select-trigger-text-size: var(--mat-sys-body-small-size),
       container-background-color: var(--mat-sys-surface),
       form-field-container-height: 28px,
       form-field-container-vertical-padding: 4px,
@@ -134,8 +123,6 @@ html {
   );
   @include mat.menu-overrides(
     (
-      item-label-text-size: var(--mat-sys-body-medium-size),
-      item-label-text-weight: 500,
       item-icon-size: 16px,
       item-icon-color: var(--mat-sys-on-surface-variant),
       item-spacing: 10px,
@@ -148,13 +135,11 @@ html {
   @include mat.select-overrides(
     (
       panel-background-color: var(--mat-sys-surface),
-      trigger-text-size: var(--mat-sys-body-medium-size),
       container-elevation-shadow: $_popup-shadow,
     )
   );
   @include mat.option-overrides(
     (
-      label-text-size: var(--mat-sys-body-medium-size),
       hover-state-layer-color: var(--mat-sys-primary),
       focus-state-layer-color: var(--mat-sys-primary),
     )
@@ -162,10 +147,8 @@ html {
   // A field's label stays in ink in every state.
   @include mat.form-field-overrides(
     (
-      container-text-size: var(--mat-sys-body-medium-size),
       container-height: 36px,
       container-vertical-padding: 8px,
-      outlined-label-text-size: var(--mat-sys-body-medium-size),
       outlined-outline-color: var(--mat-sys-outline),
       outlined-hover-outline-color: var(--mat-sys-on-surface-variant),
       outlined-label-text-color: var(--mat-sys-on-surface),
@@ -179,18 +162,7 @@ html {
   );
   @include mat.list-overrides(
     (
-      list-item-label-text-size: var(--mat-sys-body-medium-size),
       list-item-one-line-container-height: 36px,
-    )
-  );
-  @include mat.button-overrides(
-    (
-      text-label-text-size: var(--mat-sys-body-medium-size),
-      filled-label-text-size: var(--mat-sys-body-medium-size),
-      outlined-label-text-size: var(--mat-sys-body-medium-size),
-      text-label-text-weight: 500,
-      filled-label-text-weight: 500,
-      outlined-label-text-weight: 500,
     )
   );
   @include mat.icon-button-overrides(
@@ -204,30 +176,14 @@ html {
     (
       background-color: var(--mat-sys-primary),
       text-color: var(--mat-sys-on-primary),
-      text-size: 10px,
-      text-weight: 600,
       container-size: 16px,
       container-padding: 0 5px,
     )
   );
   @include mat.dialog-overrides(
     (
-      subhead-size: 16px,
-      subhead-weight: 600,
-      subhead-line-height: 24px,
       subhead-color: var(--mat-sys-on-surface),
       supporting-text-color: var(--player-body),
-      supporting-text-size: var(--mat-sys-body-medium-size),
-    )
-  );
-  @include mat.checkbox-overrides(
-    (
-      label-text-size: var(--mat-sys-body-medium-size),
-    )
-  );
-  @include mat.radio-overrides(
-    (
-      label-text-size: var(--mat-sys-body-medium-size),
     )
   );
   // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
@@ -236,15 +192,7 @@ html {
       container-elevation-shadow: 0 0 0 1px var(--mat-sys-outline-variant),
       container-background-color: var(--mat-sys-surface),
       header-expanded-state-height: 40px,
-      header-text-size: var(--mat-sys-body-medium-size),
-      header-text-weight: 500,
       header-description-color: var(--mat-sys-on-surface),
-      container-text-size: var(--mat-sys-body-medium-size),
-    )
-  );
-  @include mat.tabs-overrides(
-    (
-      label-text-size: var(--mat-sys-body-medium-size),
     )
   );
   @include mat.sidenav-overrides(
@@ -252,17 +200,6 @@ html {
       container-background-color: var(--mat-sys-surface),
       content-background-color: var(--mat-sys-background),
       container-divider-color: var(--mat-sys-outline-variant),
-    )
-  );
-  // The 13px body size reaches these too; they keep Material's 14px.
-  @include mat.slide-toggle-overrides(
-    (
-      label-text-size: 0.875rem,
-    )
-  );
-  @include mat.snack-bar-overrides(
-    (
-      supporting-text-size: 0.875rem,
     )
   );
 }
@@ -320,7 +257,7 @@ html {
   border-radius: var(--mat-sys-corner-extra-small);
 }
 
-// The app bar: a 48px surface with 13px text and 28px tools. Put it on the mat-toolbar.
+// The app bar: a 48px surface with 28px tools. Put it on the mat-toolbar.
 .player-toolbar {
   @include mat.toolbar-overrides(
     (
@@ -328,9 +265,6 @@ html {
       container-text-color: var(--mat-sys-on-surface),
       standard-height: 48px,
       mobile-height: 48px,
-      title-text-size: var(--mat-sys-body-medium-size),
-      title-text-weight: 400,
-      title-text-line-height: normal,
     )
   );
   @include mat.icon-button-overrides(

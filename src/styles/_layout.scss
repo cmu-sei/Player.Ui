@@ -13,8 +13,7 @@ body {
 
 body {
   margin: 0;
-  font: 400 var(--mat-sys-body-medium-size) / 1.45
-    var(--mat-sys-body-medium-font);
+  font: var(--mat-sys-body-medium);
   font-variant-numeric: tabular-nums;
   background: var(--mat-sys-background);
   color: var(--mat-sys-on-surface);

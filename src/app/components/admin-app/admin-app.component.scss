@@ -27,10 +27,12 @@
   @include mat.list-overrides(
     (
       list-item-one-line-container-height: 38px,
+      // A navigation drawer's labels are label-large in Material 3, not the list's body-large.
+      list-item-label-text-font: var(--mat-sys-label-large-font),
+      list-item-label-text-size: var(--mat-sys-label-large-size),
+      list-item-label-text-weight: var(--mat-sys-label-large-weight),
+      list-item-label-text-tracking: var(--mat-sys-label-large-tracking),
       active-indicator-color: var(--mat-sys-primary-container),
-      list-item-label-text-size: var(--mat-sys-body-medium-size),
-      list-item-label-text-weight: 500,
-      list-item-label-text-tracking: normal,
       list-item-label-text-color: var(--player-body),
       list-item-hover-label-text-color: var(--mat-sys-on-surface),
       list-item-focus-label-text-color: var(--mat-sys-on-surface),
