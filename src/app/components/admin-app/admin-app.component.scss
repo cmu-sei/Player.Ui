@@ -45,11 +45,10 @@
   );
 }
 
-// The open section: the accent on its soft fill.
+// The open section: the accent on its soft fill (the fill is the list's active indicator).
 .nav-item.active {
   @include mat.list-overrides(
     (
-      list-item-container-color: var(--mat-sys-primary-container),
       list-item-label-text-color: var(--mat-sys-on-primary-container),
       list-item-hover-label-text-color: var(--mat-sys-on-primary-container),
       list-item-focus-label-text-color: var(--mat-sys-on-primary-container),
