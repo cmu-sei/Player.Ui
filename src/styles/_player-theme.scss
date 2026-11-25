@@ -3,7 +3,7 @@
 
 // Player's theme: the Glaze look, expressed through Angular Material's theming APIs.
 //
-// - The palette, type sizes and corners are Material system variables (--mat-sys-*), set by mat.theme and
+// - The palette and type sizes are Material system variables (--mat-sys-*), set by mat.theme and
 //   its overrides. Components read those variables; they don't define colours of their own.
 // - Colours are light-dark(light, dark) pairs. mat.theme follows color-scheme (theme-type: color-scheme), which
 //   is light on :root and dark while CrucibleThemeService puts the darkMode class on <body>.
@@ -81,13 +81,6 @@ $_overrides: (
   body-medium-size: 13px,
   body-small-size: 12px,
   label-small-size: 11px,
-  // Corners: Material's fully round corners (buttons, chips) become 8px.
-  corner-full: 8px,
-  corner-extra-large: 10px,
-  corner-large: 8px,
-  corner-medium: 8px,
-  corner-small: 6px,
-  corner-extra-small: 4px,
 );
 
 html {
@@ -149,7 +142,6 @@ html {
       item-hover-state-layer-color: var(--mat-sys-primary),
       item-focus-state-layer-color: var(--mat-sys-primary),
       container-color: var(--mat-sys-surface),
-      container-shape: var(--mat-sys-corner-medium),
       container-elevation-shadow: $_popup-shadow,
     )
   );
@@ -176,7 +168,6 @@ html {
       outlined-label-text-size: var(--mat-sys-body-medium-size),
       outlined-outline-color: var(--mat-sys-outline),
       outlined-hover-outline-color: var(--mat-sys-on-surface-variant),
-      outlined-container-shape: var(--mat-sys-corner-medium),
       outlined-label-text-color: var(--mat-sys-on-surface),
       outlined-hover-label-text-color: var(--mat-sys-on-surface),
       outlined-focus-label-text-color: var(--mat-sys-on-surface),
@@ -216,13 +207,11 @@ html {
       text-size: 10px,
       text-weight: 600,
       container-size: 16px,
-      container-shape: 999px,
       container-padding: 0 5px,
     )
   );
   @include mat.dialog-overrides(
     (
-      container-shape: 10px,
       subhead-size: 16px,
       subhead-weight: 600,
       subhead-line-height: 24px,
@@ -244,7 +233,6 @@ html {
   // An expansion panel is a flat box with a hairline (a ring in its shadow), not a raised card.
   @include mat.expansion-overrides(
     (
-      container-shape: var(--mat-sys-corner-medium),
       container-elevation-shadow: 0 0 0 1px var(--mat-sys-outline-variant),
       container-background-color: var(--mat-sys-surface),
       header-expanded-state-height: 40px,
@@ -264,7 +252,6 @@ html {
       container-background-color: var(--mat-sys-surface),
       content-background-color: var(--mat-sys-background),
       container-divider-color: var(--mat-sys-outline-variant),
-      container-shape: 0,
     )
   );
   // The 13px body size reaches these too; they keep Material's 14px.
@@ -330,7 +317,7 @@ html {
 
   // FRAGILE: no Material token (an outlined field has no fill token; angular/components#32881).
   background-color: var(--mat-sys-surface);
-  border-radius: var(--mat-sys-corner-medium);
+  border-radius: var(--mat-sys-corner-extra-small);
 }
 
 // The app bar: a 48px surface with 13px text and 28px tools. Put it on the mat-toolbar.
@@ -394,7 +381,6 @@ html {
   @include mat.chips-overrides(
     (
       container-height: 20px,
-      container-shape-radius: 999px,
       label-text-size: var(--mat-sys-label-small-size),
       label-text-color: var(--mat-sys-on-surface-variant),
       outline-color: var(--mat-sys-outline),
