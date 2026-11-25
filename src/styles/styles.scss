@@ -21,15 +21,6 @@
   color: var(--mat-sys-on-surface);
 }
 
-// prevent table header rows from scrolling
-.mat-mdc-header-row {
-  position: sticky;
-  position: -webkit-sticky;
-  top: 0;
-  z-index: 9 !important;
-  background: var(--mat-sys-background);
-}
-
 // remove the border around paginator items per page selection
 mat-paginator {
   @include mat.form-field-overrides(

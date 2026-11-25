@@ -99,7 +99,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           </mat-cell>
         </ng-container>
 
-        <mat-header-row *matHeaderRowDef="displayedUserColumns" />
+        <mat-header-row *matHeaderRowDef="displayedUserColumns; sticky: true" />
         <mat-row *matRowDef="let row; columns: displayedUserColumns" />
       </mat-table>
 
@@ -262,7 +262,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             </mat-cell>
           </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedTeamColumns" />
+          <mat-header-row *matHeaderRowDef="displayedTeamColumns; sticky: true" />
           <mat-row *matRowDef="let row; columns: displayedTeamColumns" />
         </mat-table>
 

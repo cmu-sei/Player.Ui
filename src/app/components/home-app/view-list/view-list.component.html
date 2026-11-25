@@ -92,7 +92,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </mat-cell>
       </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedColumns" />
+      <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" />
       <mat-row *matRowDef="let row; columns: displayedColumns" />
     </mat-table>
     @if (dataSource.filteredData.length === 0) {

@@ -128,7 +128,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
       </mat-cell>
     </ng-container>
 
-    <mat-header-row *matHeaderRowDef="appTemplateColumns" />
+    <mat-header-row *matHeaderRowDef="appTemplateColumns; sticky: true" />
     <mat-row *matRowDef="let row; columns: appTemplateColumns" />
   </mat-table>
   @if (appTemplateDataSource.filteredData.length === 0) {
