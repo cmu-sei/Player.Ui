@@ -11,6 +11,12 @@ Copyright 2021 Carnegie Mellon University. All Rights Reserved.
 
 .search-field {
   flex: 0 1 260px;
+  min-width: 120px;
+}
+
+// The buttons keep their labels on one line; the search field gives up room first.
+.tools > button {
+  flex: none;
 }
 
 .search-checkbox {
