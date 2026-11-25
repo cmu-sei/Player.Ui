@@ -4,8 +4,12 @@
 @use '@angular/material' as mat;
 
 :host {
-  // Compact the two Search fields and the Role dropdown to a 40px height.
-  @include mat.form-field-density(-4);
+  // The two Search fields and the Role dropdown are 40px.
+  @include mat.form-field-overrides(
+    (
+      container-height: 40px,
+    )
+  );
 }
 
 .add-remove-users-content {
@@ -31,26 +35,36 @@
   width: 500px;
 }
 
-.mat-toolbar-row {
-  display: flex;
-  align-items: center;
+// Each list's heading and search: 58px toolbar rows.
+mat-toolbar {
+  @include mat.toolbar-overrides(
+    (
+      standard-height: 58px,
+      mobile-height: 58px,
+    )
+  );
+}
+
+mat-toolbar-row {
   gap: 10px;
-  height: 58px;
-}
 
-.mat-toolbar-row mat-icon {
-  color: var(--mat-sys-primary);
-}
+  mat-icon {
+    color: var(--mat-sys-primary);
+  }
 
-.mat-toolbar-row p {
-  font-size: 16px;
-  margin: 0;
-}
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
 
-// Buttons inside the toolbar inherit the toolbar text color; force the
-// primary theme color so they match the stroked buttons in the tables.
-.mat-toolbar-row button {
-  color: var(--mat-sys-primary);
+  // A toolbar draws its buttons in its own text colour; these use the accent, as the buttons in the tables do.
+  button {
+    @include mat.toolbar-overrides(
+      (
+        container-text-color: var(--mat-sys-primary),
+      )
+    );
+  }
 }
 
 #userImport {
@@ -71,12 +85,12 @@
 }
 
 .mat-table-team-users {
-  // The Role column uses a mat-form-field which makes rows taller than the
-  // default 52px. Force the row height to match the All Users table.
-  .mat-mdc-row {
-    height: 52px;
-    min-height: 52px;
-  }
+  // The Role column holds a 40px field, so its rows are 52px.
+  @include mat.table-overrides(
+    (
+      row-item-container-height: 52px,
+    )
+  );
 
   .mat-column-name {
     flex: 1 1 auto;
