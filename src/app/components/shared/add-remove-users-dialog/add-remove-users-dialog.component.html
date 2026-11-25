@@ -131,7 +131,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             </div>
             @if (canManageRoles) {
               <button
-                mat-stroked-button
+                matButton="outlined"
                 (click)="fileInput.click()"
                 title="Import users from a CSV containing a single column of user IDs"
                 style="margin-top: 10px"
@@ -262,7 +262,9 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             </mat-cell>
           </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedTeamColumns; sticky: true" />
+          <mat-header-row
+            *matHeaderRowDef="displayedTeamColumns; sticky: true"
+          />
           <mat-row *matRowDef="let row; columns: displayedTeamColumns" />
         </mat-table>
 

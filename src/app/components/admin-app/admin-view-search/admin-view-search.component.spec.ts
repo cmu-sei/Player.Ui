@@ -128,7 +128,7 @@ function dialogStub<T>(selector: string): T {
 /** View names listed in the table, in render order. */
 function listedViews(container: Element): string[] {
   return Array.from(
-    container.querySelectorAll('mat-cell.mat-column-name button[mat-button]'),
+    container.querySelectorAll('mat-cell.mat-column-name button[matButton]'),
   ).map((button) => button.textContent?.trim() ?? '');
 }
 

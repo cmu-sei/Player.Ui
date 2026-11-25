@@ -21,18 +21,14 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           (click)="openApplication(app, $event)"
           class="app-link-mini"
         >
-          <img
-            class="app-icon"
-            src="{{ app.icon }}"
-            alt="{{ app.name }}"
-          />
+          <img class="app-icon" src="{{ app.icon }}" alt="{{ app.name }}" />
         </a>
       </mat-list-item>
     } @else {
       <mat-list-item class="app-item">
         <div class="app-button-container">
           <a
-            mat-button
+            matButton
             [title]="app.name"
             class="px-0 w-100 normal-text justify-content-start"
             [href]="app.themedUrl"

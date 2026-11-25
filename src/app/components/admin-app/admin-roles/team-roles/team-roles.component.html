@@ -19,10 +19,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
         </button>
         @if (adding) {
           <span class="d-inline-flex gap-2">
-            <button mat-raised-button (click)="addRole(); adding = false">
+            <button matButton="elevated" (click)="addRole(); adding = false">
               Add Role
             </button>
-            <button mat-raised-button (click)="addPermission(); adding = false">
+            <button
+              matButton="elevated"
+              (click)="addPermission(); adding = false"
+            >
               Add Permission
             </button>
           </span>

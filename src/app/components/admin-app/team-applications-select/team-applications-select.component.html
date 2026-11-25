@@ -5,7 +5,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
 
 <div class="top-button d-flex justify-content-end">
   @if (viewApplications != null && viewApplications.length > 0) {
-    <button mat-stroked-button [matMenuTriggerFor]="teamAppsMenu">
+    <button matButton="outlined" [matMenuTriggerFor]="teamAppsMenu">
       Add Application
     </button>
   }
@@ -83,7 +83,7 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
           }
         </div>
         <button
-          mat-stroked-button
+          matButton="outlined"
           (click)="removeApplicationInstanceFromTeam(app)"
         >
           Remove Application

@@ -11,7 +11,7 @@ DM20-0181 -->
 
 <div>
   @for (team of teams; track team) {
-    <button mat-raised-button (click)="selectTeam(team.id)">
+    <button matButton="elevated" (click)="selectTeam(team.id)">
       {{ team.name }}
     </button>
   }
