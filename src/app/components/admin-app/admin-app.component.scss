@@ -26,7 +26,6 @@
   padding: 12px 8px;
   @include mat.list-overrides(
     (
-      list-item-one-line-container-height: 38px,
       // A navigation drawer's labels are label-large in Material 3, not the list's body-large.
       list-item-label-text-font: var(--mat-sys-label-large-font),
       list-item-label-text-size: var(--mat-sys-label-large-size),

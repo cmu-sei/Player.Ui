@@ -108,8 +108,6 @@ html {
   @include mat.table-overrides(
     (
       header-headline-color: var(--mat-sys-on-surface-variant),
-      header-container-height: 36px,
-      row-item-container-height: 40px,
       row-item-outline-color: var(--mat-sys-outline-variant),
       background-color: var(--mat-sys-surface),
     )
@@ -117,15 +115,11 @@ html {
   @include mat.paginator-overrides(
     (
       container-background-color: var(--mat-sys-surface),
-      form-field-container-height: 28px,
-      form-field-container-vertical-padding: 4px,
     )
   );
   @include mat.menu-overrides(
     (
-      item-icon-size: 16px,
       item-icon-color: var(--mat-sys-on-surface-variant),
-      item-spacing: 10px,
       item-hover-state-layer-color: var(--mat-sys-primary),
       item-focus-state-layer-color: var(--mat-sys-primary),
       container-color: var(--mat-sys-surface),
@@ -147,8 +141,6 @@ html {
   // A field's label stays in ink in every state.
   @include mat.form-field-overrides(
     (
-      container-height: 36px,
-      container-vertical-padding: 8px,
       outlined-outline-color: var(--mat-sys-outline),
       outlined-hover-outline-color: var(--mat-sys-on-surface-variant),
       outlined-label-text-color: var(--mat-sys-on-surface),
@@ -160,24 +152,16 @@ html {
       outlined-error-focus-label-text-color: var(--mat-sys-on-surface),
     )
   );
-  @include mat.list-overrides(
-    (
-      list-item-one-line-container-height: 36px,
-    )
-  );
   @include mat.icon-button-overrides(
     (
       icon-color: var(--mat-sys-on-surface-variant),
-      icon-size: 18px,
     )
   );
-  // A count on a badge: a small pill in the accent.
+  // A count on a badge, in the accent.
   @include mat.badge-overrides(
     (
       background-color: var(--mat-sys-primary),
       text-color: var(--mat-sys-on-primary),
-      container-size: 16px,
-      container-padding: 0 5px,
     )
   );
   @include mat.dialog-overrides(
@@ -191,7 +175,6 @@ html {
     (
       container-elevation-shadow: 0 0 0 1px var(--mat-sys-outline-variant),
       container-background-color: var(--mat-sys-surface),
-      header-expanded-state-height: 40px,
       header-description-color: var(--mat-sys-on-surface),
     )
   );
@@ -206,70 +189,12 @@ html {
 
 // ---- Variants: classes a template opts into ----
 
-// The quiet buttons of a dense row (a list's tools, a form's single action): 28px, 12px text, 16px icons, and
-// an outlined button stands on the surface rather than the canvas.
-.player-dense-buttons {
-  @include mat.button-overrides(
-    (
-      filled-container-height: 28px,
-      outlined-container-height: 28px,
-      text-container-height: 28px,
-      filled-horizontal-padding: 10px,
-      outlined-horizontal-padding: 10px,
-      filled-label-text-size: var(--mat-sys-body-small-size),
-      outlined-label-text-size: var(--mat-sys-body-small-size),
-      text-label-text-size: var(--mat-sys-body-small-size),
-      filled-label-text-tracking: normal,
-      outlined-label-text-tracking: normal,
-      text-label-text-tracking: normal,
-      outlined-outline-color: var(--mat-sys-outline),
-      outlined-label-text-color: var(--mat-sys-on-surface),
-    )
-  );
-
-  // FRAGILE: no Material token (an outlined button has no fill token).
-  [matButton='outlined'] {
-    background-color: var(--mat-sys-surface);
-  }
-
-  // FRAGILE: no Material token (a button's icon has no size token; angular/components#21170).
-  [matButton] > .mat-icon {
-    width: 16px;
-    height: 16px;
-    font-size: 16px;
-    line-height: 16px;
-  }
-}
-
-// A field in a dense row (a search over a list, a message box): 33px, on the surface. Put it on the
-// mat-form-field.
-.player-dense-field {
-  @include mat.form-field-overrides(
-    (
-      container-height: 33px,
-      container-vertical-padding: 6px,
-      container-text-line-height: 21px,
-    )
-  );
-
-  // FRAGILE: no Material token (an outlined field has no fill token; angular/components#32881).
-  background-color: var(--mat-sys-surface);
-  border-radius: var(--mat-sys-corner-extra-small);
-}
-
-// The app bar: a 48px surface with 28px tools. Put it on the mat-toolbar.
+// The app bar: a surface. Put it on the mat-toolbar.
 .player-toolbar {
   @include mat.toolbar-overrides(
     (
       container-background-color: var(--mat-sys-surface),
       container-text-color: var(--mat-sys-on-surface),
-      standard-height: 48px,
-      mobile-height: 48px,
-    )
-  );
-  @include mat.icon-button-overrides(
-    (
-      state-layer-size: 28px,
     )
   );
 }
@@ -314,7 +239,6 @@ html {
 .player-status-chip {
   @include mat.chips-overrides(
     (
-      container-height: 20px,
       label-text-size: var(--mat-sys-label-small-size),
       label-text-color: var(--mat-sys-on-surface-variant),
       outline-color: var(--mat-sys-outline),
@@ -354,26 +278,12 @@ html {
 // host's own styles may have changed.
 
 // FRAGILE: no Material token (angular/components#21170).
-// Icons are 18px. mat-icon has no size token, so its host is sized, as Material's icon guide does. Under html, so
-// it outranks Material's own 24px default but not the sizes it gives icons in a button, a list or a menu.
+// An MDI font icon at Material's 24px. mat-icon sets a box but no font size or line height (the Material Icons
+// font's own class does), so the glyph would take the surrounding text's and slip out of the box. Under html, so
+// Material's own icon sizes in buttons, lists and menus still win.
 html .mat-icon {
-  width: 18px;
-  height: 18px;
-  font-size: 18px;
-  line-height: 18px;
-}
-
-// FRAGILE: no Material token (angular/components#26759).
-// Menu rows are 32px. A menu item has no height token.
-button[mat-menu-item],
-a[mat-menu-item] {
-  min-height: 32px;
-
-  // item-icon-size sets the icon's box; the icon font needs its size too.
-  .mat-icon {
-    font-size: 16px;
-    line-height: 16px;
-  }
+  font-size: 24px;
+  line-height: 1;
 }
 
 // FRAGILE: no Material token (angular/components#8204).

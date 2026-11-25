@@ -70,14 +70,8 @@ mat-panel-title {
   color: var(--player-faint);
 }
 
-// The history: a bordered box of 32px rows.
+// The history: a bordered box of rows.
 .history {
-  @include mat.list-overrides(
-    (
-      list-item-one-line-container-height: 32px,
-    )
-  );
-
   padding: 0;
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--mat-sys-corner-medium);

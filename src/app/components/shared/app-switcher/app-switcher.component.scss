@@ -17,17 +17,8 @@
   @include mat.icon-button-overrides(
     (
       icon-color: var(--player-faint),
-      state-layer-size: 22px,
     )
   );
-
-  // FRAGILE: no Material token (icon size; angular/components#21170).
-  .mat-icon {
-    width: 14px;
-    height: 14px;
-    font-size: 14px;
-    line-height: 14px;
-  }
 }
 
 // The menu's own content: a small muted title over the apps, each with a lettered badge.

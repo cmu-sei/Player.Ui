@@ -88,14 +88,11 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
   @if (hasViewAdmin()) {
     <div class="send-message">
       <form
-        class="send-form player-dense-buttons"
+        class="send-form"
         #notificationForm="ngForm"
         (ngSubmit)="sendMessage()"
       >
-        <mat-form-field
-          class="input-message player-dense-field"
-          subscriptSizing="dynamic"
-        >
+        <mat-form-field class="input-message" subscriptSizing="dynamic">
           <input
             matInput
             #msgtext

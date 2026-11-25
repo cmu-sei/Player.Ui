@@ -3,15 +3,6 @@
 
 @use '@angular/material' as mat;
 
-:host {
-  // The two Search fields and the Role dropdown are 40px.
-  @include mat.form-field-overrides(
-    (
-      container-height: 40px,
-    )
-  );
-}
-
 .add-remove-users-content {
   display: flex;
   gap: 20px;
@@ -85,10 +76,10 @@ mat-toolbar-row {
 }
 
 .team-users-table {
-  // The Role column holds a 40px field, so its rows are 52px.
+  // The Role column holds a field, so its rows are 56px.
   @include mat.table-overrides(
     (
-      row-item-container-height: 52px,
+      row-item-container-height: 56px,
     )
   );
 

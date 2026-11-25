@@ -167,13 +167,13 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
             class="theme-item"
             (click)="$event.stopPropagation(); toggleTheme()"
           >
-            @if ((theme$ | async) === 'dark-theme') {
-              <mat-icon aria-hidden="true" fontIcon="mdi-weather-sunny" />
-              <span>Light mode</span>
-            } @else {
-              <mat-icon aria-hidden="true" fontIcon="mdi-weather-night" />
-              <span>Dark mode</span>
-            }
+            @let dark = (theme$ | async) === 'dark-theme';
+            <!-- The icon sits outside the @if so the menu item projects it into its icon slot. -->
+            <mat-icon
+              aria-hidden="true"
+              [fontIcon]="dark ? 'mdi-weather-sunny' : 'mdi-weather-night'"
+            />
+            <span>{{ dark ? 'Light mode' : 'Dark mode' }}</span>
           </button>
           <button mat-menu-item (click)="logout()">
             <mat-icon aria-hidden="true" fontIcon="mdi-logout" />
