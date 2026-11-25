@@ -21,6 +21,7 @@
     )
   );
 
+  // FRAGILE: no Material token (icon size; angular/components#21170).
   .mat-icon {
     width: 14px;
     height: 14px;

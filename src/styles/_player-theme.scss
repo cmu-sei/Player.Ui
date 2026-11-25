@@ -303,12 +303,12 @@ html {
     )
   );
 
-  // Exception: an outlined button has no fill token.
+  // FRAGILE: no Material token (an outlined button has no fill token).
   [matButton='outlined'] {
     background-color: var(--mat-sys-surface);
   }
 
-  // Exception: a button's icon has no size token.
+  // FRAGILE: no Material token (a button's icon has no size token; angular/components#21170).
   [matButton] > .mat-icon {
     width: 16px;
     height: 16px;
@@ -328,7 +328,7 @@ html {
     )
   );
 
-  // Exception: an outlined field has no fill token.
+  // FRAGILE: no Material token (an outlined field has no fill token; angular/components#32881).
   background-color: var(--mat-sys-surface);
   border-radius: var(--mat-sys-corner-medium);
 }
@@ -429,7 +429,11 @@ html {
 }
 
 // ---- Exceptions: no Material token exists, so the hosts Player declares are styled directly ----
+//
+// Each is tagged FRAGILE. Re-check them on every Material major upgrade: a token may have arrived, or the
+// host's own styles may have changed.
 
+// FRAGILE: no Material token (angular/components#21170).
 // Icons are 18px. mat-icon has no size token, so its host is sized, as Material's icon guide does. Under html, so
 // it outranks Material's own 24px default but not the sizes it gives icons in a button, a list or a menu.
 html .mat-icon {
@@ -439,6 +443,7 @@ html .mat-icon {
   line-height: 18px;
 }
 
+// FRAGILE: no Material token (angular/components#26759).
 // Menu rows are 32px. A menu item has no height token.
 button[mat-menu-item],
 a[mat-menu-item] {
@@ -451,6 +456,7 @@ a[mat-menu-item] {
   }
 }
 
+// FRAGILE: no Material token (angular/components#8204).
 // A row you can act on shows it under the pointer. A table has no hover token.
 mat-row:hover,
 tr[mat-row]:hover {

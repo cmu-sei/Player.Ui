@@ -43,6 +43,7 @@
   text-align: center;
 }
 
+// FRAGILE: no Material token (a list item has no padding token).
 // An application's row runs to the sidebar's edges. A list item has no padding token, so its host is styled.
 .app-item {
   padding: 0;
