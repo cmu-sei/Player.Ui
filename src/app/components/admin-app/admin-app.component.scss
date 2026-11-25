@@ -31,8 +31,8 @@
       list-item-label-text-size: var(--mat-sys-label-large-size),
       list-item-label-text-weight: var(--mat-sys-label-large-weight),
       list-item-label-text-tracking: var(--mat-sys-label-large-tracking),
-      active-indicator-color: var(--mat-sys-primary-container),
-      list-item-label-text-color: var(--player-body),
+      active-indicator-color: var(--mat-sys-secondary-container),
+      list-item-label-text-color: var(--mat-sys-on-surface-variant),
       list-item-leading-icon-size: 24px,
       list-item-leading-icon-color: var(--mat-sys-on-surface-variant),
       list-item-leading-icon-start-space: 10px,
@@ -41,12 +41,13 @@
   );
 }
 
-// The open section: the accent on its soft fill (the fill is the list's active indicator).
+// The open section, as a Material 3 navigation drawer marks it: the secondary container (the list's active
+// indicator) and its ink.
 .nav-item.active {
   @include mat.list-overrides(
     (
-      list-item-label-text-color: var(--mat-sys-on-primary-container),
-      list-item-leading-icon-color: var(--mat-sys-primary),
+      list-item-label-text-color: var(--mat-sys-on-secondary-container),
+      list-item-leading-icon-color: var(--mat-sys-on-secondary-container),
     )
   );
 }
