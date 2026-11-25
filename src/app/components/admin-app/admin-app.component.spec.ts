@@ -4,9 +4,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Component, input, Type } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
-import { screen } from '@testing-library/angular';
+import { screen, within } from '@testing-library/angular';
 import { BehaviorSubject, of } from 'rxjs';
-import userEvent from '@testing-library/user-event';
 import { Router } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { AdminAppComponent, Section } from './admin-app.component';
@@ -143,7 +142,7 @@ describe('AdminAppComponent', () => {
     },
   );
 
-  const titles: Array<[string, Section, string]> = [
+  const sections: Array<[string, Section, string]> = [
     ['Views', Section.ADMIN_VIEWS, 'Views'],
     ['Users', Section.ADMIN_USERS, 'Users'],
     ['Application Templates', Section.ADMIN_APP_TEMP, 'Application Templates'],
@@ -152,25 +151,37 @@ describe('AdminAppComponent', () => {
   ];
 
   /**
-   * Verifies: clicking a nav item merges its section into the query params and passes the section's title to the topbar.
-   * Interacts with: the rendered nav buttons; Router.navigate (spied); the topbar stub's title input.
+   * Verifies: each nav item is a link that merges its section into the query params.
+   * Interacts with: the rendered nav links.
    * Data: one row per nav item; every View permission granted so every item renders.
    */
-  it.each(titles)(
-    'clicking %s navigates to section %s and titles the page "%s"',
-    async (name, section, title) => {
-      const user = userEvent.setup();
-      const { fixture, navigate } = await renderAdmin({
-        permissions: navItems.map(([, permission]) => permission),
-      });
-      await user.click(screen.getByText(name));
-      expect(navigate).toHaveBeenCalledExactlyOnceWith([], {
-        queryParams: { section },
-        queryParamsHandling: 'merge',
-      });
-      expect(topbar(fixture).title()).toBe(title);
-    },
-  );
+  it.each(sections)('links %s to section %s', async (name, section) => {
+    await renderAdmin({
+      permissions: navItems.map(([, permission]) => permission),
+    });
+    const nav = screen.getByRole('navigation', { name: 'Administration' });
+    expect(within(nav).getByRole('link', { name })).toHaveAttribute(
+      'href',
+      `/?section=${section}`,
+    );
+  });
+
+  /**
+   * Verifies: only the open section's link is marked as the current page.
+   * Interacts with: the rendered nav links; RouterQuery.selectQueryParams stub.
+   * Data: section ADMIN_USERS with every View permission granted.
+   */
+  it('marks the open section as the current page', async () => {
+    await renderAdmin({
+      section: Section.ADMIN_USERS,
+      permissions: navItems.map(([, permission]) => permission),
+    });
+    const nav = screen.getByRole('navigation', { name: 'Administration' });
+    const current = within(nav)
+      .getAllByRole('link')
+      .filter((link) => link.getAttribute('aria-current') === 'page');
+    expect(current.map((link) => link.textContent?.trim())).toEqual(['Users']);
+  });
 
   /**
    * Verifies: opening the page with a section query param titles the page for that section.

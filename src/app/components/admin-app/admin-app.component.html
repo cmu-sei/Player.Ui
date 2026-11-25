@@ -11,33 +11,31 @@ Released under a MIT (SEI)-style license. See LICENSE.md in the project root for
     mode="side"
     [opened]="true"
   >
-    <nav aria-label="Administration">
-      <mat-action-list class="appitems-container">
-        @if (permissions$ | async; as permissions) {
-          @let current = section$ | async;
-          @for (sectionItem of sectionItems; track sectionItem) {
-            @if (permissions.includes(sectionItem.permission)) {
-              <button
-                mat-list-item
-                class="nav-item"
-                [class.active]="current === sectionItem.section"
-                [attr.aria-current]="
-                  current === sectionItem.section ? 'page' : null
-                "
-                (click)="sectionChangedFn(sectionItem.section)"
-              >
-                <mat-icon
-                  matListItemIcon
-                  aria-hidden="true"
-                  [fontIcon]="sectionItem.icon"
-                />
-                <span matListItemTitle>{{ sectionItem.name }}</span>
-              </button>
-            }
+    <mat-nav-list class="appitems-container" aria-label="Administration">
+      @if (permissions$ | async; as permissions) {
+        @let current = section$ | async;
+        @for (sectionItem of sectionItems; track sectionItem) {
+          @if (permissions.includes(sectionItem.permission)) {
+            <a
+              mat-list-item
+              class="nav-item"
+              [class.active]="current === sectionItem.section"
+              [activated]="current === sectionItem.section"
+              [routerLink]="[]"
+              [queryParams]="{ section: sectionItem.section }"
+              queryParamsHandling="merge"
+            >
+              <mat-icon
+                matListItemIcon
+                aria-hidden="true"
+                [fontIcon]="sectionItem.icon"
+              />
+              <span matListItemTitle>{{ sectionItem.name }}</span>
+            </a>
           }
         }
-      </mat-action-list>
-    </nav>
+      }
+    </mat-nav-list>
     <img
       class="crucible-logo"
       alt="Crucible Logo"

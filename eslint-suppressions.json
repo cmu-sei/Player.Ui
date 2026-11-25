@@ -199,10 +199,10 @@
       "count": 3
     },
     "@typescript-eslint/no-unsafe-argument": {
-      "count": 5
+      "count": 4
     },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 12
+      "count": 11
     },
     "@typescript-eslint/no-unsafe-call": {
       "count": 8

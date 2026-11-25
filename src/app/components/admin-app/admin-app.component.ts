@@ -16,9 +16,9 @@ import {
   MatSidenavContainer,
   MatSidenavContent,
 } from '@angular/material/sidenav';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
-  MatActionList,
+  MatNavList,
   MatListItem,
   MatListItemIcon,
   MatListItemTitle,
@@ -50,8 +50,9 @@ import { AsyncPipe } from '@angular/common';
   templateUrl: './admin-app.component.html',
   styleUrls: ['./admin-app.component.scss'],
   imports: [
-    MatActionList,
+    MatNavList,
     MatListItem,
+    RouterLink,
     MatListItemIcon,
     MatListItemTitle,
     MatSidenavContainer,
