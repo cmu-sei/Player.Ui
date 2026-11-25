@@ -1,0 +1,199 @@
+// Copyright 2026 Carnegie Mellon University. All Rights Reserved.
+// Released under a MIT (SEI)-style license. See LICENSE.md in the project root for license information.
+
+// Glazed sprinkles: the Glaze look (feature/glaze) over the Material 3 theme, as values only.
+//
+// Everything here goes through Material's own override mixins: mat.theme-overrides for the system variables
+// (colour, shape, type) and mat.<component>-overrides for the few sizes the system variables can't say. The
+// component mixins fail the build on an unknown key. The two rules at the end are the only CSS, where Material
+// has no token. Nothing here needs anything from a template: drop the file and its @use in styles.scss and
+// Player is stock Material 3 again.
+
+@use '@angular/material' as mat;
+
+// Glaze's ground. Dark is GraySpace's palette.
+$_surface: light-dark(#ffffff, #151b22);
+$_raised: light-dark(#fafbfc, #1b222b);
+$_ink: light-dark(#1c2230, #d8dee6);
+$_muted: light-dark(#6b7385, #8a96a6);
+$_line: light-dark(#e3e6eb, #2a333f);
+$_line-strong: light-dark(#cfd4dc, #36414f);
+// The accent's soft fill and its ink, derived from whatever primary the operator set. primary and on-primary
+// themselves are left alone: CrucibleThemeService writes them from the app's settings.
+$_accent-soft: color-mix(in srgb, var(--mat-sys-primary) 9%, $_surface);
+$_accent-ink: color-mix(
+  in srgb,
+  var(--mat-sys-primary) 68%,
+  light-dark(#000000, #ffffff)
+);
+
+html {
+  @include mat.theme-overrides(
+    (
+      // ---- Colour ----
+      background: light-dark(#f6f7f9, #0f1318),
+      on-background: $_ink,
+      surface: $_surface,
+      on-surface: $_ink,
+      on-surface-variant: $_muted,
+      surface-container-lowest: $_surface,
+      surface-container-low: $_surface,
+      surface-container: $_surface,
+      surface-container-high: $_raised,
+      surface-container-highest: $_raised,
+      surface-variant: $_raised,
+      inverse-surface: light-dark(#1c2230, #22344a),
+      inverse-on-surface: #ffffff,
+      outline: $_line-strong,
+      outline-variant: $_line,
+      error: light-dark(#c22f3a, #f85149),
+      primary-container: $_accent-soft,
+      on-primary-container: $_accent-ink,
+      secondary-container: $_accent-soft,
+      on-secondary-container: $_accent-ink,
+      // ---- Shape: 8px, where Material 3 is fully round or 4px ----
+      corner-full: 8px,
+      corner-extra-large: 10px,
+      corner-large: 8px,
+      corner-medium: 8px,
+      corner-small: 6px,
+      corner-extra-small: 4px,
+      // ---- Type: 13px text, where Material 3 is 14px or 16px ----
+      body-medium: 400 13px / 1.45 #{'Open Sans',
+      sans-serif},
+      body-medium-size: 13px,
+      body-large-size: 13px,
+      body-large-line-height: 20px,
+      label-large-size: 13px,
+      title-small-size: 13px,
+    )
+  );
+
+  // Player's own colours (see _player-theme.scss).
+  --player-body: light-dark(#3b4356, #b8c2cf);
+  --player-faint: light-dark(#9aa1b0, #5f6b7a);
+
+  // ---- Components: only what the system variables above can't say ----
+
+  // The top bar: 48px, its words at text size.
+  @include mat.toolbar-overrides(
+    (
+      standard-height: 48px,
+      title-text-size: 13px,
+      title-text-line-height: normal,
+    )
+  );
+
+  // A square drawer, flat against the bar.
+  @include mat.sidenav-overrides(
+    (
+      container-shape: 0,
+    )
+  );
+
+  // Tables: a small muted header over 40px rows.
+  @include mat.table-overrides(
+    (
+      header-headline-size: 12px,
+      header-headline-color: $_muted,
+      header-container-height: 36px,
+      row-item-container-height: 40px,
+      row-item-outline-color: $_line,
+    )
+  );
+
+  // An outlined button's words are ink, not the accent, and both kinds sit closer to their edges.
+  @include mat.button-overrides(
+    (
+      outlined-label-text-color: $_ink,
+      outlined-horizontal-padding: 12px,
+      outlined-icon-offset: -2px,
+      outlined-icon-spacing: 6px,
+      filled-horizontal-padding: 12px,
+      filled-icon-offset: -2px,
+      filled-icon-spacing: 6px,
+    )
+  );
+
+  // Icons in an icon button: 18px, muted.
+  @include mat.icon-button-overrides(
+    (
+      icon-size: 18px,
+      icon-color: $_muted,
+    )
+  );
+
+  // Fields: 36px, 8px corners.
+  @include mat.form-field-overrides(
+    (
+      container-height: 36px,
+      container-vertical-padding: 8px,
+      outlined-container-shape: 8px,
+    )
+  );
+
+  @include mat.paginator-overrides(
+    (
+      container-text-size: 12px,
+      select-trigger-text-size: 12px,
+      form-field-container-height: 28px,
+      form-field-container-vertical-padding: 4px,
+    )
+  );
+
+  // Menus: an 8px bordered surface under a long soft shadow.
+  @include mat.menu-overrides(
+    (
+      container-shape: 8px,
+      item-icon-size: 18px,
+      item-spacing: 10px,
+      container-elevation-shadow: (
+        0 0 0 1px $_line,
+        0 12px 32px -12px light-dark(rgb(18 22 34 / 0.45), rgb(0 0 0 / 0.45)),
+      ),
+    )
+  );
+
+  // Dialogs: a 16px semibold title.
+  @include mat.dialog-overrides(
+    (
+      subhead-size: 16px,
+      subhead-weight: 600,
+      subhead-line-height: 24px,
+    )
+  );
+
+  // Expansion panels are flat, bordered boxes.
+  @include mat.expansion-overrides(
+    (
+      container-shape: 8px,
+      container-elevation-shadow: 0 0 0 1px $_line,
+    )
+  );
+}
+
+// The paginator's page-size select has no box.
+mat-paginator {
+  @include mat.form-field-overrides(
+    (
+      outlined-outline-color: transparent,
+      outlined-hover-outline-color: transparent,
+      outlined-focus-outline-color: transparent,
+    )
+  );
+}
+
+// ---- Exceptions: no Material token exists (see README: FRAGILE) ----
+
+// FRAGILE: no Material token (angular/components#21170). Icons are small: 18px wherever Material doesn't size
+// them itself. Replaces the 24px in _player-theme.scss.
+html .mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+// FRAGILE: no Material token. A row you can act on shows it.
+mat-row:hover {
+  background: var(--mat-sys-primary-container);
+}

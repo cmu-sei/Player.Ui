@@ -10,6 +10,8 @@
 @use './player-theme';
 // The base and the page layout classes.
 @use './layout';
+// Glaze's values over the Material 3 theme. Last, so it wins.
+@use './glazed-sprinkles';
 /* END IMPORTS */
 
 /* VENDER INCLUDES */
